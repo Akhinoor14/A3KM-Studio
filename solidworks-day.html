@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>SOLIDWORKS Day - Mobile</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <link rel="stylesheet" href="mobile-clean.css" />
+  <link rel="stylesheet" href="solidworks-day-mobile.css" />
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+      overflow-x: hidden;
+    }
+    
+    .navbar { display: none !important; }
+    
+    .mobile-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(40, 0, 0, 0.98);
+      border-bottom: 2px solid rgba(255, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+      z-index: 1000;
+      backdrop-filter: blur(15px);
+    }
+    
+    .mobile-back-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .mobile-back-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .mobile-header-title {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .mobile-header-main {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .mobile-header-sub {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .mobile-content {
+      margin-top: 60px;
+      padding: 16px 16px 80px 16px;
+      min-height: calc(100vh - 60px);
+    }
+    
+    .mobile-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background: rgba(40, 0, 0, 0.98);
+      border-top: 2px solid rgba(255, 0, 0, 0.4);
+      backdrop-filter: blur(15px);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="mobile-header">
+    <button class="mobile-back-btn" onclick="history.back()" aria-label="Back">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="mobile-header-title">
+      <div class="mobile-header-main" id="day-title">Loading...</div>
+      <div class="mobile-header-sub" id="section-name">-</div>
+    </div>
+  </header>
+
+  <main class="mobile-content">
+    <div id="day-content">
+      <div class="sw-day-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading projects...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mobile-footer">
+    <button class="sw-github-btn" id="view-github-btn">
+      <i class="fab fa-github"></i>
+      <span>View on GitHub</span>
+    </button>
+  </footer>
+
+  <script src="github-proxy-config.js" defer></script>
+  <script src="github-fetch-patch.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  
+  <script>
+    console.log('📁 SOLIDWORKS Day Mobile Page Loaded');
+    
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get('section') || 'cw';
+    const day = params.get('day') || 'Day 01';
+    
+    document.getElementById('day-title').textContent = day;
+    document.getElementById('section-name').textContent = section.toUpperCase();
+    
+    const sectionMap = {
+      'cw': 'CW',
+      'hw': 'HW',
+      'solo': 'Solo Projects'
+    };
+    
+    async function loadDayContent() {
+      const content = document.getElementById('day-content');
+      
+      try {
+        const path = `${sectionMap[section]}/${day}`;
+        const url = `https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/${path}`;
+        
+        console.log(`📂 Loading: ${path}`);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log(`✅ Loaded ${data.length} items`);
+        
+        // Set GitHub button
+        document.getElementById('view-github-btn').onclick = () => {
+          window.open(`https://github.com/Akhinoor14/SOLIDWORKS-Projects/tree/main/${path}`, '_blank');
+        };
+        
+        // Render files
+        renderFiles(data);
+        
+      } catch (error) {
+        console.error('❌ Error:', error);
+        content.innerHTML = `
+          <div class="sw-day-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load projects</p>
+            <button onclick="loadDayContent()">Retry</button>
+          </div>
+        `;
+      }
+    }
+    
+    function renderFiles(items) {
+      const content = document.getElementById('day-content');
+      
+      const folders = items.filter(i => i.type === 'dir');
+      const files = items.filter(i => i.type === 'file');
+      
+      let html = '';
+      
+      // Render subfolders if any
+      if (folders.length > 0) {
+        html += '<div class="sw-day-section"><h3>📁 Folders</h3><div class="sw-day-items">';
+        folders.forEach(folder => {
+          html += `
+            <div class="sw-day-item" data-url="${folder.html_url}">
+              <div class="sw-day-item-icon">📁</div>
+              <div class="sw-day-item-info">
+                <div class="sw-day-item-name">${folder.name}</div>
+                <div class="sw-day-item-type">Folder</div>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          `;
+        });
+        html += '</div></div>';
+      }
+      
+      // Render files
+      if (files.length > 0) {
+        const cad = files.filter(f => /\.(SLDPRT|SLDASM|SLDDRW)$/i.test(f.name));
+        const docs = files.filter(f => /\.(md|txt|pdf)$/i.test(f.name));
+        const images = files.filter(f => /\.(png|jpg|jpeg|gif)$/i.test(f.name));
+        const others = files.filter(f => !cad.includes(f) && !docs.includes(f) && !images.includes(f));
+        
+        if (cad.length > 0) {
+          html += '<div class="sw-day-section"><h3>🔧 CAD Files</h3><div class="sw-day-items">';
+          cad.forEach(file => {
+            html += renderFileCard(file, '🔧');
+          });
+          html += '</div></div>';
+        }
+        
+        if (docs.length > 0) {
+          html += '<div class="sw-day-section"><h3>📄 Documents</h3><div class="sw-day-items">';
+          docs.forEach(file => {
+            html += renderFileCard(file, '📄');
+          });
+          html += '</div></div>';
+        }
+        
+        if (images.length > 0) {
+          html += '<div class="sw-day-section"><h3>🖼️ Images</h3><div class="sw-day-items">';
+          images.forEach(file => {
+            html += renderFileCard(file, '🖼️');
+          });
+          html += '</div></div>';
+        }
+        
+        if (others.length > 0) {
+          html += '<div class="sw-day-section"><h3>📦 Other Files</h3><div class="sw-day-items">';
+          others.forEach(file => {
+            html += renderFileCard(file, '📦');
+          });
+          html += '</div></div>';
+        }
+      }
+      
+      content.innerHTML = html;
+      
+      // Add click handlers
+      document.querySelectorAll('.sw-day-item').forEach(item => {
+        item.addEventListener('click', () => {
+          window.open(item.dataset.url, '_blank');
+        });
+      });
+    }
+    
+    function renderFileCard(file, icon) {
+      const size = file.size ? `${(file.size / 1024).toFixed(1)} KB` : '-';
+      return `
+        <div class="sw-day-item" data-url="${file.html_url}">
+          <div class="sw-day-item-icon">${icon}</div>
+          <div class="sw-day-item-info">
+            <div class="sw-day-item-name">${file.name}</div>
+            <div class="sw-day-item-type">${size}</div>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </div>
+      `;
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadDayContent);
+  </script>
+
+</body>
+</html>

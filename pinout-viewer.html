@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IC Pinout Viewer - Electronics Tools</title>
+    <link rel="stylesheet" href="electronics-tools-shared.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Search and Filter */
+        .search-bar {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 50px 14px 50px;
+            background: rgba(255, 152, 0, 0.08);
+            border: 1.5px solid var(--primary-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .clear-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: none;
+        }
+
+        .search-input:not(:placeholder-shown) ~ .clear-icon {
+            display: block;
+        }
+
+        /* Category Filter */
+        .category-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-chips::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .category-chip {
+            padding: 8px 16px;
+            background: rgba(255, 152, 0, 0.08);
+            border: 1px solid var(--primary-border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-chip.active {
+            background: linear-gradient(135deg, var(--primary), #F57C00);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+        }
+
+        /* IC Cards */
+        .ic-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--primary-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ic-card:active {
+            transform: scale(0.99);
+            box-shadow: 0 8px 24px rgba(255, 152, 0, 0.3);
+        }
+
+        .ic-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .ic-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .ic-package {
+            padding: 4px 10px;
+            background: rgba(33, 150, 243, 0.15);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        .ic-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .ic-specs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .ic-spec {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ic-spec i {
+            color: var(--primary);
+        }
+
+        /* Pinout Modal */
+        .pinout-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: none;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .pinout-modal.active {
+            display: block;
+        }
+
+        .pinout-content {
+            padding: 80px 16px 100px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .modal-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(20, 10, 0, 0.98);
+            border-bottom: 2px solid var(--primary-border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            z-index: 2001;
+            backdrop-filter: blur(15px);
+        }
+
+        .modal-close-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 152, 0, 0.15);
+            border: 1px solid var(--primary-border);
+            border-radius: 50%;
+            color: var(--primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .modal-title {
+            flex: 1;
+        }
+
+        .modal-ic-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-ic-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Pinout SVG Container */
+        .pinout-diagram {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--primary-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .pinout-svg {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        /* Pin Info Box */
+        .pin-info-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1.5px solid var(--primary-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            min-height: 80px;
+        }
+
+        .pin-info-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .pin-info-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .pin-info-function {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .pin-info-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Pinout Table */
+        .pinout-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .pinout-table th,
+        .pinout-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+            font-size: 0.85rem;
+        }
+
+        .pinout-table th {
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+        }
+
+        .pinout-table td {
+            color: var(--text-secondary);
+        }
+
+        .pin-number-cell {
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <header class="tool-header">
+        <button class="tool-back-btn" onclick="window.location.href='electronics-mobile.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1>IC Pinout Viewer</h1>
+    </header>
+
+    <main class="tool-content">
+        <!-- Info Box -->
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p>Interactive pinout diagrams for 33 popular ICs. Tap any IC to view detailed pinout. Search or filter by category.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search ICs... (e.g., 555, LM358, Arduino)">
+            <i class="fas fa-times clear-icon" onclick="clearSearch()"></i>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="category-chips" id="categoryChips"></div>
+
+        <!-- IC Cards Grid -->
+        <div id="icGrid"></div>
+
+        <!-- No Results -->
+        <div id="noResults" style="display: none;">
+            <div class="tool-card text-center">
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--text-dim); margin-bottom: 16px;"></i>
+                <h3 style="color: var(--text-secondary);">No ICs found</h3>
+                <p style="color: var(--text-dim); margin-top: 8px;">Try a different search term or category</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pinout Modal -->
+    <div class="pinout-modal" id="pinoutModal">
+        <div class="modal-header">
+            <button class="modal-close-btn" onclick="closePinoutModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-title">
+                <div class="modal-ic-name" id="modalICName"></div>
+                <div class="modal-ic-desc" id="modalICDesc"></div>
+            </div>
+        </div>
+        
+        <div class="pinout-content" id="pinoutContent"></div>
+    </div>
+
+    <footer class="tool-footer">
+        <p class="source-citation">
+            <i class="fas fa-book"></i> Pinouts from official datasheets: Texas Instruments, STMicroelectronics, Atmel, Espressif, ON Semiconductor
+        </p>
+    </footer>
+
+    <script src="pinout-data.js"></script>
+    <script src="pinout-viewer.js"></script>
+</body>
+</html>

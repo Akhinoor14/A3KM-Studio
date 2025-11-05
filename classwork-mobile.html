@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Class Work (CW) - SOLIDWORKS Mobile</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="mobile-clean.css" />
+  <link rel="stylesheet" href="classwork-mobile.css" />
+  
+  <style>
+    body { background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%); overflow-x: hidden; }
+    .navbar { display: none !important; }
+    
+    .mobile-header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      background: rgba(40, 0, 0, 0.98); border-bottom: 2px solid rgba(255, 0, 0, 0.4);
+      display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 1000;
+      backdrop-filter: blur(15px);
+    }
+    
+    .mobile-back-btn {
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+    }
+    
+    .mobile-back-btn:active { transform: scale(0.95); }
+    
+    .mobile-header-title { flex: 1; font-size: 1.1rem; font-weight: 700; color: #fff; }
+    
+    .mobile-content { margin-top: 60px; padding: 16px; min-height: calc(100vh - 60px); }
+  </style>
+</head>
+<body>
+
+  <header class="mobile-header">
+    <button class="mobile-back-btn" onclick="window.location.href='solidworks-mobile.html'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="mobile-header-title">
+      <span>📂 Class Work (CW)</span>
+    </div>
+  </header>
+
+  <main class="mobile-content">
+    
+    <div class="cw-info-card">
+      <div class="cw-info-icon">📂</div>
+      <h2 class="cw-info-title">Class Work Assignments</h2>
+      <p class="cw-info-desc">Guided practice parts and exercises</p>
+    </div>
+    
+    <button class="cw-github-btn" onclick="window.open('https://github.com/Akhinoor14/SOLIDWORKS-Projects/tree/main/CW', '_blank')">
+      <i class="fab fa-github"></i>
+      <span>View on GitHub</span>
+      <i class="fas fa-external-link-alt"></i>
+    </button>
+    
+    <div id="cw-days-grid">
+      <div class="cw-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading Class Work days...</p>
+      </div>
+    </div>
+    
+  </main>
+
+  <script src="github-proxy-config.js"></script>
+  <script src="github-fetch-patch.js"></script>
+  <script src="github-sync.js"></script>
+  <script src="realtime-github-sync.js"></script>
+  <script src="auto-refresh.js"></script>
+  
+  <script>
+    console.log('📂 Class Work Mobile Page Loaded');
+    
+    let expandedDays = new Set();
+    let realtimeSync = null;
+    
+    // Initialize real-time sync system
+    if (typeof RealTimeGitHubSync !== 'undefined') {
+      realtimeSync = new RealTimeGitHubSync('Akhinoor14', 'SOLIDWORKS-Projects');
+      realtimeSync.startRealTimeSync();
+      console.log('🔄 Real-time GitHub sync activated');
+      
+      // Listen for sync events and reload
+      window.addEventListener('github-sync-update', () => {
+        console.log('🆕 GitHub update detected, reloading...');
+        loadCWDays();
+      });
+    }
+    
+    async function loadCWDays() {
+      const grid = document.getElementById('cw-days-grid');
+      
+      try {
+        const url = 'https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/CW';
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log(`✅ Loaded ${data.length} items`);
+        
+        const days = data.filter(item => item.type === 'dir');
+        
+        let html = '<div class="cw-days-list">';
+        
+        // Don't fetch summaries upfront - too slow!
+        // Just show day cards, load content when expanded
+        for (const day of days) {
+          html += `
+            <div class="cw-day-wrapper" data-day="${day.name}">
+              <div class="cw-day-header" data-day="${day.name}">
+                <div class="cw-day-header-left">
+                  <div class="cw-day-icon">📅</div>
+                  <div class="cw-day-info">
+                    <h3 class="cw-day-title">${day.name}</h3>
+                    <p class="cw-day-subtitle">Click to view sections</p>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-down cw-expand-icon"></i>
+              </div>
+              <div class="cw-day-content" data-day="${day.name}" style="display: none;">
+                <div class="cw-loading-mini">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Loading sections...</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        html += '</div>';
+        grid.innerHTML = html;
+        
+        // Add click handlers for expand/collapse
+        document.querySelectorAll('.cw-day-header').forEach(header => {
+          header.addEventListener('click', () => {
+            const dayName = header.dataset.day;
+            toggleDayExpand(dayName);
+          });
+        });
+        
+      } catch (error) {
+        console.error('❌ Error:', error);
+        grid.innerHTML = `
+          <div class="cw-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load days</p>
+            <button onclick="loadCWDays()">Retry</button>
+          </div>
+        `;
+      }
+    }
+    
+    async function toggleDayExpand(dayName) {
+      const wrapper = document.querySelector(`.cw-day-wrapper[data-day="${dayName}"]`);
+      const header = wrapper.querySelector('.cw-day-header');
+      const content = wrapper.querySelector('.cw-day-content');
+      const icon = header.querySelector('.cw-expand-icon');
+      
+      if (expandedDays.has(dayName)) {
+        // Collapse
+        expandedDays.delete(dayName);
+        content.style.display = 'none';
+        icon.classList.remove('expanded');
+      } else {
+        // Expand
+        expandedDays.add(dayName);
+        content.style.display = 'block';
+        icon.classList.add('expanded');
+        
+        // Load content if not already loaded
+        if (content.querySelector('.cw-loading-mini')) {
+          await loadDayContent(dayName, content);
+        }
+      }
+    }
+    
+    async function loadDayContent(dayName, contentDiv) {
+      try {
+        const url = `https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/CW/${dayName}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const sections = data.filter(item => item.type === 'dir');
+        const rootFiles = data.filter(item => item.type === 'file');
+        
+        let html = '';
+        
+        // Check for Question/Problem files at day root level (PDF, MD, TXT, Images)
+        const questionFiles = rootFiles.filter(f => 
+          (/\.(pdf|png|jpg|jpeg|md|txt)$/i.test(f.name) && 
+          /(question|problem|statement|assignment)/i.test(f.name)) ||
+          f.name.toLowerCase().includes('question') ||
+          f.name.toLowerCase().includes('problem')
+        );
+        
+        if (questionFiles.length > 0) {
+          html += `
+            <div class="cw-question-card">
+              <div class="cw-question-header">
+                <span class="cw-question-icon">📋</span>
+                <div class="cw-question-info">
+                  <h4 class="cw-question-title">Questions / Problems</h4>
+                  <p class="cw-question-meta">${questionFiles.length} file${questionFiles.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div class="cw-question-files">
+          `;
+          
+          questionFiles.forEach(file => {
+            const fileType = getFileType(file.name);
+            const fileSize = formatSize(file.size);
+            const isPDF = /\.pdf$/i.test(file.name);
+            const isImage = /\.(png|jpg|jpeg)$/i.test(file.name);
+            
+            html += `
+              <div class="cw-file-item">
+                <div class="cw-file-info">
+                  <span class="cw-file-badge cw-badge-question">${fileType}</span>
+                  <span class="cw-file-name">${file.name}</span>
+                  <span class="cw-file-size">${fileSize}</span>
+                </div>
+                <div class="cw-file-actions">
+                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
+                    <i class="fas fa-eye"></i>
+                  </button>` : ''}
+                  ${isImage ? `<button class="cw-file-btn view" onclick="viewImage('${file.download_url}', '${file.name}')">
+                    <i class="fas fa-eye"></i>
+                  </button>` : ''}
+                  <a href="${file.download_url}" class="cw-file-btn download" download>
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <a href="${file.html_url}" class="cw-file-btn github" target="_blank">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        }
+        
+        // Render sections (subfolders) - Fetch all in parallel for speed
+        const sectionPromises = sections.map(section => 
+          fetch(section.url).then(r => r.json()).then(data => ({ section, data }))
+        );
+        
+        const sectionResults = await Promise.all(sectionPromises);
+        
+        for (const { section, data: sectionData } of sectionResults) {
+          const files = sectionData.filter(item => item.type === 'file');
+          
+          html += `
+            <div class="cw-section-card">
+              <div class="cw-section-header">
+                <span class="cw-section-icon">🟥</span>
+                <div class="cw-section-info">
+                  <h4 class="cw-section-title">${section.name}</h4>
+                  <p class="cw-section-meta">${files.length} file${files.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div class="cw-section-files">
+          `;
+          
+          files.forEach(file => {
+            const fileType = getFileType(file.name);
+            const fileSize = formatSize(file.size);
+            const isPDF = /\.pdf$/i.test(file.name);
+            
+            html += `
+              <div class="cw-file-item">
+                <div class="cw-file-info">
+                  <span class="cw-file-badge">${fileType}</span>
+                  <span class="cw-file-name">${file.name}</span>
+                  <span class="cw-file-size">${fileSize}</span>
+                </div>
+                <div class="cw-file-actions">
+                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
+                    <i class="fas fa-eye"></i>
+                  </button>` : ''}
+                  <a href="${file.download_url}" class="cw-file-btn download" download>
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <a href="${file.html_url}" class="cw-file-btn github" target="_blank">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        }
+        
+        contentDiv.innerHTML = html;
+        
+      } catch (error) {
+        console.error(`❌ Error loading ${dayName}:`, error);
+        contentDiv.innerHTML = `
+          <div class="cw-error-mini">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Failed to load sections</span>
+          </div>
+        `;
+      }
+    }
+    
+    function getFileType(filename) {
+      const ext = filename.split('.').pop().toUpperCase();
+      if (ext === 'SLDPRT') return 'SLDPRT';
+      if (ext === 'SLDASM') return 'SLDASM';
+      if (ext === 'SLDDRW') return 'SLDDRW';
+      if (ext === 'PDF') return 'PDF';
+      return ext;
+    }
+    
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    
+    // PDF Viewer function
+    function viewPDF(url, filename) {
+      const modal = document.createElement('div');
+      modal.className = 'cw-pdf-modal';
+      modal.innerHTML = `
+        <div class="cw-pdf-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="cw-pdf-container">
+          <div class="cw-pdf-header">
+            <h3>${filename}</h3>
+            <button onclick="this.closest('.cw-pdf-modal').remove()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <iframe src="${url}" class="cw-pdf-viewer"></iframe>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    // Image Viewer function
+    function viewImage(url, filename) {
+      const modal = document.createElement('div');
+      modal.className = 'cw-image-modal';
+      modal.innerHTML = `
+        <div class="cw-image-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="cw-image-container">
+          <div class="cw-image-header">
+            <h3>${filename}</h3>
+            <button onclick="this.closest('.cw-image-modal').remove()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="cw-image-content">
+            <img src="${url}" alt="${filename}">
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadCWDays);
+  </script>
+
+</body>
+</html>

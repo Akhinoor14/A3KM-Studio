@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Solo Projects - SOLIDWORKS Mobile</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="mobile-clean.css" />
+  <link rel="stylesheet" href="solo-mobile.css" />
+  
+  <style>
+    body { background: linear-gradient(135deg, #0a0a0a 0%, #15051a 100%); overflow-x: hidden; }
+    .navbar { display: none !important; }
+    
+    .mobile-header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      background: rgba(50, 0, 70, 0.98); border-bottom: 2px solid rgba(138, 43, 226, 0.4);
+      display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 1000;
+      backdrop-filter: blur(15px);
+    }
+    
+    .mobile-back-btn {
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+    }
+    
+    .mobile-back-btn:active { transform: scale(0.95); }
+    
+    .mobile-header-title { flex: 1; font-size: 1.1rem; font-weight: 700; color: #fff; }
+    
+    .mobile-content { margin-top: 60px; padding: 16px; min-height: calc(100vh - 60px); }
+  </style>
+</head>
+<body>
+
+  <header class="mobile-header">
+    <button class="mobile-back-btn" onclick="window.location.href='solidworks-mobile.html'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="mobile-header-title">
+      <span>🎯 Solo Projects</span>
+    </div>
+  </header>
+
+  <main class="mobile-content">
+    
+    <div class="solo-info-card">
+      <div class="solo-info-icon">🎯</div>
+      <h2 class="solo-info-title">Solo Projects</h2>
+      <p class="solo-info-desc">Personal creations and experiments</p>
+    </div>
+    
+    <button class="solo-github-btn" onclick="window.open('https://github.com/Akhinoor14/SOLIDWORKS-Projects/tree/main/Solo%20Projects', '_blank')">
+      <i class="fab fa-github"></i>
+      <span>View on GitHub</span>
+      <i class="fas fa-external-link-alt"></i>
+    </button>
+    
+    <div id="solo-projects-grid">
+      <div class="solo-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading Solo Projects...</p>
+      </div>
+    </div>
+    
+  </main>
+
+  <script src="github-proxy-config.js"></script>
+  <script src="github-fetch-patch.js"></script>
+  <script src="github-sync.js"></script>
+  <script src="realtime-github-sync.js"></script>
+  <script src="auto-refresh.js"></script>
+  
+  <script>
+    console.log('🎯 Solo Projects Mobile Page Loaded');
+    
+    let expandedProjects = new Set();
+    let realtimeSync = null;
+    
+    // Initialize real-time sync system
+    if (typeof RealTimeGitHubSync !== 'undefined') {
+      realtimeSync = new RealTimeGitHubSync('Akhinoor14', 'SOLIDWORKS-Projects');
+      realtimeSync.startRealTimeSync();
+      console.log('🔄 Real-time GitHub sync activated');
+      
+      window.addEventListener('github-sync-update', () => {
+        console.log('🆕 GitHub update detected, reloading...');
+        loadSoloProjects();
+      });
+    }
+    
+    async function loadSoloProjects() {
+      const grid = document.getElementById('solo-projects-grid');
+      
+      // Show loading state
+      grid.innerHTML = `
+        <div class="solo-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading Solo Projects...</p>
+        </div>
+      `;
+      
+      try {
+        // Try both "Solo Projects" and "Solo-Projects" folder names
+        let url = 'https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/Solo%20Projects';
+        let response = await fetch(url);
+        
+        // If not found, try with hyphen
+        if (!response.ok && response.status === 404) {
+          console.log('⚠️ Solo Projects not found, trying Solo-Projects...');
+          url = 'https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/Solo-Projects';
+          response = await fetch(url);
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Check if data has error message
+        if (data.message) {
+          throw new Error(data.message);
+        }
+        
+        console.log(`✅ Loaded ${data.length} items`);
+        
+        const projects = data.filter(item => item.type === 'dir');
+        
+        // Check if no projects found
+        if (projects.length === 0) {
+          grid.innerHTML = `
+            <div class="solo-error">
+              <i class="fas fa-folder-open"></i>
+              <p>No Solo Projects found</p>
+              <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 8px;">
+                Projects will appear here once uploaded
+              </p>
+            </div>
+          `;
+          return;
+        }
+        
+        let html = '<div class="solo-projects-list">';
+        
+        // Lazy load - don't fetch summaries upfront for speed
+        for (const project of projects) {
+          html += `
+            <div class="solo-project-wrapper" data-project="${project.name}">
+              <div class="solo-project-header" data-project="${project.name}">
+                <div class="solo-project-header-left">
+                  <div class="solo-project-icon">🎯</div>
+                  <div class="solo-project-info">
+                    <h3 class="solo-project-title">${project.name}</h3>
+                    <p class="solo-project-subtitle">Click to view files</p>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-down solo-expand-icon"></i>
+              </div>
+              <div class="solo-project-content" data-project="${project.name}" style="display: none;">
+                <div class="solo-loading-mini">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Loading files...</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        html += '</div>';
+        grid.innerHTML = html;
+        
+        document.querySelectorAll('.solo-project-header').forEach(header => {
+          header.addEventListener('click', () => {
+            const projectName = header.dataset.project;
+            toggleProjectExpand(projectName);
+          });
+        });
+        
+      } catch (error) {
+        console.error('❌ Error loading Solo Projects:', error);
+        grid.innerHTML = `
+          <div class="solo-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load Solo Projects</p>
+            <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 8px;">
+              ${error.message || 'Please check your connection and try again'}
+            </p>
+            <button onclick="loadSoloProjects()" style="margin-top: 12px;">
+              <i class="fas fa-redo"></i> Retry
+            </button>
+          </div>
+        `;
+      }
+    }
+    
+    async function toggleProjectExpand(projectName) {
+      const wrapper = document.querySelector(`.solo-project-wrapper[data-project="${projectName}"]`);
+      const header = wrapper.querySelector('.solo-project-header');
+      const content = wrapper.querySelector('.solo-project-content');
+      const icon = header.querySelector('.solo-expand-icon');
+      
+      if (expandedProjects.has(projectName)) {
+        expandedProjects.delete(projectName);
+        content.style.display = 'none';
+        icon.classList.remove('expanded');
+      } else {
+        expandedProjects.add(projectName);
+        content.style.display = 'block';
+        icon.classList.add('expanded');
+        
+        if (content.querySelector('.solo-loading-mini')) {
+          await loadProjectContent(projectName, content);
+        }
+      }
+    }
+    
+    async function loadProjectContent(projectName, contentDiv) {
+      try {
+        // Try both folder name formats with proper encoding
+        let url = `https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/Solo%20Projects/${encodeURIComponent(projectName)}`;
+        let response = await fetch(url);
+        
+        if (!response.ok && response.status === 404) {
+          url = `https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/Solo-Projects/${encodeURIComponent(projectName)}`;
+          response = await fetch(url);
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        const files = data.filter(item => item.type === 'file');
+        
+        let html = '';
+        
+        // Check for Question/Problem files (PDF, images with 'problem' in name)
+        const questionFiles = files.filter(f => 
+          (/\.(pdf|png|jpg|jpeg)$/i.test(f.name) && /(question|problem)/i.test(f.name)) ||
+          f.name.toLowerCase().includes('problem')
+        );
+        
+        if (questionFiles.length > 0) {
+          html += `
+            <div class="solo-question-card">
+              <div class="solo-question-header">
+                <span class="solo-question-icon">💡</span>
+                <div class="solo-question-info">
+                  <h4 class="solo-question-title">Problems</h4>
+                  <p class="solo-question-meta">${questionFiles.length} file${questionFiles.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div class="solo-question-files">
+          `;
+          
+          questionFiles.forEach(file => {
+            const fileType = getFileType(file.name);
+            const fileSize = formatSize(file.size);
+            const isPDF = /\.pdf$/i.test(file.name);
+            const isImage = /\.(png|jpg|jpeg)$/i.test(file.name);
+            
+            html += `
+              <div class="solo-file-item">
+                <div class="solo-file-info">
+                  <span class="solo-file-badge solo-badge-question">${fileType}</span>
+                  <span class="solo-file-name">${file.name}</span>
+                  <span class="solo-file-size">${fileSize}</span>
+                </div>
+                <div class="solo-file-actions">
+                  ${isPDF ? `<button class="solo-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
+                    <i class="fas fa-eye"></i>
+                  </button>` : ''}
+                  ${isImage ? `<button class="solo-file-btn view" onclick="viewImage('${file.download_url}', '${file.name}')">
+                    <i class="fas fa-eye"></i>
+                  </button>` : ''}
+                  <a href="${file.download_url}" class="solo-file-btn download" download>
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <a href="${file.html_url}" class="solo-file-btn github" target="_blank">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        }
+        
+        // Render CAD files
+        const cadFiles = files.filter(f => 
+          /\.(sldprt|sldasm|slddrw)$/i.test(f.name) && 
+          !questionFiles.includes(f)
+        );
+        
+        if (cadFiles.length > 0) {
+          html += '<div class="solo-files-list">';
+          
+          cadFiles.forEach(file => {
+            const fileType = getFileType(file.name);
+            const fileSize = formatSize(file.size);
+            
+            html += `
+              <div class="solo-file-item">
+                <div class="solo-file-info">
+                  <span class="solo-file-badge">${fileType}</span>
+                  <span class="solo-file-name">${file.name}</span>
+                  <span class="solo-file-size">${fileSize}</span>
+                </div>
+                <div class="solo-file-actions">
+                  <a href="${file.download_url}" class="solo-file-btn download" download>
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <a href="${file.html_url}" class="solo-file-btn github" target="_blank">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += '</div>';
+        }
+        
+        contentDiv.innerHTML = html;
+        
+      } catch (error) {
+        console.error(`❌ Error loading ${projectName}:`, error);
+        contentDiv.innerHTML = `
+          <div class="solo-error-mini">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Failed to load files</span>
+            <span style="font-size: 0.8rem; opacity: 0.6; display: block; margin-top: 4px;">
+              ${error.message || 'Connection error'}
+            </span>
+          </div>
+        `;
+      }
+    }
+    
+    function getFileType(filename) {
+      const ext = filename.split('.').pop().toUpperCase();
+      if (ext === 'SLDPRT') return 'SLDPRT';
+      if (ext === 'SLDASM') return 'SLDASM';
+      if (ext === 'SLDDRW') return 'SLDDRW';
+      if (ext === 'PDF') return 'PDF';
+      return ext;
+    }
+    
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    
+    // PDF Viewer function
+    function viewPDF(url, filename) {
+      const modal = document.createElement('div');
+      modal.className = 'solo-pdf-modal';
+      modal.innerHTML = `
+        <div class="solo-pdf-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="solo-pdf-container">
+          <div class="solo-pdf-header">
+            <h3>${filename}</h3>
+            <button onclick="this.closest('.solo-pdf-modal').remove()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <iframe src="${url}" class="solo-pdf-viewer"></iframe>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    // Image Viewer function
+    function viewImage(url, filename) {
+      const modal = document.createElement('div');
+      modal.className = 'solo-image-modal';
+      modal.innerHTML = `
+        <div class="solo-image-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="solo-image-container">
+          <div class="solo-image-header">
+            <h3>${filename}</h3>
+            <button onclick="this.closest('.solo-image-modal').remove()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="solo-image-content">
+            <img src="${url}" alt="${filename}" />
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadSoloProjects);
+  </script>
+
+</body>
+</html>

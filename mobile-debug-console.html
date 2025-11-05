@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Debug Console</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    
+    .header {
+      position: sticky;
+      top: 0;
+      background: #16213e;
+      padding: 12px;
+      border-bottom: 2px solid #4CAF50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .header h1 {
+      font-size: 16px;
+      color: #4CAF50;
+    }
+    
+    .clear-btn {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .console-output {
+      padding: 12px;
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-left: 3px solid #2196F3;
+      background: rgba(33, 150, 243, 0.1);
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    
+    .log-entry.log {
+      border-left-color: #2196F3;
+      background: rgba(33, 150, 243, 0.1);
+    }
+    
+    .log-entry.warn {
+      border-left-color: #FF9800;
+      background: rgba(255, 152, 0, 0.1);
+      color: #FFA726;
+    }
+    
+    .log-entry.error {
+      border-left-color: #f44336;
+      background: rgba(244, 67, 54, 0.1);
+      color: #EF5350;
+    }
+    
+    .log-entry.info {
+      border-left-color: #4CAF50;
+      background: rgba(76, 175, 80, 0.1);
+      color: #66BB6A;
+    }
+    
+    .timestamp {
+      color: #888;
+      font-size: 10px;
+      margin-right: 8px;
+    }
+    
+    .log-type {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    .log-type.LOG { background: #2196F3; }
+    .log-type.WARN { background: #FF9800; }
+    .log-type.ERROR { background: #f44336; }
+    .log-type.INFO { background: #4CAF50; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+    
+    .stats {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #16213e;
+      border-top: 1px solid #444;
+      padding: 8px 12px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .stat-count {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📱 Mobile Console</h1>
+    <button class="clear-btn" onclick="clearConsole()">Clear</button>
+  </div>
+
+  <div class="console-output" id="console-output">
+    <div class="empty-state">
+      <p>🔍 Waiting for console messages...</p>
+      <p style="font-size: 10px; margin-top: 8px;">All console.log, console.error, console.warn will appear here</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">
+      <span>Logs:</span>
+      <span class="stat-count" id="log-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span>Errors:</span>
+      <span class="stat-count" id="error-count" style="color: #f44336;">0</span>
+    </div>
+    <div class="stat-item">
+      <span>Warnings:</span>
+      <span class="stat-count" id="warn-count" style="color: #FF9800;">0</span>
+    </div>
+  </div>
+
+  <script>
+    let logCount = 0;
+    let errorCount = 0;
+    let warnCount = 0;
+
+    const output = document.getElementById('console-output');
+
+    function getTimestamp() {
+      const now = new Date();
+      return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    }
+
+    function addLog(type, args) {
+      // Remove empty state
+      const emptyState = output.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type.toLowerCase()}`;
+
+      const message = args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' ');
+
+      entry.innerHTML = `
+        <span class="timestamp">${getTimestamp()}</span>
+        <span class="log-type ${type}">${type}</span>
+        <span class="message">${message}</span>
+      `;
+
+      output.appendChild(entry);
+      output.scrollTop = output.scrollHeight;
+
+      // Update stats
+      if (type === 'LOG' || type === 'INFO') {
+        logCount++;
+        document.getElementById('log-count').textContent = logCount;
+      } else if (type === 'ERROR') {
+        errorCount++;
+        document.getElementById('error-count').textContent = errorCount;
+      } else if (type === 'WARN') {
+        warnCount++;
+        document.getElementById('warn-count').textContent = warnCount;
+      }
+    }
+
+    function clearConsole() {
+      output.innerHTML = '<div class="empty-state"><p>Console cleared</p></div>';
+      logCount = 0;
+      errorCount = 0;
+      warnCount = 0;
+      document.getElementById('log-count').textContent = '0';
+      document.getElementById('error-count').textContent = '0';
+      document.getElementById('warn-count').textContent = '0';
+    }
+
+    // Intercept console methods
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      addLog('LOG', args);
+    };
+
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      addLog('ERROR', args);
+    };
+
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      addLog('WARN', args);
+    };
+
+    console.info = function(...args) {
+      originalInfo.apply(console, args);
+      addLog('INFO', args);
+    };
+
+    // Initial log
+    console.log('📱 Mobile Console initialized');
+    console.log('📍 Navigate to any page and console logs will appear here');
+  </script>
+
+</body>
+</html>

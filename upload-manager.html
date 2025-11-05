@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOLIDWORKS Upload Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(30, 0, 0, 0.95), rgba(10, 0, 0, 0.98));
+            border-radius: 20px;
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(204, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            color: #cc0000;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+        }
+
+        /* GitHub Token Panel */
+        .token-panel {
+            background: rgba(30, 0, 0, 0.9);
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .token-panel h3 {
+            color: #ff3333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+
+        .token-grid {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .token-input {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 4px rgba(204, 0, 0, 0.2);
+        }
+
+        .token-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .token-status.connected {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 2px solid #28a745;
+        }
+
+        .token-status.disconnected {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 2px solid #dc3545;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .tab-btn {
+            padding: 18px 20px;
+            background: rgba(30, 0, 0, 0.7);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn i {
+            font-size: 1.5rem;
+        }
+
+        .tab-btn:hover {
+            background: rgba(204, 0, 0, 0.2);
+            border-color: #cc0000;
+            color: #ff3333;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #cc0000, #ff3333);
+            border-color: #cc0000;
+            color: #fff;
+            box-shadow: 0 6px 25px rgba(204, 0, 0, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Upload Form */
+        .upload-panel {
+            background: rgba(30, 0, 0, 0.9);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            color: #ff3333;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(204, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+
+        .form-control {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 4px rgba(204, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        /* File Upload Zone */
+        .upload-zone {
+            border: 3px dashed rgba(204, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: #cc0000;
+            background: rgba(204, 0, 0, 0.15);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #cc0000;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone h4 {
+            font-size: 1.5rem;
+            color: #ff3333;
+            margin-bottom: 10px;
+        }
+
+        .upload-zone p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        /* File Preview */
+        .file-preview {
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            display: none;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-preview h4 {
+            color: #ff3333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .file-item:hover {
+            background: rgba(204, 0, 0, 0.1);
+            border-color: #cc0000;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+            color: #cc0000;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .file-size {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #cc0000, #ff3333);
+            color: white;
+            box-shadow: 0 5px 20px rgba(204, 0, 0, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(204, 0, 0, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(60, 60, 60, 0.9);
+            color: #fff;
+            border: 2px solid rgba(204, 0, 0, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(80, 80, 80, 1);
+            border-color: #cc0000;
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        /* Progress Section */
+        .progress-panel {
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(30, 0, 0, 0.9);
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .progress-panel.show {
+            display: block;
+        }
+
+        .progress-panel h3 {
+            color: #ff3333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar-container {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            height: 12px;
+            overflow: hidden;
+            margin: 25px 0;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #cc0000, #ff3333, #cc0000);
+            background-size: 200% 100%;
+            animation: gradient 2s ease infinite;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .header h1 { font-size: 2rem; }
+            .token-grid { grid-template-columns: 1fr; }
+            .tab-nav { grid-template-columns: repeat(2, 1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; }
+        }
+
+        .hidden { display: none; }
+
+        /* ============================================
+           MODERN TOAST NOTIFICATION SYSTEM
+           ============================================ */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: rgba(20, 20, 20, 0.98);
+            border-radius: 12px;
+            padding: 18px 22px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transform: translateX(450px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(450px);
+            opacity: 0;
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            animation: iconPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes iconPop {
+            0% { transform: scale(0) rotate(-180deg); }
+            60% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-message {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: currentColor;
+            opacity: 0.5;
+            animation: progressBar 5s linear;
+        }
+
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* Toast Types */
+        .toast.success {
+            border-left-color: #10b981;
+        }
+        .toast.success .toast-icon {
+            color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+        .toast.error .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+        .toast.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+        .toast.info .toast-icon {
+            color: #3b82f6;
+        }
+
+        .toast.loading {
+            border-left-color: #8b5cf6;
+        }
+        .toast.loading .toast-icon {
+            color: #8b5cf6;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Toast */
+        @media (max-width: 768px) {
+            .toast-container {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Session Guard -->
+    <script>
+        (function(){
+            try {
+                var s = sessionStorage.getItem('admin_session');
+                if(!s){ window.location.href = 'only-boss.html'; }
+            } catch(e){ window.location.href = 'only-boss.html'; }
+        })();
+    </script>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-cube"></i> SOLIDWORKS Upload Manager</h1>
+            <p>Professional project management system for all SOLIDWORKS uploads</p>
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="projects.html" class="btn btn-primary btn-small" style="text-decoration: none;">
+                    <i class="fas fa-eye"></i> View Projects
+                </a>
+                <a href="only-boss-dashboard.html" class="btn btn-secondary btn-small" style="text-decoration: none;">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: rgba(220, 38, 38, 0.1); border: 2px solid rgba(220, 38, 38, 0.3); border-radius: 15px;">
+            <h3 style="color: #ff3333; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-info-circle"></i> How Uploaded Content Appears
+            </h3>
+            <div style="display: grid; gap: 12px; color: rgba(255,255,255,0.9); font-size: 0.95rem;">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fas fa-check-circle" style="color: #10b981; margin-top: 3px;"></i>
+                    <div><strong>CW/HW Files:</strong> Appear in project cards under respective Day sections with download/view buttons</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fas fa-check-circle" style="color: #10b981; margin-top: 3px;"></i>
+                    <div><strong>Questions:</strong> Auto-detected and shown as separate "Questions" card with PDF/image viewer</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fas fa-check-circle" style="color: #10b981; margin-top: 3px;"></i>
+                    <div><strong>Solo Projects:</strong> Displayed in dedicated "Solo Projects" section with all files organized by project name</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fas fa-arrow-right" style="color: #3b82f6; margin-top: 3px;"></i>
+                    <div><strong>After Upload:</strong> Visit <a href="projects.html" style="color: #ff6666; text-decoration: underline;">Projects Page</a> to see your uploaded content automatically organized!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GitHub Token Panel -->
+        <div class="token-panel">
+            <h3><i class="fab fa-github"></i> GitHub Authentication</h3>
+            <div class="token-grid">
+                <input type="password" id="github-token" class="token-input" placeholder="Enter GitHub Personal Access Token...">
+                <button class="btn btn-primary btn-small" onclick="saveToken()">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <div id="token-status" class="token-status disconnected">
+                    <i class="fas fa-times-circle"></i> Not Connected
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('cw')">
+                <i class="fas fa-book"></i>
+                <span>Class Work</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('hw')">
+                <i class="fas fa-home"></i>
+                <span>Home Work</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('solo')">
+                <i class="fas fa-star"></i>
+                <span>Solo Projects</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('question')">
+                <i class="fas fa-file-pdf"></i>
+                <span>Questions</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('update')">
+                <i class="fas fa-edit"></i>
+                <span>Update</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('delete')">
+                <i class="fas fa-trash"></i>
+                <span>Delete</span>
+            </button>
+        </div>
+
+        <!-- Tab: Class Work -->
+        <div id="tab-cw" class="tab-content active">
+            <div class="upload-panel">
+                <form id="form-cw" onsubmit="handleUpload(event, 'CW')">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Class Work Details
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Day Number</label>
+                                <select id="cw-day" class="form-control" required>
+                                    <option value="">Select Day...</option>
+                                    <option value="06">Day 06</option>
+                                    <option value="07">Day 07</option>
+                                    <option value="08">Day 08</option>
+                                    <option value="09">Day 09</option>
+                                    <option value="10">Day 10</option>
+                                    <option value="11">Day 11</option>
+                                    <option value="12">Day 12</option>
+                                    <option value="13">Day 13</option>
+                                    <option value="14">Day 14</option>
+                                    <option value="15">Day 15</option>
+                                    <option value="16">Day 16</option>
+                                    <option value="17">Day 17</option>
+                                    <option value="18">Day 18</option>
+                                    <option value="19">Day 19</option>
+                                    <option value="20">Day 20</option>
+                                    <option value="21">Day 21</option>
+                                    <option value="22">Day 22</option>
+                                    <option value="23">Day 23</option>
+                                    <option value="24">Day 24</option>
+                                    <option value="25">Day 25</option>
+                                    <option value="26">Day 26</option>
+                                    <option value="27">Day 27</option>
+                                    <option value="28">Day 28</option>
+                                    <option value="29">Day 29</option>
+                                    <option value="30">Day 30</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Project Number</label>
+                                <select id="cw-number" class="form-control" required>
+                                    <option value="">Select Number...</option>
+                                    <option value="01">01</option>
+                                    <option value="02">02</option>
+                                    <option value="03">03</option>
+                                    <option value="04">04</option>
+                                    <option value="05">05</option>
+                                    <option value="06">06</option>
+                                    <option value="07">07</option>
+                                    <option value="08">08</option>
+                                    <option value="09">09</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder-open"></i>
+                            Upload Files
+                        </h3>
+                        <div class="upload-zone" id="cw-zone" onclick="document.getElementById('cw-files').click()">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h4>Drag & Drop Your Files Here</h4>
+                            <p>or click to browse (.SLDASM, .SLDPRT, .PNG, .JPG, .PDF)</p>
+                        </div>
+                        <input type="file" id="cw-files" class="hidden" multiple accept=".SLDASM,.SLDPRT,.png,.jpg,.jpeg,.pdf">
+                        
+                        <div class="file-preview" id="cw-preview">
+                            <h4><i class="fas fa-list"></i> Selected Files</h4>
+                            <ul class="file-list" id="cw-list"></ul>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="clearFiles('cw')">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i> Upload Class Work
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="progress-panel" id="cw-progress">
+                <h3><i class="fas fa-spinner fa-spin"></i> Upload Progress</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="cw-bar"></div>
+                </div>
+                <div class="progress-text" id="cw-text">Ready to upload...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Home Work -->
+        <div id="tab-hw" class="tab-content">
+            <div class="upload-panel">
+                <form id="form-hw" onsubmit="handleUpload(event, 'HW')">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Home Work Details
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Day Number</label>
+                                <select id="hw-day" class="form-control" required>
+                                    <option value="">Select Day...</option>
+                                    <option value="06">Day 06</option>
+                                    <option value="07">Day 07</option>
+                                    <option value="08">Day 08</option>
+                                    <option value="09">Day 09</option>
+                                    <option value="10">Day 10</option>
+                                    <option value="11">Day 11</option>
+                                    <option value="12">Day 12</option>
+                                    <option value="13">Day 13</option>
+                                    <option value="14">Day 14</option>
+                                    <option value="15">Day 15</option>
+                                    <option value="16">Day 16</option>
+                                    <option value="17">Day 17</option>
+                                    <option value="18">Day 18</option>
+                                    <option value="19">Day 19</option>
+                                    <option value="20">Day 20</option>
+                                    <option value="21">Day 21</option>
+                                    <option value="22">Day 22</option>
+                                    <option value="23">Day 23</option>
+                                    <option value="24">Day 24</option>
+                                    <option value="25">Day 25</option>
+                                    <option value="26">Day 26</option>
+                                    <option value="27">Day 27</option>
+                                    <option value="28">Day 28</option>
+                                    <option value="29">Day 29</option>
+                                    <option value="30">Day 30</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Project Number</label>
+                                <select id="hw-number" class="form-control" required>
+                                    <option value="">Select Number...</option>
+                                    <option value="01">01</option>
+                                    <option value="02">02</option>
+                                    <option value="03">03</option>
+                                    <option value="04">04</option>
+                                    <option value="05">05</option>
+                                    <option value="06">06</option>
+                                    <option value="07">07</option>
+                                    <option value="08">08</option>
+                                    <option value="09">09</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder-open"></i>
+                            Upload Files
+                        </h3>
+                        <div class="upload-zone" id="hw-zone" onclick="document.getElementById('hw-files').click()">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h4>Drag & Drop Your Files Here</h4>
+                            <p>or click to browse (.SLDASM, .SLDPRT, .PNG, .JPG, .PDF)</p>
+                        </div>
+                        <input type="file" id="hw-files" class="hidden" multiple accept=".SLDASM,.SLDPRT,.png,.jpg,.jpeg,.pdf">
+                        
+                        <div class="file-preview" id="hw-preview">
+                            <h4><i class="fas fa-list"></i> Selected Files</h4>
+                            <ul class="file-list" id="hw-list"></ul>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="clearFiles('hw')">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i> Upload Home Work
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="progress-panel" id="hw-progress">
+                <h3><i class="fas fa-spinner fa-spin"></i> Upload Progress</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="hw-bar"></div>
+                </div>
+                <div class="progress-text" id="hw-text">Ready to upload...</div>
+            </div>
+        </div>
+
+        <!-- Placeholder Tabs -->
+        <div id="tab-solo" class="tab-content">
+            <div class="upload-panel">
+                <form id="form-solo" onsubmit="handleSoloUpload(event)">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-star"></i>
+                            Solo Project Upload Mode
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-folder-plus"></i> Upload Mode
+                            </label>
+                            <select id="solo-mode" class="form-control" required onchange="toggleSoloMode()">
+                                <option value="">-- Select Upload Mode --</option>
+                                <option value="new">🆕 Create New Project</option>
+                                <option value="existing">➕ Add to Existing Project</option>
+                            </select>
+                            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                Choose whether to create a new project or add files to an existing one
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- New Project Field -->
+                    <div class="form-section" id="solo-new-project-field" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder-plus"></i>
+                            New Project Name
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Project Name</label>
+                            <input type="text" id="solo-project-name" class="form-control" placeholder="e.g., Project 15, Mechanical Arm, Robot Design">
+                            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                <i class="fas fa-info-circle"></i> Enter any name - folder will be created automatically in Solo-Projects/
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Existing Project Field -->
+                    <div class="form-section" id="solo-existing-project-field" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder-open"></i>
+                            Select Existing Project
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Choose Project</label>
+                            <select id="solo-project-select" class="form-control">
+                                <option value="">-- Choose Project --</option>
+                            </select>
+                            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                <i class="fas fa-sync"></i> Projects loaded from GitHub repository
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Commit Message (Optional) -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-comment"></i>
+                            Commit Message (Optional)
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Git Commit Message</label>
+                            <input type="text" id="solo-commit-msg" class="form-control" placeholder="e.g., Added mechanical arm assembly files">
+                            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                <i class="fas fa-info-circle"></i> Optional - Describe what you're uploading
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder-open"></i>
+                            Upload SOLIDWORKS Files
+                        </h3>
+                        <div class="upload-zone" id="solo-zone" onclick="document.getElementById('solo-files').click()">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h4>Drag & Drop Your Files Here</h4>
+                            <p>Accepted: .SLDPRT, .SLDASM, .SLDDRW, .PDF, .PNG, .JPG, .STL, .STEP</p>
+                        </div>
+                        <input type="file" id="solo-files" class="hidden" multiple accept=".SLDASM,.SLDPRT,.SLDDRW,.sldasm,.sldprt,.slddrw,.png,.jpg,.jpeg,.pdf,.stl,.step,.STL,.STEP">
+                        
+                        <div class="file-preview" id="solo-preview">
+                            <h4><i class="fas fa-list"></i> Selected Files</h4>
+                            <ul class="file-list" id="solo-list"></ul>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="clearFiles('solo')">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i> Upload to Solo Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="progress-panel" id="solo-progress">
+                <h3><i class="fas fa-spinner fa-spin"></i> Upload Progress</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="solo-bar"></div>
+                </div>
+                <div class="progress-text" id="solo-text">Ready to upload...</div>
+            </div>
+        </div>
+
+        <div id="tab-question" class="tab-content">
+            <div class="upload-panel">
+                <form id="form-question" onsubmit="handleQuestionUpload(event)">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-question-circle"></i>
+                            Question Paper Upload
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-book"></i> Upload To
+                                </label>
+                                <select id="question-type" class="form-control" required onchange="toggleQuestionType(); updateQuestionFileName();">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="CW">Class Work (CW)</option>
+                                    <option value="HW">Home Work (HW)</option>
+                                    <option value="SOLO">Solo Project</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CW/HW Fields -->
+                        <div id="question-cw-hw-fields" style="display: none;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar"></i> Day Number
+                                    </label>
+                                    <select id="question-day" class="form-control" onchange="updateQuestionFileName()">
+                                        <option value="">-- Select Day --</option>
+                                    <option value="Day 01">Day 01</option>
+                                    <option value="Day 02">Day 02</option>
+                                    <option value="Day 03">Day 03</option>
+                                    <option value="Day 04">Day 04</option>
+                                    <option value="Day 05">Day 05</option>
+                                    <option value="Day 06">Day 06</option>
+                                    <option value="Day 07">Day 07</option>
+                                    <option value="Day 08">Day 08</option>
+                                    <option value="Day 09">Day 09</option>
+                                    <option value="Day 10">Day 10</option>
+                                    <option value="Day 11">Day 11</option>
+                                    <option value="Day 12">Day 12</option>
+                                    <option value="Day 13">Day 13</option>
+                                    <option value="Day 14">Day 14</option>
+                                    <option value="Day 15">Day 15</option>
+                                    <option value="Day 16">Day 16</option>
+                                    <option value="Day 17">Day 17</option>
+                                    <option value="Day 18">Day 18</option>
+                                    <option value="Day 19">Day 19</option>
+                                    <option value="Day 20">Day 20</option>
+                                    <option value="Day 21">Day 21</option>
+                                    <option value="Day 22">Day 22</option>
+                                    <option value="Day 23">Day 23</option>
+                                    <option value="Day 24">Day 24</option>
+                                    <option value="Day 25">Day 25</option>
+                                    <option value="Day 26">Day 26</option>
+                                    <option value="Day 27">Day 27</option>
+                                    <option value="Day 28">Day 28</option>
+                                    <option value="Day 29">Day 29</option>
+                                    <option value="Day 30">Day 30</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-hashtag"></i> Work Number (CW/HW Number)
+                                </label>
+                                <select id="question-work-number" class="form-control" onchange="updateQuestionFileName()">
+                                    <option value="">-- First select Type --</option>
+                                </select>
+                                <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                    <i class="fas fa-info-circle"></i> Select which CW/HW this question belongs to
+                                </small>
+                            </div>
+                            </div>
+                        </div>
+
+                        <!-- Solo Project Fields -->
+                        <div id="question-solo-fields" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-cube"></i> Select Project
+                                </label>
+                                <select id="question-solo-project" class="form-control" onchange="updateQuestionFileName()">
+                                    <option value="">-- Loading Projects --</option>
+                                </select>
+                                <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                    <i class="fas fa-info-circle"></i> Question will be uploaded directly to the project folder
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-file-pdf"></i>
+                            Upload Question File
+                        </h3>
+                        <div class="upload-zone" id="question-zone" onclick="document.getElementById('question-files').click()">
+                            <div class="upload-icon"><i class="fas fa-file-pdf"></i></div>
+                            <h4>Drag & Drop Question Paper</h4>
+                            <p>PDF or Image files (.PDF, .PNG, .JPG)</p>
+                        </div>
+                        <input type="file" id="question-files" class="hidden" accept=".pdf,.png,.jpg,.jpeg" onchange="displayFiles('question', this.files); updateQuestionFileName();" required>
+                        
+                        <div class="file-preview" id="question-preview">
+                            <h4><i class="fas fa-list"></i> Selected File</h4>
+                            <ul class="file-list" id="question-list"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-tag"></i>
+                            File Name (Auto-Generated)
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Question File Name</label>
+                            <input type="text" id="question-filename" class="form-control" placeholder="Auto-generated based on Day and CW/HW number" readonly>
+                            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 8px;">
+                                <i class="fas fa-magic"></i> Format: Day_XX_CW/HWX_Question.ext (e.g., Day_01_CW1_Question.pdf)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="clearFiles('question')">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-upload"></i> Upload Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="progress-panel" id="question-progress">
+                <h3><i class="fas fa-spinner fa-spin"></i> Upload Progress</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="question-bar"></div>
+                </div>
+                <div class="progress-text" id="question-text">Ready to upload...</div>
+            </div>
+        </div>
+
+        <div id="tab-update" class="tab-content">
+            <div class="upload-panel">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-edit"></i>
+                        Update Existing Files
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Project Type</label>
+                            <select id="update-type" class="form-control" onchange="loadUpdateFiles(this.value)">
+                                <option value="">Select Type...</option>
+                                <option value="CW">Class Work (CW)</option>
+                                <option value="HW">Home Work (HW)</option>
+                                <option value="Solo">Solo Projects</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="update-form-container" style="display: none;">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder"></i>
+                            Select File to Update
+                        </h3>
+                        <div id="update-files-list"></div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="proceedUpdate()">
+                            <i class="fas fa-sync"></i> Update Selected Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-delete" class="tab-content">
+            <div class="upload-panel">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-trash"></i>
+                        Delete Files
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Project Type</label>
+                            <select id="delete-type" class="form-control" onchange="loadDeleteFiles(this.value)">
+                                <option value="">Select Type...</option>
+                                <option value="CW">Class Work (CW)</option>
+                                <option value="HW">Home Work (HW)</option>
+                                <option value="Solo">Solo Projects</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="delete-form-container" style="display: none;">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-folder"></i>
+                            Select Files to Delete
+                        </h3>
+                        <div id="delete-files-list"></div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" style="background: linear-gradient(135deg, #dc3545, #c82333);" onclick="proceedDelete()">
+                            <i class="fas fa-trash-alt"></i> Delete Selected Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Upload Manager JavaScript -->
+    <script src="upload-manager.js"></script>
+</body>
+</html>
