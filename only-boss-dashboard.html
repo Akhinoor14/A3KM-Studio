@@ -116,6 +116,11 @@
                 <h3 class="card-title">Project Management</h3>
                 <p class="card-description">SOLIDWORKS CW/HW/Solo projects - Upload, Update, Delete with GitHub sync and auto README generation.</p>
             </div>
+            <div class="admin-card" id="uploadModelCard">
+                <div class="card-icon">🎯</div>
+                <h3 class="card-title">Upload 3D Model (GLB/GLTF)</h3>
+                <p class="card-description">Upload SOLIDWORKS 3D models to CW/HW/Solo projects. Auto-detection on mobile pages with View 3D button.</p>
+            </div>
             <div class="admin-card" onclick="alert('CV Manager - Coming Soon')">
                 <div class="card-icon">📄</div>
                 <h3 class="card-title">CV Manager</h3>
@@ -212,10 +217,342 @@
         </div>
     </div>
 
+    <!-- 3D Model Upload Modal -->
+    <div class="modal" id="uploadModelModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🎯 Upload 3D Model to SOLIDWORKS Projects</h2>
+                <button class="close-btn" id="closeUploadModal">&times;</button>
+            </div>
+
+            <div style="background: rgba(204, 0, 0, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="color: #cc0000; margin-bottom: 8px;">📋 How It Works:</h4>
+                <ul style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; line-height: 1.8; padding-left: 20px;">
+                    <li>Export your SOLIDWORKS model as <strong>GLB</strong> or <strong>GLTF</strong> format</li>
+                    <li>Select project type (CW/HW/Solo) and fill in details</li>
+                    <li>Upload GLB file → Auto-uploaded to GitHub repo</li>
+                    <li><strong>View 3D</strong> button automatically appears on mobile pages!</li>
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label>Project Type:</label>
+                <select id="uploadProjectType" style="width: 100%; padding: 12px 18px; background: rgba(20, 0, 0, 0.4); border: 2px solid rgba(204, 0, 0, 0.3); border-radius: 10px; color: #fff; font-size: 1rem;">
+                    <option value="CW">Class Work (CW)</option>
+                    <option value="HW">Home Work (HW)</option>
+                    <option value="Solo">Solo Projects</option>
+                </select>
+            </div>
+
+            <div id="cwHwFields">
+                <div class="form-group">
+                    <label>Day Number:</label>
+                    <input type="number" id="uploadDay" placeholder="e.g., 6" min="1" max="99">
+                </div>
+                <div class="form-group">
+                    <label>Work Number:</label>
+                    <input type="number" id="uploadNumber" placeholder="e.g., 1" min="1" max="99">
+                </div>
+            </div>
+
+            <div id="soloFields" style="display: none;">
+                <div class="form-group">
+                    <label>Project Name:</label>
+                    <input type="text" id="uploadProjectName" placeholder="e.g., Robotic Arm">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>3D Model File (GLB/GLTF):</label>
+                <input type="file" id="uploadGLBFile" accept=".glb,.gltf" style="width: 100%; padding: 12px 18px; background: rgba(20, 0, 0, 0.4); border: 2px solid rgba(204, 0, 0, 0.3); border-radius: 10px; color: #fff; font-size: 1rem;">
+                <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 5px;">Recommended: GLB format (smaller file size, better performance)</small>
+            </div>
+
+            <div class="form-group">
+                <label>GitHub Personal Access Token (PAT):</label>
+                <input type="password" id="uploadGitToken" placeholder="ghp_xxxxxxxxxxxx">
+                <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 5px;">
+                    Need a token? <a href="https://github.com/settings/tokens" target="_blank" style="color: #cc0000;">Create one here</a> with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">repo</code> scope
+                </small>
+            </div>
+
+            <div style="margin-top: 25px;">
+                <button class="btn btn-primary" id="uploadModelBtn">
+                    <i class="fas fa-upload"></i> Upload 3D Model
+                </button>
+                <button class="btn btn-secondary" id="cancelUploadBtn">Cancel</button>
+            </div>
+
+            <div id="uploadProgress" style="display: none; margin-top: 20px;">
+                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="fas fa-spinner fa-spin" style="color: #cc0000; font-size: 1.2rem;"></i>
+                        <span id="uploadStatusText" style="color: rgba(255, 255, 255, 0.8);">Uploading...</span>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="uploadProgressBar" style="background: linear-gradient(90deg, #cc0000, #ff4444); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-msg" id="uploadSuccessMsg"></div>
+            <div class="error-msg" id="uploadErrorMsg"></div>
+
+            <div style="margin-top: 30px; padding: 15px; background: rgba(204, 0, 0, 0.1); border-radius: 10px;">
+                <h4 style="color: #cc0000; margin-bottom: 10px;">💡 SOLIDWORKS to GLB Conversion:</h4>
+                <ul style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; line-height: 1.8; padding-left: 20px;">
+                    <li><strong>Method 1:</strong> Use SOLIDWORKS add-in or export plugin (if available)</li>
+                    <li><strong>Method 2:</strong> Upload SLDPRT to <a href="https://www.tinyglb.com/" target="_blank" style="color: #cc0000;">TinyGLB</a> or <a href="https://www.clooned.com/" target="_blank" style="color: #cc0000;">Clooned</a> → Get GLB URL</li>
+                    <li><strong>Method 3:</strong> Use third-party converter (Aspose, FreeCAD, Sketchfab)</li>
+                    <li><strong>File Size:</strong> Keep under 5 MB for best mobile performance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="github-uploader.js"></script>
     <script src="only-boss-dashboard.js"></script>
     <script>
-    // Dashboard logout button logic
+    // 3D Model Upload Modal Logic
     document.addEventListener('DOMContentLoaded', function() {
+        const uploadModelCard = document.getElementById('uploadModelCard');
+        const uploadModelModal = document.getElementById('uploadModelModal');
+        const closeUploadModal = document.getElementById('closeUploadModal');
+        const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+        const uploadProjectType = document.getElementById('uploadProjectType');
+        const cwHwFields = document.getElementById('cwHwFields');
+        const soloFields = document.getElementById('soloFields');
+        const uploadModelBtn = document.getElementById('uploadModelBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadSuccessMsg = document.getElementById('uploadSuccessMsg');
+        const uploadErrorMsg = document.getElementById('uploadErrorMsg');
+
+        // Open modal
+        if (uploadModelCard) {
+            uploadModelCard.addEventListener('click', function() {
+                uploadModelModal.classList.add('active');
+            });
+        }
+
+        // Close modal
+        if (closeUploadModal) {
+            closeUploadModal.addEventListener('click', function() {
+                uploadModelModal.classList.remove('active');
+                resetUploadForm();
+            });
+        }
+
+        if (cancelUploadBtn) {
+            cancelUploadBtn.addEventListener('click', function() {
+                uploadModelModal.classList.remove('active');
+                resetUploadForm();
+            });
+        }
+
+        // Toggle fields based on project type
+        if (uploadProjectType) {
+            uploadProjectType.addEventListener('change', function() {
+                if (this.value === 'Solo') {
+                    cwHwFields.style.display = 'none';
+                    soloFields.style.display = 'block';
+                } else {
+                    cwHwFields.style.display = 'block';
+                    soloFields.style.display = 'none';
+                }
+            });
+        }
+
+        // Upload button handler
+        if (uploadModelBtn) {
+            uploadModelBtn.addEventListener('click', async function() {
+                uploadSuccessMsg.style.display = 'none';
+                uploadErrorMsg.style.display = 'none';
+
+                const projectType = uploadProjectType.value;
+                const glbFile = document.getElementById('uploadGLBFile').files[0];
+                const gitToken = document.getElementById('uploadGitToken').value.trim();
+
+                // Validation
+                if (!glbFile) {
+                    showError('Please select a GLB/GLTF file');
+                    return;
+                }
+
+                if (!gitToken) {
+                    showError('Please enter your GitHub Personal Access Token');
+                    return;
+                }
+
+                let folderPath;
+                let projectName;
+
+                if (projectType === 'Solo') {
+                    projectName = document.getElementById('uploadProjectName').value.trim();
+                    if (!projectName) {
+                        showError('Please enter a project name');
+                        return;
+                    }
+                    folderPath = `Solo Projects/${projectName}`;
+                } else {
+                    const day = document.getElementById('uploadDay').value;
+                    const number = document.getElementById('uploadNumber').value;
+
+                    if (!day || !number) {
+                        showError('Please enter day and work number');
+                        return;
+                    }
+
+                    // Use GitHubUploader format: CW/Day 06/cw 01 day 6
+                    const dayStr = String(day).padStart(2, '0');
+                    const numStr = String(number).padStart(2, '0');
+                    const workType = projectType.toLowerCase();
+                    folderPath = `${projectType}/Day ${dayStr}/${workType} ${numStr} day ${day}`;
+                    projectName = `${projectType} ${number} - Day ${day}`;
+                }
+
+                try {
+                    // Show progress
+                    uploadProgress.style.display = 'block';
+                    uploadModelBtn.disabled = true;
+                    updateProgress(10, 'Validating token...');
+
+                    // Create GitHubUploader instance
+                    const uploader = new GitHubUploader('Akhinoor14', 'SOLIDWORKS-Projects', gitToken);
+
+                    // Validate token
+                    updateProgress(20, 'Checking repository access...');
+                    const isValid = await uploader.validateAccess();
+                    if (!isValid) {
+                        throw new Error('Invalid token or no repository access');
+                    }
+
+                    // Upload GLB file
+                    updateProgress(40, `Uploading ${glbFile.name}...`);
+                    const fileContent = await readFileAsBase64(glbFile);
+                    const glbPath = `${folderPath}/${glbFile.name}`;
+                    
+                    await uploader.uploadFile(glbPath, fileContent, `Add 3D model: ${glbFile.name}`);
+                    updateProgress(70, 'Creating README...');
+
+                    // Generate README
+                    const readmePath = `${folderPath}/README.md`;
+                    const readmeContent = generateREADME(projectName, glbFile.name, projectType);
+                    await uploader.uploadTextFile(readmePath, readmeContent, 'Add/update README with 3D model info');
+
+                    updateProgress(100, 'Upload complete!');
+
+                    // Success
+                    setTimeout(() => {
+                        showSuccess(`✅ Successfully uploaded ${glbFile.name} to ${folderPath}! The "View 3D" button will appear automatically on mobile pages.`);
+                        uploadProgress.style.display = 'none';
+                        uploadModelBtn.disabled = false;
+                        resetUploadForm();
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showError(`Upload failed: ${error.message}`);
+                    uploadProgress.style.display = 'none';
+                    uploadModelBtn.disabled = false;
+                }
+            });
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('uploadProgressBar').style.width = percent + '%';
+            document.getElementById('uploadStatusText').textContent = text;
+        }
+
+        function showSuccess(message) {
+            uploadSuccessMsg.textContent = message;
+            uploadSuccessMsg.style.display = 'block';
+            setTimeout(() => {
+                uploadSuccessMsg.style.display = 'none';
+            }, 8000);
+        }
+
+        function showError(message) {
+            uploadErrorMsg.textContent = message;
+            uploadErrorMsg.style.display = 'block';
+            setTimeout(() => {
+                uploadErrorMsg.style.display = 'none';
+            }, 6000);
+        }
+
+        function resetUploadForm() {
+            document.getElementById('uploadGLBFile').value = '';
+            document.getElementById('uploadDay').value = '';
+            document.getElementById('uploadNumber').value = '';
+            document.getElementById('uploadProjectName').value = '';
+            uploadProgress.style.display = 'none';
+            uploadSuccessMsg.style.display = 'none';
+            uploadErrorMsg.style.display = 'none';
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function generateREADME(projectName, fileName, projectType) {
+            const date = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            return `# ${projectName}
+
+**Project Type:** ${projectType}  
+**Date:** ${date}  
+**Status:** ✅ Complete
+
+## 📦 Files
+
+### 3D Model
+- \`${fileName}\` - Interactive 3D model (GLB/GLTF format)
+  - ✅ Viewable on mobile with **View 3D** button
+  - ✅ AR support on compatible devices
+  - ✅ Camera controls (rotate, zoom, pan)
+
+## 🎯 Features
+
+- **Format:** ${fileName.endsWith('.glb') ? 'GLB (Binary glTF)' : 'GLTF (JSON glTF)'}
+- **Viewer:** Google Model Viewer
+- **Mobile Optimized:** Full-screen immersive experience
+- **Desktop Ready:** Rounded modal with camera controls
+- **AR Ready:** WebXR (Android) + Quick Look (iOS)
+
+## 📱 How to View
+
+1. Open mobile page (CW/HW/Solo Projects)
+2. Find this project
+3. Click the **cube icon** (🎯 View 3D)
+4. Interact: Drag to rotate, Pinch to zoom
+5. Try AR mode on compatible devices!
+
+## 🛠️ Technical Details
+
+- **Repository:** SOLIDWORKS-Projects
+- **Auto-Detection:** Enabled
+- **Caching:** Service worker precached
+- **Performance:** Lazy-loaded on demand
+
+---
+
+**Uploaded via:** A3KM Studio Only Boss Dashboard  
+**Generated:** ${date}
+`;
+        }
+
+        // Dashboard logout button logic
         var logoutBtn = document.getElementById('dashboardLogoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function() {

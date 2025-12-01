@@ -12,11 +12,16 @@ const CORE_ASSETS = [
   '/contact-mobile.html',
   '/about-mobile.html',
   '/projects.html',
+  '/classwork-mobile.html',
+  '/homework-mobile.html',
+  '/solo-mobile.html',
   '/styles.css',
   '/home-mobile.css',
   '/contact-mobile-clean.css',
   '/mobile-project-cards-fix.css',
   '/mobile-home-fix.css',
+  '/shared/model-viewer.js',
+  '/shared/model-viewer.css',
   '/favicon.svg',
   '/manifest.json'
 ];

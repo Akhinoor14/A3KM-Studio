@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="mobile-clean.css" />
   <link rel="stylesheet" href="homework-mobile.css" />
+  <link rel="stylesheet" href="shared/model-viewer.css" />
   
   <style>
     body { background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0a 100%); overflow-x: hidden; }
@@ -72,6 +73,7 @@
     
   </main>
 
+  <script src="shared/model-viewer.js"></script>
   <script src="github-proxy-config.js"></script>
   <script src="github-fetch-patch.js"></script>
   <script src="github-sync.js"></script>
@@ -214,6 +216,7 @@
             const fileSize = formatSize(file.size);
             const isPDF = /\.pdf$/i.test(file.name);
             const isImage = /\.(png|jpg|jpeg)$/i.test(file.name);
+            const is3D = /\.(glb|gltf)$/i.test(file.name);
             
             html += `
               <div class="hw-file-item">
@@ -223,6 +226,9 @@
                   <span class="hw-file-size">${fileSize}</span>
                 </div>
                 <div class="hw-file-actions">
+                  ${is3D ? `<button class="hw-file-btn view" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" title="View 3D Model">
+                    <i class="fas fa-cube"></i>
+                  </button>` : ''}
                   ${isPDF ? `<button class="hw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
                     <i class="fas fa-eye"></i>
                   </button>` : ''}
@@ -272,6 +278,7 @@
             const fileType = getFileType(file.name);
             const fileSize = formatSize(file.size);
             const isPDF = /\.pdf$/i.test(file.name);
+            const is3D = /\.(glb|gltf)$/i.test(file.name);
             
             html += `
               <div class="hw-file-item">
@@ -281,6 +288,9 @@
                   <span class="hw-file-size">${fileSize}</span>
                 </div>
                 <div class="hw-file-actions">
+                  ${is3D ? `<button class="hw-file-btn view" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" title="View 3D Model">
+                    <i class="fas fa-cube"></i>
+                  </button>` : ''}
                   ${isPDF ? `<button class="hw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
                     <i class="fas fa-eye"></i>
                   </button>` : ''}
@@ -319,6 +329,8 @@
       if (ext === 'SLDPRT') return 'SLDPRT';
       if (ext === 'SLDASM') return 'SLDASM';
       if (ext === 'SLDDRW') return 'SLDDRW';
+      if (ext === 'GLB') return '3D-GLB';
+      if (ext === 'GLTF') return '3D-GLTF';
       if (ext === 'PDF') return 'PDF';
       return ext;
     }
