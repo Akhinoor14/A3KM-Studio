@@ -100,6 +100,7 @@
   </main>
 
   <script src="shared/model-viewer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="github-proxy-config.js"></script>
   <script src="github-fetch-patch.js"></script>
   <script src="github-sync.js"></script>
@@ -186,9 +187,19 @@
     
     async function toggleDayExpand(dayName) {
       const wrapper = document.querySelector(`.hw-day-wrapper[data-day="${dayName}"]`);
+      if (!wrapper) {
+        console.error('Wrapper not found for:', dayName);
+        return;
+      }
+      
       const header = wrapper.querySelector('.hw-day-header');
       const content = wrapper.querySelector('.hw-day-content');
       const icon = header.querySelector('.hw-expand-icon');
+      
+      if (!content || !icon) {
+        console.error('Content or icon not found');
+        return;
+      }
       
       if (expandedDays.has(dayName)) {
         expandedDays.delete(dayName);
@@ -215,6 +226,21 @@
         const rootFiles = data.filter(item => item.type === 'file');
         
         let html = '';
+        
+        // Add ZIP Download Button
+        const dayNameEncoded = encodeURIComponent(dayName);
+        html += `
+          <div class="hw-day-actions" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            <button onclick="downloadDayZip('${dayName}', '${url}')" style="flex: 1; min-width: 150px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);">
+              <i class="fas fa-download"></i>
+              <span>Download All (ZIP)</span>
+            </button>
+            <a href="https://github.com/Akhinoor14/SOLIDWORKS-Projects/tree/main/HW/${dayNameEncoded}" target="_blank" style="flex: 1; min-width: 150px; background: #333; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+              <i class="fab fa-github"></i>
+              <span>Open on GitHub</span>
+            </a>
+          </div>
+        `;
         
         // Check for Question/Problem files (PDF, MD, TXT, Images)
         const questionFiles = rootFiles.filter(f => 
@@ -385,6 +411,41 @@
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
     
+    // ZIP Download for Homework Day
+    async function downloadDayZip(dayName, dayUrl) {
+      try {
+        // Show loading
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:#fff;padding:20px 40px;border-radius:10px;z-index:10000;';
+        loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating ZIP...';
+        document.body.appendChild(loadingDiv);
+        
+        const zip = new JSZip();
+        const response = await fetch(dayUrl);
+        const data = await response.json();
+        
+        // Add all files to zip
+        for (const file of data) {
+          if (file.type === 'file') {
+            const fileResponse = await fetch(file.download_url);
+            const blob = await fileResponse.blob();
+            zip.file(file.name, blob);
+          }
+        }
+        
+        // Generate and download
+        const content = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `${dayName}.zip`;
+        link.click();
+        
+        document.body.removeChild(loadingDiv);
+      } catch (error) {
+        alert('Download failed: ' + error.message);
+      }
+    }
+    
     // PDF Viewer function
     function viewPDF(url, filename) {
       const modal = document.createElement('div');
@@ -533,10 +594,28 @@
         if (btn) {
           e.preventDefault();
           e.stopPropagation();
-          const src = btn.getAttribute('data-model-src');
-          const title = btn.getAttribute('data-model-title') || 'Home Work 3D Model';
-          if (src && typeof openModelViewer === 'function') {
-            openModelViewer({ src, title, ar: true });
+          
+          // Find parent day content to collect all 3D models
+          const dayContent = btn.closest('.hw-day-content');
+          if (dayContent) {
+            const all3DElements = dayContent.querySelectorAll('[data-model-src]');
+            const models = Array.from(all3DElements).map(el => ({
+              src: el.getAttribute('data-model-src'),
+              title: el.getAttribute('data-model-title') || 'Home Work 3D Model'
+            }));
+            
+            const clickedSrc = btn.getAttribute('data-model-src');
+            const currentIndex = models.findIndex(m => m.src === clickedSrc);
+            
+            if (typeof openModelViewer === 'function') {
+              openModelViewer({
+                src: clickedSrc,
+                title: btn.getAttribute('data-model-title') || 'Home Work 3D Model',
+                ar: true,
+                models: models,
+                currentIndex: currentIndex
+              });
+            }
           }
           return;
         }
@@ -546,10 +625,28 @@
         if (container) {
           e.preventDefault();
           e.stopPropagation();
-          const src = container.getAttribute('data-model-src');
-          const title = container.getAttribute('data-model-title') || 'Home Work 3D Model';
-          if (src && typeof openModelViewer === 'function') {
-            openModelViewer({ src, title, ar: true });
+          
+          // Find parent day content to collect all 3D models
+          const dayContent = container.closest('.hw-day-content');
+          if (dayContent) {
+            const all3DElements = dayContent.querySelectorAll('[data-model-src]');
+            const models = Array.from(all3DElements).map(el => ({
+              src: el.getAttribute('data-model-src'),
+              title: el.getAttribute('data-model-title') || 'Home Work 3D Model'
+            }));
+            
+            const clickedSrc = container.getAttribute('data-model-src');
+            const currentIndex = models.findIndex(m => m.src === clickedSrc);
+            
+            if (typeof openModelViewer === 'function') {
+              openModelViewer({
+                src: clickedSrc,
+                title: container.getAttribute('data-model-title') || 'Home Work 3D Model',
+                ar: true,
+                models: models,
+                currentIndex: currentIndex
+              });
+            }
           }
           return;
         }

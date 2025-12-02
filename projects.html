@@ -204,6 +204,7 @@
     }
   </style>
   <script src="shared/model-viewer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -1273,7 +1274,16 @@
       }
 
       // Tab click handlers
-      buttons.forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.target)));
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          showView(target);
+          // Load files for the section
+          if (target === 'cw' || target === 'hw' || target === 'solo') {
+            setTimeout(() => loadSolidWorksFiles(target), 100);
+          }
+        });
+      });
 
       // Back buttons
       card.querySelectorAll('.sw-back').forEach(backBtn => {
@@ -1351,18 +1361,52 @@
         }
       }
       
+      // ZIP Download Function for Desktop
+      async function downloadSectionZip(title, files, type) {
+        try {
+          const loadingDiv = document.createElement('div');
+          loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:#fff;padding:30px 50px;border-radius:12px;z-index:10000;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+          loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:10px;"></i><br><strong style="font-size:1.1rem;">Creating ZIP...</strong>';
+          document.body.appendChild(loadingDiv);
+          
+          const zip = new JSZip();
+          
+          for (const file of files) {
+            const response = await fetch(file.download_url);
+            const blob = await response.blob();
+            zip.file(file.name, blob);
+          }
+          
+          const content = await zip.generateAsync({ type: 'blob' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          link.download = `${title.replace(/\s+/g, '_')}_${type.toUpperCase()}.zip`;
+          link.click();
+          
+          document.body.removeChild(loadingDiv);
+        } catch (error) {
+          alert('Download failed: ' + error.message);
+        }
+      }
+      
       function renderFileCard(title, files, type) {
         const colorMap = { cw: '#ff4444', hw: '#ffaa00', solo: '#00aaff' };
         const color = colorMap[type] || '#888';
         
         let html = `
           <div class="desktop-day-card" style="margin-bottom:16px;border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(0,0,0,0.3);overflow:hidden;">
-            <div class="desktop-day-header" style="padding:12px 16px;background:linear-gradient(135deg, ${color}22, ${color}11);border-bottom:1px solid rgba(255,255,255,0.1);">
-              <h4 style="margin:0;font-size:1.05rem;color:${color};display:flex;align-items:center;gap:8px;">
-                <i class="fas fa-folder-open"></i>
-                ${title}
-              </h4>
-              <p style="margin:4px 0 0 0;font-size:0.85rem;color:rgba(255,255,255,0.6);">${files.length} file${files.length !== 1 ? 's' : ''}</p>
+            <div class="desktop-day-header" style="padding:12px 16px;background:linear-gradient(135deg, ${color}22, ${color}11);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <h4 style="margin:0;font-size:1.05rem;color:${color};display:flex;align-items:center;gap:8px;">
+                  <i class="fas fa-folder-open"></i>
+                  ${title}
+                </h4>
+                <p style="margin:4px 0 0 0;font-size:0.85rem;color:rgba(255,255,255,0.6);">${files.length} file${files.length !== 1 ? 's' : ''}</p>
+              </div>
+              <button onclick='downloadSectionZip("${title.replace(/'/g, "\\'")}",${JSON.stringify(files)},"${type}")' style="padding:8px 16px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:transform 0.2s;box-shadow:0 2px 8px rgba(220,38,38,0.3);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fas fa-download"></i>
+                <span>ZIP</span>
+              </button>
             </div>
             <div class="desktop-files-grid" style="padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
         `;
@@ -1437,23 +1481,15 @@
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
       }
       
-      // Load files when switching to a view
-      buttons.forEach(btn => {
-        const originalListener = btn.onclick;
-        btn.addEventListener('click', () => {
-          const target = btn.dataset.target;
-          if (target === 'cw' || target === 'hw' || target === 'solo') {
-            setTimeout(() => loadSolidWorksFiles(target), 100);
-          }
-        });
-      });
-      
-      // Also handle tile clicks
+      // Also handle tile clicks for navigation
       card.querySelectorAll('.sw-tile').forEach(tile => {
         tile.addEventListener('click', () => {
           const target = tile.dataset.target;
-          if (target === 'cw' || target === 'hw' || target === 'solo') {
-            setTimeout(() => loadSolidWorksFiles(target), 100);
+          if (target) {
+            showView(target);
+            if (target === 'cw' || target === 'hw' || target === 'solo') {
+              setTimeout(() => loadSolidWorksFiles(target), 100);
+            }
           }
         });
       });
@@ -1465,10 +1501,28 @@
         if (viewBtn) {
           e.preventDefault();
           e.stopPropagation();
-          const src = viewBtn.getAttribute('data-model-src');
-          const title = viewBtn.getAttribute('data-model-title') || 'SolidWorks 3D Model';
-          if (src && typeof openModelViewer === 'function') {
-            openModelViewer({ src, title, ar: true });
+          
+          // Find parent card container to collect all 3D models
+          const cardContainer = viewBtn.closest('.desktop-day-card');
+          if (cardContainer) {
+            const all3DElements = cardContainer.querySelectorAll('[data-model-src]');
+            const models = Array.from(all3DElements).map(el => ({
+              src: el.getAttribute('data-model-src'),
+              title: el.getAttribute('data-model-title') || 'SolidWorks 3D Model'
+            }));
+            
+            const clickedSrc = viewBtn.getAttribute('data-model-src');
+            const currentIndex = models.findIndex(m => m.src === clickedSrc);
+            
+            if (typeof openModelViewer === 'function') {
+              openModelViewer({
+                src: clickedSrc,
+                title: viewBtn.getAttribute('data-model-title') || 'SolidWorks 3D Model',
+                ar: true,
+                models: models,
+                currentIndex: currentIndex
+              });
+            }
           }
           return;
         }
@@ -1478,10 +1532,28 @@
         if (wrapper) {
           e.preventDefault();
           e.stopPropagation();
-          const src = wrapper.getAttribute('data-model-src');
-          const title = wrapper.getAttribute('data-model-title') || 'SolidWorks 3D Model';
-          if (src && typeof openModelViewer === 'function') {
-            openModelViewer({ src, title, ar: true });
+          
+          // Find parent card container to collect all 3D models
+          const cardContainer = wrapper.closest('.desktop-day-card');
+          if (cardContainer) {
+            const all3DElements = cardContainer.querySelectorAll('[data-model-src]');
+            const models = Array.from(all3DElements).map(el => ({
+              src: el.getAttribute('data-model-src'),
+              title: el.getAttribute('data-model-title') || 'SolidWorks 3D Model'
+            }));
+            
+            const clickedSrc = wrapper.getAttribute('data-model-src');
+            const currentIndex = models.findIndex(m => m.src === clickedSrc);
+            
+            if (typeof openModelViewer === 'function') {
+              openModelViewer({
+                src: clickedSrc,
+                title: wrapper.getAttribute('data-model-title') || 'SolidWorks 3D Model',
+                ar: true,
+                models: models,
+                currentIndex: currentIndex
+              });
+            }
           }
           return;
         }

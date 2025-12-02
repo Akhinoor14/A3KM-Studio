@@ -39,6 +39,8 @@
    * @param {boolean} [options.ar] - Enable AR mode (default: true)
    * @param {string} [options.iosSrc] - Optional iOS-specific USDZ file for AR
    * @param {string} [options.downloadUrl] - Optional download URL (defaults to src)
+   * @param {Array} [options.models] - Array of model objects for navigation [{src, title}, ...]
+   * @param {number} [options.currentIndex] - Current model index in models array
    */
   window.openModelViewer = async function(options) {
     const {
@@ -47,13 +49,21 @@
       poster = '',
       ar = true,
       iosSrc = '',
-      downloadUrl = src
+      downloadUrl = src,
+      models = [],
+      currentIndex = 0
     } = options;
     
     if (!src) {
       console.error('❌ Model source URL is required');
       return;
     }
+    
+    // Store navigation context
+    window._currentModelContext = {
+      models: models,
+      currentIndex: currentIndex
+    };
     
     try {
       // Load library if not already loaded
@@ -79,6 +89,22 @@
       
       const posterAttr = poster ? `poster="${poster}"` : '';
       
+      // Navigation buttons (show only if multiple models)
+      const hasNavigation = models.length > 1;
+      const navButtons = hasNavigation ? `
+        <div class="model-viewer-navigation">
+          <button class="model-nav-btn prev" title="Previous Model" ${currentIndex === 0 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+            <span>Previous</span>
+          </button>
+          <span class="model-counter">${currentIndex + 1} / ${models.length}</span>
+          <button class="model-nav-btn next" title="Next Model" ${currentIndex === models.length - 1 ? 'disabled' : ''}>
+            <span>Next</span>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      ` : '';
+      
       modal.innerHTML = `
         <div class="model-viewer-overlay"></div>
         <div class="model-viewer-container">
@@ -87,6 +113,7 @@
               <i class="fas fa-cube"></i>
               <span>${escapeHtml(title)}</span>
             </div>
+            ${navButtons}
             <button class="model-viewer-close" title="Close">
               <i class="fas fa-times"></i>
             </button>
@@ -198,6 +225,12 @@
   window.closeModelViewer = function() {
     if (currentViewer) {
       currentViewer.classList.remove('active');
+      
+      // Clean up arrow key handler
+      if (currentViewer._arrowHandler) {
+        document.removeEventListener('keydown', currentViewer._arrowHandler);
+      }
+      
       setTimeout(() => {
         currentViewer.remove();
         currentViewer = null;
@@ -205,6 +238,42 @@
       }, 300);
     }
   };
+  
+  /**
+   * Navigate to previous or next model
+   */
+  function navigateModel(direction) {
+    const context = window._currentModelContext;
+    if (!context || !context.models || context.models.length <= 1) {
+      return;
+    }
+    
+    let newIndex = context.currentIndex;
+    
+    if (direction === 'prev' && newIndex > 0) {
+      newIndex--;
+    } else if (direction === 'next' && newIndex < context.models.length - 1) {
+      newIndex++;
+    } else {
+      return; // Already at start/end
+    }
+    
+    const newModel = context.models[newIndex];
+    if (!newModel) return;
+    
+    // Close current and open new
+    window.closeModelViewer();
+    
+    setTimeout(() => {
+      window.openModelViewer({
+        src: newModel.src,
+        title: newModel.title || '3D Model',
+        models: context.models,
+        currentIndex: newIndex,
+        ar: true
+      });
+    }, 350);
+  }
   
   /**
    * Toggle auto-rotate on model viewer
@@ -246,6 +315,18 @@
     const overlay = modal.querySelector('.model-viewer-overlay');
     overlay.addEventListener('click', window.closeModelViewer);
     
+    // Navigation buttons
+    const prevBtn = modal.querySelector('.model-nav-btn.prev');
+    const nextBtn = modal.querySelector('.model-nav-btn.next');
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => navigateModel('prev'));
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => navigateModel('next'));
+    }
+    
     // ESC key
     const escHandler = (e) => {
       if (e.key === 'Escape') {
@@ -254,6 +335,19 @@
       }
     };
     document.addEventListener('keydown', escHandler);
+    
+    // Arrow key navigation
+    const arrowHandler = (e) => {
+      if (e.key === 'ArrowLeft') {
+        navigateModel('prev');
+      } else if (e.key === 'ArrowRight') {
+        navigateModel('next');
+      }
+    };
+    document.addEventListener('keydown', arrowHandler);
+    
+    // Store handler for cleanup
+    modal._arrowHandler = arrowHandler;
     
     // Model viewer events
     const modelViewer = modal.querySelector('model-viewer');
