@@ -1399,7 +1399,7 @@ I'm **Md. Akhinoor Islam** - always open to interesting conversations, collabora
 ### 📧 Direct Contact:
 - **Email:** [mdakhinoorislam.official.2005@gmail.com](mailto:mdakhinoorislam.official.2005@gmail.com)
 - **Phone/WhatsApp:** [+880 1724-812042](https://wa.me/8801724812042)
-- **Contact Form:** [Send Message](https://rafid-003.github.io/Portfolio-Website/contact.html)
+- **Contact:** mdakhinoorislam.official.2005@gmail.com
 
 ### 🌐 Social & Professional:
 - **GitHub:** [github.com/akhinoor14](https://github.com/akhinoor14)

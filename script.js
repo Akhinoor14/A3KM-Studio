@@ -5138,42 +5138,37 @@ document.addEventListener('DOMContentLoaded', function() {
 const sampleProjects = [
     {
         title: "Interactive Engineering Portfolio Website",
-        shortDescription: "Modern, responsive portfolio website showcasing engineering projects with dark/light theme, animations, and interactive features.",
-        fullDescription: "A comprehensive, interactive portfolio website built from scratch to showcase engineering projects and technical skills. This modern web application features a responsive design with dark/light theme toggle, smooth animations, particle background effects, and interactive project modals. The website includes advanced functionality such as project filtering, search capabilities, contact forms, and GitHub API integration. Built with vanilla HTML, CSS, and JavaScript, it demonstrates proficiency in modern web development while maintaining focus on engineering content. The site features three main project categories: CAD design (SOLIDWORKS), embedded systems (Arduino), and electronics components. Includes comprehensive documentation, deployment guides, and fallback systems for reliable performance.",
-        tech: ["HTML5", "CSS3", "JavaScript", "Responsive Design", "GitHub Pages", "Web Development"],
+        shortDescription: "Mobile-first portfolio portal: documentation, showcase, and quick links (GitHub-free).",
+        fullDescription: "Mobile-first portal that surfaces local documentation and an interactive showcase. This trimmed desktop card intentionally links to the mobile pages: a self-contained documentation page, a showcase walkthrough, and the mobile portfolio landing. The desktop card removes repo-level downloads and GitHub-centric actions to keep users in the faster, locally-hosted mobile experience.",
+        tech: ["HTML5", "CSS3", "JavaScript", "Mobile-First", "Local Docs", "Fast Navigation"],
         category: "web",
-        github: "https://github.com/Akhinoor14/Solidworks-Website-Project",
-        demo: "https://akhinoor14.github.io/Solidworks-Website-Project",
+        github: "",
+        demo: null,
         image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop&crop=center",
         gallery: [
             "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop",
             "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop",
             "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=400&fit=crop"
         ],
-        features: ["Responsive Design", "Dark/Light Theme", "GitHub API", "Interactive UI"],
+        features: ["Mobile Portal", "Documentation", "Showcase", "GitHub-Free"],
         featured: true,
         // Special Portfolio website structure
         specialType: "portfolio",
         websiteFeatures: [
             {
-                name: "Modern UI/UX",
+                name: "Documentation",
+                icon: "📚",
+                details: ["Local development guide", "Architecture & decisions", "English and বাংলা versions"]
+            },
+            {
+                name: "Showcase",
                 icon: "🎨",
-                details: ["Engineering architecture theme", "Blueprint grid patterns", "Smooth animations", "Interactive cards"]
+                details: ["Interactive timeline", "Feature walkthrough", "Animated statistics"]
             },
             {
-                name: "Advanced Features",
-                icon: "⚡",
-                details: ["GitHub repository browser", "PDF viewer", "Markdown renderer", "3D model support"]
-            },
-            {
-                name: "Tech Stack",
-                icon: "💻",
-                details: ["Vanilla JavaScript", "CSS3 Grid/Flexbox", "HTML5 semantic tags", "GitHub Pages deployment"]
-            },
-            {
-                name: "Performance",
-                icon: "🚀",
-                details: ["Optimized animations", "Lazy loading", "Fast page load", "Mobile responsive"]
+                name: "Mobile Portal",
+                icon: "📱",
+                details: ["GitHub-free mobile landing", "Quick links", "Fast local navigation"]
             }
         ],
         repoFiles: {
@@ -5182,7 +5177,23 @@ const sampleProjects = [
             hasJavaScript: true,
             hasDocumentation: true,
             hasDeployment: true
-        }
+        },
+        actionsOverride: `
+            <div class="project-actions-grid">
+                <a href="portfolio-mobile.html" class="action-btn btn-mobile" target="_self" rel="noopener">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile View</span>
+                </a>
+                <a href="documentation-clean.html" class="action-btn btn-docs" target="_self" rel="noopener">
+                    <i class="fas fa-book-open"></i>
+                    <span>Documentation</span>
+                </a>
+                <a href="portfolio-project-mobile.html" class="action-btn btn-showcase" target="_self" rel="noopener">
+                    <i class="fas fa-eye"></i>
+                    <span>Showcase</span>
+                </a>
+            </div>
+        `
     },
     {
         title: "SOLIDWORKS Beginner Projects",
@@ -5721,6 +5732,8 @@ function createProjectCard(project) {
 
     // Helper to build action buttons (no Details button as requested)
     const buildActions = () => {
+        // Allow projects to fully override default actions (for local/mobile pages)
+        if (project.actionsOverride) return project.actionsOverride;
         const hasDemo = !!project.demo;
         const escapedGithub = (project.github || '').replace(/'/g, "\\'");
         const escapedTitle = (project.title || '').replace(/'/g, "\\'");

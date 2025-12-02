@@ -599,7 +599,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["https://rafid-003.github.io"],
+        "origins": ["*"],  # Allow all origins or specify your domain
         "methods": ["GET", "POST"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -678,7 +678,7 @@ img, video, iframe {
 // 1. CONFIGURATION & CONSTANTS
 // ============================================
 const CONFIG = {
-    GITHUB_USERNAME: 'Rafid-003',
+    GITHUB_USERNAME: 'Akhinoor14',
     BACKEND_URL: 'https://backend.railway.app',
     CACHE_DURATION: 300000, // 5 minutes
     SESSION_TIMEOUT: 1800000 // 30 minutes
@@ -831,7 +831,7 @@ main (production)
  * @returns {Promise<Object>} { success: boolean, data: Array, fromCache: boolean }
  * 
  * @example
- * const result = await fetchGitHubRepos('Rafid-003', false);
+ * const result = await fetchGitHubRepos('Akhinoor14', false);
  * if (result.success) {
  *     renderProjects(result.data);
  * }
@@ -899,7 +899,7 @@ portfolio.yourdomain.com
 **Step 3: Update URLs**
 ```javascript
 const BACKEND_URL = 'https://your-backend.railway.app';
-const FRONTEND_URL = 'https://rafid-003.github.io/Portfolio-Website';
+const BACKEND_URL = 'https://solidworks-website-project-main-production.up.railway.app';
 ```
 
 ### Environment-Specific Configurations
@@ -1216,8 +1216,7 @@ function sanitizeInput(input) {
 ## যোগাযোগ
 
 - **Email:** mdakhinoorislam.official.2005@gmail.com
-- **GitHub:** [github.com/Rafid-003](https://github.com/Rafid-003)
-- **Portfolio:** [rafid-003.github.io/Portfolio-Website](https://rafid-003.github.io/Portfolio-Website)
+- **GitHub:** [github.com/Akhinoor14](https://github.com/Akhinoor14)
 - **LinkedIn:** [Coming Soon]
 
 ---
