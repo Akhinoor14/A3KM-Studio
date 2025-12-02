@@ -612,10 +612,14 @@
                 </div>
 
                 <div class="selected-files" id="cwFilesList"></div>
+                <div class="file-summary" id="cwFileSummary"></div>
 
                 <div class="action-buttons">
                     <button class="btn btn-secondary" onclick="clearFiles('cw')">
                         <i class="fas fa-times"></i> Clear All
+                    </button>
+                    <button class="btn btn-secondary" id="cwCancelBtn" style="display:none" onclick="cancelUpload('cw')">
+                        <i class="fas fa-ban"></i> Cancel
                     </button>
                     <button class="btn btn-primary" id="cwUploadBtn" onclick="uploadFiles('cw')" disabled>
                         <i class="fas fa-upload"></i> Upload to GitHub
@@ -653,10 +657,14 @@
                 </div>
 
                 <div class="selected-files" id="hwFilesList"></div>
+                <div class="file-summary" id="hwFileSummary"></div>
 
                 <div class="action-buttons">
                     <button class="btn btn-secondary" onclick="clearFiles('hw')">
                         <i class="fas fa-times"></i> Clear All
+                    </button>
+                    <button class="btn btn-secondary" id="hwCancelBtn" style="display:none" onclick="cancelUpload('hw')">
+                        <i class="fas fa-ban"></i> Cancel
                     </button>
                     <button class="btn btn-primary" id="hwUploadBtn" onclick="uploadFiles('hw')" disabled>
                         <i class="fas fa-upload"></i> Upload to GitHub
@@ -693,10 +701,14 @@
                 </div>
 
                 <div class="selected-files" id="soloFilesList"></div>
+                <div class="file-summary" id="soloFileSummary"></div>
 
                 <div class="action-buttons">
                     <button class="btn btn-secondary" onclick="clearFiles('solo')">
                         <i class="fas fa-times"></i> Clear All
+                    </button>
+                    <button class="btn btn-secondary" id="soloCancelBtn" style="display:none" onclick="cancelUpload('solo')">
+                        <i class="fas fa-ban"></i> Cancel
                     </button>
                     <button class="btn btn-primary" id="soloUploadBtn" onclick="uploadSoloProject()" disabled>
                         <i class="fas fa-upload"></i> Upload Project
@@ -735,16 +747,20 @@
                     <div class="upload-icon">
                         <i class="fas fa-file-upload"></i>
                     </div>
-                    <div class="upload-text">Upload Question File</div>
-                    <div class="upload-hint">PDF, PNG, or JPG</div>
-                    <input type="file" id="questionFileInput" class="file-input" accept=".pdf,.png,.jpg,.jpeg">
+                    <div class="upload-text">Upload Question File(s)</div>
+                    <div class="upload-hint">PDF, PNG, or JPG (multiple files supported)</div>
+                    <input type="file" id="questionFileInput" class="file-input" multiple accept=".pdf,.png,.jpg,.jpeg">
                 </div>
 
                 <div class="selected-files" id="questionFilesList"></div>
+                <div class="file-summary" id="questionFileSummary"></div>
 
                 <div class="action-buttons">
                     <button class="btn btn-secondary" onclick="clearFiles('question')">
                         <i class="fas fa-times"></i> Clear
+                    </button>
+                    <button class="btn btn-secondary" id="questionCancelBtn" style="display:none" onclick="cancelUpload('question')">
+                        <i class="fas fa-ban"></i> Cancel
                     </button>
                     <button class="btn btn-primary" id="questionUploadBtn" onclick="uploadQuestions()" disabled>
                         <i class="fas fa-upload"></i> Upload Question
@@ -794,13 +810,13 @@
                     </div>
                     <div class="upload-text">Upload New Version</div>
                     <div class="upload-hint">Select file above first</div>
-                    <input type="file" id="updateFileInput" class="file-input" disabled>
+                    <input type="file" id="updateFileInput" class="file-input" disabled accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf,.pdf,.png,.jpg,.jpeg">
                 </div>
 
                 <div class="selected-files" id="updateFilesList"></div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="clearFiles('update')">
+                    <button class="btn btn-secondary" onclick="clearUpdateSelection()">
                         <i class="fas fa-times"></i> Clear
                     </button>
                     <button class="btn btn-primary" id="updateBtn" onclick="updateFile()" disabled>
@@ -888,6 +904,10 @@
                     option.textContent = day;
                     select.appendChild(option);
                 }
+                // Restore last selection
+                const saved = localStorage.getItem('swum_'+id);
+                if (saved) select.value = saved;
+                select.addEventListener('change', () => localStorage.setItem('swum_'+id, select.value));
             });
 
             // Add change listeners to enable upload buttons
@@ -914,6 +934,115 @@
                         uploadBtn.disabled = false;
                     }
                 });
+                // Persist project name
+                const savedName = localStorage.getItem('swum_solo_name');
+                if (savedName) soloProjectInput.value = savedName;
+                soloProjectInput.addEventListener('change', () => localStorage.setItem('swum_solo_name', soloProjectInput.value.trim()));
+            }
+
+            // Update type/day listeners
+            const updateType = document.getElementById('updateType');
+            const updateDay = document.getElementById('updateDay');
+            const updateFile = document.getElementById('updateFile');
+            if (updateType) {
+                updateType.addEventListener('change', async () => {
+                    const daySelect = document.getElementById('updateDay');
+                    const fileSelect = document.getElementById('updateFile');
+                    daySelect.disabled = true;
+                    fileSelect.disabled = true;
+                    daySelect.innerHTML = '<option value="">-- Loading... --</option>';
+                    fileSelect.innerHTML = '<option value="">-- First select day/project --</option>';
+                    
+                    if (updateType.value) {
+                        await loadDaysOrProjects('update', updateType.value);
+                    } else {
+                        daySelect.innerHTML = '<option value="">-- First select type --</option>';
+                    }
+                });
+            }
+            if (updateDay) {
+                updateDay.addEventListener('change', async () => {
+                    const fileSelect = document.getElementById('updateFile');
+                    const fileInput = document.getElementById('updateFileInput');
+                    const uploadZone = document.getElementById('updateUploadZone');
+                    fileSelect.disabled = true;
+                    fileInput.disabled = true;
+                    fileSelect.innerHTML = '<option value="">-- Loading files... --</option>';
+                    
+                    if (updateDay.value) {
+                        await loadFilesForUpdate();
+                    } else {
+                        fileSelect.innerHTML = '<option value="">-- First select day/project --</option>';
+                    }
+                });
+            }
+            if (updateFile) {
+                updateFile.addEventListener('change', () => {
+                    const fileInput = document.getElementById('updateFileInput');
+                    const uploadZone = document.getElementById('updateUploadZone');
+                    if (updateFile.value) {
+                        // Enable input and set dynamic accept filter based on selected file extension
+                        const selectedName = updateFile.options[updateFile.selectedIndex].textContent || '';
+                        const ext = selectedName.split('.').pop().toLowerCase();
+                        const mapping = {
+                            'sldprt': '.SLDPRT,.sldprt',
+                            'sldasm': '.SLDASM,.sldasm',
+                            'slddrw': '.SLDDRW,.slddrw',
+                            'glb': '.GLB,.glb',
+                            'gltf': '.GLTF,.gltf',
+                            'pdf': '.pdf',
+                            'png': '.png',
+                            'jpg': '.jpg,.jpeg',
+                            'jpeg': '.jpg,.jpeg'
+                        };
+                        fileInput.setAttribute('accept', mapping[ext] || '');
+                        fileInput.disabled = false;
+                        uploadZone.onclick = () => fileInput.click();
+                    } else {
+                        fileInput.disabled = true;
+                        fileInput.value = '';
+                    }
+                });
+            }
+
+            // Delete type/day listeners
+            const deleteType = document.getElementById('deleteType');
+            const deleteDay = document.getElementById('deleteDay');
+            const deleteFile = document.getElementById('deleteFile');
+            if (deleteType) {
+                deleteType.addEventListener('change', async () => {
+                    const daySelect = document.getElementById('deleteDay');
+                    const fileSelect = document.getElementById('deleteFile');
+                    daySelect.disabled = true;
+                    fileSelect.disabled = true;
+                    daySelect.innerHTML = '<option value="">-- Loading... --</option>';
+                    fileSelect.innerHTML = '<option value="">-- First select day/project --</option>';
+                    
+                    if (deleteType.value) {
+                        await loadDaysOrProjects('delete', deleteType.value);
+                    } else {
+                        daySelect.innerHTML = '<option value="">-- First select type --</option>';
+                    }
+                });
+            }
+            if (deleteDay) {
+                deleteDay.addEventListener('change', async () => {
+                    const fileSelect = document.getElementById('deleteFile');
+                    fileSelect.disabled = true;
+                    fileSelect.innerHTML = '<option value="">-- Loading files... --</option>';
+                    
+                    if (deleteDay.value) {
+                        await loadFilesForDelete();
+                    } else {
+                        fileSelect.innerHTML = '<option value="">-- First select day/project --</option>';
+                    }
+                });
+            }
+            if (deleteFile) {
+                deleteFile.addEventListener('change', () => {
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    deleteBtn.disabled = !deleteFile.value;
+                });
             }
 
             // Question day/type listeners
@@ -931,6 +1060,35 @@
                 });
             }
         }
+
+        // Update file input listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const updateFileInput = document.getElementById('updateFileInput');
+            if (updateFileInput) {
+                updateFileInput.addEventListener('change', function(e) {
+                    const files = e.target.files;
+                    const filesList = document.getElementById('updateFilesList');
+                    const updateBtn = document.getElementById('updateBtn');
+                    
+                    if (files.length > 0) {
+                        filesList.innerHTML = '';
+                        const file = files[0];
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <i class="fas fa-file"></i>
+                            <span class="file-name">${file.name}</span>
+                            <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
+                        `;
+                        filesList.appendChild(fileItem);
+                        updateBtn.disabled = false;
+                    } else {
+                        filesList.innerHTML = '';
+                        updateBtn.disabled = true;
+                    }
+                });
+            }
+        });
 
         // Setup file upload zones
         function setupFileUploadZones() {
@@ -980,7 +1138,24 @@
                 return;
             }
 
-            // Display files with proper icons
+            // Validate file sizes (100MB GitHub limit)
+            const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+            const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE);
+            if (oversizedFiles.length > 0) {
+                showMessage(type, `❌ Files too large: ${oversizedFiles.map(f => f.name).join(', ')}. Max 100MB per file.`, 'error');
+                input.value = '';
+                list.innerHTML = '';
+                if (btn) btn.disabled = true;
+                return;
+            }
+
+            // Display files with proper icons and summary
+            const summary = document.getElementById(type + 'FileSummary');
+            const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+            if (summary) {
+                summary.innerHTML = `${files.length} file(s), ${(totalSize / (1024*1024)).toFixed(2)} MB total`;
+            }
+
             list.innerHTML = files.map((file, i) => {
                 const ext = file.name.split('.').pop().toLowerCase();
                 let icon = 'fa-file';
@@ -1026,12 +1201,31 @@
         function clearFiles(type) {
             document.getElementById(type + 'FileInput').value = '';
             document.getElementById(type + 'FilesList').innerHTML = '';
+            const summary = document.getElementById(type + 'FileSummary');
+            if (summary) summary.innerHTML = '';
             const btn = document.getElementById(type + 'UploadBtn');
             if (btn) btn.disabled = true;
         }
 
-        // Switch tabs
+        // Switch tabs with unsaved-change warning
         function switchTab(tabId) {
+            // Warn if any file selection is present
+            const inputs = ['cw','hw','solo','question'].map(t => document.getElementById(t + 'FileInput')).filter(Boolean);
+            const hasPending = inputs.some(inp => inp && inp.files && inp.files.length > 0);
+            if (hasPending) {
+                const proceed = confirm('You have selected files that are not uploaded yet. Switching tabs will clear selections. Continue?');
+                if (!proceed) return;
+                // Clear selections
+                ['cw','hw','solo','question'].forEach(t => {
+                    const el = document.getElementById(t + 'FileInput');
+                    if (el) el.value = '';
+                    const list = document.getElementById(t + 'FilesList');
+                    if (list) list.innerHTML = '';
+                    const btn = document.getElementById(t + 'UploadBtn');
+                    if (btn) btn.disabled = true;
+                });
+            }
+
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.closest('.tab-btn').classList.add('active');
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -1054,12 +1248,63 @@
 
         // Manage GitHub token
         function manageGitHubToken() {
-            // This will use existing script.js token management
-            if (typeof uploadToSolidworks === 'function') {
-                uploadToSolidworks('cw'); // Triggers token dialog from script.js
-            } else {
-                alert('Token management integration pending. Please add token via existing upload system.');
+            const currentToken = localStorage.getItem('github_token') || '';
+            const tokenDialog = document.createElement('div');
+            tokenDialog.className = 'upload-dialog-overlay';
+            tokenDialog.innerHTML = `
+                <div class="upload-dialog" style="max-width: 500px;">
+                    <div class="dialog-header">
+                        <h2><i class="fas fa-key"></i> GitHub Token Management</h2>
+                        <button class="close-btn" onclick="this.closest('.upload-dialog-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="dialog-body">
+                        <p style="color: rgba(255,255,255,0.8); margin-bottom: 15px;">
+                            Enter your GitHub Personal Access Token with <code>repo</code> permissions.
+                        </p>
+                        <input type="password" id="tokenInput" class="form-control" 
+                               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
+                               value="${currentToken}" 
+                               style="margin-bottom: 15px; font-family: monospace;">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="saveGitHubToken()" style="flex: 1;">
+                                <i class="fas fa-save"></i> Save Token
+                            </button>
+                            <button class="btn btn-secondary" onclick="this.closest('.upload-dialog-overlay').remove()" style="flex: 1;">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(tokenDialog);
+            document.getElementById('tokenInput').focus();
+        }
+
+        function saveGitHubToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) {
+                alert('Please enter a valid token');
+                return;
             }
+            localStorage.setItem('github_token', token);
+            checkGitHubToken();
+            document.querySelector('.upload-dialog-overlay')?.remove();
+            showMessage('cw', '✅ Token saved successfully!', 'success');
+        }
+
+        // Helper: detect duplicate names in a FileList/Array (case-insensitive)
+        function getDuplicateNames(fileList) {
+            const names = new Map();
+            const dups = new Set();
+            Array.from(fileList || []).forEach(f => {
+                const n = (f?.name || '').toLowerCase();
+                if (!n) return;
+                if (names.has(n)) dups.add(n);
+                else names.set(n, true);
+            });
+            return Array.from(dups);
         }
 
         // Upload files - Integrated with script.js GitHub upload logic
@@ -1085,23 +1330,92 @@
                 return;
             }
 
-            // Show uploading status
+            // Show uploading status and enable cancel
             showMessage(type, `Uploading ${files.length} file(s) to ${day}...`, 'info');
             const uploadBtn = document.getElementById(`${type}UploadBtn`);
+            const cancelBtn = document.getElementById(`${type}CancelBtn`);
             if (uploadBtn) {
                 uploadBtn.disabled = true;
                 uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             }
+            if (cancelBtn) cancelBtn.style.display = '';
 
             try {
+                // Setup AbortController for this upload
+                const abortCtrl = new AbortController();
+                uploadAbortControllers[type] = abortCtrl;
                 const owner = 'Akhinoor14';
                 const repo = 'SOLIDWORKS-Projects';
                 const basePath = type.toUpperCase(); // CW or HW
                 
+                // Pre-compute next SOLIDWORKS folder index for this day and group all SW files together
+                const existingItemsResp = await fetch(
+                    `https://api.github.com/repos/${owner}/${repo}/contents/${basePath}/${day}`,
+                    {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+                let nextIndex = 1;
+                if (existingItemsResp.ok) {
+                    const items = await existingItemsResp.json();
+                    const re = new RegExp(`^${type} \\d{2} ${day.toLowerCase().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`);
+                    const indices = items
+                        .filter(it => it.type === 'dir' && re.test(it.name))
+                        .map(it => parseInt(it.name.split(' ')[1], 10))
+                        .filter(n => !isNaN(n));
+                    if (indices.length > 0) nextIndex = Math.max(...indices) + 1;
+                }
+                const solidsFolderForBatch = `${type} ${String(nextIndex).padStart(2, '0')} ${day.toLowerCase()}`;
+
+                // Preflight: check for duplicate filenames within the same target folders
+                const groups = {};
+                Array.from(files).forEach(file => {
+                    const fileName = file.name.toLowerCase();
+                    let folderName = '';
+                    if (/(question|problem|assignment)/.test(fileName) || /\.(pdf|txt|md)$/i.test(fileName)) {
+                        folderName = '';
+                    } else if (/\.(glb|gltf)$/i.test(fileName)) {
+                        folderName = `${type} 3d model ${day.toLowerCase()}`;
+                    } else {
+                        folderName = solidsFolderForBatch;
+                    }
+                    const key = folderName || '__root__';
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(file);
+                });
+                let duplicateWarnings = [];
+                for (const key in groups) {
+                    const dups = getDuplicateNames(groups[key]);
+                    if (dups.length) {
+                        duplicateWarnings.push(`${key === '__root__' ? `${basePath}/${day}` : `${basePath}/${day}/${key}`}: ${dups.join(', ')}`);
+                    }
+                }
+                if (duplicateWarnings.length) {
+                    const proceed = confirm(`⚠️ Duplicate file names detected within the same target folder.\n\n${duplicateWarnings.join('\n')}\n\nContinue anyway? (Duplicates may fail to upload)`);
+                    if (!proceed) {
+                        if (uploadBtn) {
+                            uploadBtn.disabled = false;
+                            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+                        }
+                        if (cancelBtn) cancelBtn.style.display = 'none';
+                        uploadAbortControllers[type] = null;
+                        showMessage(type, 'Upload cancelled due to duplicate filenames', 'warning');
+                        return;
+                    }
+                }
+
                 let successCount = 0;
                 let failCount = 0;
 
-                for (const file of files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Update progress
+                    showMessage(type, `Uploading ${i + 1}/${files.length}: ${file.name}...`, 'info');
+                    
                     try {
                         // Determine folder structure based on file type
                         let folderName = '';
@@ -1116,8 +1430,8 @@
                             // 3D models go to specific subfolder
                             folderName = `${type} 3d model ${day.toLowerCase()}`;
                         } else {
-                            // SOLIDWORKS files go to numbered subfolder
-                            folderName = `${type} ${String(successCount + 1).padStart(2, '0')} ${day.toLowerCase()}`;
+                            // SOLIDWORKS files go to single grouped numbered subfolder per batch
+                            folderName = solidsFolderForBatch;
                         }
 
                         const uploadPath = folderName 
@@ -1132,6 +1446,7 @@
                             `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
                             {
                                 method: 'PUT',
+                                signal: abortCtrl.signal,
                                 headers: {
                                     'Authorization': `token ${token}`,
                                     'Content-Type': 'application/json',
@@ -1167,13 +1482,28 @@
 
             } catch (error) {
                 console.error('Upload error:', error);
-                showMessage(type, `❌ Upload failed: ${error.message}`, 'error');
+                
+                let errorMsg = 'Upload failed: ';
+                if (!navigator.onLine) {
+                    errorMsg += 'No internet connection. Please check your network.';
+                } else if (error.message.includes('fetch')) {
+                    errorMsg += 'Network error. Please try again.';
+                } else if (error.message.includes('token')) {
+                    errorMsg += 'Invalid GitHub token. Please update your token.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                showMessage(type, `❌ ${errorMsg}`, 'error');
             } finally {
                 // Reset button
                 if (uploadBtn) {
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
                 }
+                const cancelBtn = document.getElementById(`${type}CancelBtn`);
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                uploadAbortControllers[type] = null;
             }
         }
 
@@ -1187,6 +1517,37 @@
             });
         }
 
+        // Clear files
+        function clearFiles(type) {
+            const fileInput = document.getElementById(type + 'FileInput');
+            const filesList = document.getElementById(type + 'FilesList');
+            const uploadBtn = document.getElementById(type + 'UploadBtn');
+            
+            if (fileInput) fileInput.value = '';
+            if (filesList) filesList.innerHTML = '';
+            if (uploadBtn) uploadBtn.disabled = true;
+            
+            // Clear solo project name if applicable
+            if (type === 'solo') {
+                const projectName = document.getElementById('soloProjectName');
+                if (projectName) projectName.value = '';
+            }
+        }
+
+        // Clear update selection
+        function clearUpdateSelection() {
+            const fileInput = document.getElementById('updateFileInput');
+            const filesList = document.getElementById('updateFilesList');
+            const updateBtn = document.getElementById('updateBtn');
+            
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.disabled = true;
+            }
+            if (filesList) filesList.innerHTML = '';
+            if (updateBtn) updateBtn.disabled = true;
+        }
+
         // Show message
         function showMessage(type, text, messageType) {
             const messageEl = document.getElementById(type + 'Message');
@@ -1195,6 +1556,30 @@
             const iconMap = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
             messageEl.innerHTML = `<i class="fas fa-${iconMap[messageType] || 'info-circle'}"></i> ${text}`;
             setTimeout(() => messageEl.classList.remove('show'), 5000);
+        }
+
+        // Cancel ongoing upload (AbortController placeholder)
+        let uploadAbortControllers = { cw: null, hw: null, solo: null, question: null };
+        function cancelUpload(type) {
+            try {
+                const ctrl = uploadAbortControllers[type];
+                if (ctrl) ctrl.abort();
+                showMessage(type, '⛔ Upload cancelled', 'warning');
+            } catch (e) {}
+            const cancelBtn = document.getElementById(type + 'CancelBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+            const uploadBtn = document.getElementById(type + 'UploadBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                const labelMap = {
+                    cw: 'Upload to GitHub',
+                    hw: 'Upload to GitHub',
+                    solo: 'Upload Project',
+                    question: 'Upload Questions'
+                };
+                const label = labelMap[type] || 'Upload';
+                uploadBtn.innerHTML = `<i class="fas fa-upload"></i> ${label}`;
+            }
         }
 
         // Remove file from selection
@@ -1227,6 +1612,13 @@
                 return;
             }
 
+            // Validate project name (no special characters except dash/underscore)
+            const validNameRegex = /^[a-zA-Z0-9_-]+(\s+[a-zA-Z0-9_-]+)*$/;
+            if (!validNameRegex.test(projectName)) {
+                showMessage('solo', '❌ Invalid project name. Use only letters, numbers, spaces, dash, or underscore', 'error');
+                return;
+            }
+
             const token = localStorage.getItem('github_token');
             if (!token) {
                 showMessage('solo', 'GitHub token required. Click "Manage Token".', 'error');
@@ -1235,19 +1627,73 @@
 
             showMessage('solo', `Uploading ${files.length} file(s) to ${projectName}...`, 'info');
             const uploadBtn = document.getElementById('soloUploadBtn');
+            const cancelBtn = document.getElementById('soloCancelBtn');
             if (uploadBtn) {
                 uploadBtn.disabled = true;
                 uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             }
+            if (cancelBtn) cancelBtn.style.display = '';
 
             try {
+                const abortCtrl = new AbortController();
+                uploadAbortControllers['solo'] = abortCtrl;
                 const owner = 'Akhinoor14';
                 const repo = 'SOLIDWORKS-Projects';
+                
+                // Preflight: warn if project already exists
+                try {
+                    const existsResp = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/Solo/${encodeURIComponent(projectName)}`,
+                        {
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            },
+                            signal: abortCtrl.signal
+                        }
+                    );
+                    if (existsResp.ok) {
+                        const proceed = confirm(`⚠️ Solo project "${projectName}" already exists.\nUploading may overwrite existing files with the same names. Continue?`);
+                        if (!proceed) {
+                            if (uploadBtn) {
+                                uploadBtn.disabled = false;
+                                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+                            }
+                            if (cancelBtn) cancelBtn.style.display = 'none';
+                            uploadAbortControllers['solo'] = null;
+                            showMessage('solo', 'Upload cancelled by user', 'warning');
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // If 404, project doesn't exist; that's fine. Other errors bubble up later.
+                }
+                
+                // Preflight: check duplicate filenames within selection
+                const soloDups = getDuplicateNames(files);
+                if (soloDups.length) {
+                    const proceed = confirm(`⚠️ Duplicate file names selected: ${soloDups.join(', ')}\n\nContinue anyway?`);
+                    if (!proceed) {
+                        if (uploadBtn) {
+                            uploadBtn.disabled = false;
+                            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+                        }
+                        if (cancelBtn) cancelBtn.style.display = 'none';
+                        uploadAbortControllers['solo'] = null;
+                        showMessage('solo', 'Upload cancelled due to duplicate filenames', 'warning');
+                        return;
+                    }
+                }
                 
                 let successCount = 0;
                 let failCount = 0;
 
-                for (const file of files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Update progress
+                    showMessage('solo', `Uploading ${i + 1}/${files.length}: ${file.name}...`, 'info');
+                    
                     try {
                         const uploadPath = `Solo/${projectName}/${file.name}`;
                         const content = await fileToBase64(file);
@@ -1256,6 +1702,7 @@
                             `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
                             {
                                 method: 'PUT',
+                                signal: abortCtrl.signal,
                                 headers: {
                                     'Authorization': `token ${token}`,
                                     'Content-Type': 'application/json',
@@ -1291,12 +1738,274 @@
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
                 }
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                uploadAbortControllers['solo'] = null;
             }
         }
 
-        // Placeholder functions for Update/Delete tabs
-        function updateFile() { 
-            showMessage('update', 'Update feature coming soon', 'info');
+        // Load days or projects based on type
+        async function loadDaysOrProjects(mode, type) {
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage(mode, 'GitHub token required. Click "Manage Token".', 'error');
+                return;
+            }
+
+            const daySelect = document.getElementById(mode + 'Day');
+            daySelect.innerHTML = '<option value="">-- Loading... --</option>';
+            daySelect.disabled = true;
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                
+                const daySelect = document.getElementById(mode + 'Day');
+                daySelect.innerHTML = '<option value="">-- Choose Day/Project --</option>';
+
+                if (type === 'Solo') {
+                    // Load solo projects
+                    const response = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/Solo`,
+                        {
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+
+                    if (response.ok) {
+                        const items = await response.json();
+                        const projects = items.filter(item => item.type === 'dir');
+                        projects.forEach(project => {
+                            const option = document.createElement('option');
+                            option.value = project.name;
+                            option.textContent = project.name;
+                            daySelect.appendChild(option);
+                        });
+                        daySelect.disabled = false;
+                    } else {
+                        showMessage(mode, 'No solo projects found', 'warning');
+                    }
+                } else {
+                    // Load CW/HW days
+                    const response = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/${type}`,
+                        {
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+
+                    if (response.ok) {
+                        const items = await response.json();
+                        const days = items.filter(item => item.type === 'dir' && item.name.startsWith('Day'));
+                        days.sort((a, b) => a.name.localeCompare(b.name));
+                        days.forEach(day => {
+                            const option = document.createElement('option');
+                            option.value = day.name;
+                            option.textContent = day.name;
+                            daySelect.appendChild(option);
+                        });
+                        daySelect.disabled = false;
+                    } else {
+                        showMessage(mode, `No ${type} days found`, 'warning');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading days/projects:', error);
+                showMessage(mode, 'Failed to load: ' + error.message, 'error');
+            }
+        }
+
+        // Load files for update
+        async function loadFilesForUpdate() {
+            const type = document.getElementById('updateType').value;
+            const day = document.getElementById('updateDay').value;
+            const fileSelect = document.getElementById('updateFile');
+            const token = localStorage.getItem('github_token');
+
+            if (!token || !type || !day) return;
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                const basePath = type === 'Solo' ? `Solo/${day}` : `${type}/${day}`;
+
+                const files = await fetchAllFilesRecursive(
+                    `https://api.github.com/repos/${owner}/${repo}/contents/${basePath}`,
+                    {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                );
+
+                fileSelect.innerHTML = '<option value="">-- Select file to replace --</option>';
+                if (!files || files.length === 0) {
+                    fileSelect.innerHTML = '<option value="">-- No files found --</option>';
+                    fileSelect.disabled = true;
+                    showMessage('update', 'No files found in the selected folder', 'warning');
+                    return;
+                }
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.path;
+                    option.textContent = file.name;
+                    option.setAttribute('data-sha', file.sha);
+                    fileSelect.appendChild(option);
+                });
+                fileSelect.disabled = false;
+            } catch (error) {
+                console.error('Error loading files:', error);
+                showMessage('update', 'Failed to load files: ' + error.message, 'error');
+            }
+        }
+
+        // Load files for delete
+        async function loadFilesForDelete() {
+            const type = document.getElementById('deleteType').value;
+            const day = document.getElementById('deleteDay').value;
+            const fileSelect = document.getElementById('deleteFile');
+            const token = localStorage.getItem('github_token');
+
+            if (!token || !type || !day) return;
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                const basePath = type === 'Solo' ? `Solo/${day}` : `${type}/${day}`;
+
+                const files = await fetchAllFilesRecursive(
+                    `https://api.github.com/repos/${owner}/${repo}/contents/${basePath}`,
+                    {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                );
+
+                fileSelect.innerHTML = '<option value="">-- Select file to delete --</option>';
+                if (!files || files.length === 0) {
+                    fileSelect.innerHTML = '<option value="">-- No files found --</option>';
+                    fileSelect.disabled = true;
+                    showMessage('delete', 'No files found in the selected folder', 'warning');
+                    return;
+                }
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.path;
+                    option.textContent = file.name;
+                    option.setAttribute('data-sha', file.sha);
+                    fileSelect.appendChild(option);
+                });
+                fileSelect.disabled = false;
+            } catch (error) {
+                console.error('Error loading files:', error);
+                showMessage('delete', 'Failed to load files: ' + error.message, 'error');
+            }
+        }
+
+        // Recursive file fetcher
+        async function fetchAllFilesRecursive(url, headers) {
+            const response = await fetch(url, { headers });
+            if (!response.ok) throw new Error('Failed to fetch directory');
+
+            const items = await response.json();
+            let allFiles = [];
+
+            for (const item of items) {
+                if (item.type === 'file') {
+                    allFiles.push(item);
+                } else if (item.type === 'dir') {
+                    const subFiles = await fetchAllFilesRecursive(item.url, headers);
+                    allFiles = allFiles.concat(subFiles);
+                }
+            }
+
+            return allFiles;
+        }
+
+        // Update file function
+        async function updateFile() {
+            const type = document.getElementById('updateType').value;
+            const day = document.getElementById('updateDay').value;
+            const fileSelect = document.getElementById('updateFile');
+            const fileInput = document.getElementById('updateFileInput');
+            
+            const filePath = fileSelect.value;
+            const newFile = fileInput.files[0];
+            
+            if (!type || !day || !filePath || !newFile) {
+                showMessage('update', 'Please fill all fields and select a new file', 'error');
+                return;
+            }
+
+            // Validate file extension match
+            const originalExt = filePath.split('.').pop().toLowerCase();
+            const newExt = newFile.name.split('.').pop().toLowerCase();
+            
+            if (originalExt !== newExt) {
+                if (!confirm(`⚠️ Extension mismatch!\n\nOriginal: .${originalExt}\nNew: .${newExt}\n\nThis may cause issues. Continue anyway?`)) {
+                    return;
+                }
+            }
+
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage('update', 'GitHub token required', 'error');
+                return;
+            }
+
+            const sha = fileSelect.options[fileSelect.selectedIndex].getAttribute('data-sha');
+            const updateBtn = document.getElementById('updateBtn');
+            
+            updateBtn.disabled = true;
+            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            showMessage('update', 'Updating file...', 'info');
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                const content = await fileToBase64(newFile);
+
+                const response = await fetch(
+                    `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: `Update ${filePath.split('/').pop()} in ${type}/${day}`,
+                            content: content.split(',')[1],
+                            sha: sha,
+                            branch: 'main'
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    showMessage('update', '✅ File updated successfully!', 'success');
+                    fileInput.value = '';
+                    fileSelect.value = '';
+                    fileInput.disabled = true;
+                    
+                    // Reload file list to show updated file
+                    setTimeout(() => loadFilesForUpdate(), 1000);
+                } else {
+                    const error = await response.json();
+                    showMessage('update', `❌ Update failed: ${error.message || 'Unknown error'}`, 'error');
+                    console.error('GitHub API Error:', error);
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showMessage('update', `❌ Update failed: ${error.message}`, 'error');
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.innerHTML = '<i class="fas fa-save"></i> Update File';
+            }
         }
 
         // Upload Question Documents
@@ -1320,21 +2029,40 @@
                 return;
             }
 
+            // Preflight: duplicate filenames within selection
+            const qDups = getDuplicateNames(files);
+            if (qDups.length) {
+                const proceed = confirm(`⚠️ Duplicate file names selected: ${qDups.join(', ')}\n\nContinue anyway?`);
+                if (!proceed) {
+                    showMessage('question', 'Upload cancelled due to duplicate filenames', 'warning');
+                    return;
+                }
+            }
+
             showMessage('question', `Uploading ${files.length} question file(s) to ${day}...`, 'info');
             const uploadBtn = document.getElementById('questionUploadBtn');
+            const cancelBtn = document.getElementById('questionCancelBtn');
             if (uploadBtn) {
                 uploadBtn.disabled = true;
                 uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             }
+            if (cancelBtn) cancelBtn.style.display = '';
 
             try {
+                const abortCtrl = new AbortController();
+                uploadAbortControllers['question'] = abortCtrl;
                 const owner = 'Akhinoor14';
                 const repo = 'SOLIDWORKS-Projects';
                 
                 let successCount = 0;
                 let failCount = 0;
 
-                for (const file of files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Update progress
+                    showMessage('question', `Uploading ${i + 1}/${files.length}: ${file.name}...`, 'info');
+                    
                     try {
                         // Questions go directly to day folder root
                         const uploadPath = `${type}/${day}/${file.name}`;
@@ -1344,6 +2072,7 @@
                             `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
                             {
                                 method: 'PUT',
+                                signal: abortCtrl.signal,
                                 headers: {
                                     'Authorization': `token ${token}`,
                                     'Content-Type': 'application/json',
@@ -1378,33 +2107,100 @@
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Questions';
                 }
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                uploadAbortControllers['question'] = null;
             }
         }
         
         async function confirmDelete() {
             const type = document.getElementById('deleteType')?.value;
             const day = document.getElementById('deleteDay')?.value;
-            const file = document.getElementById('deleteFile')?.value;
+            const fileSelect = document.getElementById('deleteFile');
+            const filePath = fileSelect?.value;
             
-            if (!type || !day || !file) {
+            if (!type || !day || !filePath) {
                 showMessage('delete', 'Please select all fields', 'error');
                 return;
             }
 
-            if (!confirm(`⚠️ Are you sure you want to delete "${file}" from ${day}? This cannot be undone!`)) {
+            const fileName = filePath.split('/').pop();
+            if (!confirm(`⚠️ Are you sure you want to delete "${fileName}" from ${day}?\n\nThis action CANNOT be undone!`)) {
                 return;
             }
 
-            showMessage('delete', 'Delete functionality will be implemented soon', 'info');
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage('delete', 'GitHub token required', 'error');
+                return;
+            }
+
+            const sha = fileSelect.options[fileSelect.selectedIndex].getAttribute('data-sha');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            showMessage('delete', 'Deleting file...', 'info');
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+
+                const response = await fetch(
+                    `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: `Delete ${fileName} from ${type}/${day}`,
+                            sha: sha,
+                            branch: 'main'
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    showMessage('delete', '✅ File deleted successfully!', 'success');
+                    
+                    // Reload file list
+                    setTimeout(async () => {
+                        await loadFilesForDelete();
+                        fileSelect.value = '';
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    showMessage('delete', `❌ Delete failed: ${error.message || 'Unknown error'}`, 'error');
+                    console.error('GitHub API Error:', error);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showMessage('delete', `❌ Delete failed: ${error.message}`, 'error');
+            } finally {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete File';
+            }
         }
         
         function clearDeleteSelection() {
-            ['deleteType', 'deleteDay', 'deleteFile'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-            const btn = document.getElementById('deleteBtn');
-            if (btn) btn.disabled = true;
+            const typeSelect = document.getElementById('deleteType');
+            const daySelect = document.getElementById('deleteDay');
+            const fileSelect = document.getElementById('deleteFile');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            if (typeSelect) typeSelect.value = '';
+            if (daySelect) {
+                daySelect.value = '';
+                daySelect.disabled = true;
+                daySelect.innerHTML = '<option value="">-- First select type --</option>';
+            }
+            if (fileSelect) {
+                fileSelect.value = '';
+                fileSelect.disabled = true;
+                fileSelect.innerHTML = '<option value="">-- First select day/project --</option>';
+            }
+            if (deleteBtn) deleteBtn.disabled = true;
         }
     </script>
 </body>
