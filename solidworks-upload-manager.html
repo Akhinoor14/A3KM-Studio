@@ -544,16 +544,30 @@
             <p>Complete project management - Upload, Update, Delete with auto README & GitHub sync</p>
         </div>
 
-        <!-- GitHub Token Panel -->
+        <!-- Backend API Status Panel -->
         <div class="token-panel">
             <div class="token-status">
                 <div class="token-info">
-                    <div class="token-indicator" id="tokenIndicator"></div>
-                    <span class="token-text" id="tokenStatusText">Checking GitHub token...</span>
+                    <div class="token-indicator" id="backendIndicator"></div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="token-text" id="backendStatusText">Checking backend...</span>
+                            <span id="backendSpinner" style="display: none;"><i class="fas fa-spinner fa-spin" style="font-size: 0.85rem;"></i></span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 4px;" id="backendDetails">
+                            <span id="tokenCountText">Tokens: -</span> | 
+                            <span id="rateLimitText">Limit: -</span>
+                        </div>
+                    </div>
                 </div>
-                <button class="change-token-btn" onclick="manageGitHubToken()">
-                    <i class="fas fa-key"></i> Manage Token
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="change-token-btn" onclick="checkBackendStatus()" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="change-token-btn" onclick="window.open('backend-token-manager.html', '_blank')">
+                        <i class="fas fa-cog"></i> Manage
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -884,12 +898,56 @@
     <script src="website-updater.js"></script>
     <script src="script.js"></script>
     <script>
+        // Backend API Configuration
+        const BACKEND_URL = 'http://localhost:5000';
+        let backendAvailable = false;
+        let backendToken = null;
+        let statusCheckInterval = null;
+        
+        // Live notification
+        function showLiveNotification(msg, type='info', dur=3000) {
+            const n = document.createElement('div');
+            n.style.cssText = `position:fixed;top:80px;right:20px;background:${type==='success'?'rgba(0,204,0,0.95)':type==='error'?'rgba(220,53,69,0.95)':'rgba(0,123,255,0.95)'};color:white;padding:15px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;animation:slideIn 0.3s;max-width:350px;font-size:0.9rem;`;
+            n.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}"></i> ${msg}`;
+            document.body.appendChild(n);
+            setTimeout(() => { n.style.animation='slideOut 0.3s'; setTimeout(()=>n.remove(),300); }, dur);
+        }
+        
+        async function checkBackendStatus(showNotif=false) {
+            const ind=document.getElementById('backendIndicator'), txt=document.getElementById('backendStatusText'),
+            spin=document.getElementById('backendSpinner'), tc=document.getElementById('tokenCountText'),
+            rl=document.getElementById('rateLimitText'), rb=document.getElementById('refreshBtn');
+            if(spin) spin.style.display='inline'; if(rb) rb.disabled=true;
+            try {
+                const r = await fetch(`${BACKEND_URL}/health`, {method:'GET',mode:'cors',cache:'no-cache'});
+                if(r.ok) {
+                    const d = await r.json();
+                    if(ind) { ind.style.transition='background 0.3s'; ind.style.background='#00cc00'; }
+                    if(txt) txt.textContent='✅ Backend Connected';
+                    if(tc) tc.textContent=`Tokens: ${d.tokens_configured||0}`;
+                    if(rl) rl.textContent=`Limit: ${d.effective_limit||'60/hr'}`;
+                    backendAvailable=true; backendToken='BACKEND_MANAGED';
+                    if(showNotif) showLiveNotification('Backend connected!','success');
+                    if(!statusCheckInterval) statusCheckInterval=setInterval(()=>checkBackendStatus(false),30000);
+                } else throw new Error('Backend error');
+            } catch(e) {
+                if(ind) { ind.style.transition='background 0.3s'; ind.style.background='#dc3545'; }
+                if(txt) txt.textContent='❌ Backend Offline';
+                if(tc) tc.textContent='Tokens: N/A'; if(rl) rl.textContent='Limit: N/A';
+                backendAvailable=false; backendToken=null;
+                if(showNotif) showLiveNotification('Backend offline. Start: cd "Backend projects" → python secure-proxy-server.py','error',5000);
+            } finally { if(spin) spin.style.display='none'; if(rb) rb.disabled=false; }
+        }
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             populateDayDropdowns();
             setupFileUploadZones();
-            checkGitHubToken();
+            checkBackendStatus(false);
         });
+        const st=document.createElement('style');
+        st.textContent='@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}';
+        document.head.appendChild(st);
 
         // Populate day dropdowns
         function populateDayDropdowns() {
@@ -1232,67 +1290,7 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        // Check GitHub token
-        function checkGitHubToken() {
-            const token = localStorage.getItem('github_token');
-            const indicator = document.getElementById('tokenIndicator');
-            const statusText = document.getElementById('tokenStatusText');
-
-            if (!token) {
-                indicator.classList.add('invalid');
-                statusText.textContent = 'No GitHub token. Click "Manage Token" to add one.';
-            } else {
-                statusText.textContent = 'GitHub token saved ✓';
-            }
-        }
-
-        // Manage GitHub token
-        function manageGitHubToken() {
-            const currentToken = localStorage.getItem('github_token') || '';
-            const tokenDialog = document.createElement('div');
-            tokenDialog.className = 'upload-dialog-overlay';
-            tokenDialog.innerHTML = `
-                <div class="upload-dialog" style="max-width: 500px;">
-                    <div class="dialog-header">
-                        <h2><i class="fas fa-key"></i> GitHub Token Management</h2>
-                        <button class="close-btn" onclick="this.closest('.upload-dialog-overlay').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="dialog-body">
-                        <p style="color: rgba(255,255,255,0.8); margin-bottom: 15px;">
-                            Enter your GitHub Personal Access Token with <code>repo</code> permissions.
-                        </p>
-                        <input type="password" id="tokenInput" class="form-control" 
-                               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
-                               value="${currentToken}" 
-                               style="margin-bottom: 15px; font-family: monospace;">
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-primary" onclick="saveGitHubToken()" style="flex: 1;">
-                                <i class="fas fa-save"></i> Save Token
-                            </button>
-                            <button class="btn btn-secondary" onclick="this.closest('.upload-dialog-overlay').remove()" style="flex: 1;">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(tokenDialog);
-            document.getElementById('tokenInput').focus();
-        }
-
-        function saveGitHubToken() {
-            const token = document.getElementById('tokenInput').value.trim();
-            if (!token) {
-                alert('Please enter a valid token');
-                return;
-            }
-            localStorage.setItem('github_token', token);
-            checkGitHubToken();
-            document.querySelector('.upload-dialog-overlay')?.remove();
-            showMessage('cw', '✅ Token saved successfully!', 'success');
-        }
+        // Backend connection managed - no manual token needed
 
         // Helper: detect duplicate names in a FileList/Array (case-insensitive)
         function getDuplicateNames(fileList) {
@@ -1323,12 +1321,13 @@
                 return;
             }
 
-            // Check GitHub token
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage(type, 'GitHub token required. Click "Manage Token" first.', 'error');
+            // Check backend connection
+            if (!backendAvailable || !backendToken) {
+                showMessage(type, 'Backend not connected. Click "Refresh" to reconnect.', 'error');
+                showLiveNotification('Please connect to backend first!', 'error');
                 return;
             }
+            const token = backendToken;
 
             // Show uploading status and enable cancel
             showMessage(type, `Uploading ${files.length} file(s) to ${day}...`, 'info');
@@ -1619,11 +1618,12 @@
                 return;
             }
 
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage('solo', 'GitHub token required. Click "Manage Token".', 'error');
+            if (!backendAvailable || !backendToken) {
+                showMessage('solo', 'Backend not connected. Click "Refresh".', 'error');
+                showLiveNotification('Connect backend first!', 'error');
                 return;
             }
+            const token = backendToken;
 
             showMessage('solo', `Uploading ${files.length} file(s) to ${projectName}...`, 'info');
             const uploadBtn = document.getElementById('soloUploadBtn');
@@ -1745,11 +1745,11 @@
 
         // Load days or projects based on type
         async function loadDaysOrProjects(mode, type) {
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage(mode, 'GitHub token required. Click "Manage Token".', 'error');
+            if (!backendAvailable || !backendToken) {
+                showMessage(mode, 'Backend not connected.', 'error');
                 return;
             }
+            const token = backendToken;
 
             const daySelect = document.getElementById(mode + 'Day');
             daySelect.innerHTML = '<option value="">-- Loading... --</option>';
@@ -1825,9 +1825,9 @@
             const type = document.getElementById('updateType').value;
             const day = document.getElementById('updateDay').value;
             const fileSelect = document.getElementById('updateFile');
-            const token = localStorage.getItem('github_token');
+            const token = backendToken;
 
-            if (!token || !type || !day) return;
+            if (!token || !backendAvailable || !type || !day) return;
 
             try {
                 const owner = 'Akhinoor14';
@@ -1868,9 +1868,9 @@
             const type = document.getElementById('deleteType').value;
             const day = document.getElementById('deleteDay').value;
             const fileSelect = document.getElementById('deleteFile');
-            const token = localStorage.getItem('github_token');
+            const token = backendToken;
 
-            if (!token || !type || !day) return;
+            if (!token || !backendAvailable || !type || !day) return;
 
             try {
                 const owner = 'Akhinoor14';
@@ -1951,11 +1951,11 @@
                 }
             }
 
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage('update', 'GitHub token required', 'error');
+            if (!backendAvailable || !backendToken) {
+                showMessage('update', 'Backend required', 'error');
                 return;
             }
+            const token = backendToken;
 
             const sha = fileSelect.options[fileSelect.selectedIndex].getAttribute('data-sha');
             const updateBtn = document.getElementById('updateBtn');
@@ -2023,11 +2023,12 @@
                 return;
             }
 
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage('question', 'GitHub token required. Click "Manage Token".', 'error');
+            if (!backendAvailable || !backendToken) {
+                showMessage('question', 'Backend required. Click Refresh.', 'error');
+                showLiveNotification('Connect backend!', 'error');
                 return;
             }
+            const token = backendToken;
 
             // Preflight: duplicate filenames within selection
             const qDups = getDuplicateNames(files);
@@ -2128,11 +2129,11 @@
                 return;
             }
 
-            const token = localStorage.getItem('github_token');
-            if (!token) {
-                showMessage('delete', 'GitHub token required', 'error');
+            if (!backendAvailable || !backendToken) {
+                showMessage('delete', 'Backend required', 'error');
                 return;
             }
+            const token = backendToken;
 
             const sha = fileSelect.options[fileSelect.selectedIndex].getAttribute('data-sha');
             const deleteBtn = document.getElementById('deleteBtn');

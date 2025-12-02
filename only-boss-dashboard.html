@@ -269,20 +269,34 @@
             </div>
 
             <div class="form-group">
-                <label>GitHub Personal Access Token (PAT):</label>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <input type="password" id="uploadGitToken" placeholder="ghp_xxxxxxxxxxxx" style="width: 100%;">
-                        <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 5px;">
-                            Need a token? <a href="https://github.com/settings/tokens" target="_blank" style="color: #cc0000;">Create one here</a> with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">repo</code> scope
-                        </small>
+                <label>Backend API Connection:</label>
+                <div style="background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; border: 2px solid rgba(204, 0, 0, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div id="apiStatusIndicator" style="width: 12px; height: 12px; border-radius: 50%; background: #999;"></div>
+                        <span id="apiStatusText" style="color: rgba(255, 255, 255, 0.8); font-weight: 600;">Checking...</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" onclick="saveGitHubToken()" style="white-space: nowrap;">
-                        <i class="fas fa-save"></i> Save Token
+                    <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); line-height: 1.6;">
+                        <div id="apiDetails">
+                            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                                <span>Tokens Active:</span>
+                                <span id="apiTokenCount">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                                <span>Rate Limit:</span>
+                                <span id="apiRateLimit">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                                <span>Backend URL:</span>
+                                <span id="apiBackendUrl" style="font-family: monospace; font-size: 0.75rem;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="checkBackendConnection()" style="margin-top: 10px; width: 100%;">
+                        <i class="fas fa-sync-alt"></i> Refresh Status
                     </button>
-                </div>
-                <div id="tokenStatus" style="margin-top: 8px; padding: 8px 12px; border-radius: 6px; display: none;">
-                    <i class="fas fa-check-circle"></i> <span id="tokenStatusText"></span>
+                    <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 10px; text-align: center;">
+                        Tokens managed via <a href="backend-token-manager.html" target="_blank" style="color: #cc0000;">Backend Manager</a>
+                    </small>
                 </div>
             </div>
 
@@ -336,12 +350,59 @@
         const uploadProgress = document.getElementById('uploadProgress');
         const uploadSuccessMsg = document.getElementById('uploadSuccessMsg');
         const uploadErrorMsg = document.getElementById('uploadErrorMsg');
+        
+        // Backend API configuration
+        const BACKEND_URL = 'http://localhost:5000';
+        let backendToken = null;
+        let backendAvailable = false;
 
+        // Backend connection check
+        async function checkBackendConnection() {
+            const indicator = document.getElementById('apiStatusIndicator');
+            const statusText = document.getElementById('apiStatusText');
+            const tokenCount = document.getElementById('apiTokenCount');
+            const rateLimit = document.getElementById('apiRateLimit');
+            const backendUrl = document.getElementById('apiBackendUrl');
+            
+            indicator.style.background = '#ffc107';
+            statusText.textContent = 'Checking...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    indicator.style.background = '#00cc00';
+                    statusText.textContent = '✅ Connected';
+                    tokenCount.textContent = data.tokens_active ? `${data.tokens_configured || 0} tokens` : 'Not loaded';
+                    rateLimit.textContent = data.effective_limit || '60/hour';
+                    backendUrl.textContent = BACKEND_URL;
+                    backendAvailable = true;
+                    backendToken = 'BACKEND_MANAGED'; // Flag to use backend
+                } else {
+                    throw new Error('Backend responded with error');
+                }
+            } catch (error) {
+                indicator.style.background = '#dc3545';
+                statusText.textContent = '❌ Offline';
+                tokenCount.textContent = 'N/A';
+                rateLimit.textContent = 'N/A';
+                backendUrl.textContent = BACKEND_URL + ' (not reachable)';
+                backendAvailable = false;
+                backendToken = null;
+                
+                showError('Backend not connected. Start server: cd "Backend projects" → python secure-proxy-server.py');
+            }
+        }
+        
         // Open modal
         if (uploadModelCard) {
             uploadModelCard.addEventListener('click', function() {
                 uploadModelModal.classList.add('active');
-                loadSavedToken();
+                checkBackendConnection();
             });
         }
 
@@ -381,7 +442,6 @@
 
                 const projectType = uploadProjectType.value;
                 const glbFile = document.getElementById('uploadGLBFile').files[0];
-                const gitToken = document.getElementById('uploadGitToken').value.trim();
 
                 // Validation
                 if (!glbFile) {
@@ -396,8 +456,9 @@
                     return;
                 }
 
-                if (!gitToken) {
-                    showError('Please enter your GitHub Personal Access Token');
+                // Check backend connection
+                if (!backendAvailable || !backendToken) {
+                    showError('Backend API not connected. Please check connection status and try again.');
                     return;
                 }
 
@@ -446,8 +507,10 @@
                     uploadModelBtn.disabled = true;
                     updateProgress(10, 'Validating token...');
 
-                    // Create GitHubUploader instance
-                    const uploader = new GitHubUploader('Akhinoor14', 'SOLIDWORKS-Projects', gitToken);
+                    // Create GitHubUploader instance (token managed by backend)
+                    const uploader = new GitHubUploader('Akhinoor14', 'SOLIDWORKS-Projects', backendToken);
+                    uploader.useBackendProxy = true;
+                    uploader.backendUrl = BACKEND_URL;
 
                     // Validate token
                     updateProgress(20, 'Checking repository access...');
@@ -566,54 +629,14 @@
             }, 6000);
         }
 
-        function saveGitHubToken() {
-            const tokenInput = document.getElementById('uploadGitToken');
-            const token = tokenInput.value.trim();
-            
-            if (!token) {
-                showError('Please enter a token first');
-                return;
+        // Check backend on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-check backend when upload card exists
+            const uploadCard = document.getElementById('uploadModelCard');
+            if (uploadCard) {
+                setTimeout(checkBackendConnection, 500);
             }
-            
-            // Basic token format validation
-            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                if (!confirm('⚠️ Token format looks unusual. GitHub tokens usually start with "ghp_" or "github_pat_". Continue anyway?')) {
-                    return;
-                }
-            }
-            
-            localStorage.setItem('dashboard_github_token', token);
-            
-            const statusDiv = document.getElementById('tokenStatus');
-            const statusText = document.getElementById('tokenStatusText');
-            statusDiv.style.display = 'block';
-            statusDiv.style.background = 'rgba(0, 204, 0, 0.1)';
-            statusDiv.style.border = '1px solid rgba(0, 204, 0, 0.3)';
-            statusDiv.style.color = '#00cc00';
-            statusText.textContent = 'Token saved successfully! It will be auto-filled next time.';
-            
-            setTimeout(() => {
-                statusDiv.style.display = 'none';
-            }, 4000);
-        }
-        
-        function loadSavedToken() {
-            const savedToken = localStorage.getItem('dashboard_github_token');
-            if (savedToken) {
-                document.getElementById('uploadGitToken').value = savedToken;
-                const statusDiv = document.getElementById('tokenStatus');
-                const statusText = document.getElementById('tokenStatusText');
-                statusDiv.style.display = 'block';
-                statusDiv.style.background = 'rgba(0, 204, 0, 0.1)';
-                statusDiv.style.border = '1px solid rgba(0, 204, 0, 0.3)';
-                statusDiv.style.color = '#00cc00';
-                statusText.textContent = 'Saved token loaded automatically';
-                
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
+        });
 
         function resetUploadForm() {
             document.getElementById('uploadGLBFile').value = '';
