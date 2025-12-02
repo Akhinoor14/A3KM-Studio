@@ -5180,12 +5180,12 @@ const sampleProjects = [
         },
         actionsOverride: `
             <div class="project-actions-grid">
-                <a href="documentation-clean.html" class="action-btn btn-readme" target="_blank" rel="noopener" title="Read comprehensive development documentation">
+                <a href="documentation-clean.html" class="action-btn btn-readme" target="_blank" rel="noopener">
                     <i class="fas fa-book"></i>
                     <span>Documentation</span>
                 </a>
-                <a href="portfolio-project-mobile.html" class="action-btn btn-demo" target="_blank" rel="noopener" title="View interactive project showcase">
-                    <i class="fas fa-chart-line"></i>
+                <a href="portfolio-project-mobile.html" class="action-btn btn-demo" target="_blank" rel="noopener">
+                    <i class="fas fa-external-link-alt"></i>
                     <span>Project Showcase</span>
                 </a>
             </div>
