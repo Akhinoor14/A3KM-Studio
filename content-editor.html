@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Editor - Only Boss</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .editor-header {
+            background: linear-gradient(135deg, rgba(20, 0, 0, 0.95), rgba(10, 0, 0, 0.98));
+            border-bottom: 3px solid #cc0000;
+            box-shadow: 0 4px 20px rgba(204, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .editor-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #cc0000, #990000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(204, 0, 0, 0.6);
+        }
+        
+        .header-title h1 {
+            font-size: 1.8rem;
+            color: #cc0000;
+            margin-bottom: 5px;
+        }
+        
+        .header-title p {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .btn-save {
+            background: linear-gradient(135deg, #cc0000, #990000);
+            color: white;
+            border-color: #cc0000;
+        }
+        
+        .btn-save:hover {
+            background: linear-gradient(135deg, #dd0000, #aa0000);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(204, 0, 0, 0.4);
+        }
+        
+        .btn-tool {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-tool:hover {
+            background: rgba(204, 0, 0, 0.2);
+            border-color: #cc0000;
+            transform: translateY(-2px);
+        }
+        
+        .auto-save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 15px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #81C784;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .auto-save-indicator i {
+            font-size: 1rem;
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+        
+        /* Sidebar - Page Selector */
+        .sidebar {
+            background: linear-gradient(135deg, rgba(30, 0, 0, 0.7), rgba(10, 0, 0, 0.9));
+            border: 2px solid rgba(204, 0, 0, 0.25);
+            border-radius: 18px;
+            padding: 25px;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+        
+        .sidebar h2 {
+            color: #cc0000;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .page-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .page-item {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .page-item:hover {
+            background: rgba(204, 0, 0, 0.1);
+            border-color: rgba(204, 0, 0, 0.3);
+        }
+        
+        .page-item.active {
+            background: rgba(204, 0, 0, 0.2);
+            border-color: #cc0000;
+            color: #cc0000;
+        }
+        
+        .page-item i {
+            font-size: 1.1rem;
+        }
+        
+        /* Editor Area */
+        .editor-area {
+            background: linear-gradient(135deg, rgba(30, 0, 0, 0.7), rgba(10, 0, 0, 0.9));
+            border: 2px solid rgba(204, 0, 0, 0.25);
+            border-radius: 18px;
+            padding: 35px;
+        }
+        
+        .editor-header-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(204, 0, 0, 0.3);
+        }
+        
+        .editor-header-section h2 {
+            color: #cc0000;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .editor-header-section p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(204, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h3 {
+            color: #ff4444;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-toggle {
+            padding: 6px 15px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid #cc0000;
+            border-radius: 6px;
+            color: #cc0000;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .section-toggle:hover {
+            background: rgba(204, 0, 0, 0.3);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(20, 0, 0, 0.5);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 15px rgba(204, 0, 0, 0.3);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+        }
+        
+        /* Character Counter */
+        .char-counter {
+            text-align: right;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+        
+        /* Preview Box */
+        .preview-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .preview-box h4 {
+            color: #cc0000;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .preview-content {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+        
+        /* Success/Error Messages */
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #81C784;
+        }
+        
+        .message.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #F44336;
+            color: #EF9A9A;
+        }
+        
+        /* Export Section */
+        .export-section {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .export-section h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .export-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-export {
+            padding: 12px 24px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            color: #81C784;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-export:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .export-output {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .export-output pre {
+            color: #81C784;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .btn span {
+                display: none;
+            }
+            
+            .auto-save-indicator span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="editor-header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="editor-icon">
+                    <i class="fas fa-pen-to-square"></i>
+                </div>
+                <div class="header-title">
+                    <h1>Content Editor</h1>
+                    <p>Edit website text and descriptions</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="auto-save-indicator" id="autoSaveIndicator">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <span>Saved</span>
+                </div>
+                <button class="btn btn-tool" onclick="undo()" title="Undo (Ctrl+Z)">
+                    <i class="fas fa-rotate-left"></i>
+                </button>
+                <button class="btn btn-tool" onclick="redo()" title="Redo (Ctrl+Shift+Z)">
+                    <i class="fas fa-rotate-right"></i>
+                </button>
+                <button class="btn btn-tool" onclick="openFindReplace()" title="Find & Replace (Ctrl+F)">
+                    <i class="fas fa-magnifying-glass"></i>
+                </button>
+                <button class="btn btn-tool" onclick="showStatistics()" title="Statistics">
+                    <i class="fas fa-chart-simple"></i>
+                </button>
+                <button class="btn btn-tool" onclick="validateAll()" title="Validate All">
+                    <i class="fas fa-circle-check"></i>
+                </button>
+                <a href="only-boss-dashboard.html" class="btn btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
+                <button class="btn btn-save" onclick="saveAllChanges()">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar - Page Selector -->
+        <div class="sidebar">
+            <h2>
+                <i class="fas fa-file-lines"></i>
+                Select Page
+            </h2>
+            <div class="page-list">
+                <div class="page-item active" onclick="loadPage('home')" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home Page</span>
+                </div>
+                <div class="page-item" onclick="loadPage('about')" data-page="about">
+                    <i class="fas fa-user"></i>
+                    <span>About Page</span>
+                </div>
+                <div class="page-item" onclick="loadPage('contact')" data-page="contact">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact Page</span>
+                </div>
+                <div class="page-item" onclick="loadPage('home-mobile')" data-page="home-mobile">
+                    <i class="fas fa-mobile-screen"></i>
+                    <span>Home Mobile</span>
+                </div>
+                <div class="page-item" onclick="loadPage('about-mobile')" data-page="about-mobile">
+                    <i class="fas fa-mobile-screen-button"></i>
+                    <span>About Mobile</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid rgba(204, 0, 0, 0.2);">
+                <h3 style="color: #cc0000; font-size: 1.1rem; margin-bottom: 15px;">
+                    <i class="fas fa-toolbox"></i> Tools
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="page-item" onclick="importJSON()" style="cursor: pointer; border: none;">
+                        <i class="fas fa-file-import"></i>
+                        <span>Import JSON</span>
+                    </button>
+                    <button class="page-item" onclick="downloadJSON()" style="cursor: pointer; border: none;">
+                        <i class="fas fa-download"></i>
+                        <span>Download Backup</span>
+                    </button>
+                    <button class="page-item" onclick="resetToDefaults()" style="cursor: pointer; border: none;">
+                        <i class="fas fa-arrow-rotate-left"></i>
+                        <span>Reset to Defaults</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="editor-area">
+            <div id="editorContent">
+                <!-- Content will be loaded here dynamically -->
+            </div>
+
+            <!-- Export Section -->
+            <div class="export-section">
+                <h3><i class="fas fa-code"></i> Export Changes</h3>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 15px;">
+                    Generate updated HTML snippets to copy-paste into your files
+                </p>
+                <div class="export-actions">
+                    <button class="btn-export" onclick="exportHTML()">
+                        <i class="fas fa-file-code"></i> Export HTML
+                    </button>
+                    <button class="btn-export" onclick="exportJSON()">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                    <button class="btn-export" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
+                    </button>
+                    <button class="btn-export" onclick="togglePreviewMode()">
+                        <i class="fas fa-eye"></i> Toggle Preview
+                    </button>
+                </div>
+                <div class="export-output" id="exportOutput"></div>
+                
+                <!-- Live Preview Panel -->
+                <div id="livePreviewPanel" style="display: none; margin-top: 20px; padding: 20px; background: rgba(0, 0, 0, 0.4); border: 2px solid rgba(76, 175, 80, 0.3); border-radius: 10px;">
+                    <h4 style="color: #4CAF50; margin-bottom: 15px;">
+                        <i class="fas fa-eye"></i> Live Preview
+                    </h4>
+                    <div id="livePreviewContent" style="color: rgba(255, 255, 255, 0.8); line-height: 1.6;"></div>
+                </div>
+            </div>
+
+            <!-- Keyboard Shortcuts Help -->
+            <div style="background: rgba(255, 193, 7, 0.1); border: 2px solid #FFC107; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                <h4 style="color: #FFD54F; margin-bottom: 15px;">
+                    <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;">
+                    <div><kbd style="background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px;">Ctrl+Z</kbd> Undo</div>
+                    <div><kbd style="background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px;">Ctrl+Shift+Z</kbd> Redo</div>
+                    <div><kbd style="background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px;">Ctrl+S</kbd> Export</div>
+                    <div><kbd style="background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px;">Ctrl+F</kbd> Find & Replace</div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="message success" id="successMsg"></div>
+            <div class="message error" id="errorMsg"></div>
+        </div>
+    </div>
+
+    <script src="content-editor.js"></script>
+</body>
+</html>

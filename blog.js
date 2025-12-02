@@ -117,14 +117,15 @@
     const uniqueTags = Array.from(new Set(posts.filter(p=>p.status==='published').flatMap(p=>p.tags||[]))).sort();
     
     const html = `
-      <div class="header">
-        <div class="title">Blog</div>
-        <input class="search-input" id="search" placeholder="Search posts..." value="${escapeHTML(searchParam)}" />
-      </div>
-      <div class="container">
+      <div class="blog-search-filters">
+        <div class="search">
+          <input class="search-input" id="search" placeholder="🔍 Search posts..." value="${escapeHTML(searchParam)}" />
+        </div>
         <div class="filters">
           ${uniqueTags.map(t=> `<span class="tag ${t===tagParam?'active':''}" data-tag="${escapeHTML(t)}">${escapeHTML(t)}</span>`).join('')}
         </div>
+      </div>
+      <div class="container">
         <div id="list">
           ${pageItems.length === 0 ? '<p class="loading">No posts found.</p>' : ''}
           ${pageItems.map(p=> `
@@ -139,9 +140,9 @@
           `).join('')}
         </div>
         <div class="pagination">
-          <button class="button" id="prev" ${page<=1?'disabled':''}>Prev</button>
+          <button class="button" id="prev" ${page<=1?'disabled':''}>← Previous</button>
           <span>Page ${page} / ${totalPages}</span>
-          <button class="button" id="next" ${page>=totalPages?'disabled':''}>Next</button>
+          <button class="button" id="next" ${page>=totalPages?'disabled':''}>Next →</button>
         </div>
       </div>`;
     
