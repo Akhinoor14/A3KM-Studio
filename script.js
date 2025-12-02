@@ -5138,9 +5138,9 @@ document.addEventListener('DOMContentLoaded', function() {
 const sampleProjects = [
     {
         title: "Interactive Engineering Portfolio Website",
-        shortDescription: "Mobile-first portfolio portal: documentation, showcase, and quick links (GitHub-free).",
-        fullDescription: "Mobile-first portal that surfaces local documentation and an interactive showcase. This trimmed desktop card intentionally links to the mobile pages: a self-contained documentation page, a showcase walkthrough, and the mobile portfolio landing. The desktop card removes repo-level downloads and GitHub-centric actions to keep users in the faster, locally-hosted mobile experience.",
-        tech: ["HTML5", "CSS3", "JavaScript", "Mobile-First", "Local Docs", "Fast Navigation"],
+        shortDescription: "Comprehensive portfolio with interactive documentation, project showcase, and development journey.",
+        fullDescription: "A full-featured portfolio website showcasing engineering projects with detailed documentation. Features include interactive project showcase with animated statistics, comprehensive development documentation in English and বাংলা, timeline visualization, technical architecture details, and prompting strategy insights. Built with HTML5, CSS3, and Vanilla JavaScript demonstrating modern web development practices.",
+        tech: ["HTML5", "CSS3", "JavaScript", "Responsive Design", "Documentation", "Web Development"],
         category: "web",
         github: "",
         demo: null,
@@ -5150,25 +5150,25 @@ const sampleProjects = [
             "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop",
             "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=400&fit=crop"
         ],
-        features: ["Mobile Portal", "Documentation", "Showcase", "GitHub-Free"],
+        features: ["Interactive Showcase", "Bilingual Documentation", "Project Timeline", "Development Insights"],
         featured: true,
         // Special Portfolio website structure
         specialType: "portfolio",
         websiteFeatures: [
             {
-                name: "Documentation",
+                name: "Interactive Documentation",
                 icon: "📚",
-                details: ["Local development guide", "Architecture & decisions", "English and বাংলা versions"]
+                details: ["Complete development guide", "Architecture decisions & best practices", "Bilingual support (English & বাংলা)", "Code examples & walkthroughs"]
             },
             {
-                name: "Showcase",
+                name: "Project Showcase",
                 icon: "🎨",
-                details: ["Interactive timeline", "Feature walkthrough", "Animated statistics"]
+                details: ["Animated statistics dashboard", "Interactive development timeline", "Feature highlights & demos", "Technology stack visualization"]
             },
             {
-                name: "Mobile Portal",
-                icon: "📱",
-                details: ["GitHub-free mobile landing", "Quick links", "Fast local navigation"]
+                name: "Development Journey",
+                icon: "🚀",
+                details: ["Phase-by-phase breakdown", "Challenges & solutions", "AI collaboration insights", "Performance metrics"]
             }
         ],
         repoFiles: {
@@ -5180,17 +5180,13 @@ const sampleProjects = [
         },
         actionsOverride: `
             <div class="project-actions-grid">
-                <a href="portfolio-mobile.html" class="action-btn btn-mobile" target="_self" rel="noopener">
-                    <i class="fas fa-mobile-alt"></i>
-                    <span>Mobile View</span>
-                </a>
-                <a href="documentation-clean.html" class="action-btn btn-docs" target="_self" rel="noopener">
-                    <i class="fas fa-book-open"></i>
+                <a href="documentation-clean.html" class="action-btn btn-readme" target="_blank" rel="noopener" title="Read comprehensive development documentation">
+                    <i class="fas fa-book"></i>
                     <span>Documentation</span>
                 </a>
-                <a href="portfolio-project-mobile.html" class="action-btn btn-showcase" target="_self" rel="noopener">
-                    <i class="fas fa-eye"></i>
-                    <span>Showcase</span>
+                <a href="portfolio-project-mobile.html" class="action-btn btn-demo" target="_blank" rel="noopener" title="View interactive project showcase">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Project Showcase</span>
                 </a>
             </div>
         `
