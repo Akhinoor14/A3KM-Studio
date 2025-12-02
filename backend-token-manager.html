@@ -465,6 +465,9 @@
         <h1><i class="fas fa-server"></i> Backend Token Manager</h1>
         <p class="subtitle">🔐 Admin Only - Configure GitHub API Tokens for Backend Proxy</p>
 
+        <!-- 🔥 LIVE BACKEND STATUS BAR 🔥 -->
+        <div id="token-backend-status"></div>
+
         <div id="alertContainer"></div>
 
         <!-- Server Status Section -->
@@ -748,10 +751,26 @@ python secure-proxy-server.py</pre>
                 console.log('📥 Server response:', data);
 
                 if (response.ok) {
-                    showAlert(`Success! Added ${data.new_tokens_added} token(s). Total: ${data.total_tokens}`, 'success');
+                    const successMsg = `✅ Success! Added ${data.new_tokens_added} token(s). Total: ${data.total_tokens}\n\n` +
+                                     `🔐 Tokens are now active and will be automatically used by:\n` +
+                                     `• SOLIDWORKS Upload Manager\n` +
+                                     `• All GitHub API operations\n` +
+                                     `• Auto rate-limit management\n\n` +
+                                     `No manual configuration needed - backend handles everything!`;
+                    
+                    showAlert(successMsg, 'success');
                     document.getElementById('newTokens').value = '';
                     await checkServerHealth();
                     await refreshTokenStats();
+                    
+                    // Show live notification
+                    if (typeof backendConnection !== 'undefined') {
+                        backendConnection.showLiveNotification(
+                            `✅ ${data.new_tokens_added} token(s) added! Now available across all pages.`,
+                            'success',
+                            4000
+                        );
+                    }
                 } else {
                     const errorMsg = data.error || 'Failed to add tokens. Check admin password.';
                     console.error('❌ Server error:', errorMsg);
@@ -1039,6 +1058,70 @@ python secure-proxy-server.py</pre>
         window.addEventListener('DOMContentLoaded', () => {
             checkServerHealth();
         });
+    </script>
+
+    <!-- 🔥 HARDCORE BACKEND CONNECTION SYSTEM 🔥 -->
+    <script src="backend-connection-core.js"></script>
+    <script src="backend-status-ui.js"></script>
+    <script>
+        // Initialize hardcore backend connection - NO MERCY!
+        const backendConnection = new BackendConnectionCore({
+            backendUrl: BACKEND_URL,
+            reconnectInterval: 5000,      // Retry every 5 seconds
+            healthCheckInterval: 15000,   // Health check every 15 seconds
+            maxRetry: Infinity,            // NEVER GIVE UP!
+            timeout: 10000                 // 10 second timeout
+        });
+
+        // Initialize beautiful status UI
+        const backendUI = new BackendStatusUI(backendConnection, 'token-backend-status');
+
+        // Start connection immediately
+        backendConnection.start();
+
+        // Handle connection events
+        backendConnection.on('connected', (status) => {
+            console.log('✅ Backend CONNECTED:', status);
+            checkServerHealth(); // Update old UI
+        });
+
+        backendConnection.on('disconnected', (status) => {
+            console.log('❌ Backend DISCONNECTED:', status);
+            checkServerHealth(); // Update old UI
+        });
+
+        backendConnection.on('status', () => {
+            checkServerHealth(); // Update on every status change
+        });
+
+        // Override old checkServerHealth to use new system
+        function checkServerHealth() {
+            const status = backendConnection.getStatus();
+            
+            const statusValue = document.getElementById('serverStatusValue');
+            const tokensCount = document.getElementById('tokensCount');
+            const rateLimit = document.getElementById('rateLimit');
+            
+            if (status.isConnected && status.lastStatus) {
+                if (statusValue) {
+                    statusValue.innerHTML = '<span style="color: #28a745;"><i class="fas fa-check-circle"></i> Online</span>';
+                }
+                if (tokensCount) {
+                    tokensCount.textContent = status.lastStatus.tokens ? 'Active' : 'Not loaded';
+                }
+                if (rateLimit) {
+                    rateLimit.textContent = `${status.lastStatus.rateLimit || 60} req/hour`;
+                }
+            } else {
+                if (statusValue) {
+                    statusValue.innerHTML = '<span style="color: #dc3545;"><i class="fas fa-times-circle"></i> Offline - Reconnecting...</span>';
+                }
+                if (tokensCount) tokensCount.textContent = 'N/A';
+                if (rateLimit) rateLimit.textContent = 'N/A';
+            }
+        }
+
+        console.log('🔥 HARDCORE BACKEND CONNECTION ACTIVE - TOKEN MANAGER EDITION!');
     </script>
 </body>
 </html>

@@ -544,6 +544,9 @@
             <p>Complete project management - Upload, Update, Delete with auto README & GitHub sync</p>
         </div>
 
+        <!-- 🔥 LIVE BACKEND STATUS BAR 🔥 -->
+        <div id="upload-backend-status"></div>
+
         <!-- Backend API Status Panel -->
         <div class="token-panel">
             <div class="token-status">
@@ -1322,12 +1325,11 @@
             }
 
             // Check backend connection
-            if (!backendAvailable || !backendToken) {
-                showMessage(type, 'Backend not connected. Click "Refresh" to reconnect.', 'error');
-                showLiveNotification('Please connect to backend first!', 'error');
+            if (!backendConnection || !backendConnection.isConnected) {
+                showMessage(type, '❌ Backend not connected. Reconnecting...', 'error');
+                backendConnection.showLiveNotification('Backend offline! Start: python secure-proxy-server.py', 'error', 5000);
                 return;
             }
-            const token = backendToken;
 
             // Show uploading status and enable cancel
             showMessage(type, `Uploading ${files.length} file(s) to ${day}...`, 'info');
@@ -1348,18 +1350,15 @@
                 const basePath = type.toUpperCase(); // CW or HW
                 
                 // Pre-compute next SOLIDWORKS folder index for this day and group all SW files together
-                const existingItemsResp = await fetch(
-                    `https://api.github.com/repos/${owner}/${repo}/contents/${basePath}/${day}`,
-                    {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
+                // Use backend-managed GitHub API request
+                const existingItemsResp = await backendConnection.githubRequest(
+                    `/repos/${owner}/${repo}/contents/${basePath}/${day}`,
+                    { method: 'GET' }
+                ).catch(() => null);
+                
                 let nextIndex = 1;
-                if (existingItemsResp.ok) {
-                    const items = await existingItemsResp.json();
+                if (existingItemsResp) {
+                    const items = Array.isArray(existingItemsResp) ? existingItemsResp : [];
                     const re = new RegExp(`^${type} \\d{2} ${day.toLowerCase().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`);
                     const indices = items
                         .filter(it => it.type === 'dir' && re.test(it.name))
@@ -1440,16 +1439,11 @@
                         // Convert file to base64
                         const content = await fileToBase64(file);
                         
-                        // Upload to GitHub
-                        const response = await fetch(
-                            `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
+                        // Upload to GitHub using backend-managed tokens
+                        await backendConnection.githubRequest(
+                            `/repos/${owner}/${repo}/contents/${uploadPath}`,
                             {
                                 method: 'PUT',
-                                signal: abortCtrl.signal,
-                                headers: {
-                                    'Authorization': `token ${token}`,
-                                    'Content-Type': 'application/json',
-                                },
                                 body: JSON.stringify({
                                     message: `Upload ${file.name} to ${day} via Upload Manager`,
                                     content: content.split(',')[1], // Remove data:... prefix
@@ -1458,42 +1452,51 @@
                             }
                         );
 
-                        if (response.ok) {
-                            successCount++;
-                        } else {
-                            const error = await response.json();
-                            console.error(`Failed to upload ${file.name}:`, error);
-                            failCount++;
-                        }
+                        successCount++;
+                        console.log(`✅ Uploaded: ${file.name}`);
+                        
                     } catch (error) {
-                        console.error(`Error uploading ${file.name}:`, error);
+                        console.error(`❌ Failed to upload ${file.name}:`, error);
                         failCount++;
+                        
+                        // Check if aborted
+                        if (error.name === 'AbortError') {
+                            throw error; // Re-throw to stop loop
+                        }
+                    }
                     }
                 }
 
                 // Show final result
                 if (failCount === 0) {
                     showMessage(type, `✅ Successfully uploaded ${successCount} file(s) to ${day}!`, 'success');
+                    backendConnection.showLiveNotification(`✅ ${successCount} files uploaded!`, 'success');
                     clearFiles(type);
                 } else {
                     showMessage(type, `⚠️ Uploaded ${successCount} file(s), ${failCount} failed`, 'warning');
+                    backendConnection.showLiveNotification(`⚠️ ${failCount} files failed`, 'warning');
                 }
 
             } catch (error) {
-                console.error('Upload error:', error);
+                console.error('❌ Upload error:', error);
                 
                 let errorMsg = 'Upload failed: ';
-                if (!navigator.onLine) {
-                    errorMsg += 'No internet connection. Please check your network.';
-                } else if (error.message.includes('fetch')) {
-                    errorMsg += 'Network error. Please try again.';
-                } else if (error.message.includes('token')) {
-                    errorMsg += 'Invalid GitHub token. Please update your token.';
+                if (error.name === 'AbortError') {
+                    errorMsg = '⛔ Upload cancelled by user';
+                } else if (!navigator.onLine) {
+                    errorMsg = '📡 No internet connection';
+                } else if (error.message.includes('not connected')) {
+                    errorMsg = '🔌 Backend not connected - Reconnecting...';
+                } else if (error.message.includes('rate limit')) {
+                    errorMsg = '⏱️ Rate limit - Backend switching tokens...';
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    errorMsg = '🔐 Token error - Check Backend Token Manager';
                 } else {
-                    errorMsg += error.message;
+                    errorMsg = error.message;
                 }
                 
                 showMessage(type, `❌ ${errorMsg}`, 'error');
+                backendConnection.showLiveNotification(errorMsg, 'error', 5000);
             } finally {
                 // Reset button
                 if (uploadBtn) {
@@ -1618,12 +1621,11 @@
                 return;
             }
 
-            if (!backendAvailable || !backendToken) {
-                showMessage('solo', 'Backend not connected. Click "Refresh".', 'error');
-                showLiveNotification('Connect backend first!', 'error');
+            if (!backendConnection || !backendConnection.isConnected) {
+                showMessage('solo', '❌ Backend not connected. Reconnecting...', 'error');
+                backendConnection.showLiveNotification('Backend offline!', 'error', 5000);
                 return;
             }
-            const token = backendToken;
 
             showMessage('solo', `Uploading ${files.length} file(s) to ${projectName}...`, 'info');
             const uploadBtn = document.getElementById('soloUploadBtn');
@@ -1698,15 +1700,11 @@
                         const uploadPath = `Solo/${projectName}/${file.name}`;
                         const content = await fileToBase64(file);
                         
-                        const response = await fetch(
-                            `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
+                        // Upload using backend-managed tokens
+                        await backendConnection.githubRequest(
+                            `/repos/${owner}/${repo}/contents/${uploadPath}`,
                             {
                                 method: 'PUT',
-                                signal: abortCtrl.signal,
-                                headers: {
-                                    'Authorization': `token ${token}`,
-                                    'Content-Type': 'application/json',
-                                },
                                 body: JSON.stringify({
                                     message: `Upload ${file.name} to Solo/${projectName}`,
                                     content: content.split(',')[1],
@@ -1715,24 +1713,28 @@
                             }
                         );
 
-                        if (response.ok) successCount++;
-                        else failCount++;
+                        successCount++;
+                        console.log(`✅ Uploaded: ${file.name}`);
                     } catch (error) {
-                        console.error(`Error uploading ${file.name}:`, error);
+                        console.error(`❌ Failed: ${file.name}:`, error);
                         failCount++;
                     }
                 }
 
                 if (failCount === 0) {
                     showMessage('solo', `✅ Successfully uploaded ${successCount} file(s)!`, 'success');
+                    backendConnection.showLiveNotification(`✅ ${successCount} files uploaded!`, 'success');
                     clearFiles('solo');
                     projectNameInput.value = '';
                 } else {
                     showMessage('solo', `⚠️ Uploaded ${successCount}, ${failCount} failed`, 'warning');
+                    backendConnection.showLiveNotification(`⚠️ ${failCount} files failed`, 'warning');
                 }
 
             } catch (error) {
+                console.error('❌ Solo upload error:', error);
                 showMessage('solo', `❌ Upload failed: ${error.message}`, 'error');
+                backendConnection.showLiveNotification('Upload failed: ' + error.message, 'error', 5000);
             } finally {
                 if (uploadBtn) {
                     uploadBtn.disabled = false;
@@ -1745,11 +1747,10 @@
 
         // Load days or projects based on type
         async function loadDaysOrProjects(mode, type) {
-            if (!backendAvailable || !backendToken) {
-                showMessage(mode, 'Backend not connected.', 'error');
+            if (!backendConnection || !backendConnection.isConnected) {
+                showMessage(mode, '❌ Backend not connected', 'error');
                 return;
             }
-            const token = backendToken;
 
             const daySelect = document.getElementById(mode + 'Day');
             daySelect.innerHTML = '<option value="">-- Loading... --</option>';
@@ -1763,19 +1764,13 @@
                 daySelect.innerHTML = '<option value="">-- Choose Day/Project --</option>';
 
                 if (type === 'Solo') {
-                    // Load solo projects
-                    const response = await fetch(
-                        `https://api.github.com/repos/${owner}/${repo}/contents/Solo`,
-                        {
-                            headers: {
-                                'Authorization': `token ${token}`,
-                                'Accept': 'application/vnd.github.v3+json'
-                            }
-                        }
-                    );
-
-                    if (response.ok) {
-                        const items = await response.json();
+                    // Load solo projects using backend tokens
+                    try {
+                        const items = await backendConnection.githubRequest(
+                            `/repos/${owner}/${repo}/contents/Solo`,
+                            { method: 'GET' }
+                        );
+                        
                         const projects = items.filter(item => item.type === 'dir');
                         projects.forEach(project => {
                             const option = document.createElement('option');
@@ -1784,20 +1779,16 @@
                             daySelect.appendChild(option);
                         });
                         daySelect.disabled = false;
-                    } else {
+                    } catch (error) {
                         showMessage(mode, 'No solo projects found', 'warning');
                     }
                 } else {
-                    // Load CW/HW days
-                    const response = await fetch(
-                        `https://api.github.com/repos/${owner}/${repo}/contents/${type}`,
-                        {
-                            headers: {
-                                'Authorization': `token ${token}`,
-                                'Accept': 'application/vnd.github.v3+json'
-                            }
-                        }
-                    );
+                    // Load CW/HW days using backend tokens
+                    try {
+                        const items = await backendConnection.githubRequest(
+                            `/repos/${owner}/${repo}/contents/${type}`,
+                            { method: 'GET' }
+                        );
 
                     if (response.ok) {
                         const items = await response.json();
@@ -2203,6 +2194,319 @@
             }
             if (deleteBtn) deleteBtn.disabled = true;
         }
+    </script>
+
+    <!-- 🔥 HARDCORE BACKEND CONNECTION SYSTEM 🔥 -->
+    <script src="backend-connection-core.js"></script>
+    <script src="backend-status-ui.js"></script>
+    <script>
+        // Initialize hardcore backend connection - NO MERCY!
+        const backendConnection = new BackendConnectionCore({
+            backendUrl: BACKEND_URL || 'http://localhost:5000',
+            reconnectInterval: 5000,      // Retry every 5 seconds
+            healthCheckInterval: 15000,   // Health check every 15 seconds
+            maxRetry: Infinity,            // NEVER GIVE UP!
+            timeout: 10000                 // 10 second timeout
+        });
+
+        // Initialize beautiful status UI
+        const backendUI = new BackendStatusUI(backendConnection, 'upload-backend-status');
+
+        // Start connection immediately
+        backendConnection.start();
+
+        // Handle connection events
+        backendConnection.on('connected', (status) => {
+            console.log('✅ Backend CONNECTED:', status);
+            
+            // Update old UI elements if they exist
+            const ind = document.getElementById('backendIndicator');
+            const txt = document.getElementById('backendStatusText');
+            const tc = document.getElementById('tokenCountText');
+            const rl = document.getElementById('rateLimitText');
+            
+            if (ind) {
+                ind.style.transition = 'background 0.3s';
+                ind.style.background = '#00cc00';
+            }
+            if (txt) txt.textContent = '✅ Backend Connected';
+            if (tc) tc.textContent = `Tokens: ${status.tokens || 0}`;
+            if (rl) rl.textContent = `Limit: ${status.rateLimit || 60}/hr`;
+            
+            // Enable all upload buttons
+            document.querySelectorAll('.upload-btn, button[onclick*="upload"]').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+            
+            backendAvailable = true;
+            backendToken = 'BACKEND_MANAGED';
+        });
+
+        backendConnection.on('disconnected', (status) => {
+            console.log('❌ Backend DISCONNECTED:', status);
+            
+            // Update old UI elements
+            const ind = document.getElementById('backendIndicator');
+            const txt = document.getElementById('backendStatusText');
+            const tc = document.getElementById('tokenCountText');
+            const rl = document.getElementById('rateLimitText');
+            
+            if (ind) {
+                ind.style.transition = 'background 0.3s';
+                ind.style.background = '#dc3545';
+            }
+            if (txt) txt.textContent = '❌ Backend Offline - Reconnecting...';
+            if (tc) tc.textContent = 'Tokens: N/A';
+            if (rl) rl.textContent = 'Limit: N/A';
+            
+            // Disable upload buttons
+            document.querySelectorAll('.upload-btn, button[onclick*="upload"]').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+            
+            backendAvailable = false;
+            backendToken = null;
+        });
+
+        backendConnection.on('error', (data) => {
+            console.error('❌ Backend ERROR:', data.error, '| Retry:', data.retryCount);
+        });
+
+        // Override old checkBackendStatus function to use new system
+        async function checkBackendStatus(showNotif = false) {
+            const status = backendConnection.getStatus();
+            
+            if (showNotif) {
+                if (status.isConnected) {
+                    backendConnection.showLiveNotification('Backend connected!', 'success');
+                } else {
+                    backendConnection.showLiveNotification(
+                        'Backend offline. Auto-reconnecting... Start: python secure-proxy-server.py',
+                        'error',
+                        5000
+                    );
+                }
+            }
+            
+            return status;
+        }
+
+        // Add refresh button handler if exists
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                await backendConnection.forceReconnect();
+                
+                setTimeout(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                }, 1000);
+            });
+        }
+
+        console.log('🔥 HARDCORE BACKEND CONNECTION ACTIVE - NO MERCY MODE!');
+    </script>
+
+    <!-- 🔐 GitHub Upload Helper with Backend Token Management -->
+    <script>
+        /**
+         * Upload files to GitHub using backend-managed tokens
+         * Automatically uses token pool from backend token manager
+         */
+        async function uploadFilesToGitHub(files, targetPath, commitMessage) {
+            if (!backendConnection.isConnected) {
+                throw new Error('Backend not connected. Cannot upload files.');
+            }
+
+            console.log(`📤 Uploading ${files.length} file(s) to ${targetPath}`);
+            console.log('🔐 Using backend-managed token pool');
+
+            try {
+                const uploadPromises = files.map(async (file) => {
+                    const filePath = `${targetPath}/${file.name}`;
+                    
+                    console.log(`  → Uploading: ${file.name}`);
+                    
+                    // Convert file to base64
+                    const base64Content = await fileToBase64(file);
+                    const content = base64Content.split(',')[1]; // Remove data:type;base64, prefix
+                    
+                    // Upload through backend proxy (automatically uses token pool)
+                    const result = await backendConnection.githubRequest(
+                        `/repos/Akhinoor14/A3KM-Studio/contents/${filePath}`,
+                        {
+                            method: 'PUT',
+                            body: JSON.stringify({
+                                message: commitMessage || `Upload ${file.name}`,
+                                content: content,
+                                branch: 'main'
+                            })
+                        }
+                    );
+                    
+                    console.log(`  ✅ Uploaded: ${file.name}`);
+                    return result;
+                });
+
+                const results = await Promise.all(uploadPromises);
+                
+                console.log(`✅ All ${files.length} files uploaded successfully!`);
+                backendConnection.showLiveNotification(
+                    `✅ Uploaded ${files.length} file(s) successfully!`,
+                    'success'
+                );
+                
+                return results;
+
+            } catch (error) {
+                console.error('❌ Upload failed:', error);
+                
+                let errorMsg = 'Upload failed: ' + error.message;
+                
+                if (error.message.includes('not connected')) {
+                    errorMsg = '❌ Backend offline! Start server: python secure-proxy-server.py';
+                } else if (error.message.includes('rate limit')) {
+                    errorMsg = '⚠️ Rate limit exceeded. Backend will auto-switch to next token...';
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    errorMsg = '🔐 Token issue. Check tokens in Backend Token Manager.';
+                }
+                
+                backendConnection.showLiveNotification(errorMsg, 'error', 5000);
+                throw error;
+            }
+        }
+
+        /**
+         * Update existing file on GitHub using backend tokens
+         */
+        async function updateFileOnGitHub(filePath, file, commitMessage) {
+            if (!backendConnection.isConnected) {
+                throw new Error('Backend not connected. Cannot update file.');
+            }
+
+            console.log(`📝 Updating file: ${filePath}`);
+
+            try {
+                // Get current file SHA (required for update)
+                const currentFile = await backendConnection.githubRequest(
+                    `/repos/Akhinoor14/A3KM-Studio/contents/${filePath}`,
+                    { method: 'GET' }
+                );
+
+                // Convert new file to base64
+                const base64Content = await fileToBase64(file);
+                const content = base64Content.split(',')[1];
+
+                // Update file
+                const result = await backendConnection.githubRequest(
+                    `/repos/Akhinoor14/A3KM-Studio/contents/${filePath}`,
+                    {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            message: commitMessage || `Update ${file.name}`,
+                            content: content,
+                            sha: currentFile.sha,
+                            branch: 'main'
+                        })
+                    }
+                );
+
+                console.log(`✅ File updated: ${filePath}`);
+                backendConnection.showLiveNotification(
+                    `✅ File updated successfully!`,
+                    'success'
+                );
+
+                return result;
+
+            } catch (error) {
+                console.error('❌ Update failed:', error);
+                backendConnection.showLiveNotification(
+                    'Update failed: ' + error.message,
+                    'error',
+                    5000
+                );
+                throw error;
+            }
+        }
+
+        /**
+         * Delete file from GitHub using backend tokens
+         */
+        async function deleteFileFromGitHub(filePath, commitMessage) {
+            if (!backendConnection.isConnected) {
+                throw new Error('Backend not connected. Cannot delete file.');
+            }
+
+            console.log(`🗑️ Deleting file: ${filePath}`);
+
+            try {
+                // Get current file SHA (required for delete)
+                const currentFile = await backendConnection.githubRequest(
+                    `/repos/Akhinoor14/A3KM-Studio/contents/${filePath}`,
+                    { method: 'GET' }
+                );
+
+                // Delete file
+                const result = await backendConnection.githubRequest(
+                    `/repos/Akhinoor14/A3KM-Studio/contents/${filePath}`,
+                    {
+                        method: 'DELETE',
+                        body: JSON.stringify({
+                            message: commitMessage || `Delete ${filePath}`,
+                            sha: currentFile.sha,
+                            branch: 'main'
+                        })
+                    }
+                );
+
+                console.log(`✅ File deleted: ${filePath}`);
+                backendConnection.showLiveNotification(
+                    `✅ File deleted successfully!`,
+                    'success'
+                );
+
+                return result;
+
+            } catch (error) {
+                console.error('❌ Delete failed:', error);
+                backendConnection.showLiveNotification(
+                    'Delete failed: ' + error.message,
+                    'error',
+                    5000
+                );
+                throw error;
+            }
+        }
+
+        /**
+         * Get folder contents from GitHub using backend tokens
+         */
+        async function getGitHubFolderContents(folderPath) {
+            if (!backendConnection.isConnected) {
+                throw new Error('Backend not connected. Cannot fetch folder contents.');
+            }
+
+            try {
+                const result = await backendConnection.githubRequest(
+                    `/repos/Akhinoor14/A3KM-Studio/contents/${folderPath}`,
+                    { method: 'GET' }
+                );
+
+                return result;
+
+            } catch (error) {
+                console.error('❌ Failed to get folder contents:', error);
+                throw error;
+            }
+        }
+
+        console.log('🔐 GitHub upload helper loaded - using backend token pool');
     </script>
 </body>
 </html>
