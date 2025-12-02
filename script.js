@@ -5516,18 +5516,22 @@ const sampleProjects = [
         },
         // Custom action buttons override
         actionsOverride: `
-            <div class="project-actions">
-                <button class="action-btn btn-browse" onclick="window.openRepoFileBrowser('Akhinoor14', 'Tinkercad-basic-Projects-Using-Arduino-Uno', '')">
-                    <i class="fas fa-folder-open"></i> Browse
+            <div class="project-actions-grid">
+                <button class="action-btn btn-browse" onclick="openGitHubBrowser('https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno', 'Arduino UNO Projects with Tinkercad')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Browse</span>
                 </button>
-                <a class="action-btn btn-github" href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno">
-                    <i class="fab fa-github"></i> GitHub
+                <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno" class="action-btn btn-github" target="_blank" rel="noopener">
+                    <i class="fab fa-github"></i>
+                    <span>GitHub</span>
                 </a>
-                <a class="action-btn btn-download" href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno/archive/refs/heads/main.zip">
-                    <i class="fas fa-download"></i> Download ZIP
+                <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno/archive/refs/heads/main.zip" class="action-btn btn-zip" target="_blank" rel="noopener" title="If main is unavailable, try master from GitHub">
+                    <i class="fas fa-file-archive"></i>
+                    <span>Download ZIP</span>
                 </a>
-                <a class="action-btn btn-readme" href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno#readme">
-                    <i class="fas fa-book"></i> README
+                <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno#readme" class="action-btn btn-readme" target="_blank" rel="noopener">
+                    <i class="fas fa-book"></i>
+                    <span>README</span>
                 </a>
             </div>
         `
