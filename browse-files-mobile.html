@@ -15,6 +15,53 @@
   <link rel="stylesheet" href="mobile-clean.css" />
   <link rel="stylesheet" href="browse-files-mobile.css" />
   <link rel="stylesheet" href="mobile-backend-status.css" />
+  
+  <style>
+    /* Performance optimizations for Browse Files */
+    body {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    
+    .browse-header {
+      will-change: transform;
+      transform: translateZ(0);
+    }
+    
+    .browse-content {
+      contain: layout style paint;
+    }
+    
+    /* 3D Preview optimizations */
+    .browse-3d-preview-container,
+    .lazy-3d-browse {
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout style paint;
+    }
+    
+    .browse-item {
+      contain: layout style;
+    }
+    
+    /* Smooth transitions */
+    .browse-3d-overlay {
+      transition: opacity 0.3s ease;
+    }
+    
+    /* Touch optimization */
+    .browse-back-btn,
+    .browse-action-btn,
+    .browse-3d-btn {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    /* Prevent layout shift during 3D load */
+    .browse-3d-preview-wrapper {
+      min-height: 200px;
+    }
+  </style>
 </head>
 <body>
 
@@ -310,7 +357,7 @@
         const size = formatSize(file.size);
         
         if (is3D) {
-          // 3D File with embedded preview
+          // 3D File with embedded preview (Lazy Loading)
           html += `
             <div class="browse-item browse-file browse-3d-file" 
                  data-name="${file.name}"
@@ -319,17 +366,13 @@
                  data-html-url="${file.html_url}"
                  data-size="${file.size}">
               <div class="browse-3d-preview-wrapper">
-                <div class="browse-3d-preview-container" onclick="event.stopPropagation(); openModelViewer({src: '${file.download_url}', title: '${file.name}'})">
-                  <model-viewer
-                    src="${file.download_url}"
-                    camera-controls
-                    loading="lazy"
-                    reveal="interaction"
-                    style="width:100%;height:100%;--poster-color:transparent;">
-                  </model-viewer>
-                  <div class="browse-3d-overlay">
-                    <i class="fas fa-expand"></i>
-                    <span>Tap to expand</span>
+                <div class="browse-3d-preview-container lazy-3d-browse" 
+                     data-model-src="${file.download_url}" 
+                     onclick="event.stopPropagation(); openModelViewer({src: '${file.download_url}', title: '${file.name}'})"
+                     style="position: relative; background: rgba(0,0,0,0.5); min-height: 200px; display: flex; align-items: center; justify-content: center; border-radius: 12px; overflow: hidden;">
+                  <div class="preview-placeholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-cube" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;"></i>
+                    <span style="font-size: 0.9rem; font-weight: 600;">Tap to preview 3D model</span>
                   </div>
                 </div>
               </div>
@@ -1572,9 +1615,116 @@
               });
             }, 500);
           }
+          
+          // Initialize lazy 3D loading after content loads
+          setTimeout(() => {
+            initBrowseLazy3DPreviews();
+          }, 100);
         });
       }
     });
+    
+    // Lazy load 3D previews for Browse Files using Intersection Observer
+    function initBrowseLazy3DPreviews() {
+      const lazy3DContainers = document.querySelectorAll('.lazy-3d-browse');
+      
+      if (!lazy3DContainers.length) {
+        console.log('🔍 No 3D models found in current folder');
+        return;
+      }
+      
+      console.log(`🎯 Found ${lazy3DContainers.length} 3D models to lazy load`);
+      
+      const observerOptions = {
+        root: null,
+        rootMargin: '150px', // Start loading earlier for smoother UX
+        threshold: 0.1
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const container = entry.target;
+            const modelSrc = container.getAttribute('data-model-src');
+            
+            // Check if already loaded
+            if (container.querySelector('model-viewer')) {
+              return;
+            }
+            
+            console.log('📦 Loading 3D model:', modelSrc);
+            
+            // Create model-viewer element
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.setAttribute('src', modelSrc);
+            modelViewer.setAttribute('alt', '3D Model');
+            modelViewer.setAttribute('camera-controls', '');
+            modelViewer.setAttribute('disable-zoom', '');
+            modelViewer.setAttribute('interaction-prompt', 'none');
+            modelViewer.setAttribute('reveal', 'manual');
+            modelViewer.style.cssText = 'width: 100%; height: 100%; position: absolute; top: 0; left: 0; --poster-color: transparent;';
+            
+            // Add overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'browse-3d-overlay';
+            overlay.innerHTML = `
+              <i class="fas fa-expand"></i>
+              <span>Tap to expand</span>
+            `;
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; color: #fff; font-size: 0.9rem; font-weight: 600;';
+            
+            // Show overlay on interaction
+            container.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+            container.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+            container.addEventListener('touchstart', () => overlay.style.opacity = '1', { passive: true });
+            
+            // Remove placeholder with fade
+            const placeholder = container.querySelector('.preview-placeholder');
+            if (placeholder) {
+              placeholder.style.transition = 'opacity 0.3s ease';
+              placeholder.style.opacity = '0';
+              setTimeout(() => placeholder.remove(), 300);
+            }
+            
+            // Add to DOM
+            container.appendChild(modelViewer);
+            container.appendChild(overlay);
+            
+            // Manually reveal after load
+            modelViewer.addEventListener('load', () => {
+              console.log('✅ 3D model loaded successfully');
+              modelViewer.dismissPoster();
+            });
+            
+            modelViewer.addEventListener('error', (e) => {
+              console.error('❌ 3D model load failed:', e);
+              container.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: rgba(255,100,100,0.8);">
+                  <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                  <span style="font-size: 0.85rem;">Failed to load 3D model</span>
+                </div>
+              `;
+            });
+            
+            // Stop observing this element
+            observer.unobserve(container);
+          }
+        });
+      }, observerOptions);
+      
+      // Observe all lazy 3D containers
+      lazy3DContainers.forEach(container => observer.observe(container));
+    }
+    
+    // Re-initialize lazy loading when navigating to different folders
+    const originalLoadRepoContents = loadRepoContents;
+    loadRepoContents = async function(path) {
+      await originalLoadRepoContents(path);
+      setTimeout(() => {
+        initBrowseLazy3DPreviews();
+        console.log('🔄 Lazy 3D loading re-initialized for new folder');
+      }, 100);
+    };
   </script>
 
   <!-- Add model-viewer library -->

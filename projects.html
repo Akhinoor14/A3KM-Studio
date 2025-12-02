@@ -75,6 +75,133 @@
         padding: 10px 12px !important;
       }
     }
+    
+    /* Desktop 3D Preview Styles */
+    .desktop-3d-preview-wrapper:hover .desktop-3d-overlay {
+      opacity: 1 !important;
+    }
+    
+    .desktop-file-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.25) !important;
+    }
+    
+    .desktop-file-card.has-3d-preview {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .desktop-3d-preview-wrapper model-viewer {
+      transition: transform 0.3s ease;
+    }
+    
+    .desktop-3d-preview-wrapper:hover model-viewer {
+      transform: scale(1.05);
+    }
+    
+    /* Loading state for files */
+    .sw-loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    
+    /* Smooth transitions for day cards */
+    .desktop-day-card {
+      animation: fadeInUp 0.4s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+      .desktop-files-grid {
+        grid-template-columns: 1fr !important;
+      }
+      
+      .desktop-3d-preview-wrapper {
+        height: 180px !important;
+      }
+    }
+    
+    /* Browser Modal 3D Preview Styles */
+    .browser-item.has-3d-preview {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 15px;
+      align-items: center;
+      padding: 12px;
+    }
+    
+    .browser-3d-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+      position: relative;
+      contain: layout style paint;
+      will-change: transform;
+    }
+    
+    .browser-3d-preview model-viewer {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    
+    .browser-3d-preview .lazy-3d-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 12px;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    .browser-3d-preview .lazy-3d-placeholder i {
+      font-size: 28px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .browser-3d-preview.loaded .lazy-3d-placeholder {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    /* Hover effect for 3D preview */
+    .browser-item.has-3d-preview:hover .browser-3d-preview {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+    }
+    
+    /* Adjust item-info for 3D preview items */
+    .browser-item.has-3d-preview .item-info {
+      flex: 1;
+    }
+    
+    .browser-item.has-3d-preview .item-meta {
+      color: #667eea;
+      font-weight: 600;
+    }
   </style>
   <script src="shared/model-viewer.js"></script>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
@@ -830,12 +957,24 @@
         const frag = document.createDocumentFragment();
         items.forEach(item => {
           const row = document.createElement('div');
-          row.className = `browser-item ${item.type === 'dir' ? 'folder' : 'file'}`;
+          const is3DFile = item.type === 'file' && /\.(glb|gltf)$/i.test(item.name);
+          row.className = `browser-item ${item.type === 'dir' ? 'folder' : 'file'} ${is3DFile ? 'has-3d-preview' : ''}`;
+          
+          // 3D preview for GLB/GLTF files
+          const preview3D = is3DFile ? `
+            <div class="browser-3d-preview lazy-3d-browser" data-model-src="${item.download_url}">
+              <div class="lazy-3d-placeholder">
+                <i class="fas fa-cube"></i>
+                <span>Loading 3D...</span>
+              </div>
+            </div>
+          ` : `<div class="item-icon"><i class="fas fa-${item.type==='dir'?'folder':'file'}"></i></div>`;
+          
           row.innerHTML = `
-            <div class="item-icon"><i class="fas fa-${item.type==='dir'?'folder':'file'}"></i></div>
+            ${preview3D}
             <div class="item-info">
               <div class="item-name">${item.name}</div>
-              <div class="item-meta">${item.type.toUpperCase()}</div>
+              <div class="item-meta">${item.type.toUpperCase()}${is3DFile ? ' • 3D Model' : ''}</div>
             </div>
             <div class="item-actions">
               ${item.type==='file' ? '<button class="item-action-btn view" title="Preview"><i class="fas fa-eye"></i></button>' : ''}
@@ -873,6 +1012,9 @@
         });
         el.list.innerHTML = '';
         el.list.appendChild(frag);
+        
+        // Initialize lazy 3D previews
+        initModalLazy3DPreviews();
 
         // Breadcrumb click
         el.path.querySelectorAll('.path-item').forEach(pi => {
@@ -1008,6 +1150,71 @@
           card.style.display = match ? '' : 'none';
         });
       }
+      
+      // Modal 3D Preview Lazy Loading with Intersection Observer
+      let modalObserver = null;
+      function initModalLazy3DPreviews() {
+        // Disconnect previous observer if exists
+        if (modalObserver) {
+          modalObserver.disconnect();
+        }
+
+        // Create new observer
+        modalObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const container = entry.target;
+              const modelSrc = container.dataset.modelSrc;
+              
+              // Check if already loaded
+              if (container.querySelector('model-viewer')) {
+                return;
+              }
+
+              // Create model-viewer
+              const viewer = document.createElement('model-viewer');
+              viewer.src = modelSrc;
+              viewer.alt = 'SolidWorks 3D Model';
+              viewer.setAttribute('camera-controls', '');
+              viewer.setAttribute('touch-action', 'pan-y');
+              viewer.setAttribute('disable-zoom', '');
+              viewer.style.width = '100%';
+              viewer.style.height = '100%';
+              viewer.style.backgroundColor = 'transparent';
+
+              // Add loading handler
+              viewer.addEventListener('load', () => {
+                container.classList.add('loaded');
+                const placeholder = container.querySelector('.lazy-3d-placeholder');
+                if (placeholder) {
+                  placeholder.remove();
+                }
+              });
+
+              // Add error handler
+              viewer.addEventListener('error', () => {
+                const placeholder = container.querySelector('.lazy-3d-placeholder');
+                if (placeholder) {
+                  placeholder.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Failed to load</span>';
+                  placeholder.style.color = '#e74c3c';
+                }
+              });
+
+              container.appendChild(viewer);
+              modalObserver.unobserve(container);
+            }
+          });
+        }, {
+          root: null,
+          rootMargin: '100px',
+          threshold: 0.1
+        });
+
+        // Observe all lazy-3d-browser elements
+        document.querySelectorAll('.lazy-3d-browser').forEach(element => {
+          modalObserver.observe(element);
+        });
+      }
 
       // Only activate on mobile to avoid conflicting with desktop UX
       if (mql.matches) {
@@ -1082,6 +1289,173 @@
       const current = Array.from(buttons).find(b => b.getAttribute('aria-current') === 'true');
       const defaultView = current ? current.dataset.target : 'root';
       showView(defaultView);
+
+      // Load CW/HW/Solo files from GitHub when view is shown
+      const loadedViews = new Set();
+      
+      async function loadSolidWorksFiles(type) {
+        if (loadedViews.has(type)) return; // Already loaded
+        loadedViews.add(type);
+        
+        const wrapId = type === 'cw' ? 'cw-files-wrap' : type === 'hw' ? 'hw-files-wrap' : 'solo-files-wrap';
+        const wrap = card.querySelector(`#${wrapId}`);
+        if (!wrap) return;
+        
+        wrap.innerHTML = '<div class="sw-loading" style="padding:20px;text-align:center;color:rgba(255,255,255,0.7);"><i class="fas fa-spinner fa-spin"></i> Loading files...</div>';
+        
+        try {
+          const folderPath = type === 'cw' ? 'CW' : type === 'hw' ? 'HW' : 'Solo Projects';
+          const response = await fetch(`https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/${folderPath}`);
+          const items = await response.json();
+          
+          if (!Array.isArray(items)) {
+            throw new Error('Invalid response');
+          }
+          
+          // Get day folders (or project folders for Solo)
+          const folders = items.filter(item => item.type === 'dir').sort((a, b) => a.name.localeCompare(b.name));
+          
+          if (folders.length === 0) {
+            wrap.innerHTML = '<div class="sw-empty" style="padding:20px;text-align:center;color:rgba(255,255,255,0.6);">No folders found</div>';
+            return;
+          }
+          
+          // Fetch all folder contents in parallel
+          const folderPromises = folders.map(folder => 
+            fetch(folder.url).then(r => r.json()).then(data => ({ folder, data }))
+          );
+          
+          const folderResults = await Promise.all(folderPromises);
+          
+          // Render day/project cards
+          let html = '';
+          for (const { folder, data } of folderResults) {
+            const subfolders = data.filter(item => item.type === 'dir');
+            
+            for (const subfolder of subfolders) {
+              const subResponse = await fetch(subfolder.url);
+              const files = await subResponse.json();
+              const fileItems = files.filter(item => item.type === 'file');
+              
+              if (fileItems.length === 0) continue;
+              
+              html += renderFileCard(subfolder.name, fileItems, type);
+            }
+          }
+          
+          wrap.innerHTML = html || '<div class="sw-empty" style="padding:20px;text-align:center;">No files found</div>';
+          
+        } catch (error) {
+          console.error(`Error loading ${type} files:`, error);
+          wrap.innerHTML = `<div class="sw-error" style="padding:20px;text-align:center;color:#ff6b6b;">Failed to load files. <button onclick="location.reload()" style="margin-left:10px;padding:5px 10px;background:rgba(255,107,107,0.2);border:1px solid #ff6b6b;border-radius:5px;color:#fff;cursor:pointer;">Retry</button></div>`;
+        }
+      }
+      
+      function renderFileCard(title, files, type) {
+        const colorMap = { cw: '#ff4444', hw: '#ffaa00', solo: '#00aaff' };
+        const color = colorMap[type] || '#888';
+        
+        let html = `
+          <div class="desktop-day-card" style="margin-bottom:16px;border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(0,0,0,0.3);overflow:hidden;">
+            <div class="desktop-day-header" style="padding:12px 16px;background:linear-gradient(135deg, ${color}22, ${color}11);border-bottom:1px solid rgba(255,255,255,0.1);">
+              <h4 style="margin:0;font-size:1.05rem;color:${color};display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-folder-open"></i>
+                ${title}
+              </h4>
+              <p style="margin:4px 0 0 0;font-size:0.85rem;color:rgba(255,255,255,0.6);">${files.length} file${files.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div class="desktop-files-grid" style="padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+        `;
+        
+        files.forEach(file => {
+          const is3D = /\.(glb|gltf)$/i.test(file.name);
+          const isPDF = /\.pdf$/i.test(file.name);
+          const fileSize = formatFileSize(file.size);
+          const fileName = file.name;
+          
+          html += `
+            <div class="desktop-file-card ${is3D ? 'has-3d-preview' : ''}" style="border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(0,0,0,0.2);overflow:hidden;transition:all 0.3s ease;">
+              ${is3D ? `
+              <div class="desktop-3d-preview-wrapper" onclick="openModelViewer({src: '${file.download_url}', title: '${fileName.replace(/'/g, "\\'")}'})" style="position:relative;width:100%;height:200px;background:rgba(0,0,0,0.5);cursor:pointer;overflow:hidden;">
+                <model-viewer
+                  src="${file.download_url}"
+                  alt="${fileName}"
+                  camera-controls
+                  auto-rotate
+                  loading="lazy"
+                  reveal="interaction"
+                  style="width:100%;height:100%;--poster-color:transparent;">
+                </model-viewer>
+                <div class="desktop-3d-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s ease;pointer-events:none;">
+                  <i class="fas fa-expand" style="font-size:2rem;color:#fff;margin-bottom:8px;"></i>
+                  <span style="color:#fff;font-size:0.9rem;font-weight:600;">Click to expand</span>
+                </div>
+              </div>
+              ` : ''}
+              <div class="desktop-file-info" style="padding:12px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span class="file-badge" style="padding:3px 8px;border-radius:5px;font-size:0.75rem;font-weight:700;background:${is3D ? color + '33' : 'rgba(255,255,255,0.1)'};color:${is3D ? color : 'rgba(255,255,255,0.8)'};border:1px solid ${is3D ? color : 'rgba(255,255,255,0.2)'};">
+                    ${is3D ? '3D MODEL' : fileName.split('.').pop().toUpperCase()}
+                  </span>
+                  <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">${fileSize}</span>
+                </div>
+                <div style="font-size:0.9rem;color:rgba(255,255,255,0.9);margin-bottom:12px;word-break:break-word;">${fileName}</div>
+                <div class="desktop-file-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                  ${is3D ? `
+                  <button onclick="openModelViewer({src: '${file.download_url}', title: '${fileName.replace(/'/g, "\\'")}'});" class="file-action-btn" style="flex:1;padding:8px 12px;background:${color}22;border:1px solid ${color};border-radius:6px;color:${color};font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='${color}33'" onmouseout="this.style.background='${color}22'">
+                    <i class="fas fa-cube"></i>
+                    <span>View 3D</span>
+                  </button>
+                  ` : ''}
+                  <a href="${file.download_url}" download class="file-action-btn" style="flex:1;padding:8px 12px;background:rgba(0,200,0,0.15);border:1px solid #00c800;border-radius:6px;color:#00c800;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;" onmouseover="this.style.background='rgba(0,200,0,0.25)'" onmouseout="this.style.background='rgba(0,200,0,0.15)'">
+                    <i class="fas fa-download"></i>
+                    <span>Download</span>
+                  </a>
+                  <a href="${file.html_url}" target="_blank" class="file-action-btn" style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.8);font-size:0.85rem;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <i class="fab fa-github"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+        
+        return html;
+      }
+      
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+      }
+      
+      // Load files when switching to a view
+      buttons.forEach(btn => {
+        const originalListener = btn.onclick;
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          if (target === 'cw' || target === 'hw' || target === 'solo') {
+            setTimeout(() => loadSolidWorksFiles(target), 100);
+          }
+        });
+      });
+      
+      // Also handle tile clicks
+      card.querySelectorAll('.sw-tile').forEach(tile => {
+        tile.addEventListener('click', () => {
+          const target = tile.dataset.target;
+          if (target === 'cw' || target === 'hw' || target === 'solo') {
+            setTimeout(() => loadSolidWorksFiles(target), 100);
+          }
+        });
+      });
 
       // Lightweight empty states for file containers if nothing injected yet
       const containers = [

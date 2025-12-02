@@ -16,7 +16,13 @@
   <link rel="stylesheet" href="shared/model-viewer.css" />
   
   <style>
-    body { background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0a 100%); overflow-x: hidden; }
+    body { 
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0a 100%); 
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    
     .navbar { display: none !important; }
     
     .mobile-header {
@@ -24,19 +30,39 @@
       background: rgba(60, 30, 0, 0.98); border-bottom: 2px solid rgba(255, 140, 0, 0.4);
       display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 1000;
       backdrop-filter: blur(15px);
+      will-change: transform;
+      transform: translateZ(0);
     }
     
     .mobile-back-btn {
       width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
       background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     
     .mobile-back-btn:active { transform: scale(0.95); }
     
     .mobile-header-title { flex: 1; font-size: 1.1rem; font-weight: 700; color: #fff; }
     
-    .mobile-content { margin-top: 60px; padding: 16px; min-height: calc(100vh - 60px); }
+    .mobile-content { 
+      margin-top: 60px; 
+      padding: 16px; 
+      min-height: calc(100vh - 60px);
+      contain: layout style paint;
+    }
+    
+    .hw-3d-preview-container,
+    .lazy-3d {
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout style paint;
+    }
+    
+    .hw-file-item {
+      contain: layout style;
+    }
   </style>
 </head>
 <body>
@@ -299,23 +325,13 @@
             const is3D = /\.(glb|gltf)$/i.test(file.name);
             
             html += `
-              <div class="hw-file-item ${is3D ? 'has-3d-preview' : ''}">
+              <div class="hw-file-item ${is3D ? 'has-3d-preview' : ''}" data-file-type="${is3D ? '3d' : 'file'}">
                 ${is3D ? `
-                <div class="hw-3d-preview-container" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" style="cursor: pointer;">
-                  <model-viewer
-                    src="${file.download_url}"
-                    alt="${file.name}"
-                    auto-rotate
-                    camera-controls
-                    disable-zoom
-                    interaction-prompt="none"
-                    class="hw-3d-preview"
-                    loading="lazy">
-                    <div class="hw-3d-overlay">
-                      <i class="fas fa-expand"></i>
-                      <span>Click to expand</span>
-                    </div>
-                  </model-viewer>
+                <div class="hw-3d-preview-container lazy-3d" data-model-src="${file.download_url}" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" style="cursor: pointer; position: relative; background: rgba(0,0,0,0.5); min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                  <div class="preview-placeholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-cube" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <span style="font-size: 0.85rem;">Tap to preview</span>
+                  </div>
                 </div>
                 ` : ''}
                 <div class="hw-file-info">
@@ -416,6 +432,84 @@
       `;
       document.body.appendChild(modal);
     }
+    
+    // Lazy load 3D previews using Intersection Observer
+    function initLazy3DPreviews() {
+      const lazy3DContainers = document.querySelectorAll('.lazy-3d');
+      
+      if (!lazy3DContainers.length) return;
+      
+      console.log(`🎯 Found ${lazy3DContainers.length} 3D previews to lazy load`);
+      
+      const observerOptions = {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const container = entry.target;
+            const modelSrc = container.getAttribute('data-model-src');
+            
+            if (container.querySelector('model-viewer')) {
+              return;
+            }
+            
+            console.log('📦 Loading 3D model:', modelSrc);
+            
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.setAttribute('src', modelSrc);
+            modelViewer.setAttribute('alt', '3D Model');
+            modelViewer.setAttribute('camera-controls', '');
+            modelViewer.setAttribute('disable-zoom', '');
+            modelViewer.setAttribute('interaction-prompt', 'none');
+            modelViewer.setAttribute('reveal', 'manual');
+            modelViewer.className = 'hw-3d-preview';
+            modelViewer.style.cssText = 'width: 100%; height: 100%; position: absolute; top: 0; left: 0;';
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'hw-3d-overlay';
+            overlay.innerHTML = `
+              <i class="fas fa-expand"></i>
+              <span>Click to expand</span>
+            `;
+            overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; color: #fff;';
+            
+            container.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+            container.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+            
+            const placeholder = container.querySelector('.preview-placeholder');
+            if (placeholder) {
+              placeholder.style.opacity = '0';
+              setTimeout(() => placeholder.remove(), 300);
+            }
+            
+            container.appendChild(modelViewer);
+            container.appendChild(overlay);
+            
+            modelViewer.addEventListener('load', () => {
+              console.log('✅ 3D model loaded');
+              modelViewer.dismissPoster();
+            });
+            
+            observer.unobserve(container);
+          }
+        });
+      }, observerOptions);
+      
+      lazy3DContainers.forEach(container => observer.observe(container));
+    }
+    
+    const originalLoadHWDays = loadHWDays;
+    loadHWDays = async function() {
+      await originalLoadHWDays();
+      setTimeout(() => {
+        initLazy3DPreviews();
+        console.log('🚀 Lazy 3D loading initialized');
+      }, 100);
+    };
     
     document.addEventListener('DOMContentLoaded', loadHWDays);
   </script>
