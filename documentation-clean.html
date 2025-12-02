@@ -1021,7 +1021,7 @@
   <!-- Header with Controls -->
   <header class="doc-header" id="doc-header">
     <!-- Back Button -->
-    <button class="doc-back-btn" onclick="window.location.href='portfolio-mobile.html'">
+    <button class="doc-back-btn" onclick="goBack()">
       <i class="fas fa-arrow-left"></i>
       <span>Back</span>
     </button>
@@ -1895,6 +1895,40 @@
         exitFullscreenMode();
       }
     });
+    
+    // ========== SMART BACK NAVIGATION ==========
+    function goBack() {
+      const referrer = document.referrer;
+      const currentDomain = window.location.origin;
+      
+      // Check if came from same domain
+      if (referrer && referrer.startsWith(currentDomain)) {
+        // Check if came from desktop projects page
+        if (referrer.includes('projects.html')) {
+          window.location.href = 'projects.html';
+        }
+        // Check if came from mobile portfolio
+        else if (referrer.includes('portfolio-mobile.html')) {
+          window.location.href = 'portfolio-mobile.html';
+        }
+        // Generic back if from other internal page
+        else if (window.history.length > 1) {
+          window.history.back();
+        }
+        // Fallback to mobile portfolio
+        else {
+          window.location.href = 'portfolio-mobile.html';
+        }
+      }
+      // If no referrer or external, use browser back or fallback
+      else if (window.history.length > 1) {
+        window.history.back();
+      }
+      // Ultimate fallback
+      else {
+        window.location.href = 'portfolio-mobile.html';
+      }
+    }
     
     // Calculate reading time after content loads
     window.addEventListener('DOMContentLoaded', () => {
