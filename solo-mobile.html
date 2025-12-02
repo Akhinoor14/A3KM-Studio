@@ -461,103 +461,153 @@
       document.body.appendChild(modal);
     }
     
-    // Lazy load 3D previews using Intersection Observer
+    // Lazy load 3D previews using Intersection Observer (OPTIMIZED)
+    let lazy3DObserver = null;
+    
     function initLazy3DPreviews() {
-      const lazy3DContainers = document.querySelectorAll('.lazy-3d');
+      // Disconnect previous observer if exists
+      if (lazy3DObserver) {
+        lazy3DObserver.disconnect();
+      }
       
-      if (!lazy3DContainers.length) return;
+      const lazy3DContainers = document.querySelectorAll('.lazy-3d:not(.loaded)');
       
-      console.log(`🎯 Found ${lazy3DContainers.length} 3D previews to lazy load`);
+      if (!lazy3DContainers.length) {
+        console.log('📦 No 3D previews to load');
+        return;
+      }
       
-      const observerOptions = {
-        root: null,
-        rootMargin: '100px',
-        threshold: 0.1
-      };
+      console.log(`🎯 Initializing lazy load for ${lazy3DContainers.length} 3D previews`);
       
-      const observer = new IntersectionObserver((entries) => {
+      lazy3DObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const container = entry.target;
-            const modelSrc = container.getAttribute('data-model-src');
             
-            if (container.querySelector('model-viewer')) {
+            // Skip if already loaded
+            if (container.classList.contains('loaded')) {
               return;
             }
             
-            console.log('📦 Loading 3D model:', modelSrc);
+            const modelSrc = container.getAttribute('data-model-src');
+            if (!modelSrc) return;
             
+            console.log('📦 Loading 3D preview:', modelSrc);
+            
+            // Mark as loaded immediately to prevent duplicate loads
+            container.classList.add('loaded');
+            
+            // Create minimal model-viewer for preview
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('src', modelSrc);
-            modelViewer.setAttribute('alt', '3D Model');
+            modelViewer.setAttribute('alt', '3D Model Preview');
             modelViewer.setAttribute('camera-controls', '');
             modelViewer.setAttribute('disable-zoom', '');
             modelViewer.setAttribute('interaction-prompt', 'none');
+            modelViewer.setAttribute('loading', 'lazy');
             modelViewer.setAttribute('reveal', 'manual');
-            modelViewer.className = 'solo-3d-preview';
             modelViewer.style.cssText = 'width: 100%; height: 100%; position: absolute; top: 0; left: 0;';
             
-            const overlay = document.createElement('div');
-            overlay.className = 'solo-3d-overlay';
-            overlay.innerHTML = `
-              <i class="fas fa-expand"></i>
-              <span>Click to expand</span>
-            `;
-            overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; color: #fff;';
-            
-            container.addEventListener('mouseenter', () => overlay.style.opacity = '1');
-            container.addEventListener('mouseleave', () => overlay.style.opacity = '0');
-            
-            const placeholder = container.querySelector('.preview-placeholder');
-            if (placeholder) {
-              placeholder.style.opacity = '0';
-              setTimeout(() => placeholder.remove(), 300);
-            }
-            
-            container.appendChild(modelViewer);
-            container.appendChild(overlay);
-            
+            // Remove placeholder on load
             modelViewer.addEventListener('load', () => {
-              console.log('✅ 3D model loaded');
-              modelViewer.dismissPoster();
+              const placeholder = container.querySelector('.preview-placeholder');
+              if (placeholder) {
+                placeholder.style.transition = 'opacity 0.3s ease';
+                placeholder.style.opacity = '0';
+                setTimeout(() => placeholder.remove(), 300);
+              }
+              console.log('✅ 3D preview loaded');
             });
             
-            observer.unobserve(container);
+            // Handle errors
+            modelViewer.addEventListener('error', (e) => {
+              console.error('❌ 3D preview load error:', e);
+              const placeholder = container.querySelector('.preview-placeholder');
+              if (placeholder) {
+                placeholder.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Load failed</span>';
+                placeholder.style.color = '#ff6b6b';
+              }
+            });
+            
+            container.appendChild(modelViewer);
+            
+            // Reveal the model after a short delay
+            setTimeout(() => {
+              if (modelViewer.dismissPoster) {
+                modelViewer.dismissPoster();
+              }
+            }, 500);
+            
+            // Unobserve after loading
+            lazy3DObserver.unobserve(container);
           }
         });
-      }, observerOptions);
+      }, {
+        root: null,
+        rootMargin: '150px', // Load a bit before entering viewport
+        threshold: 0.1
+      });
       
-      lazy3DContainers.forEach(container => observer.observe(container));
-    }
-    
-    // Handle 3D model viewer clicks
-    function setup3DViewerHandlers() {
-      document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.solo-file-btn.view[data-model-src]');
-        const container = e.target.closest('.solo-3d-preview-container[data-model-src]');
-        
-        if (btn || container) {
-          const element = btn || container;
-          const src = element.getAttribute('data-model-src');
-          const title = element.getAttribute('data-model-title') || 'Solo 3D Model';
-          
-          if (src) {
-            openModelViewer({src, title});
-          }
-        }
+      // Observe all lazy 3D containers
+      lazy3DContainers.forEach(container => {
+        lazy3DObserver.observe(container);
       });
     }
     
+    // Handle 3D model viewer clicks (delegated event handling)
+    function setup3DViewerHandlers() {
+      // Remove old listener if exists
+      if (window._solo3DClickHandler) {
+        document.removeEventListener('click', window._solo3DClickHandler);
+      }
+      
+      // Create new handler
+      window._solo3DClickHandler = function(e) {
+        // Check for view button click
+        const btn = e.target.closest('.solo-file-btn.view[data-model-src]');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const src = btn.getAttribute('data-model-src');
+          const title = btn.getAttribute('data-model-title') || 'Solo 3D Model';
+          if (src && typeof openModelViewer === 'function') {
+            openModelViewer({ src, title, ar: true });
+          }
+          return;
+        }
+        
+        // Check for preview container click
+        const container = e.target.closest('.solo-3d-preview-container[data-model-src]');
+        if (container) {
+          e.preventDefault();
+          e.stopPropagation();
+          const src = container.getAttribute('data-model-src');
+          const title = container.getAttribute('data-model-title') || 'Solo 3D Model';
+          if (src && typeof openModelViewer === 'function') {
+            openModelViewer({ src, title, ar: true });
+          }
+          return;
+        }
+      };
+      
+      document.addEventListener('click', window._solo3DClickHandler);
+      console.log('✅ 3D viewer click handlers set up');
+    }
+    
+    // Wrap original loadSoloProjects
     const originalLoadSoloProjects = loadSoloProjects;
     loadSoloProjects = async function() {
       await originalLoadSoloProjects();
+      
+      // Initialize 3D systems after content loads
       setTimeout(() => {
         initLazy3DPreviews();
         setup3DViewerHandlers();
-        console.log('🚀 Lazy 3D loading initialized');
-      }, 100);
+        console.log('🚀 Solo 3D system initialized');
+      }, 200);
     };
     
+    // Start on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', loadSoloProjects);
   </script>
 

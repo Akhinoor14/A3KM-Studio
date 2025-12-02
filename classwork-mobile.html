@@ -256,25 +256,16 @@
             const isPDF = /\.pdf$/i.test(file.name);
             const isImage = /\.(png|jpg|jpeg)$/i.test(file.name);
             const is3D = /\.(glb|gltf)$/i.test(file.name);
+            const escapedName = file.name.replace(/'/g, "\\'");
             
             html += `
               <div class="cw-file-item ${is3D ? 'has-3d-preview' : ''}">
                 ${is3D ? `
-                <div class="cw-3d-preview-container" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" style="cursor: pointer;">
-                  <model-viewer
-                    src="${file.download_url}"
-                    alt="${file.name}"
-                    auto-rotate
-                    camera-controls
-                    disable-zoom
-                    interaction-prompt="none"
-                    class="cw-3d-preview"
-                    loading="lazy">
-                    <div class="cw-3d-overlay">
-                      <i class="fas fa-expand"></i>
-                      <span>Click to expand</span>
-                    </div>
-                  </model-viewer>
+                <div class="cw-3d-preview-container lazy-3d" data-model-src="${file.download_url}" data-model-title="${escapedName}" style="cursor: pointer; position: relative; background: rgba(0,0,0,0.5); min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                  <div class="preview-placeholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-cube" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <span style="font-size: 0.85rem;">Tap to preview</span>
+                  </div>
                 </div>
                 ` : ''}
                 <div class="cw-file-info">
@@ -283,13 +274,13 @@
                   <span class="cw-file-size">${fileSize}</span>
                 </div>
                 <div class="cw-file-actions">
-                  ${is3D ? `<button class="cw-file-btn view" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" title="View 3D Model">
+                  ${is3D ? `<button class="cw-file-btn view" data-model-src="${file.download_url}" data-model-title="${escapedName}" title="View 3D Model">
                     <i class="fas fa-cube"></i>
                   </button>` : ''}
-                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
+                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${escapedName}')">
                     <i class="fas fa-eye"></i>
                   </button>` : ''}
-                  ${isImage ? `<button class="cw-file-btn view" onclick="viewImage('${file.download_url}', '${file.name}')">
+                  ${isImage ? `<button class="cw-file-btn view" onclick="viewImage('${file.download_url}', '${escapedName}')">
                     <i class="fas fa-eye"></i>
                   </button>` : ''}
                   <a href="${file.download_url}" class="cw-file-btn download" download>
@@ -336,11 +327,12 @@
             const fileSize = formatSize(file.size);
             const isPDF = /\.pdf$/i.test(file.name);
             const is3D = /\.(glb|gltf)$/i.test(file.name);
+            const escapedName = file.name.replace(/'/g, "\\'");
             
             html += `
               <div class="cw-file-item ${is3D ? 'has-3d-preview' : ''}" data-file-type="${is3D ? '3d' : 'file'}">
                 ${is3D ? `
-                <div class="cw-3d-preview-container lazy-3d" data-model-src="${file.download_url}" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" style="cursor: pointer; position: relative; background: rgba(0,0,0,0.5); min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                <div class="cw-3d-preview-container lazy-3d" data-model-src="${file.download_url}" data-model-title="${escapedName}" style="cursor: pointer; position: relative; background: rgba(0,0,0,0.5); min-height: 180px; display: flex; align-items: center; justify-content: center;">
                   <div class="preview-placeholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
                     <i class="fas fa-cube" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
                     <span style="font-size: 0.85rem;">Tap to preview</span>
@@ -353,10 +345,10 @@
                   <span class="cw-file-size">${fileSize}</span>
                 </div>
                 <div class="cw-file-actions">
-                  ${is3D ? `<button class="cw-file-btn view" onclick="openModelViewer({src: '${file.download_url}', title: '${file.name.replace(/'/g, "\\'")}'})" title="View 3D Model">
+                  ${is3D ? `<button class="cw-file-btn view" data-model-src="${file.download_url}" data-model-title="${escapedName}" title="View 3D Model">
                     <i class="fas fa-cube"></i>
                   </button>` : ''}
-                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${file.name}')">
+                  ${isPDF ? `<button class="cw-file-btn view" onclick="viewPDF('${file.download_url}', '${escapedName}')">
                     <i class="fas fa-eye"></i>
                   </button>` : ''}
                   <a href="${file.download_url}" class="cw-file-btn download" download>
@@ -446,82 +438,138 @@
       document.body.appendChild(modal);
     }
     
-    // Lazy load 3D previews using Intersection Observer
+    // Lazy load 3D previews using Intersection Observer (OPTIMIZED)
+    let lazy3DObserver = null;
+    
     function initLazy3DPreviews() {
-      const lazy3DContainers = document.querySelectorAll('.lazy-3d');
+      // Disconnect previous observer if exists
+      if (lazy3DObserver) {
+        lazy3DObserver.disconnect();
+      }
       
-      if (!lazy3DContainers.length) return;
+      const lazy3DContainers = document.querySelectorAll('.lazy-3d:not(.loaded)');
       
-      console.log(`🎯 Found ${lazy3DContainers.length} 3D previews to lazy load`);
+      if (!lazy3DContainers.length) {
+        console.log('📦 No 3D previews to load');
+        return;
+      }
       
-      const observerOptions = {
-        root: null,
-        rootMargin: '100px', // Start loading 100px before entering viewport
-        threshold: 0.1
-      };
+      console.log(`🎯 Initializing lazy load for ${lazy3DContainers.length} 3D previews`);
       
-      const observer = new IntersectionObserver((entries) => {
+      lazy3DObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const container = entry.target;
-            const modelSrc = container.getAttribute('data-model-src');
             
-            // Check if already loaded
-            if (container.querySelector('model-viewer')) {
+            // Skip if already loaded
+            if (container.classList.contains('loaded')) {
               return;
             }
             
-            console.log('📦 Loading 3D model:', modelSrc);
+            const modelSrc = container.getAttribute('data-model-src');
+            if (!modelSrc) return;
             
-            // Create model-viewer element
+            console.log('📦 Loading 3D preview:', modelSrc);
+            
+            // Mark as loaded immediately
+            container.classList.add('loaded');
+            
+            // Create minimal model-viewer for preview
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('src', modelSrc);
-            modelViewer.setAttribute('alt', '3D Model');
+            modelViewer.setAttribute('alt', '3D Model Preview');
             modelViewer.setAttribute('camera-controls', '');
             modelViewer.setAttribute('disable-zoom', '');
             modelViewer.setAttribute('interaction-prompt', 'none');
+            modelViewer.setAttribute('loading', 'lazy');
             modelViewer.setAttribute('reveal', 'manual');
             modelViewer.className = 'cw-3d-preview';
             modelViewer.style.cssText = 'width: 100%; height: 100%; position: absolute; top: 0; left: 0;';
             
-            // Add overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'cw-3d-overlay';
-            overlay.innerHTML = `
-              <i class="fas fa-expand"></i>
-              <span>Click to expand</span>
-            `;
-            overlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; color: #fff;';
-            
-            // Show overlay on hover
-            container.addEventListener('mouseenter', () => overlay.style.opacity = '1');
-            container.addEventListener('mouseleave', () => overlay.style.opacity = '0');
-            
-            // Remove placeholder
-            const placeholder = container.querySelector('.preview-placeholder');
-            if (placeholder) {
-              placeholder.style.opacity = '0';
-              setTimeout(() => placeholder.remove(), 300);
-            }
-            
-            // Add model viewer
-            container.appendChild(modelViewer);
-            container.appendChild(overlay);
-            
-            // Manually reveal after model loads
+            // Remove placeholder on load
             modelViewer.addEventListener('load', () => {
-              console.log('✅ 3D model loaded');
-              modelViewer.dismissPoster();
+              const placeholder = container.querySelector('.preview-placeholder');
+              if (placeholder) {
+                placeholder.style.transition = 'opacity 0.3s ease';
+                placeholder.style.opacity = '0';
+                setTimeout(() => placeholder.remove(), 300);
+              }
+              console.log('✅ 3D preview loaded');
             });
             
-            // Stop observing this element
-            observer.unobserve(container);
+            // Handle errors
+            modelViewer.addEventListener('error', (e) => {
+              console.error('❌ 3D preview load error:', e);
+              const placeholder = container.querySelector('.preview-placeholder');
+              if (placeholder) {
+                placeholder.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Load failed</span>';
+                placeholder.style.color = '#ff6b6b';
+              }
+            });
+            
+            container.appendChild(modelViewer);
+            
+            // Reveal the model
+            setTimeout(() => {
+              if (modelViewer.dismissPoster) {
+                modelViewer.dismissPoster();
+              }
+            }, 500);
+            
+            // Unobserve after loading
+            lazy3DObserver.unobserve(container);
           }
         });
-      }, observerOptions);
+      }, {
+        root: null,
+        rootMargin: '150px',
+        threshold: 0.1
+      });
       
       // Observe all lazy 3D containers
-      lazy3DContainers.forEach(container => observer.observe(container));
+      lazy3DContainers.forEach(container => {
+        lazy3DObserver.observe(container);
+      });
+    }
+    
+    // Handle 3D model viewer clicks (delegated event handling)
+    function setup3DViewerHandlers() {
+      // Remove old listener if exists
+      if (window._cw3DClickHandler) {
+        document.removeEventListener('click', window._cw3DClickHandler);
+      }
+      
+      // Create new handler
+      window._cw3DClickHandler = function(e) {
+        // Check for view button click
+        const btn = e.target.closest('.cw-file-btn.view[data-model-src]');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const src = btn.getAttribute('data-model-src');
+          const title = btn.getAttribute('data-model-title') || 'Class Work 3D Model';
+          if (src && typeof openModelViewer === 'function') {
+            openModelViewer({ src, title, ar: true });
+          }
+          return;
+        }
+        
+        // Check for preview container click
+        const container = e.target.closest('.cw-3d-preview-container[data-model-src]');
+        if (container) {
+          e.preventDefault();
+          e.stopPropagation();
+          const src = container.getAttribute('data-model-src');
+          const title = container.getAttribute('data-model-title') || 'Class Work 3D Model';
+          if (src && typeof openModelViewer === 'function') {
+            openModelViewer({ src, title, ar: true });
+          }
+          return;
+        }
+      };
+      
+      document.addEventListener('click', window._cw3DClickHandler);
+      console.log('✅ 3D viewer click handlers set up');
     }
     
     // Re-initialize lazy loading after content loads
@@ -531,8 +579,9 @@
       // Wait for DOM to update
       setTimeout(() => {
         initLazy3DPreviews();
-        console.log('🚀 Lazy 3D loading initialized');
-      }, 100);
+        setup3DViewerHandlers();
+        console.log('🚀 CW 3D system initialized');
+      }, 200);
     };
     
     document.addEventListener('DOMContentLoaded', loadCWDays);
