@@ -249,23 +249,69 @@
     .certificate-thumbnail {
       width: 100%;
       height: 200px;
-      background: rgba(0, 0, 0, 0.5);
+      background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.08));
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
+      border: 3px solid transparent;
+      border-image: linear-gradient(135deg, #CC0000, #FFD700, #CC0000) 1;
+      box-shadow: inset 0 0 30px rgba(204, 0, 0, 0.1),
+                  0 0 20px rgba(204, 0, 0, 0.2);
+    }
+
+    .certificate-thumbnail::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #CC0000, #FFD700, #8B0000, #FFD700, #CC0000);
+      background-size: 300% 300%;
+      border-radius: inherit;
+      z-index: -1;
+      animation: borderGlow 4s ease infinite;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .certificate-card:hover .certificate-thumbnail::before {
+      opacity: 0.6;
+    }
+
+    @keyframes borderGlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
 
     .certificate-thumbnail img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      padding: 8px;
     }
 
     .certificate-thumbnail .placeholder {
       font-size: 4rem;
-      color: rgba(204, 0, 0, 0.3);
+      color: rgba(204, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .certificate-thumbnail .pdf-icon {
+      font-size: 5rem;
+      color: #CC0000;
+      text-shadow: 0 0 20px rgba(204, 0, 0, 0.5);
+    }
+
+    .certificate-thumbnail .pdf-label {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 600;
     }
 
     .certificate-badge {
@@ -396,9 +442,9 @@
       background: linear-gradient(135deg, #1a1a1a 0%, #2d0000 100%);
       border: 2px solid rgba(204, 0, 0, 0.5);
       border-radius: 12px;
-      max-width: 900px;
-      width: 100%;
-      max-height: 90vh;
+      max-width: 1400px;
+      width: 95%;
+      max-height: 95vh;
       overflow-y: auto;
       position: relative;
     }
@@ -437,21 +483,57 @@
 
     .modal-image-container {
       width: 100%;
-      min-height: 400px;
-      max-height: 600px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
+      min-height: 600px;
+      height: 75vh;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(26, 0, 0, 0.3));
+      border-radius: 12px;
       margin-bottom: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      position: relative;
+      border: 4px solid transparent;
+      border-image: linear-gradient(135deg, #CC0000, #FFD700, #8B0000, #FFD700, #CC0000) 1;
+      box-shadow: inset 0 0 50px rgba(204, 0, 0, 0.15),
+                  0 0 40px rgba(204, 0, 0, 0.3),
+                  0 10px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-image-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg,
+        transparent 30%,
+        rgba(255, 215, 0, 0.1) 50%,
+        transparent 70%);
+      background-size: 200% 200%;
+      animation: shimmer 3s ease infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { background-position: -100% 0; }
+      50% { background-position: 200% 0; }
+    }
+
+    .modal-image-container > * {
+      position: relative;
+      z-index: 2;
     }
 
     .modal-image {
-      width: 100%;
-      max-height: 600px;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
       object-fit: contain;
+      filter: drop-shadow(0 0 20px rgba(204, 0, 0, 0.3));
     }
 
     .modal-info {
@@ -594,6 +676,18 @@
 
       .modal-actions {
         flex-direction: column;
+      }
+
+      .modal-image-container {
+        min-height: 400px;
+        height: 60vh;
+      }
+
+      /* Mobile PDF viewer fix */
+      .modal-image-container embed,
+      .modal-image-container iframe {
+        width: 100% !important;
+        height: 100% !important;
       }
     }
   </style>
@@ -807,12 +901,36 @@
       card.className = 'certificate-card';
       card.onclick = () => openModal(cert);
 
-      // Determine thumbnail source
-      const thumbnailSrc = cert.thumbnail || cert.filePath;
-      const isImage = cert.fileType === 'jpg' || cert.fileType === 'jpeg' || cert.fileType === 'png';
+      // Determine thumbnail content based on file type
+      const isPDF = cert.fileType.toLowerCase() === 'pdf';
+      const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(cert.fileType.toLowerCase());
       
-      const thumbnailContent = `<img src="${thumbnailSrc}" alt="${cert.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-           <div class="placeholder" style="display:none;"><i class="fas fa-file-certificate"></i></div>`;
+      let thumbnailContent = '';
+      if (isPDF) {
+        // Show PDF icon for PDF files
+        thumbnailContent = `
+          <div class="placeholder" style="display:flex;">
+            <i class="fas fa-file-pdf pdf-icon"></i>
+            <span class="pdf-label">PDF Certificate</span>
+          </div>
+        `;
+      } else if (isImage) {
+        // Show image with fallback
+        const thumbnailSrc = cert.thumbnail || cert.filePath;
+        thumbnailContent = `
+          <img src="${thumbnailSrc}" alt="${cert.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="placeholder" style="display:none;">
+            <i class="fas fa-file-certificate"></i>
+          </div>
+        `;
+      } else {
+        // Generic file icon
+        thumbnailContent = `
+          <div class="placeholder" style="display:flex;">
+            <i class="fas fa-file-certificate"></i>
+          </div>
+        `;
+      }
 
       card.innerHTML = `
         <div class="certificate-thumbnail">
@@ -868,18 +986,33 @@
       const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(cert.fileType.toLowerCase());
       
       if (isPDF) {
-        // Show PDF inline without download prompt
-        modalContent.innerHTML = `
-          <embed id="modalPDF" 
-                 src="${cert.filePath}#toolbar=0&navpanes=0&scrollbar=1" 
-                 type="application/pdf"
-                 style="width: 100%; height: 100%; border: none; border-radius: 12px;">
-        `;
+        // Mobile-friendly PDF viewer with fallback
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Use iframe for better mobile support
+          modalContent.innerHTML = `
+            <iframe id="modalPDF" 
+                    src="${cert.filePath}#view=FitH&toolbar=0&navpanes=0" 
+                    type="application/pdf"
+                    frameborder="0"
+                    scrolling="auto"
+                    style="width: 100%; height: 100%; border: none; border-radius: 8px; background: white;">
+            </iframe>
+          `;
+        } else {
+          // Desktop: Use embed tag
+          modalContent.innerHTML = `
+            <embed id="modalPDF" 
+                   src="${cert.filePath}#toolbar=0&navpanes=0&scrollbar=1" 
+                   type="application/pdf"
+                   style="width: 100%; height: 100%; border: none; border-radius: 8px; filter: drop-shadow(0 0 15px rgba(204, 0, 0, 0.2));">
+          `;
+        }
       } else if (isImage) {
-        // Show image
+        // Show image with premium styling
         modalContent.innerHTML = `
-          <img id="modalImage" src="${cert.filePath}" alt="${cert.title}" 
-               style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px;">
+          <img class="modal-image" id="modalImage" src="${cert.filePath}" alt="${cert.title}">
         `;
       } else {
         // Fallback

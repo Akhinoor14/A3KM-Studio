@@ -698,7 +698,7 @@
                     <button class="btn btn-secondary" onclick="clearFiles('solo')">
                         <i class="fas fa-times"></i> Clear All
                     </button>
-                    <button class="btn btn-primary" id="soloUploadBtn" onclick="uploadFiles('solo')" disabled>
+                    <button class="btn btn-primary" id="soloUploadBtn" onclick="uploadSoloProject()" disabled>
                         <i class="fas fa-upload"></i> Upload Project
                     </button>
                 </div>
@@ -746,7 +746,7 @@
                     <button class="btn btn-secondary" onclick="clearFiles('question')">
                         <i class="fas fa-times"></i> Clear
                     </button>
-                    <button class="btn btn-primary" id="questionUploadBtn" onclick="uploadFiles('question')" disabled>
+                    <button class="btn btn-primary" id="questionUploadBtn" onclick="uploadQuestions()" disabled>
                         <i class="fas fa-upload"></i> Upload Question
                     </button>
                 </div>
@@ -880,6 +880,7 @@
             const dropdowns = ['cwDay', 'hwDay', 'questionDay'];
             dropdowns.forEach(id => {
                 const select = document.getElementById(id);
+                // Support Day 01 to Day 30
                 for (let i = 1; i <= 30; i++) {
                     const day = `Day ${String(i).padStart(2, '0')}`;
                     const option = document.createElement('option');
@@ -888,6 +889,47 @@
                     select.appendChild(option);
                 }
             });
+
+            // Add change listeners to enable upload buttons
+            ['cw', 'hw'].forEach(type => {
+                const daySelect = document.getElementById(`${type}Day`);
+                if (daySelect) {
+                    daySelect.addEventListener('change', () => {
+                        const fileInput = document.getElementById(`${type}FileInput`);
+                        const uploadBtn = document.getElementById(`${type}UploadBtn`);
+                        if (uploadBtn && fileInput && fileInput.files.length > 0 && daySelect.value) {
+                            uploadBtn.disabled = false;
+                        }
+                    });
+                }
+            });
+
+            // Solo project name listener
+            const soloProjectInput = document.getElementById('soloProjectName');
+            if (soloProjectInput) {
+                soloProjectInput.addEventListener('input', () => {
+                    const fileInput = document.getElementById('soloFileInput');
+                    const uploadBtn = document.getElementById('soloUploadBtn');
+                    if (uploadBtn && fileInput && fileInput.files.length > 0 && soloProjectInput.value.trim()) {
+                        uploadBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Question day/type listeners
+            const questionDay = document.getElementById('questionDay');
+            const questionType = document.getElementById('questionType');
+            if (questionDay && questionType) {
+                [questionDay, questionType].forEach(el => {
+                    el.addEventListener('change', () => {
+                        const fileInput = document.getElementById('questionFileInput');
+                        const uploadBtn = document.getElementById('questionUploadBtn');
+                        if (uploadBtn && fileInput && fileInput.files.length > 0 && questionDay.value) {
+                            uploadBtn.disabled = false;
+                        }
+                    });
+                });
+            }
         }
 
         // Setup file upload zones
@@ -938,11 +980,19 @@
                 return;
             }
 
-            // Display files
-            list.innerHTML = files.map((file, i) => `
+            // Display files with proper icons
+            list.innerHTML = files.map((file, i) => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                let icon = 'fa-file';
+                if (['glb', 'gltf'].includes(ext)) icon = 'fa-cube';
+                else if (['sldprt', 'sldasm', 'slddrw'].includes(ext)) icon = 'fa-drafting-compass';
+                else if (['pdf'].includes(ext)) icon = 'fa-file-pdf';
+                else if (['png', 'jpg', 'jpeg'].includes(ext)) icon = 'fa-image';
+
+                return `
                 <div class="file-item">
                     <div class="file-info">
-                        <div class="file-icon"><i class="fas fa-cube"></i></div>
+                        <div class="file-icon"><i class="fas ${icon}"></i></div>
                         <div class="file-details">
                             <div class="file-name">${file.name}</div>
                             <div class="file-size">${(file.size / 1024).toFixed(2)} KB</div>
@@ -952,14 +1002,24 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
-            // Enable upload button if day/project selected
-            const daySelected = type === 'solo' 
-                ? document.getElementById('soloProjectName').value 
-                : document.getElementById(type + 'Day').value;
+            // Enable upload button based on type
+            let canUpload = files.length > 0;
             
-            if (btn) btn.disabled = !daySelected || files.length === 0;
+            if (type === 'solo') {
+                const projectName = document.getElementById('soloProjectName')?.value.trim();
+                canUpload = canUpload && projectName;
+            } else if (type === 'question') {
+                const day = document.getElementById('questionDay')?.value;
+                canUpload = canUpload && day;
+            } else {
+                const day = document.getElementById(type + 'Day')?.value;
+                canUpload = canUpload && day;
+            }
+            
+            if (btn) btn.disabled = !canUpload;
         }
 
         // Clear files
@@ -1002,25 +1062,350 @@
             }
         }
 
-        // Upload files (delegates to script.js)
-        function uploadFiles(type) {
-            showMessage(type, 'Upload integration with script.js pending...', 'info');
-            // Will integrate with performFileUpload(), performSoloProjectUpload() etc from script.js
+        // Upload files - Integrated with script.js GitHub upload logic
+        async function uploadFiles(type) {
+            const daySelect = document.getElementById(`${type}Day`);
+            const fileInput = document.getElementById(`${type}FileInput`);
+            const messageEl = document.getElementById(`${type}Message`);
+            
+            if (!daySelect || !fileInput) return;
+            
+            const day = daySelect.value;
+            const files = fileInput.files;
+            
+            if (!day || files.length === 0) {
+                showMessage(type, 'Please select a day and choose files to upload', 'error');
+                return;
+            }
+
+            // Check GitHub token
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage(type, 'GitHub token required. Click "Manage Token" first.', 'error');
+                return;
+            }
+
+            // Show uploading status
+            showMessage(type, `Uploading ${files.length} file(s) to ${day}...`, 'info');
+            const uploadBtn = document.getElementById(`${type}UploadBtn`);
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            }
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                const basePath = type.toUpperCase(); // CW or HW
+                
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const file of files) {
+                    try {
+                        // Determine folder structure based on file type
+                        let folderName = '';
+                        const fileName = file.name.toLowerCase();
+                        
+                        // Check if it's a question/problem file
+                        if (/(question|problem|assignment)/.test(fileName) || 
+                            /\.(pdf|txt|md)$/i.test(fileName)) {
+                            // Upload directly to day folder for questions
+                            folderName = '';
+                        } else if (/\.(glb|gltf)$/i.test(fileName)) {
+                            // 3D models go to specific subfolder
+                            folderName = `${type} 3d model ${day.toLowerCase()}`;
+                        } else {
+                            // SOLIDWORKS files go to numbered subfolder
+                            folderName = `${type} ${String(successCount + 1).padStart(2, '0')} ${day.toLowerCase()}`;
+                        }
+
+                        const uploadPath = folderName 
+                            ? `${basePath}/${day}/${folderName}/${file.name}`
+                            : `${basePath}/${day}/${file.name}`;
+
+                        // Convert file to base64
+                        const content = await fileToBase64(file);
+                        
+                        // Upload to GitHub
+                        const response = await fetch(
+                            `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `token ${token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    message: `Upload ${file.name} to ${day} via Upload Manager`,
+                                    content: content.split(',')[1], // Remove data:... prefix
+                                    branch: 'main'
+                                })
+                            }
+                        );
+
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            const error = await response.json();
+                            console.error(`Failed to upload ${file.name}:`, error);
+                            failCount++;
+                        }
+                    } catch (error) {
+                        console.error(`Error uploading ${file.name}:`, error);
+                        failCount++;
+                    }
+                }
+
+                // Show final result
+                if (failCount === 0) {
+                    showMessage(type, `✅ Successfully uploaded ${successCount} file(s) to ${day}!`, 'success');
+                    clearFiles(type);
+                } else {
+                    showMessage(type, `⚠️ Uploaded ${successCount} file(s), ${failCount} failed`, 'warning');
+                }
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage(type, `❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                // Reset button
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+                }
+            }
+        }
+
+        // Helper: Convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
         // Show message
         function showMessage(type, text, messageType) {
             const messageEl = document.getElementById(type + 'Message');
+            if (!messageEl) return;
             messageEl.className = `message ${messageType} show`;
-            messageEl.innerHTML = `<i class="fas fa-${messageType === 'success' ? 'check-circle' : 'info-circle'}"></i> ${text}`;
+            const iconMap = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+            messageEl.innerHTML = `<i class="fas fa-${iconMap[messageType] || 'info-circle'}"></i> ${text}`;
             setTimeout(() => messageEl.classList.remove('show'), 5000);
         }
 
-        // Placeholder functions
-        function removeFile(type, index) { /* TODO */ }
-        function updateFile() { /* TODO */ }
-        function confirmDelete() { /* TODO */ }
-        function clearDeleteSelection() { /* TODO */ }
+        // Remove file from selection
+        function removeFile(type, index) {
+            const input = document.getElementById(type + 'FileInput');
+            if (!input || !input.files) return;
+
+            const dt = new DataTransfer();
+            const files = Array.from(input.files);
+            
+            files.forEach((file, i) => {
+                if (i !== index) dt.items.add(file);
+            });
+
+            input.files = dt.files;
+            handleFileSelection(type);
+        }
+
+        // Upload Solo Projects
+        async function uploadSoloProject() {
+            const projectNameInput = document.getElementById('soloProjectName');
+            const fileInput = document.getElementById('soloFileInput');
+            const messageEl = document.getElementById('soloMessage');
+            
+            const projectName = projectNameInput?.value.trim();
+            const files = fileInput?.files;
+            
+            if (!projectName || !files || files.length === 0) {
+                showMessage('solo', 'Please enter project name and select files', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage('solo', 'GitHub token required. Click "Manage Token".', 'error');
+                return;
+            }
+
+            showMessage('solo', `Uploading ${files.length} file(s) to ${projectName}...`, 'info');
+            const uploadBtn = document.getElementById('soloUploadBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            }
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const file of files) {
+                    try {
+                        const uploadPath = `Solo/${projectName}/${file.name}`;
+                        const content = await fileToBase64(file);
+                        
+                        const response = await fetch(
+                            `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `token ${token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    message: `Upload ${file.name} to Solo/${projectName}`,
+                                    content: content.split(',')[1],
+                                    branch: 'main'
+                                })
+                            }
+                        );
+
+                        if (response.ok) successCount++;
+                        else failCount++;
+                    } catch (error) {
+                        console.error(`Error uploading ${file.name}:`, error);
+                        failCount++;
+                    }
+                }
+
+                if (failCount === 0) {
+                    showMessage('solo', `✅ Successfully uploaded ${successCount} file(s)!`, 'success');
+                    clearFiles('solo');
+                    projectNameInput.value = '';
+                } else {
+                    showMessage('solo', `⚠️ Uploaded ${successCount}, ${failCount} failed`, 'warning');
+                }
+
+            } catch (error) {
+                showMessage('solo', `❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+                }
+            }
+        }
+
+        // Placeholder functions for Update/Delete tabs
+        function updateFile() { 
+            showMessage('update', 'Update feature coming soon', 'info');
+        }
+
+        // Upload Question Documents
+        async function uploadQuestions() {
+            const daySelect = document.getElementById('questionDay');
+            const typeSelect = document.getElementById('questionType');
+            const fileInput = document.getElementById('questionFileInput');
+            
+            const day = daySelect?.value;
+            const type = typeSelect?.value || 'CW';
+            const files = fileInput?.files;
+            
+            if (!day || !files || files.length === 0) {
+                showMessage('question', 'Please select day and files', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                showMessage('question', 'GitHub token required. Click "Manage Token".', 'error');
+                return;
+            }
+
+            showMessage('question', `Uploading ${files.length} question file(s) to ${day}...`, 'info');
+            const uploadBtn = document.getElementById('questionUploadBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            }
+
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'SOLIDWORKS-Projects';
+                
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const file of files) {
+                    try {
+                        // Questions go directly to day folder root
+                        const uploadPath = `${type}/${day}/${file.name}`;
+                        const content = await fileToBase64(file);
+                        
+                        const response = await fetch(
+                            `https://api.github.com/repos/${owner}/${repo}/contents/${uploadPath}`,
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `token ${token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    message: `Upload question ${file.name} to ${type}/${day}`,
+                                    content: content.split(',')[1],
+                                    branch: 'main'
+                                })
+                            }
+                        );
+
+                        if (response.ok) successCount++;
+                        else failCount++;
+                    } catch (error) {
+                        console.error(`Error uploading ${file.name}:`, error);
+                        failCount++;
+                    }
+                }
+
+                if (failCount === 0) {
+                    showMessage('question', `✅ Successfully uploaded ${successCount} file(s)!`, 'success');
+                    clearFiles('question');
+                } else {
+                    showMessage('question', `⚠️ Uploaded ${successCount}, ${failCount} failed`, 'warning');
+                }
+
+            } catch (error) {
+                showMessage('question', `❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Questions';
+                }
+            }
+        }
+        
+        async function confirmDelete() {
+            const type = document.getElementById('deleteType')?.value;
+            const day = document.getElementById('deleteDay')?.value;
+            const file = document.getElementById('deleteFile')?.value;
+            
+            if (!type || !day || !file) {
+                showMessage('delete', 'Please select all fields', 'error');
+                return;
+            }
+
+            if (!confirm(`⚠️ Are you sure you want to delete "${file}" from ${day}? This cannot be undone!`)) {
+                return;
+            }
+
+            showMessage('delete', 'Delete functionality will be implemented soon', 'info');
+        }
+        
+        function clearDeleteSelection() {
+            ['deleteType', 'deleteDay', 'deleteFile'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const btn = document.getElementById('deleteBtn');
+            if (btn) btn.disabled = true;
+        }
     </script>
 </body>
 </html>
