@@ -270,10 +270,20 @@
 
             <div class="form-group">
                 <label>GitHub Personal Access Token (PAT):</label>
-                <input type="password" id="uploadGitToken" placeholder="ghp_xxxxxxxxxxxx">
-                <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 5px;">
-                    Need a token? <a href="https://github.com/settings/tokens" target="_blank" style="color: #cc0000;">Create one here</a> with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">repo</code> scope
-                </small>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <input type="password" id="uploadGitToken" placeholder="ghp_xxxxxxxxxxxx" style="width: 100%;">
+                        <small style="color: rgba(255, 255, 255, 0.5); display: block; margin-top: 5px;">
+                            Need a token? <a href="https://github.com/settings/tokens" target="_blank" style="color: #cc0000;">Create one here</a> with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">repo</code> scope
+                        </small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="saveGitHubToken()" style="white-space: nowrap;">
+                        <i class="fas fa-save"></i> Save Token
+                    </button>
+                </div>
+                <div id="tokenStatus" style="margin-top: 8px; padding: 8px 12px; border-radius: 6px; display: none;">
+                    <i class="fas fa-check-circle"></i> <span id="tokenStatusText"></span>
+                </div>
             </div>
 
             <div style="margin-top: 25px;">
@@ -331,6 +341,7 @@
         if (uploadModelCard) {
             uploadModelCard.addEventListener('click', function() {
                 uploadModelModal.classList.add('active');
+                loadSavedToken();
             });
         }
 
@@ -378,6 +389,13 @@
                     return;
                 }
 
+                // Validate file size (100 MB GitHub limit)
+                const maxSize = 100 * 1024 * 1024; // 100 MB
+                if (glbFile.size > maxSize) {
+                    showError(`File too large: ${(glbFile.size / 1024 / 1024).toFixed(2)} MB. Maximum allowed: 100 MB`);
+                    return;
+                }
+
                 if (!gitToken) {
                     showError('Please enter your GitHub Personal Access Token');
                     return;
@@ -392,13 +410,25 @@
                         showError('Please enter a project name');
                         return;
                     }
-                    folderPath = `Solo Projects/${projectName}`;
+                    // Validate project name
+                    const validNameRegex = /^[a-zA-Z0-9_-]+(\s+[a-zA-Z0-9_-]+)*$/;
+                    if (!validNameRegex.test(projectName)) {
+                        showError('Invalid project name. Use only letters, numbers, spaces, dash, or underscore');
+                        return;
+                    }
+                    folderPath = `Solo/${projectName}`;
                 } else {
                     const day = document.getElementById('uploadDay').value;
                     const number = document.getElementById('uploadNumber').value;
 
                     if (!day || !number) {
                         showError('Please enter day and work number');
+                        return;
+                    }
+
+                    // Validate numbers
+                    if (day < 1 || day > 99 || number < 1 || number > 99) {
+                        showError('Day and work number must be between 1 and 99');
                         return;
                     }
 
@@ -426,24 +456,67 @@
                         throw new Error('Invalid token or no repository access');
                     }
 
-                    // Upload GLB file
-                    updateProgress(40, `Uploading ${glbFile.name}...`);
-                    const fileContent = await readFileAsBase64(glbFile);
-                    const glbPath = `${folderPath}/${glbFile.name}`;
+                    // Generate proper filename based on project type
+                    updateProgress(30, 'Preparing file...');
+                    const fileExt = glbFile.name.split('.').pop();
+                    let newFileName;
                     
-                    await uploader.uploadFile(glbPath, fileContent, `Add 3D model: ${glbFile.name}`);
-                    updateProgress(70, 'Creating README...');
+                    if (projectType === 'Solo') {
+                        // Solo: projectname.glb (e.g., robotic-arm.glb)
+                        newFileName = `${projectName.toLowerCase().replace(/\s+/g, '-')}.${fileExt}`;
+                    } else {
+                        // CW/HW: type-number-day.glb (e.g., cw-01-day-6.glb)
+                        const numStr = String(number).padStart(2, '0');
+                        newFileName = `${projectType.toLowerCase()}-${numStr}-day-${day}.${fileExt}`;
+                    }
+
+                    // Check if file already exists
+                    updateProgress(35, 'Checking for existing files...');
+                    try {
+                        const checkPath = `${folderPath}/${newFileName}`;
+                        const existingFile = await fetch(
+                            `https://api.github.com/repos/Akhinoor14/SOLIDWORKS-Projects/contents/${checkPath}`,
+                            {
+                                headers: {
+                                    'Authorization': `token ${gitToken}`,
+                                    'Accept': 'application/vnd.github.v3+json'
+                                }
+                            }
+                        );
+                        
+                        if (existingFile.ok) {
+                            const proceed = confirm(`⚠️ File "${newFileName}" already exists in ${folderPath}.\n\nDo you want to overwrite it?`);
+                            if (!proceed) {
+                                uploadProgress.style.display = 'none';
+                                uploadModelBtn.disabled = false;
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // 404 means file doesn't exist - that's fine
+                    }
+
+                    // Upload GLB file with proper name
+                    updateProgress(45, `Uploading ${newFileName}...`);
+                    const fileContent = await readFileAsBase64(glbFile);
+                    const glbPath = `${folderPath}/${newFileName}`;
+                    
+                    await uploader.uploadFile(glbPath, fileContent, `Add 3D model: ${newFileName}`);
+                    updateProgress(75, 'Creating README...');
 
                     // Generate README
                     const readmePath = `${folderPath}/README.md`;
-                    const readmeContent = generateREADME(projectName, glbFile.name, projectType);
+                    const readmeContent = generateREADME(projectName, newFileName, projectType, folderPath, glbFile.size);
                     await uploader.uploadTextFile(readmePath, readmeContent, 'Add/update README with 3D model info');
 
                     updateProgress(100, 'Upload complete!');
 
+                    // Save token on successful upload
+                    localStorage.setItem('dashboard_github_token', gitToken);
+
                     // Success
                     setTimeout(() => {
-                        showSuccess(`✅ Successfully uploaded ${glbFile.name} to ${folderPath}! The "View 3D" button will appear automatically on mobile pages.`);
+                        showSuccess(`✅ Successfully uploaded as "${newFileName}" to ${folderPath}!\n\nThe "View 3D" button will appear automatically on mobile pages.`);
                         uploadProgress.style.display = 'none';
                         uploadModelBtn.disabled = false;
                         resetUploadForm();
@@ -451,7 +524,21 @@
 
                 } catch (error) {
                     console.error('Upload error:', error);
-                    showError(`Upload failed: ${error.message}`);
+                    
+                    let errorMsg = 'Upload failed: ';
+                    if (!navigator.onLine) {
+                        errorMsg += 'No internet connection. Please check your network.';
+                    } else if (error.message.includes('token') || error.message.includes('401')) {
+                        errorMsg += 'Invalid GitHub token. Please check your token and try again.';
+                    } else if (error.message.includes('404')) {
+                        errorMsg += 'Repository not found. Please verify repository name.';
+                    } else if (error.message.includes('403')) {
+                        errorMsg += 'Access denied. Please check token permissions (repo scope required).';
+                    } else {
+                        errorMsg += error.message;
+                    }
+                    
+                    showError(errorMsg);
                     uploadProgress.style.display = 'none';
                     uploadModelBtn.disabled = false;
                 }
@@ -479,6 +566,55 @@
             }, 6000);
         }
 
+        function saveGitHubToken() {
+            const tokenInput = document.getElementById('uploadGitToken');
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                showError('Please enter a token first');
+                return;
+            }
+            
+            // Basic token format validation
+            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+                if (!confirm('⚠️ Token format looks unusual. GitHub tokens usually start with "ghp_" or "github_pat_". Continue anyway?')) {
+                    return;
+                }
+            }
+            
+            localStorage.setItem('dashboard_github_token', token);
+            
+            const statusDiv = document.getElementById('tokenStatus');
+            const statusText = document.getElementById('tokenStatusText');
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = 'rgba(0, 204, 0, 0.1)';
+            statusDiv.style.border = '1px solid rgba(0, 204, 0, 0.3)';
+            statusDiv.style.color = '#00cc00';
+            statusText.textContent = 'Token saved successfully! It will be auto-filled next time.';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 4000);
+        }
+        
+        function loadSavedToken() {
+            const savedToken = localStorage.getItem('dashboard_github_token');
+            if (savedToken) {
+                document.getElementById('uploadGitToken').value = savedToken;
+                const statusDiv = document.getElementById('tokenStatus');
+                const statusText = document.getElementById('tokenStatusText');
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'rgba(0, 204, 0, 0.1)';
+                statusDiv.style.border = '1px solid rgba(0, 204, 0, 0.3)';
+                statusDiv.style.color = '#00cc00';
+                statusText.textContent = 'Saved token loaded automatically';
+                
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
         function resetUploadForm() {
             document.getElementById('uploadGLBFile').value = '';
             document.getElementById('uploadDay').value = '';
@@ -501,54 +637,68 @@
             });
         }
 
-        function generateREADME(projectName, fileName, projectType) {
+        function generateREADME(projectName, fileName, projectType, folderPath, fileSize) {
             const date = new Date().toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
             });
+            const sizeMB = fileSize ? (fileSize / (1024 * 1024)).toFixed(2) : 'N/A';
             
             return `# ${projectName}
 
 **Project Type:** ${projectType}  
-**Date:** ${date}  
+**Upload Date:** ${date}  
+**Location:** \`${folderPath}\`  
 **Status:** ✅ Complete
 
 ## 📦 Files
 
 ### 3D Model
-- \`${fileName}\` - Interactive 3D model (GLB/GLTF format)
-  - ✅ Viewable on mobile with **View 3D** button
-  - ✅ AR support on compatible devices
-  - ✅ Camera controls (rotate, zoom, pan)
-
-## 🎯 Features
-
+- **Filename:** \`${fileName}\`
 - **Format:** ${fileName.endsWith('.glb') ? 'GLB (Binary glTF)' : 'GLTF (JSON glTF)'}
-- **Viewer:** Google Model Viewer
-- **Mobile Optimized:** Full-screen immersive experience
-- **Desktop Ready:** Rounded modal with camera controls
-- **AR Ready:** WebXR (Android) + Quick Look (iOS)
+- **Size:** ${sizeMB} MB
+- **Features:**
+  - ✅ Interactive 3D viewer on mobile
+  - ✅ AR support (Android/iOS)
+  - ✅ Camera controls (rotate, zoom, pan)
+  - ✅ Full-screen immersive mode
+
+## 🎯 Viewer Features
+
+- **Renderer:** Google Model Viewer (WebGL)
+- **Mobile:** Touch-optimized controls
+- **Desktop:** Mouse/trackpad support  
+- **AR Mode:** WebXR (Android) + Quick Look (iOS)
+- **Performance:** Auto-optimized, lazy-loaded
 
 ## 📱 How to View
 
-1. Open mobile page (CW/HW/Solo Projects)
-2. Find this project
-3. Click the **cube icon** (🎯 View 3D)
-4. Interact: Drag to rotate, Pinch to zoom
-5. Try AR mode on compatible devices!
+1. **Open mobile page:**
+   - CW → Class Work → Expand day
+   - HW → Home Work → Expand day
+   - Solo → Solo Projects → Find project
+2. **Look for cube icon** (🎯)
+3. **Tap to open** 3D viewer
+4. **Interact:**
+   - Drag to rotate
+   - Pinch to zoom
+   - Two fingers to pan
+5. **Try AR mode** on compatible devices!
 
 ## 🛠️ Technical Details
 
-- **Repository:** SOLIDWORKS-Projects
-- **Auto-Detection:** Enabled
-- **Caching:** Service worker precached
-- **Performance:** Lazy-loaded on demand
+- **Repository:** [SOLIDWORKS-Projects](https://github.com/Akhinoor14/SOLIDWORKS-Projects)
+- **Full Path:** \`${folderPath}/${fileName}\`
+- **Auto-Detection:** ✅ Enabled
+- **Caching:** Service worker optimized
+- **CDN:** GitHub raw content delivery
 
 ---
 
 **Uploaded via:** A3KM Studio Only Boss Dashboard  
-**Generated:** ${date}
+**System:** Automated 3D Model Pipeline v2.0  
+**Date:** ${date}
 `;
         }
 
