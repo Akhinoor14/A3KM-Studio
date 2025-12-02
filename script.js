@@ -4545,7 +4545,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${file.preview2 ? `<a href="${file.preview2}" target="_blank" class="sw-action-btn sw-btn-preview" title="View Preview 2">
                             <i class="fas fa-eye"></i> Preview 2
                         </a>` : ''}
-                        ${file.model3d ? `<button class="sw-action-btn sw-btn-3d" onclick="open3DViewer('${file.model3d}')" title="View 3D Model">
+                        ${file.model3d ? `<button class="sw-action-btn sw-btn-3d" onclick="open3DModelViewer('${file.model3d}')" title="View 3D Model">
                             <i class="fas fa-cube"></i> 3D View
                         </button>` : ''}
                     </div>
@@ -4594,7 +4594,85 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 hwFilesWrap.innerHTML = hwHtml;
             }
-            END OF OLD STATIC CODE */
+
+            /**
+             * 3D Model Viewer (GLB) using <model-viewer> web component
+             * - Zero-dependency viewer that works across modern browsers
+             * - Shows AR controls if supported
+             * - Adds a simple modal overlay with close button
+             */
+            if (typeof window !== 'undefined') {
+                window.open3DModelViewer = function(glbUrl) {
+                    try {
+                        // Ensure the model-viewer script is loaded once
+                        if (!document.querySelector('script[data-model-viewer]')) {
+                            const mvScript = document.createElement('script');
+                            mvScript.type = 'module';
+                            mvScript.dataset.modelViewer = 'true';
+                            mvScript.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+                            document.head.appendChild(mvScript);
+                        }
+
+                        // Build modal container
+                        let modal = document.getElementById('glb-viewer-modal');
+                        if (!modal) {
+                            modal = document.createElement('div');
+                            modal.id = 'glb-viewer-modal';
+                            modal.style.cssText = `
+                                position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+                                display: flex; align-items: center; justify-content: center;
+                                z-index: 10000; padding: 20px;
+                            `;
+
+                            const content = document.createElement('div');
+                            content.id = 'glb-viewer-content';
+                            content.style.cssText = `
+                                position: relative; width: 95vw; max-width: 1000px; height: 80vh; background: #111; border-radius: 10px; overflow: hidden;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+                            `;
+
+                            const closeBtn = document.createElement('button');
+                            closeBtn.textContent = '×';
+                            closeBtn.setAttribute('aria-label', 'Close');
+                            closeBtn.style.cssText = `
+                                position: absolute; top: 8px; right: 12px; font-size: 28px; line-height: 28px;
+                                background: rgba(255,255,255,0.12); color: #fff; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; z-index: 2;
+                            `;
+                            closeBtn.onclick = () => {
+                                modal.remove();
+                            };
+
+                            const mv = document.createElement('model-viewer');
+                            mv.setAttribute('src', glbUrl);
+                            mv.setAttribute('camera-controls', '');
+                            mv.setAttribute('tone-mapping', 'neutral');
+                            mv.setAttribute('shadow-intensity', '1');
+                            mv.setAttribute('environment-image', 'neutral');
+                            mv.setAttribute('style', 'width:100%;height:100%;background:#000');
+                            mv.innerHTML = `
+                                <div style="position:absolute;bottom:12px;left:12px;color:#fff;font-size:12px;background:rgba(0,0,0,0.4);padding:6px 8px;border-radius:6px;">
+                                    Drag to orbit • Scroll to zoom • Right-click to pan
+                                </div>
+                            `;
+
+                            content.appendChild(closeBtn);
+                            content.appendChild(mv);
+                            modal.appendChild(content);
+                            document.body.appendChild(modal);
+                        } else {
+                            const mv = modal.querySelector('model-viewer');
+                            if (mv) mv.setAttribute('src', glbUrl);
+                            modal.style.display = 'flex';
+                        }
+
+                        console.log('✅ 3D viewer opened:', glbUrl);
+                    } catch (err) {
+                        console.error('❌ Failed to open 3D viewer:', err);
+                        alert('Could not open 3D viewer. You can download and view the GLB locally.');
+                    }
+                };
+            }
+            /* END OF OLD STATIC CODE */
 
             // Add quick links section
             addQuickLinksSection();
