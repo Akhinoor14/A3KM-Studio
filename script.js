@@ -5517,21 +5517,21 @@ const sampleProjects = [
         // Custom action buttons override
         actionsOverride: `
             <div class="project-actions-grid">
-                <button class="action-btn btn-browse" onclick="openGitHubBrowser('https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno', 'Arduino UNO Projects with Tinkercad')">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Browse</span>
-                </button>
                 <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno" class="action-btn btn-github" target="_blank" rel="noopener">
                     <i class="fab fa-github"></i>
                     <span>GitHub</span>
                 </a>
+                <a href="arduino-readme-viewer.html" class="action-btn btn-readme">
+                    <i class="fas fa-book"></i>
+                    <span>README</span>
+                </a>
+                <button class="action-btn btn-browse" onclick="openGitHubBrowser('https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno', 'Arduino UNO Projects with Tinkercad')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Browse</span>
+                </button>
                 <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno/archive/refs/heads/main.zip" class="action-btn btn-zip" target="_blank" rel="noopener" title="If main is unavailable, try master from GitHub">
                     <i class="fas fa-file-archive"></i>
                     <span>Download ZIP</span>
-                </a>
-                <a href="https://github.com/Akhinoor14/Tinkercad-basic-Projects-Using-Arduino-Uno#readme" class="action-btn btn-readme" target="_blank" rel="noopener">
-                    <i class="fas fa-book"></i>
-                    <span>README</span>
                 </a>
             </div>
         `
@@ -5758,13 +5758,21 @@ function createProjectCard(project) {
         const lastBtn = hasDemo 
             ? `<a href="${project.demo}" class="action-btn btn-demo" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i><span>Live Demo</span></a>`
             : `<a href="${zipUrl}" class="action-btn btn-zip" target="_blank" rel="noopener" title="If main is unavailable, try master from GitHub"><i class="fas fa-file-archive"></i><span>Download ZIP</span></a>`;
+        // Check if Electronics card - use local viewer for README
+        const readmeBtnHref = (project.title === 'Electronic Components Guide') 
+            ? 'electronics-readme-viewer.html'
+            : `${readmeUrl}#readme`;
+        const readmeBtnTarget = (project.title === 'Electronic Components Guide') 
+            ? ''
+            : 'target="_blank" rel="noopener"';
+        
         return `
             <div class="project-actions-grid">
                 <a href="${project.github}" class="action-btn btn-github" target="_blank" rel="noopener">
                     <i class="fab fa-github"></i>
                     <span>GitHub</span>
                 </a>
-                <a href="${readmeUrl}#readme" class="action-btn btn-readme" target="_blank" rel="noopener">
+                <a href="${readmeBtnHref}" class="action-btn btn-readme" ${readmeBtnTarget}>
                     <i class="fas fa-book"></i>
                     <span>README</span>
                 </a>
