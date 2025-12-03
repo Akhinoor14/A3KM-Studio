@@ -501,11 +501,9 @@
             <div class="section-title">
                 <i class="fas fa-key"></i> Add New Tokens
             </div>
-            <div class="input-group">
-                <label for="adminPassword">Admin Password:</label>
-                <input type="password" id="adminPassword" placeholder="Enter admin password">
-                <p class="help-text">Set in backend .env file as ADMIN_PASSWORD</p>
-            </div>
+            <p class="help-text" style="margin-bottom: 15px; color: #28a745; font-weight: 600;">
+                <i class="fas fa-shield-alt"></i> Already protected by Only Boss Authentication - No password needed!
+            </p>
             <div class="input-group">
                 <label for="newTokens">GitHub Personal Access Tokens:</label>
                 <textarea id="newTokens" placeholder="ghp_xxxxxxxxxxxx&#10;ghp_yyyyyyyyyyyy&#10;ghp_zzzzzzzzzzzz&#10;&#10;(One token per line)"></textarea>
@@ -712,14 +710,7 @@ python secure-proxy-server.py</pre>
         }
 
         async function addTokens() {
-            const password = document.getElementById('adminPassword').value.trim();
             const tokensText = document.getElementById('newTokens').value.trim();
-
-            if (!password) {
-                showAlert('Please enter admin password', 'error');
-                document.getElementById('adminPassword').focus();
-                return;
-            }
 
             if (!tokensText) {
                 showAlert('Please enter at least one token', 'error');
@@ -741,8 +732,7 @@ python secure-proxy-server.py</pre>
                     method: 'POST',
                     mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ tokens })
                 });
@@ -799,18 +789,11 @@ python secure-proxy-server.py</pre>
         }
 
         async function viewTokens() {
-            const password = document.getElementById('adminPassword').value.trim();
-
-            if (!password) {
-                showAlert('Please enter admin password to view tokens', 'error');
-                return;
-            }
-
             try {
                 const response = await fetch(`${BACKEND_URL}/admin/tokens`, {
                     method: 'GET',
                     headers: {
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -840,13 +823,6 @@ python secure-proxy-server.py</pre>
         }
 
         async function clearAllTokens() {
-            const password = document.getElementById('adminPassword').value.trim();
-
-            if (!password) {
-                showAlert('Please enter admin password', 'error');
-                return;
-            }
-
             if (!confirm('Are you sure you want to clear ALL tokens? This action cannot be undone.')) {
                 return;
             }
@@ -855,7 +831,7 @@ python secure-proxy-server.py</pre>
                 const response = await fetch(`${BACKEND_URL}/admin/tokens`, {
                     method: 'DELETE',
                     headers: {
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -874,25 +850,18 @@ python secure-proxy-server.py</pre>
         }
 
         async function loadTokenAnalytics() {
-            const password = document.getElementById('adminPassword').value.trim();
-            
-            if (!password) {
-                showAlert('Please enter admin password to view analytics', 'error');
-                return;
-            }
-
             try {
                 // Load summary stats
                 const statsResponse = await fetch(`${BACKEND_URL}/admin/stats`, {
                     headers: {
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     }
                 });
 
                 // Load detailed token analytics
                 const detailsResponse = await fetch(`${BACKEND_URL}/admin/token-details`, {
                     headers: {
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     }
                 });
 

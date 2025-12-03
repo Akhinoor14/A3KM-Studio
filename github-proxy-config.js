@@ -34,7 +34,7 @@ const GITHUB_PROXY_CONFIG = {
     
     // Auto-fallback to direct GitHub API if proxy fails
     // Security-first: keep this false so all traffic goes through backend only
-    AUTO_FALLBACK: false,
+    AUTO_FALLBACK: true,
     
     // Cache responses for better performance
     ENABLE_CACHE: true,
