@@ -91,8 +91,8 @@
   <!-- Backend Status Bar (Compact for browse view) -->
   <div class="browse-backend-status" id="browse-backend-status">
     <div class="status-compact">
-      <i class="fas fa-circle-notch fa-spin"></i>
-      <span>Checking connection...</span>
+      <i class="fas fa-key"></i>
+      <span>Frontend Token System Active</span>
     </div>
   </div>
 
@@ -201,6 +201,34 @@
   <script>
     console.log('📁 Browse Files Mobile - Page Loaded');
     
+    // Verify Frontend Token System
+    if (typeof getNextToken === 'function' && typeof GITHUB_DIRECT_TOKENS !== 'undefined') {
+      console.log('✅ Frontend Token System Active');
+      console.log(`🔑 Available Tokens: ${GITHUB_DIRECT_TOKENS.length}`);
+      
+      // Update status bar
+      const statusBar = document.getElementById('browse-backend-status');
+      if (statusBar) {
+        statusBar.innerHTML = `
+          <div class="status-compact" style="background: linear-gradient(135deg, rgba(0, 150, 136, 0.2), rgba(0, 100, 90, 0.15)); border-color: rgba(0, 150, 136, 0.4); color: #4db6ac;">
+            <i class="fas fa-key" style="color: #4db6ac;"></i>
+            <span>Token System: ${GITHUB_DIRECT_TOKENS.length} Active</span>
+          </div>
+        `;
+      }
+    } else {
+      console.warn('⚠️ Frontend Token System Not Loaded');
+      const statusBar = document.getElementById('browse-backend-status');
+      if (statusBar) {
+        statusBar.innerHTML = `
+          <div class="status-compact" style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(200, 120, 0, 0.15)); border-color: rgba(255, 152, 0, 0.4); color: #ffb74d;">
+            <i class="fas fa-exclamation-triangle" style="color: #ffb74d;"></i>
+            <span>Token System Loading...</span>
+          </div>
+        `;
+      }
+    }
+    
     // Get repo and path from URL parameters (for Arduino support)
   const urlParams = new URLSearchParams(window.location.search);
   const repoParam = urlParams.get('repo') || 'SOLIDWORKS-Projects';
@@ -299,7 +327,7 @@
       
       try {
         console.log(`🔍 Loading: ${owner}/${repo}/${path}`);
-        console.log(`🔧 Proxy enabled: ${typeof GITHUB_PROXY_CONFIG !== 'undefined' && GITHUB_PROXY_CONFIG.USE_PROXY}`);
+        console.log(`🔧 Frontend Token System: ${typeof getNextToken !== 'undefined' ? 'ACTIVE ✅' : 'MISSING ❌'}`);
         
         // Ensure path doesn't have leading/trailing slashes
         const cleanPath = path.replace(/^\/+|\/+$/g, '');
@@ -307,8 +335,15 @@
         
         console.log(`🌐 Fetching: ${url}`);
         
-        // fetch is patched by github-fetch-patch.js to use proxy automatically
-        const response = await fetch(url);
+        // Use frontend token system directly
+        const token = typeof getNextToken === 'function' ? getNextToken() : null;
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `token ${token}`;
+          console.log(`🔑 Using frontend token for authentication`);
+        }
+        
+        const response = await fetch(url, { headers });
         
         console.log(`📡 Response status: ${response.status}`);
         
@@ -790,7 +825,14 @@
     // Markdown Preview with Tinkercad Detection
     async function renderMarkdownPreview(fileData, contentEl) {
       try {
-        const response = await fetch(fileData.url);
+        // Use frontend token for authenticated request
+        const token = typeof getNextToken === 'function' ? getNextToken() : null;
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `token ${token}`;
+        }
+        
+        const response = await fetch(fileData.url, { headers });
         const markdown = await response.text();
         
         // Detect Tinkercad link in markdown
@@ -851,7 +893,14 @@
     // Code Preview with Syntax Highlighting + Arduino Enhancements
     async function renderCodePreview(fileData, contentEl) {
       try {
-        const response = await fetch(fileData.url);
+        // Use frontend token for authenticated request
+        const token = typeof getNextToken === 'function' ? getNextToken() : null;
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `token ${token}`;
+        }
+        
+        const response = await fetch(fileData.url, { headers });
         const code = await response.text();
         
         const ext = fileData.name.split('.').pop().toLowerCase();

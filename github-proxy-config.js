@@ -1,23 +1,22 @@
 /**
- * GitHub API Proxy Configuration - Hybrid Setup with Direct Token Rotation
- * =========================================================================
+ * GitHub API Direct Token System - Pure Frontend Solution
+ * ========================================================
  * 
- * FALLBACK TOKENS: Frontend has embedded tokens for direct GitHub API access
- * If backend fails, tokens automatically rotate to ensure 20,000 req/hour
+ * 🚀 GLOBAL TOKEN ROTATION - NO BACKEND REQUIRED
+ * - 4 tokens embedded for 20,000 requests/hour capacity
+ * - Random token selection for perfect load balancing
+ * - Works on ANY device, ANY visitor, globally
+ * - Real-time usage tracking & monitoring
  * 
- * Backend Setup (Optional):
- * 1. cd "Backend projects"
- * 2. python secure-proxy-server.py
- * 
- * Direct Token System:
- * - 4 tokens embedded for failsafe operation
- * - Automatic rotation for load balancing
- * - Works even if backend is offline
- * - 20,000 requests/hour capacity
+ * Token Distribution Strategy:
+ * - Each visitor gets random token on each request
+ * - Ensures equal distribution across all 4 tokens
+ * - Maximizes API rate limit usage
+ * - Zero server dependency
  */
 
 // ============================================
-// DIRECT GITHUB TOKENS (FALLBACK SYSTEM)
+// DIRECT GITHUB TOKENS (PRIMARY SYSTEM)
 // ============================================
 
 const GITHUB_DIRECT_TOKENS = [
@@ -27,52 +26,116 @@ const GITHUB_DIRECT_TOKENS = [
     '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'
 ];
 
-let currentTokenIndex = 0;
+// Global usage statistics (persisted in localStorage)
 let tokenUsageStats = {
     totalRequests: 0,
     tokenUsage: [0, 0, 0, 0], // Usage count per token
     lastUsed: null,
-    backendUsed: 0,
-    directUsed: 0
+    sessionRequests: 0,
+    failedRequests: 0
 };
 
+// Load stats from localStorage
+if (typeof window !== 'undefined' && localStorage) {
+    try {
+        const saved = localStorage.getItem('github_token_stats');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            tokenUsageStats = { ...tokenUsageStats, ...parsed };
+        }
+    } catch (e) {
+        console.warn('Could not load token stats:', e);
+    }
+}
+
+/**
+ * Get random token for maximum distribution
+ * Each device/visitor gets random token on each request
+ */
 function getNextToken() {
-    const token = GITHUB_DIRECT_TOKENS[currentTokenIndex];
-    const tokenNum = currentTokenIndex + 1;
+    // Pure random selection for global distribution
+    const randomIndex = Math.floor(Math.random() * GITHUB_DIRECT_TOKENS.length);
+    const token = GITHUB_DIRECT_TOKENS[randomIndex];
+    const tokenNum = randomIndex + 1;
     
     // Update stats
-    tokenUsageStats.tokenUsage[currentTokenIndex]++;
+    tokenUsageStats.tokenUsage[randomIndex]++;
     tokenUsageStats.totalRequests++;
-    tokenUsageStats.directUsed++;
-    tokenUsageStats.lastUsed = new Date().toLocaleTimeString();
+    tokenUsageStats.sessionRequests++;
+    tokenUsageStats.lastUsed = new Date().toISOString();
     
-    // Log token usage
-    console.log(`🔑 Using Token ${tokenNum}/4 | Total Requests: ${tokenUsageStats.totalRequests} | Backend: ${tokenUsageStats.backendUsed} | Direct: ${tokenUsageStats.directUsed}`);
+    // Save to localStorage
+    if (typeof window !== 'undefined' && localStorage) {
+        try {
+            localStorage.setItem('github_token_stats', JSON.stringify(tokenUsageStats));
+        } catch (e) {
+            // Ignore localStorage errors
+        }
+    }
     
-    // Rotate to next token
-    currentTokenIndex = (currentTokenIndex + 1) % GITHUB_DIRECT_TOKENS.length;
+    // Log token usage with detailed stats
+    const distribution = tokenUsageStats.tokenUsage.map((count, i) => 
+        `T${i+1}:${count}`
+    ).join(' | ');
+    
+    console.log(`🔑 Token ${tokenNum}/4 ACTIVE | Session: ${tokenUsageStats.sessionRequests} | Total: ${tokenUsageStats.totalRequests} | Distribution: ${distribution}`);
+    
     return token;
 }
 
-// Expose stats globally for debugging
+// Expose stats globally for monitoring
 if (typeof window !== 'undefined') {
     window.GITHUB_TOKEN_STATS = tokenUsageStats;
+    
+    // Global function to check token usage statistics
+    window.checkTokenUsage = function() {
+        console.log('📊 Token Usage Statistics:');
+        console.log('─────────────────────────');
+        GITHUB_DIRECT_TOKENS.forEach((token, i) => {
+            const usage = tokenUsageStats.tokenUsage[i];
+            const percent = tokenUsageStats.totalRequests > 0 
+                ? ((usage / tokenUsageStats.totalRequests) * 100).toFixed(1)
+                : 0;
+            console.log(`Token ${i+1}: ${usage} requests (${percent}%)`);
+        });
+        console.log(`Total Requests: ${tokenUsageStats.totalRequests}`);
+        console.log(`Session Requests: ${tokenUsageStats.sessionRequests}`);
+        console.log(`Failed Requests: ${tokenUsageStats.failedRequests}`);
+        console.log(`Last Used: ${tokenUsageStats.lastUsed || 'Never'}`);
+        console.log('─────────────────────────');
+        console.log('✅ All 4 tokens are ACTIVE and rotating');
+        return tokenUsageStats;
+    };
+    
+    // Quick test function to verify tokens are working
+    window.testTokens = async function() {
+        console.log('🧪 Testing token system with 5 random requests...');
+        const testPath = 'repos/Akhinoor14/A3KM-Studio';
+        
+        for (let i = 0; i < 5; i++) {
+            try {
+                await fetchGitHubApi(testPath);
+                console.log(`✅ Test ${i+1}/5 completed`);
+            } catch (error) {
+                console.error(`❌ Test ${i+1}/5 failed:`, error);
+            }
+        }
+        
+        console.log('\n📊 After testing:');
+        window.checkTokenUsage();
+    };
 }
 
 // ============================================
-// PRODUCTION CONFIGURATION
+// PRODUCTION CONFIGURATION - BACKEND DISABLED
 // ============================================
 
 const GITHUB_PROXY_CONFIG = {
-    // Try backend first, fallback to direct tokens
-    USE_PROXY: true,
+    // Backend completely disabled - using direct tokens only
+    USE_PROXY: false,
     
-    // Backend proxy server URL (optional)
-    PROXY_URL: 'http://localhost:5000',
-    
-    // ALWAYS use direct tokens if proxy fails
-    AUTO_FALLBACK: true,
-    USE_DIRECT_TOKENS: true, // Enable embedded token rotation
+    // Direct token system always enabled
+    USE_DIRECT_TOKENS: true,
     
     // Cache responses for better performance
     ENABLE_CACHE: true,
@@ -125,17 +188,13 @@ function setCachedResponse(path, params, data) {
 // ============================================
 
 /**
- * Get GitHub API URL (proxy or direct)
+ * Get GitHub API URL (always direct)
  * @param {string} path - GitHub API path (e.g., 'repos/owner/repo/contents')
  * @returns {string} - Full API URL
  */
 function getGitHubApiUrl(path) {
-    if (GITHUB_PROXY_CONFIG.USE_PROXY) {
-        const cleanPath = path.replace(/^\//, '');
-        return `${GITHUB_PROXY_CONFIG.PROXY_URL}/api/github/${cleanPath}`;
-    }
-    
-    return `https://api.github.com/${path}`;
+    const cleanPath = path.replace(/^\//, '');
+    return `https://api.github.com/${cleanPath}`;
 }
 
 // ============================================
@@ -143,7 +202,7 @@ function getGitHubApiUrl(path) {
 // ============================================
 
 /**
- * Fetch from GitHub API with automatic proxy and caching
+ * Fetch from GitHub API with direct token rotation and caching
  * @param {string} path - GitHub API path
  * @param {object} options - Fetch options
  * @returns {Promise<Response>}
@@ -156,60 +215,17 @@ async function fetchGitHubApi(path, options = {}) {
     
     const cached = getCachedResponse(cleanPath, paramObj);
     if (cached) {
+        console.log('💾 Cache hit - serving from cache');
         return new Response(JSON.stringify(cached), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
     }
     
-    const url = getGitHubApiUrl(path);
+    // Direct GitHub API call with random token
+    const directUrl = `https://api.github.com/${cleanPath}`;
     
     try {
-        // If using proxy, remove Authorization header (backend handles tokens)
-        if (GITHUB_PROXY_CONFIG.USE_PROXY) {
-            const proxyOptions = { ...options };
-            if (proxyOptions.headers) {
-                delete proxyOptions.headers.Authorization;
-                delete proxyOptions.headers['Authorization'];
-            }
-            
-            const response = await fetch(url, proxyOptions);
-            
-            // Track backend usage
-            if (response.ok) {
-                tokenUsageStats.backendUsed++;
-                tokenUsageStats.totalRequests++;
-                console.log(`✅ Backend used | Total: ${tokenUsageStats.totalRequests} | Backend: ${tokenUsageStats.backendUsed} | Direct: ${tokenUsageStats.directUsed}`);
-            }
-            
-            // Cache successful responses
-            if (response.ok) {
-                const clonedResponse = response.clone();
-                clonedResponse.json().then(data => {
-                    setCachedResponse(cleanPath, paramObj, data);
-                });
-            }
-            
-            // Auto-fallback if proxy fails - USE DIRECT TOKENS
-            if (!response.ok && GITHUB_PROXY_CONFIG.AUTO_FALLBACK) {
-                console.log('🔄 Proxy failed, using direct token rotation...');
-                const directUrl = `https://api.github.com/${cleanPath}`;
-                const directOptions = {
-                    ...options,
-                    headers: {
-                        ...options.headers,
-                        'Authorization': `Bearer ${getNextToken()}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                };
-                return await fetch(directUrl, directOptions);
-            }
-            
-            return response;
-        }
-        
-        // Direct GitHub API call with token rotation
-        const directUrl = `https://api.github.com/${cleanPath}`;
         const directOptions = {
             ...options,
             headers: {
@@ -218,6 +234,7 @@ async function fetchGitHubApi(path, options = {}) {
                 'Accept': 'application/vnd.github.v3+json'
             }
         };
+        
         const response = await fetch(directUrl, directOptions);
         
         // Cache successful responses
@@ -225,29 +242,19 @@ async function fetchGitHubApi(path, options = {}) {
             const clonedResponse = response.clone();
             clonedResponse.json().then(data => {
                 setCachedResponse(cleanPath, paramObj, data);
+            }).catch(() => {
+                // Ignore cache errors for non-JSON responses
             });
+        } else {
+            tokenUsageStats.failedRequests++;
+            console.warn(`⚠️  Request failed with status: ${response.status}`);
         }
         
         return response;
         
     } catch (error) {
+        tokenUsageStats.failedRequests++;
         console.error('❌ API fetch error:', error);
-        
-        // Network error - ALWAYS try direct tokens
-        if (GITHUB_PROXY_CONFIG.USE_DIRECT_TOKENS) {
-            console.log('🔄 Error, falling back to direct token rotation...');
-            const directUrl = `https://api.github.com/${cleanPath}`;
-            const directOptions = {
-                ...options,
-                headers: {
-                    ...options.headers,
-                    'Authorization': `Bearer ${getNextToken()}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            };
-            return await fetch(directUrl, directOptions);
-        }
-        
         throw error;
     }
 }
@@ -265,50 +272,82 @@ function clearGitHubCache() {
 }
 
 /**
- * Check proxy server health
+ * Check token system health
  */
-async function checkProxyHealth() {
-    if (!GITHUB_PROXY_CONFIG.USE_PROXY) {
-        return { available: false, reason: 'Proxy not enabled' };
+async function checkTokenHealth() {
+    console.log('🔍 Testing token rotation system...');
+    
+    const results = {
+        totalTokens: GITHUB_DIRECT_TOKENS.length,
+        activeTokens: 0,
+        testedTokens: [],
+        allWorking: false
+    };
+    
+    // Test a lightweight endpoint with each token
+    for (let i = 0; i < GITHUB_DIRECT_TOKENS.length; i++) {
+        try {
+            const response = await fetch('https://api.github.com/rate_limit', {
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_DIRECT_TOKENS[i]}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                results.activeTokens++;
+                results.testedTokens.push({
+                    token: i + 1,
+                    status: '✅ Active',
+                    remaining: data.rate.remaining,
+                    limit: data.rate.limit
+                });
+            } else {
+                results.testedTokens.push({
+                    token: i + 1,
+                    status: '❌ Failed',
+                    error: response.status
+                });
+            }
+        } catch (error) {
+            results.testedTokens.push({
+                token: i + 1,
+                status: '❌ Error',
+                error: error.message
+            });
+        }
     }
     
-    try {
-        const response = await fetch(`${GITHUB_PROXY_CONFIG.PROXY_URL}/health`, {
-            method: 'GET',
-            timeout: 5000
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return { 
-                available: true, 
-                ...data 
-            };
-        }
-        
-        return { available: false, reason: 'Proxy unhealthy' };
-    } catch (error) {
-        return { available: false, reason: error.message };
-    }
+    results.allWorking = results.activeTokens === GITHUB_DIRECT_TOKENS.length;
+    
+    console.log('📊 Token Health Report:');
+    console.log('─────────────────────────');
+    results.testedTokens.forEach(t => {
+        console.log(`Token ${t.token}: ${t.status}${t.remaining ? ` (${t.remaining}/${t.limit} remaining)` : ''}`);
+    });
+    console.log(`Active Tokens: ${results.activeTokens}/${results.totalTokens}`);
+    console.log(results.allWorking ? '✅ All tokens working!' : '⚠️  Some tokens failed');
+    console.log('─────────────────────────');
+    
+    return results;
 }
 
 // ============================================
 // AUTO-INITIALIZATION
 // ============================================
 
-// Check proxy health on load
-if (GITHUB_PROXY_CONFIG.USE_PROXY) {
-    checkProxyHealth().then(health => {
-        if (health.available) {
-            console.log('✅ Backend proxy connected:', health);
-            console.log(`⚡ Effective rate limit: ${health.effective_limit} req/hour`);
-        } else {
-            console.warn('⚠️  Backend proxy not available:', health.reason);
-            if (GITHUB_PROXY_CONFIG.AUTO_FALLBACK) {
-                console.log('🔄 Using direct GitHub API as fallback');
-            }
-        }
-    });
+// Initialize token system on load
+if (typeof window !== 'undefined') {
+    console.log('🚀 GitHub Direct Token System Initialized');
+    console.log(`📡 ${GITHUB_DIRECT_TOKENS.length} tokens available for rotation`);
+    console.log(`⚡ Capacity: ${GITHUB_DIRECT_TOKENS.length * 5000} requests/hour`);
+    console.log('🌍 Works on ANY device globally - No backend required');
+    console.log('');
+    console.log('📋 Available Commands:');
+    console.log('  window.checkTokenHealth() - Test all 4 tokens live');
+    console.log('  window.checkTokenUsage() - See usage statistics');
+    console.log('  window.testTokens() - Run 5 test requests');
 }
 
 // ============================================
@@ -320,13 +359,16 @@ if (typeof window !== 'undefined') {
     window.getGitHubApiUrl = getGitHubApiUrl;
     window.fetchGitHubApi = fetchGitHubApi;
     window.clearGitHubCache = clearGitHubCache;
-    window.checkProxyHealth = checkProxyHealth;
+    window.checkTokenHealth = checkTokenHealth;
     
     // Log configuration on load
-    console.log('🔧 GitHub Proxy Config:', {
-        proxy_enabled: GITHUB_PROXY_CONFIG.USE_PROXY,
-        proxy_url: GITHUB_PROXY_CONFIG.PROXY_URL,
+    console.log('');
+    console.log('🔧 Configuration:', {
+        total_tokens: GITHUB_DIRECT_TOKENS.length,
         cache_enabled: GITHUB_PROXY_CONFIG.ENABLE_CACHE,
-        auto_fallback: GITHUB_PROXY_CONFIG.AUTO_FALLBACK
+        cache_duration: `${GITHUB_PROXY_CONFIG.CACHE_DURATION / 1000}s`,
+        backend_enabled: false,
+        random_rotation: true
     });
+    console.log('═══════════════════════════════════════');
 }

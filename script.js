@@ -51,6 +51,17 @@ function changeMainImage(imgSrc, thumbnail) {
 // GitHub Repository Browser System
 // ============================================
 
+// Initialize frontend token system check
+(function() {
+    if (typeof getNextToken === 'function' && typeof GITHUB_DIRECT_TOKENS !== 'undefined') {
+        console.log('✅ Frontend Token System Active in script.js');
+        console.log(`🔑 Available Tokens: ${GITHUB_DIRECT_TOKENS.length}`);
+        console.log('📊 All GitHub API calls will use frontend tokens');
+    } else {
+        console.warn('⚠️ Frontend Token System not loaded - falling back to localStorage');
+    }
+})();
+
 // ============================================
 // Token Management with Rotation System
 // ============================================
@@ -124,9 +135,20 @@ function getRotatedToken(){
     }
 }
 
-// Get headers with smart token rotation
+// Get headers with frontend token system integration
 function getGitHubHeaders(useRotation = false){
     const headers = { 'Accept': 'application/vnd.github.v3+json' };
+    
+    // Prioritize frontend token system if available
+    if (typeof getNextToken === 'function') {
+        const token = getNextToken();
+        if (token) {
+            headers['Authorization'] = `token ${token}`;
+            return headers;
+        }
+    }
+    
+    // Fallback to legacy token system
     const token = useRotation ? getRotatedToken() : getGitHubToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
@@ -177,6 +199,18 @@ function openGitHubBrowser(repoUrlOrOwner, projectTitleOrRepo, optionalTitle) {
     
     const modal = createGitHubBrowserModal(owner, repo, projectTitle);
     document.body.appendChild(modal);
+    
+    // Update status indicator with frontend token info
+    setTimeout(() => {
+        const statusEl = document.getElementById('githubBrowserStatus');
+        if (statusEl && typeof GITHUB_DIRECT_TOKENS !== 'undefined') {
+            statusEl.innerHTML = `<i class="fas fa-key"></i> ${GITHUB_DIRECT_TOKENS.length} Tokens Active`;
+            statusEl.style.color = '#28a745';
+        } else if (statusEl) {
+            statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> No authentication`;
+            statusEl.style.color = '#ffc107';
+        }
+    }, 100);
     
     setTimeout(() => {
         modal.classList.add('show');
@@ -242,8 +276,8 @@ function createGitHubBrowserModal(owner, repo, projectTitle) {
             
             <div class="github-browser-header" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 0; padding: 0.5rem 1.5rem;">
                 <div class="repo-info" style="padding: 0;">
-                    <span style="font-size: 0.85rem; color: #28a745;">
-                        <i class="fas fa-shield-alt"></i> Secure Connection
+                    <span style="font-size: 0.85rem; color: #28a745;" id="githubBrowserStatus">
+                        <i class="fas fa-key"></i> Secure Connection System Active
                     </span>
                 </div>
             </div>
@@ -276,8 +310,10 @@ function createGitHubBrowserModal(owner, repo, projectTitle) {
             </div>
         </div>
     `;
+    
     // No token UI initialization needed for public users
-    // Backend proxy handles all authentication
+    // Frontend token system (github-proxy-config.js) handles all authentication
+    // Users don't need to manage tokens - completely transparent
     
     return modal;
 }
@@ -294,6 +330,14 @@ async function loadRepoContents(owner, repo, path = '') {
             </div>
         `;
         
+        // Check which token system is being used
+        const hasFrontendTokens = typeof getNextToken === 'function' && typeof GITHUB_DIRECT_TOKENS !== 'undefined';
+        if (hasFrontendTokens) {
+            console.log(`🔑 Using Frontend Token System (${GITHUB_DIRECT_TOKENS.length} tokens)`);
+        } else {
+            console.log('⚠️ Using legacy localStorage tokens');
+        }
+        
         // Use token rotation if multiple tokens configured
         const tokens = getAllGitHubTokens();
         const useRotation = tokens.length > 1;
@@ -306,11 +350,10 @@ async function loadRepoContents(owner, repo, path = '') {
             if (response.status === 403 || response.status === 401) {
                 console.log('🔄 GitHub API limited, trying public repository access...');
                 
-                // Try fetching via GitHub's web interface (works for public repos without token)
+                // Try fetching via GitHub's web interface with frontend tokens
                 const publicUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-                const publicResponse = await fetch(publicUrl, {
-                    headers: { 'Accept': 'application/vnd.github.v3+json' }
-                });
+                const publicHeaders = getGitHubHeaders();
+                const publicResponse = await fetch(publicUrl, { headers: publicHeaders });
                 
                 if (publicResponse.ok) {
                     const contents = await publicResponse.json();
@@ -6225,7 +6268,8 @@ document.addEventListener('DOMContentLoaded', observeElements);
 // GitHub API integration for real-time data
 async function fetchGitHubProjects(username) {
     try {
-        const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
+        const headers = getGitHubHeaders();
+        const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`, { headers });
         const repos = await response.json();
         
         const projects = repos.map(repo => ({
