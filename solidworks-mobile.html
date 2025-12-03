@@ -15,7 +15,6 @@
   
   <!-- Mobile Styles -->
   <link rel="stylesheet" href="mobile-clean.css" />
-  <link rel="stylesheet" href="mobile-navbar.css" />
   
   <style>
     /* Mobile-only page structure */
@@ -404,19 +403,8 @@
 </head>
 <body>
 
-  <!-- Mobile Navbar Component -->
-  <div id="mobileNavbarContainer"></div>
-  <script>
-    fetch('mobile-navbar.html')
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById('mobileNavbarContainer').innerHTML = html;
-      })
-      .catch(e => console.error('Failed to load mobile navbar:', e));
-  </script>
-
   <!-- Backend Status Bar -->
-  <div id="solidworks-backend-status" style="position: fixed; top: 56px; left: 0; right: 0; z-index: 998;"></div>
+  <!-- Backend removed - using direct token system -->
 
   <!-- Mobile Header -->
   <header class="mobile-header">
@@ -474,8 +462,7 @@
   </div>
 
   <!-- Backend Scripts (preserve all backend functionality) -->
-  <script src="backend-connection-core.js"></script>
-  <script src="backend-status-ui.js"></script>
+  <!-- Backend removed - using direct token system from github-proxy-config.js -->
   <script src="github-proxy-config.js" defer></script>
   <script src="github-fetch-patch.js" defer></script>
   <script src="github-sync.js" defer></script>
@@ -483,22 +470,8 @@
   <script src="auto-refresh.js" defer></script>
   
   <script>
-    // Initialize backend connection
-    const backendConnection = new BackendConnectionCore({
-      backendUrl: 'http://localhost:5000',
-      reconnectInterval: 5000,
-      healthCheckInterval: 15000,
-      maxRetry: Infinity,
-      timeout: 10000
-    });
-
-    // Initialize status UI
-    const backendUI = new BackendStatusUI(backendConnection, 'solidworks-backend-status');
-
-    // Start connection
-    backendConnection.start();
-
     console.log('🔧 SOLIDWORKS Mobile 3D Gallery Loaded');
+    console.log('✅ Using Direct Frontend Token System - No Backend Required');
     
     // ============================================
     // MOBILE 3D GALLERY - CORE FUNCTIONALITY
@@ -525,9 +498,16 @@
         // Show loading
         loading.style.display = 'flex';
         
-        // Fetch repository tree
-        const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/git/trees/${GITHUB_CONFIG.branch}?recursive=1`;
-        const response = await fetch(apiUrl);
+        // CRITICAL: Verify tokens are loaded before API call
+        if (typeof GITHUB_DIRECT_TOKENS === 'undefined' || GITHUB_DIRECT_TOKENS.length === 0) {
+          throw new Error('🚨 Token system not loaded - cannot fetch data');
+        }
+        
+        console.log(`🔑 Using token system: ${GITHUB_DIRECT_TOKENS.length} tokens available`);
+        
+        // Fetch repository tree using token system
+        const endpoint = `repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/git/trees/${GITHUB_CONFIG.branch}?recursive=1`;
+        const response = await fetchGitHubApi(endpoint);
         
         if (!response.ok) throw new Error('Failed to fetch repository');
         

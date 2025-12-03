@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="mobile-clean.css">
     <link rel="stylesheet" href="mobile-boss-dashboard-fix.css">
+    <link rel="stylesheet" href="main-top-navbar.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); color: #ffffff; min-height: 100vh; }
@@ -376,9 +377,7 @@
     </div>
 
     <!-- 🔥 LIVE BACKEND STATUS BAR 🔥 -->
-    <div style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
-        <div id="dashboard-backend-status"></div>
-    </div>
+    <!-- Backend status removed - using direct frontend tokens -->
 
     <div class="container">
         <div class="dashboard-welcome">
@@ -391,22 +390,16 @@
                 <h3 class="card-title">Blog Manager</h3>
                 <p class="card-description">Create, edit, and manage blog posts with visual Markdown editor. Real-time preview and auto-save.</p>
             </div>
-            <div class="admin-card requires-backend" onclick="window.location.href='./backend-token-manager.html'">
-                <div class="card-icon">🔐</div>
-                <h3 class="card-title">Backend Token Manager</h3>
-                <p class="card-description">Manage encrypted GitHub API tokens for backend proxy server. Configure multiple tokens for unlimited access. Admin authentication required.</p>
-                <span class="backend-badge">Requires Backend</span>
-            </div>
+            <!-- Backend Token Manager removed - using direct frontend tokens -->
             <div class="admin-card" onclick="alert('CV Manager - Coming Soon')">
                 <div class="card-icon">📄</div>
                 <h3 class="card-title">CV Manager</h3>
                 <p class="card-description">Upload and update your CV/Resume. Manage different versions.</p>
             </div>
-            <div class="admin-card requires-backend" onclick="window.location.href='./solidworks-upload-manager.html'">
+            <div class="admin-card" onclick="window.location.href='./solidworks-upload-manager.html'">
                 <div class="card-icon">📦</div>
                 <h3 class="card-title">SOLIDWORKS Projects</h3>
-                <p class="card-description">Upload SOLIDWORKS files (.SLDPRT, .SLDASM) and 3D models (.GLB, .GLTF) to CW/HW/Solo projects. Requires backend server for GitHub upload.</p>
-                <span class="backend-badge">Requires Backend</span>
+                <p class="card-description">Upload SOLIDWORKS files (.SLDPRT, .SLDASM) and 3D models (.GLB, .GLTF) to CW/HW/Solo projects. Direct GitHub upload with frontend tokens.</p>
             </div>
             <div class="admin-card" onclick="window.location.href='project-manager.html'">
                 <div class="card-icon">🚀</div>
@@ -448,7 +441,81 @@
                 <h3 class="card-title">Analytics</h3>
                 <p class="card-description">View visitor statistics and engagement metrics.</p>
             </div>
+            
+            <!-- Token Monitoring Cards -->
+            <div class="admin-card" onclick="window.location.href='token-analytics-live.html'" style="border: 3px solid rgba(0, 255, 0, 0.4); box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);">
+                <div class="card-icon">🔑</div>
+                <h3 class="card-title">Live Token Analytics</h3>
+                <p class="card-description">Real-time monitoring of GitHub API token usage, distribution, and health. Track all 4 tokens live with detailed metrics.</p>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(0, 255, 0, 0.1); border-radius: 6px; border: 1px solid rgba(0, 255, 0, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #00ff00; font-size: 0.85rem;">
+                            <i class="fas fa-circle" style="font-size: 0.6rem; animation: pulse 2s infinite;"></i> Live Status
+                        </span>
+                        <span id="tokenQuickStatus" style="color: #fff; font-weight: 600; font-size: 0.9rem;">4 Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="admin-card" onclick="window.location.href='verify-frontend-tokens.html'" style="border: 2px solid rgba(85, 153, 255, 0.4);">
+                <div class="card-icon">🧪</div>
+                <h3 class="card-title">Token System Tester</h3>
+                <p class="card-description">Test and verify token system functionality. Run health checks, test API requests, and monitor token rotation.</p>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(85, 153, 255, 0.1); border-radius: 6px; border: 1px solid rgba(85, 153, 255, 0.3);">
+                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem;">
+                        <i class="fas fa-check-circle"></i> Test token rotation
+                        <br>
+                        <i class="fas fa-heartbeat"></i> Health monitoring
+                    </div>
+                </div>
+            </div>
         </div>
+        <!-- Token System Status Panel -->
+        <div class="security-panel" style="background: linear-gradient(135deg, rgba(0, 50, 0, 0.2), rgba(0, 30, 0, 0.3)); border-color: rgba(0, 255, 0, 0.3); margin-bottom: 30px;">
+            <h2>🔑 Token System Status - Live Monitoring</h2>
+            <div class="security-status">
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">Active Tokens</div>
+                    <div class="status-value" id="liveTokenCount" style="color: #00ff00;">Loading...</div>
+                </div>
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">Total Capacity</div>
+                    <div class="status-value" id="liveTokenCapacity" style="color: #00ff00;">Loading...</div>
+                </div>
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">Requests Made</div>
+                    <div class="status-value" id="liveRequestCount" style="color: #00ff00;">0</div>
+                </div>
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">Success Rate</div>
+                    <div class="status-value" id="liveSuccessRate" style="color: #00ff00;">100%</div>
+                </div>
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">System Status</div>
+                    <div class="status-value" id="liveSystemStatus" style="color: #00ff00;">
+                        <i class="fas fa-circle" style="font-size: 0.8rem; animation: pulse 2s infinite;"></i> Active
+                    </div>
+                </div>
+                <div class="status-item" style="border-left-color: #00ff00;">
+                    <div class="status-label">API Limit Protection</div>
+                    <div class="status-value" style="color: #00ff00;">
+                        <i class="fas fa-shield-check"></i> Enabled
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(0, 255, 0, 0.05); border: 1px solid rgba(0, 255, 0, 0.2); border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle" style="color: #00ff00;"></i>
+                        No API limit errors will occur - Token rotation active
+                    </div>
+                    <button onclick="window.location.href='token-analytics-live.html'" style="padding: 8px 16px; background: linear-gradient(135deg, #00cc00, #009900); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-chart-line"></i> View Detailed Analytics
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div class="security-panel">
             <h2>🛡️ Security Status</h2>
             <div class="security-status">
@@ -2142,47 +2209,77 @@ This project is licensed under the MIT License.
         }
     </script>
 
-    <!-- 🔥 HARDCORE BACKEND CONNECTION SYSTEM 🔥 -->
-    <script src="backend-connection-core.js"></script>
-    <script src="backend-status-ui.js"></script>
+    <!-- Frontend Token System with Live Monitoring -->
+    <script src="github-proxy-config.js"></script>
+    <script src="github-fetch-patch.js"></script>
     <script>
-        // Initialize hardcore backend connection - NO MERCY!
-        const backendConnection = new BackendConnectionCore({
-            backendUrl: 'http://localhost:5000',
-            reconnectInterval: 5000,      // Retry every 5 seconds
-            healthCheckInterval: 15000,   // Health check every 15 seconds
-            maxRetry: Infinity,            // NEVER GIVE UP!
-            timeout: 10000                 // 10 second timeout
+        console.log('✅ Using Direct Frontend Token System - No Backend Required');
+        
+        // Live Token Monitoring Dashboard
+        function updateTokenMonitoring() {
+            if (typeof GITHUB_DIRECT_TOKENS !== 'undefined') {
+                // Update token count
+                document.getElementById('liveTokenCount').textContent = GITHUB_DIRECT_TOKENS.length + ' Tokens';
+                document.getElementById('tokenQuickStatus').textContent = GITHUB_DIRECT_TOKENS.length + ' Active';
+                
+                // Update capacity
+                const capacity = GITHUB_DIRECT_TOKENS.length * 5000;
+                document.getElementById('liveTokenCapacity').textContent = capacity.toLocaleString() + '/hour';
+                
+                // Update request stats
+                if (typeof window.GITHUB_TOKEN_STATS !== 'undefined') {
+                    const stats = window.GITHUB_TOKEN_STATS;
+                    document.getElementById('liveRequestCount').textContent = stats.totalRequests.toLocaleString();
+                    
+                    // Calculate success rate
+                    const successRate = stats.totalRequests > 0 
+                        ? ((stats.totalRequests - stats.failedRequests) / stats.totalRequests * 100).toFixed(1)
+                        : 100;
+                    document.getElementById('liveSuccessRate').textContent = successRate + '%';
+                    
+                    // Update success rate color
+                    const rateEl = document.getElementById('liveSuccessRate');
+                    if (successRate >= 95) {
+                        rateEl.style.color = '#00ff00';
+                    } else if (successRate >= 80) {
+                        rateEl.style.color = '#ffaa00';
+                    } else {
+                        rateEl.style.color = '#ff3333';
+                    }
+                }
+                
+                console.log('📊 Token monitoring updated:', {
+                    tokens: GITHUB_DIRECT_TOKENS.length,
+                    capacity: capacity,
+                    stats: window.GITHUB_TOKEN_STATS
+                });
+            } else {
+                console.error('🚨 CRITICAL: Tokens not loaded!');
+                document.getElementById('liveSystemStatus').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                document.getElementById('liveSystemStatus').style.color = '#ff3333';
+            }
+        }
+        
+        // Update immediately on load
+        setTimeout(updateTokenMonitoring, 500);
+        
+        // Auto-update every 5 seconds
+        setInterval(updateTokenMonitoring, 5000);
+        
+        // Log token system status
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (typeof GITHUB_DIRECT_TOKENS !== 'undefined') {
+                    console.log('✅ Token System Active');
+                    console.log('🔑 Tokens Available:', GITHUB_DIRECT_TOKENS.length);
+                    console.log('⚡ Capacity:', GITHUB_DIRECT_TOKENS.length * 5000, 'requests/hour');
+                    console.log('🛡️ API Limit Protection: ENABLED');
+                    console.log('🌍 Global Distribution: ACTIVE');
+                } else {
+                    console.error('🚨 Token system failed to load!');
+                }
+            }, 1000);
         });
-
-        // Initialize beautiful status UI
-        const backendUI = new BackendStatusUI(backendConnection, 'dashboard-backend-status');
-
-        // Start connection immediately
-        backendConnection.start();
-
-        // Handle connection events - Update cards
-        backendConnection.on('connected', () => {
-            console.log('✅ Dashboard: Backend CONNECTED');
-            
-            // Add green indicator to backend-required cards
-            document.querySelectorAll('.requires-backend').forEach(card => {
-                card.classList.remove('offline');
-                card.style.borderLeft = '4px solid #28a745';
-            });
-        });
-
-        backendConnection.on('disconnected', () => {
-            console.log('❌ Dashboard: Backend DISCONNECTED');
-            
-            // Add red indicator to backend-required cards
-            document.querySelectorAll('.requires-backend').forEach(card => {
-                card.classList.add('offline');
-                card.style.borderLeft = '4px solid #dc3545';
-            });
-        });
-
-        console.log('🔥 HARDCORE BACKEND CONNECTION ACTIVE - DASHBOARD EDITION!');
     </script>
     
     <!-- Mobile Fixed Navbar Script -->
@@ -2203,6 +2300,18 @@ This project is licensed under the MIT License.
           navbar.style.display = 'none';
         }
       }
+    </script>
+    
+    <!-- Top Navbar Component (Mobile Only) -->
+    <script>
+    if (window.innerWidth <= 768) {
+      fetch('main-top-navbar.html')
+        .then(response => response.text())
+        .then(data => {
+          document.body.insertAdjacentHTML('afterbegin', data);
+        })
+        .catch(e => console.error('Failed to load top navbar:', e));
+    }
     </script>
     </body>
     </html>

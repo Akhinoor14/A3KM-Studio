@@ -18,6 +18,9 @@
 // ============================================
 // DIRECT GITHUB TOKENS (PRIMARY SYSTEM)
 // ============================================
+// These tokens are globally available to ALL visitors
+// Each visitor gets random token rotation for perfect load distribution
+// CRITICAL: Always keep these tokens valid and active!
 
 const GITHUB_DIRECT_TOKENS = [
     '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',
@@ -25,6 +28,14 @@ const GITHUB_DIRECT_TOKENS = [
     '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',
     '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'
 ];
+
+// Global token availability check - CRITICAL for preventing API limits
+if (typeof window !== 'undefined') {
+    window.GITHUB_DIRECT_TOKENS = GITHUB_DIRECT_TOKENS;
+    console.log('🌍 GLOBAL TOKEN SYSTEM ACTIVE');
+    console.log(`🔑 ${GITHUB_DIRECT_TOKENS.length} tokens globally available`);
+    console.log(`⚡ Total capacity: ${GITHUB_DIRECT_TOKENS.length * 5000} requests/hour`);
+}
 
 // Global usage statistics (persisted in localStorage)
 let tokenUsageStats = {
@@ -203,11 +214,18 @@ function getGitHubApiUrl(path) {
 
 /**
  * Fetch from GitHub API with direct token rotation and caching
+ * CRITICAL: This function prevents API limit errors by using token rotation
  * @param {string} path - GitHub API path
  * @param {object} options - Fetch options
  * @returns {Promise<Response>}
  */
 async function fetchGitHubApi(path, options = {}) {
+    // CRITICAL: Verify tokens are loaded
+    if (!GITHUB_DIRECT_TOKENS || GITHUB_DIRECT_TOKENS.length === 0) {
+        console.error('🚨 CRITICAL: No tokens available! API calls will fail!');
+        throw new Error('GitHub tokens not loaded - cannot make API calls');
+    }
+    
     // Check cache first
     const params = new URL(path.includes('?') ? `http://x.com/${path}` : 'http://x.com').searchParams;
     const paramObj = Object.fromEntries(params);
@@ -225,38 +243,64 @@ async function fetchGitHubApi(path, options = {}) {
     // Direct GitHub API call with random token
     const directUrl = `https://api.github.com/${cleanPath}`;
     
-    try {
-        const directOptions = {
-            ...options,
-            headers: {
-                ...options.headers,
-                'Authorization': `Bearer ${getNextToken()}`,
-                'Accept': 'application/vnd.github.v3+json'
+    // Retry mechanism for API limit errors
+    let lastError = null;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const token = getNextToken();
+            const directOptions = {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            };
+            
+            const response = await fetch(directUrl, directOptions);
+            
+            // Check for rate limit error
+            if (response.status === 403 || response.status === 429) {
+                const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+                console.warn(`⚠️ Rate limit warning: ${rateLimitRemaining} remaining`);
+                
+                // If rate limit hit and we have retries left, try with different token
+                if (attempt < maxRetries) {
+                    console.log(`🔄 Retrying with different token (attempt ${attempt + 1}/${maxRetries})...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+                    continue;
+                }
             }
-        };
-        
-        const response = await fetch(directUrl, directOptions);
-        
-        // Cache successful responses
-        if (response.ok) {
-            const clonedResponse = response.clone();
-            clonedResponse.json().then(data => {
-                setCachedResponse(cleanPath, paramObj, data);
-            }).catch(() => {
-                // Ignore cache errors for non-JSON responses
-            });
-        } else {
-            tokenUsageStats.failedRequests++;
-            console.warn(`⚠️  Request failed with status: ${response.status}`);
+            
+            // Cache successful responses
+            if (response.ok) {
+                const clonedResponse = response.clone();
+                clonedResponse.json().then(data => {
+                    setCachedResponse(cleanPath, paramObj, data);
+                }).catch(() => {
+                    // Ignore cache errors for non-JSON responses
+                });
+            } else {
+                tokenUsageStats.failedRequests++;
+                console.warn(`⚠️ Request failed with status: ${response.status}`);
+            }
+            
+            return response;
+            
+        } catch (error) {
+            lastError = error;
+            console.error(`❌ API fetch error (attempt ${attempt}/${maxRetries}):`, error);
+            
+            if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
         }
-        
-        return response;
-        
-    } catch (error) {
-        tokenUsageStats.failedRequests++;
-        console.error('❌ API fetch error:', error);
-        throw error;
     }
+    
+    tokenUsageStats.failedRequests++;
+    throw lastError || new Error('API request failed after retries');
 }
 
 // ============================================

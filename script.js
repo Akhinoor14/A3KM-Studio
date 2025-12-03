@@ -6150,38 +6150,35 @@ function renderProjects(projectsToShow = sampleProjects) {
 function filterProjects(category) {
     console.log('🔍 Filtering by category:', category);
     
-    const embedded = document.getElementById('solidworks-beginner-card');
+    // Get all project cards (both static HTML cards and dynamically rendered ones)
+    const allCards = document.querySelectorAll('.project-card');
     
     if (category === 'all') {
-        // Show all projects
+        // Show all cards
         console.log('✅ Showing all projects');
-        if(embedded) {
-            embedded.classList.remove('hidden');
-            embedded.classList.add('visible');
-            embedded.style.display = '';
-        }
-        renderProjects(sampleProjects);
-    } else if (category === 'desktop') {
-        // Show only desktop projects (SOLIDWORKS embedded card)
-        console.log('✅ Showing desktop projects');
-        if(embedded) {
-            embedded.classList.remove('hidden');
-            embedded.classList.add('visible');
-            embedded.style.display = '';
-        }
-        // Filter other projects that are desktop category
-        const filteredProjects = sampleProjects.filter(p => p.category === 'desktop');
-        renderProjects(filteredProjects);
+        allCards.forEach(card => {
+            card.classList.remove('hidden');
+            card.classList.add('visible');
+            card.style.display = '';
+        });
     } else {
-        // Show web/mobile projects, hide SOLIDWORKS
-        console.log('✅ Showing', category, 'projects');
-        if(embedded) {
-            embedded.classList.add('hidden');
-            embedded.classList.remove('visible');
-            embedded.style.display = 'none';
-        }
-        const filteredProjects = sampleProjects.filter(p => p.category === category);
-        renderProjects(filteredProjects);
+        // Filter by category
+        console.log('✅ Filtering by:', category);
+        allCards.forEach(card => {
+            const cardCategory = card.getAttribute('data-category') || card.classList.contains(category);
+            
+            if (cardCategory === category || card.classList.contains(category)) {
+                // Show matching cards
+                card.classList.remove('hidden');
+                card.classList.add('visible');
+                card.style.display = '';
+            } else {
+                // Hide non-matching cards
+                card.classList.add('hidden');
+                card.classList.remove('visible');
+                card.style.display = 'none';
+            }
+        });
     }
 }
 

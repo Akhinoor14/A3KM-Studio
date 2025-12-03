@@ -545,7 +545,7 @@
         </div>
 
         <!-- 🔥 LIVE BACKEND STATUS BAR 🔥 -->
-        <div id="upload-backend-status"></div>
+        <!-- Backend removed - using direct token system -->
 
         <!-- Backend API Status Panel -->
         <div class="token-panel">
@@ -2179,85 +2179,34 @@
         }
     </script>
 
-    <!-- 🔥 HARDCORE BACKEND CONNECTION SYSTEM 🔥 -->
-    <script src="backend-connection-core.js"></script>
-    <script src="backend-status-ui.js"></script>
+    <!-- Backend removed - using direct frontend token system -->
     <script>
-        // Initialize hardcore backend connection - NO MERCY!
-        const backendConnection = new BackendConnectionCore({
-            backendUrl: BACKEND_URL || 'http://localhost:5000',
-            reconnectInterval: 5000,      // Retry every 5 seconds
-            healthCheckInterval: 15000,   // Health check every 15 seconds
-            maxRetry: Infinity,            // NEVER GIVE UP!
-            timeout: 10000                 // 10 second timeout
-        });
-
-        // Initialize beautiful status UI
-        const backendUI = new BackendStatusUI(backendConnection, 'upload-backend-status');
-
-        // Start connection immediately
-        backendConnection.start();
-
-        // Handle connection events
-        backendConnection.on('connected', (status) => {
-            console.log('✅ Backend CONNECTED:', status);
-            
-            // Update old UI elements if they exist
-            const ind = document.getElementById('backendIndicator');
-            const txt = document.getElementById('backendStatusText');
-            const tc = document.getElementById('tokenCountText');
-            const rl = document.getElementById('rateLimitText');
-            
-            if (ind) {
-                ind.style.transition = 'background 0.3s';
-                ind.style.background = '#00cc00';
-            }
-            if (txt) txt.textContent = '✅ Backend Connected';
-            if (tc) tc.textContent = `Tokens: ${status.tokens || 0}`;
-            if (rl) rl.textContent = `Limit: ${status.rateLimit || 60}/hr`;
-            
-            // Enable all upload buttons
+        console.log('✅ Using Direct Frontend Token System - No Backend Required');
+        
+        // Set upload system to use frontend tokens
+        let backendAvailable = true; // Always available with frontend tokens
+        let backendToken = 'FRONTEND_TOKENS'; // Using direct tokens
+        
+        // Enable all upload buttons immediately
+        document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.upload-btn, button[onclick*="upload"]').forEach(btn => {
                 btn.disabled = false;
                 btn.style.opacity = '1';
             });
             
-            backendAvailable = true;
-            backendToken = 'BACKEND_MANAGED';
-        });
-
-        backendConnection.on('disconnected', (status) => {
-            console.log('❌ Backend DISCONNECTED:', status);
-            
-            // Update old UI elements
+            // Update status UI if it exists
             const ind = document.getElementById('backendIndicator');
             const txt = document.getElementById('backendStatusText');
             const tc = document.getElementById('tokenCountText');
             const rl = document.getElementById('rateLimitText');
             
-            if (ind) {
-                ind.style.transition = 'background 0.3s';
-                ind.style.background = '#dc3545';
-            }
-            if (txt) txt.textContent = '❌ Backend Offline - Reconnecting...';
-            if (tc) tc.textContent = 'Tokens: N/A';
-            if (rl) rl.textContent = 'Limit: N/A';
-            
-            // Disable upload buttons
-            document.querySelectorAll('.upload-btn, button[onclick*="upload"]').forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            });
-            
-            backendAvailable = false;
-            backendToken = null;
+            if (ind) ind.style.background = '#00cc00';
+            if (txt) txt.textContent = '✅ Frontend Tokens Active';
+            if (tc) tc.textContent = `Tokens: ${GITHUB_DIRECT_TOKENS ? GITHUB_DIRECT_TOKENS.length : 4}`;
+            if (rl) rl.textContent = `Limit: ${(GITHUB_DIRECT_TOKENS ? GITHUB_DIRECT_TOKENS.length : 4) * 5000}/hr`;
         });
-
-        backendConnection.on('error', (data) => {
-            console.error('❌ Backend ERROR:', data.error, '| Retry:', data.retryCount);
-        });
-
-        // Override old checkBackendStatus function to use new system
+        
+        // Dummy function for compatibility
         async function checkBackendStatus(showNotif = false) {
             const status = backendConnection.getStatus();
             
