@@ -287,13 +287,8 @@ def index():
 def manage_tokens():
     """
     Admin endpoint - Manage tokens
-    Requires admin password in header
+    Protected by only-boss authentication at frontend
     """
-    # Check authentication
-    auth_header = request.headers.get('X-Admin-Password')
-    if not auth_header or not verify_admin(auth_header):
-        abort(401, description='Unauthorized - Invalid admin password')
-    
     global token_pool, GITHUB_TOKENS
     
     if request.method == 'GET':
@@ -350,12 +345,8 @@ def manage_tokens():
 def admin_stats():
     """
     Admin endpoint - View statistics
-    Requires admin password
+    Protected by only-boss authentication at frontend
     """
-    auth_header = request.headers.get('X-Admin-Password')
-    if not auth_header or not verify_admin(auth_header):
-        abort(401, description='Unauthorized')
-    
     # Calculate total requests
     total_requests = sum(stats['usage_count'] for stats in token_usage_stats.values())
     total_success = sum(stats['success_count'] for stats in token_usage_stats.values())
@@ -388,11 +379,8 @@ def token_details():
     """
     Admin endpoint - Detailed token analytics
     Shows usage per token, endpoints used, rate limits, etc.
+    Protected by only-boss authentication at frontend
     """
-    auth_header = request.headers.get('X-Admin-Password')
-    if not auth_header or not verify_admin(auth_header):
-        abort(401, description='Unauthorized')
-    
     # Prepare detailed stats (remove full token for security)
     detailed_stats = []
     for token_id, stats in token_usage_stats.items():
@@ -453,12 +441,12 @@ if __name__ == '__main__':
     print(f"🔑 Tokens Loaded: {len(GITHUB_TOKENS)}")
     print(f"⚡ Effective Rate Limit: {len(GITHUB_TOKENS) * 5000 if GITHUB_TOKENS else 60} req/hour")
     print(f"🌐 CORS Origins: {', '.join(ALLOWED_ORIGINS)}")
-    print(f"🔒 Admin Endpoints Protected: YES")
+    print(f"🔒 Admin Endpoints: Protected by only-boss authentication")
     print("="*70)
     print("\n📌 Public Endpoints:")
     print("   GET  /api/github/<path>  - Proxy GitHub API")
     print("   GET  /health             - Health check")
-    print("\n🔐 Admin Endpoints (require X-Admin-Password header):")
+    print("\n🔐 Admin Endpoints (no password needed - only-boss protected):")
     print("   GET    /admin/tokens - View tokens")
     print("   POST   /admin/tokens - Add tokens")
     print("   DELETE /admin/tokens - Clear tokens")
@@ -469,18 +457,9 @@ if __name__ == '__main__':
     # Try to use production WSGI server if available
     try:
         from waitress import serve
-        print("?? Starting production WSGI server (Waitress)...")
-        serve(app, host=HOST, port=PORT)
-    except ImportError:
-        print("??  Waitress not installed. Using Flask dev server.")
-        print("?? Install for production: pip install waitress")
-        # Try to use production WSGI server if available
-    try:
-        from waitress import serve
         print("🚀 Starting production WSGI server (Waitress)...")
         serve(app, host=HOST, port=PORT)
     except ImportError:
         print("⚠️  Waitress not installed. Using Flask dev server.")
         print("💡 Install for production: pip install waitress")
         app.run(host=HOST, port=PORT, debug=False)
-
