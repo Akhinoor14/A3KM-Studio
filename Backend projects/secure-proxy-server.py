@@ -466,5 +466,21 @@ if __name__ == '__main__':
     print("   GET    /admin/token-details - Detailed token analytics")
     print("="*70 + "\n")
     
-    # Use HOST from config (0.0.0.0 for production, 127.0.0.1 for local)
-    app.run(host=HOST, port=PORT, debug=False)
+    # Try to use production WSGI server if available
+    try:
+        from waitress import serve
+        print("?? Starting production WSGI server (Waitress)...")
+        serve(app, host=HOST, port=PORT)
+    except ImportError:
+        print("??  Waitress not installed. Using Flask dev server.")
+        print("?? Install for production: pip install waitress")
+        # Try to use production WSGI server if available
+    try:
+        from waitress import serve
+        print("🚀 Starting production WSGI server (Waitress)...")
+        serve(app, host=HOST, port=PORT)
+    except ImportError:
+        print("⚠️  Waitress not installed. Using Flask dev server.")
+        print("💡 Install for production: pip install waitress")
+        app.run(host=HOST, port=PORT, debug=False)
+
