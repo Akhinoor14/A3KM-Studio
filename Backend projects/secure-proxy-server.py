@@ -33,7 +33,7 @@ app = Flask(__name__)
 
 # Configuration
 SECRET_KEY = os.getenv('SECRET_KEY', Fernet.generate_key().decode())
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'your_secure_admin_password_here')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'A3KM-Admin-2025-Secure')
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
 PORT = int(os.getenv('PORT', 5000))
 HOST = os.getenv('HOST', '0.0.0.0')  # Allow external access in production
