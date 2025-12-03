@@ -136,8 +136,13 @@
                 </div>
               ` : ''}
               <div class="card-body">
+                ${(p.tags && p.tags.length > 0) ? `
+                  <div class="card-tags">
+                    ${p.tags.map(t => `<span class="card-tag">${escapeHTML(t)}</span>`).join('')}
+                  </div>
+                ` : ''}
                 <h3>${escapeHTML(p.title)}</h3>
-                <div class="meta">${formatDate(p.date)} • ${(p.tags||[]).map(escapeHTML).join(', ')}</div>
+                <div class="meta">${formatDate(p.date)}</div>
                 <p>${escapeHTML(p.summary||'')}</p>
               </div>
             </div>
@@ -288,13 +293,15 @@
       const postUrl = `${SITE_URL}/${location.pathname}?post=${encodeURIComponent(slug)}`;
       
       const html = `
-        <div class="header">
-          <div class="title">Blog</div>
-          <button class="button" id="back">← Back</button>
-        </div>
+        <a href="#" class="back-to-list" id="back">← Back to Blog</a>
         <div class="container post">
+          ${(tags && tags.length > 0) ? `
+            <div class="card-tags">
+              ${tags.map(t => `<span class="card-tag">${escapeHTML(t)}</span>`).join('')}
+            </div>
+          ` : ''}
           <h1>${escapeHTML(frontMatter.title||slug)}</h1>
-          <div class="meta">${formatDate(frontMatter.date||'')} • ${(tags||[]).map(escapeHTML).join(', ')} • ${minutes} min read</div>
+          <div class="meta">${formatDate(frontMatter.date||'')} • ${minutes} min read</div>
           ${frontMatter.coverImage ? `<img class="cover" src="${escapeHTML(frontMatter.coverImage)}" alt="${escapeHTML(frontMatter.title||slug)}" loading="lazy" />` : ''}
           <div class="content">${markdownToHtml(body)}</div>
           <div class="share">
