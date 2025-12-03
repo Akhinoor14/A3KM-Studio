@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Frontend Token System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(204, 0, 0, 0.3);
+        }
+        .header h1 {
+            font-size: 2rem;
+            color: #cc0000;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+        .test-section {
+            background: rgba(20, 0, 0, 0.6);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #ff3333;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+        .status-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .status-value.success { color: #00ff00; }
+        .status-value.error { color: #ff3333; }
+        .status-value.warning { color: #ffaa00; }
+        .test-btn {
+            background: linear-gradient(135deg, #cc0000, #990000);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .test-btn:hover {
+            background: linear-gradient(135deg, #dd0000, #aa0000);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(204, 0, 0, 0.4);
+        }
+        .test-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .log-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        .log-entry.success { color: #00ff00; }
+        .log-entry.error { color: #ff3333; }
+        .log-entry.info { color: #5599ff; }
+        .log-entry.warning { color: #ffaa00; }
+        .token-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .token-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .token-number {
+            color: #cc0000;
+            font-weight: 600;
+        }
+        .token-preview {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-shield-check"></i> Frontend Token System Verification</h1>
+            <p>Test and verify that GitHub API tokens are working correctly</p>
+        </div>
+
+        <!-- System Status -->
+        <div class="test-section">
+            <h2><i class="fas fa-info-circle"></i> System Status</h2>
+            <div class="status-box">
+                <span class="status-label">Token System Loaded</span>
+                <span class="status-value" id="systemLoaded">Checking...</span>
+            </div>
+            <div class="status-box">
+                <span class="status-label">Available Tokens</span>
+                <span class="status-value" id="tokenCount">0</span>
+            </div>
+            <div class="status-box">
+                <span class="status-label">Estimated Rate Limit</span>
+                <span class="status-value" id="rateLimit">0 requests/hour</span>
+            </div>
+            <div class="status-box">
+                <span class="status-label">Backend Proxy</span>
+                <span class="status-value" id="backendStatus">Disabled</span>
+            </div>
+        </div>
+
+        <!-- Token Details -->
+        <div class="test-section">
+            <h2><i class="fas fa-key"></i> Token Details</h2>
+            <div class="token-list" id="tokenList">
+                <p style="color: rgba(255,255,255,0.6);">Loading tokens...</p>
+            </div>
+        </div>
+
+        <!-- Live Tests -->
+        <div class="test-section">
+            <h2><i class="fas fa-vial"></i> Live API Tests</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="test-btn" onclick="testSingleRequest()">
+                    <i class="fas fa-play"></i> Test Single Request
+                </button>
+                <button class="test-btn" onclick="testMultipleRequests()">
+                    <i class="fas fa-forward"></i> Test 5 Requests
+                </button>
+                <button class="test-btn" onclick="testTokenRotation()">
+                    <i class="fas fa-sync"></i> Test Token Rotation
+                </button>
+                <button class="test-btn" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> Clear Logs
+                </button>
+            </div>
+            <div class="log-box" id="logBox">
+                <div class="log-entry info">Ready to test...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="github-proxy-config.js"></script>
+    <script src="github-fetch-patch.js"></script>
+    <script>
+        // Logging function
+        function log(message, type = 'info') {
+            const logBox = document.getElementById('logBox');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logBox').innerHTML = '<div class="log-entry info">Logs cleared...</div>';
+        }
+
+        // Check system status
+        function checkSystemStatus() {
+            const systemLoaded = document.getElementById('systemLoaded');
+            const tokenCount = document.getElementById('tokenCount');
+            const rateLimit = document.getElementById('rateLimit');
+            const backendStatus = document.getElementById('backendStatus');
+            
+            if (typeof GITHUB_DIRECT_TOKENS !== 'undefined' && typeof fetchGitHubApi === 'function') {
+                systemLoaded.textContent = '✅ Active';
+                systemLoaded.className = 'status-value success';
+                
+                tokenCount.textContent = GITHUB_DIRECT_TOKENS.length;
+                tokenCount.className = 'status-value success';
+                
+                const estimatedLimit = GITHUB_DIRECT_TOKENS.length * 5000;
+                rateLimit.textContent = `${estimatedLimit.toLocaleString()} requests/hour`;
+                rateLimit.className = 'status-value success';
+                
+                log(`✅ Token system loaded successfully`, 'success');
+                log(`🔑 ${GITHUB_DIRECT_TOKENS.length} tokens available`, 'success');
+                
+                // Display token details
+                displayTokens();
+            } else {
+                systemLoaded.textContent = '❌ Not Loaded';
+                systemLoaded.className = 'status-value error';
+                log('❌ Token system failed to load', 'error');
+            }
+            
+            if (typeof GITHUB_PROXY_CONFIG !== 'undefined') {
+                if (GITHUB_PROXY_CONFIG.USE_PROXY) {
+                    backendStatus.textContent = '⚠️ Enabled';
+                    backendStatus.className = 'status-value warning';
+                    log('⚠️ Backend proxy is enabled', 'warning');
+                } else {
+                    backendStatus.textContent = '✅ Disabled';
+                    backendStatus.className = 'status-value success';
+                    log('✅ Backend proxy disabled (direct tokens only)', 'success');
+                }
+            }
+        }
+
+        // Display tokens
+        function displayTokens() {
+            const tokenList = document.getElementById('tokenList');
+            tokenList.innerHTML = '';
+            
+            GITHUB_DIRECT_TOKENS.forEach((token, index) => {
+                const item = document.createElement('div');
+                item.className = 'token-item';
+                
+                const preview = token.substring(0, 8) + '...' + token.substring(token.length - 4);
+                
+                item.innerHTML = `
+                    <span class="token-number">Token ${index + 1}</span>
+                    <span class="token-preview">${preview}</span>
+                `;
+                tokenList.appendChild(item);
+            });
+        }
+
+        // Test single request
+        async function testSingleRequest() {
+            log('🧪 Testing single API request...', 'info');
+            try {
+                const response = await fetchGitHubApi('repos/Akhinoor14/A3KM-Studio');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Request successful! Repo: ${data.name}`, 'success');
+                    log(`⭐ Stars: ${data.stargazers_count} | Forks: ${data.forks_count}`, 'info');
+                } else {
+                    log(`❌ Request failed with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test multiple requests
+        async function testMultipleRequests() {
+            log('🧪 Testing 5 consecutive requests...', 'info');
+            const testPath = 'repos/Akhinoor14/A3KM-Studio';
+            
+            for (let i = 1; i <= 5; i++) {
+                try {
+                    const response = await fetchGitHubApi(testPath);
+                    if (response.ok) {
+                        log(`✅ Request ${i}/5 completed successfully`, 'success');
+                    } else {
+                        log(`❌ Request ${i}/5 failed: ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Request ${i}/5 error: ${error.message}`, 'error');
+                }
+                
+                // Small delay between requests
+                if (i < 5) await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            log('📊 Multiple request test completed', 'info');
+        }
+
+        // Test token rotation
+        async function testTokenRotation() {
+            log('🔄 Testing token rotation system...', 'info');
+            
+            if (typeof window.checkTokenUsage === 'function') {
+                const statsBefore = {...window.GITHUB_TOKEN_STATS};
+                log(`📊 Usage before test: ${JSON.stringify(statsBefore.tokenUsage)}`, 'info');
+                
+                // Make several requests
+                for (let i = 0; i < 10; i++) {
+                    try {
+                        await fetchGitHubApi('rate_limit');
+                    } catch (e) {
+                        // Ignore errors for rotation test
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                
+                const statsAfter = {...window.GITHUB_TOKEN_STATS};
+                log(`📊 Usage after test: ${JSON.stringify(statsAfter.tokenUsage)}`, 'info');
+                
+                const tokensUsed = statsAfter.tokenUsage.filter((count, i) => 
+                    count > statsBefore.tokenUsage[i]
+                ).length;
+                
+                if (tokensUsed > 1) {
+                    log(`✅ Token rotation working! ${tokensUsed} different tokens used`, 'success');
+                } else {
+                    log(`⚠️ Rotation may not be working - only ${tokensUsed} token used`, 'warning');
+                }
+            } else {
+                log('❌ Token usage tracking not available', 'error');
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkSystemStatus, 500);
+        });
+    </script>
+</body>
+</html>
