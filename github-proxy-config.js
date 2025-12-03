@@ -1,40 +1,78 @@
 /**
- * GitHub API Proxy Configuration - Production Setup
- * ==================================================
+ * GitHub API Proxy Configuration - Hybrid Setup with Direct Token Rotation
+ * =========================================================================
  * 
- * This configuration enables automatic backend proxy usage.
- * All GitHub API calls are routed through secure backend server.
+ * FALLBACK TOKENS: Frontend has embedded tokens for direct GitHub API access
+ * If backend fails, tokens automatically rotate to ensure 20,000 req/hour
  * 
- * Benefits:
- * - No tokens exposed to frontend
- * - Unlimited API access (backend handles rotation)
- * - Secure and professional
- * - Zero user configuration needed
- * 
- * Backend Setup:
+ * Backend Setup (Optional):
  * 1. cd "Backend projects"
- * 2. python setup-tokens.py  (one-time admin setup)
- * 3. python secure-proxy-server.py
+ * 2. python secure-proxy-server.py
  * 
- * For deployment: Deploy to Railway/Heroku and update PROXY_URL below
+ * Direct Token System:
+ * - 4 tokens embedded for failsafe operation
+ * - Automatic rotation for load balancing
+ * - Works even if backend is offline
+ * - 20,000 requests/hour capacity
  */
+
+// ============================================
+// DIRECT GITHUB TOKENS (FALLBACK SYSTEM)
+// ============================================
+
+const GITHUB_DIRECT_TOKENS = [
+    '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',
+    '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',
+    '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',
+    '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'
+];
+
+let currentTokenIndex = 0;
+let tokenUsageStats = {
+    totalRequests: 0,
+    tokenUsage: [0, 0, 0, 0], // Usage count per token
+    lastUsed: null,
+    backendUsed: 0,
+    directUsed: 0
+};
+
+function getNextToken() {
+    const token = GITHUB_DIRECT_TOKENS[currentTokenIndex];
+    const tokenNum = currentTokenIndex + 1;
+    
+    // Update stats
+    tokenUsageStats.tokenUsage[currentTokenIndex]++;
+    tokenUsageStats.totalRequests++;
+    tokenUsageStats.directUsed++;
+    tokenUsageStats.lastUsed = new Date().toLocaleTimeString();
+    
+    // Log token usage
+    console.log(`🔑 Using Token ${tokenNum}/4 | Total Requests: ${tokenUsageStats.totalRequests} | Backend: ${tokenUsageStats.backendUsed} | Direct: ${tokenUsageStats.directUsed}`);
+    
+    // Rotate to next token
+    currentTokenIndex = (currentTokenIndex + 1) % GITHUB_DIRECT_TOKENS.length;
+    return token;
+}
+
+// Expose stats globally for debugging
+if (typeof window !== 'undefined') {
+    window.GITHUB_TOKEN_STATS = tokenUsageStats;
+}
 
 // ============================================
 // PRODUCTION CONFIGURATION
 // ============================================
 
 const GITHUB_PROXY_CONFIG = {
-    // Enable proxy (SET TO TRUE FOR PRODUCTION)
+    // Try backend first, fallback to direct tokens
     USE_PROXY: true,
     
-    // Backend proxy server URL
-    // Local development: http://localhost:5000
-    // Production: https://solidworks-website-project-main-production.up.railway.app
+    // Backend proxy server URL (optional)
     PROXY_URL: 'http://localhost:5000',
     
-    // Auto-fallback to direct GitHub API if proxy fails
-    // Security-first: keep this false so all traffic goes through backend only
+    // ALWAYS use direct tokens if proxy fails
     AUTO_FALLBACK: true,
+    USE_DIRECT_TOKENS: true, // Enable embedded token rotation
     
     // Cache responses for better performance
     ENABLE_CACHE: true,
@@ -137,6 +175,13 @@ async function fetchGitHubApi(path, options = {}) {
             
             const response = await fetch(url, proxyOptions);
             
+            // Track backend usage
+            if (response.ok) {
+                tokenUsageStats.backendUsed++;
+                tokenUsageStats.totalRequests++;
+                console.log(`✅ Backend used | Total: ${tokenUsageStats.totalRequests} | Backend: ${tokenUsageStats.backendUsed} | Direct: ${tokenUsageStats.directUsed}`);
+            }
+            
             // Cache successful responses
             if (response.ok) {
                 const clonedResponse = response.clone();
@@ -145,18 +190,35 @@ async function fetchGitHubApi(path, options = {}) {
                 });
             }
             
-            // Auto-fallback if proxy fails
+            // Auto-fallback if proxy fails - USE DIRECT TOKENS
             if (!response.ok && GITHUB_PROXY_CONFIG.AUTO_FALLBACK) {
-                console.log('🔄 Proxy failed, falling back to direct GitHub API...');
+                console.log('🔄 Proxy failed, using direct token rotation...');
                 const directUrl = `https://api.github.com/${cleanPath}`;
-                return await fetch(directUrl, options);
+                const directOptions = {
+                    ...options,
+                    headers: {
+                        ...options.headers,
+                        'Authorization': `Bearer ${getNextToken()}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                };
+                return await fetch(directUrl, directOptions);
             }
             
             return response;
         }
         
-        // Direct GitHub API call
-        const response = await fetch(url, options);
+        // Direct GitHub API call with token rotation
+        const directUrl = `https://api.github.com/${cleanPath}`;
+        const directOptions = {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${getNextToken()}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        };
+        const response = await fetch(directUrl, directOptions);
         
         // Cache successful responses
         if (response.ok) {
@@ -171,11 +233,19 @@ async function fetchGitHubApi(path, options = {}) {
     } catch (error) {
         console.error('❌ API fetch error:', error);
         
-        // Network error with proxy, try direct if fallback enabled
-        if (GITHUB_PROXY_CONFIG.USE_PROXY && GITHUB_PROXY_CONFIG.AUTO_FALLBACK) {
-            console.log('🔄 Network error, falling back to direct GitHub API...');
+        // Network error - ALWAYS try direct tokens
+        if (GITHUB_PROXY_CONFIG.USE_DIRECT_TOKENS) {
+            console.log('🔄 Error, falling back to direct token rotation...');
             const directUrl = `https://api.github.com/${cleanPath}`;
-            return await fetch(directUrl, options);
+            const directOptions = {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${getNextToken()}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            };
+            return await fetch(directUrl, directOptions);
         }
         
         throw error;
@@ -260,4 +330,3 @@ if (typeof window !== 'undefined') {
         auto_fallback: GITHUB_PROXY_CONFIG.AUTO_FALLBACK
     });
 }
-
