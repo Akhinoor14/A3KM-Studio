@@ -15,7 +15,6 @@
   
   <!-- Mobile Styles -->
   <link rel="stylesheet" href="mobile-clean.css" />
-  <link rel="stylesheet" href="solidworks-mobile-styles.css" />
   
   <style>
     /* Mobile-only page structure */
@@ -32,7 +31,7 @@
     /* Mobile header */
     .mobile-header {
       position: fixed;
-      top: 0;
+      top: 56px;
       left: 0;
       right: 0;
       height: 60px;
@@ -42,7 +41,7 @@
       align-items: center;
       padding: 0 12px;
       gap: 12px;
-      z-index: 1000;
+      z-index: 999;
       backdrop-filter: blur(15px);
     }
     
@@ -82,13 +81,38 @@
     
     /* Content area */
     .mobile-content {
-      margin-top: 60px;
+      margin-top: 116px;
       padding: 16px;
-      min-height: calc(100vh - 60px);
+      min-height: calc(100vh - 116px);
     }
   </style>
 </head>
 <body>
+
+  <!-- Quick Navigation Icons -->
+  <nav class="nav-quick-icons">
+    <a href="home-mobile.html" class="nav-icon" title="Home">
+      <i class="fas fa-home"></i>
+    </a>
+    <a href="about-mobile.html" class="nav-icon" title="About">
+      <i class="fas fa-user"></i>
+    </a>
+    <a href="projects.html" class="nav-icon active" title="Projects">
+      <i class="fas fa-briefcase"></i>
+    </a>
+    <a href="blog-mobile.html" class="nav-icon" title="Blog">
+      <i class="fas fa-blog"></i>
+    </a>
+    <a href="contact-mobile.html" class="nav-icon" title="Contact">
+      <i class="fas fa-envelope"></i>
+    </a>
+    <a href="only-boss-dashboard.html" class="nav-icon" title="Only Boss">
+      <i class="fas fa-crown"></i>
+    </a>
+  </nav>
+
+  <!-- Backend Status Bar -->
+  <div id="solidworks-backend-status" style="position: fixed; top: 56px; left: 0; right: 0; z-index: 998;"></div>
 
   <!-- Mobile Header -->
   <header class="mobile-header">
@@ -192,6 +216,8 @@
   </main>
 
   <!-- Backend Scripts (preserve all backend functionality) -->
+  <script src="backend-connection-core.js"></script>
+  <script src="backend-status-ui.js"></script>
   <script src="github-proxy-config.js" defer></script>
   <script src="github-fetch-patch.js" defer></script>
   <script src="github-sync.js" defer></script>
@@ -199,6 +225,21 @@
   <script src="auto-refresh.js" defer></script>
   
   <script>
+    // Initialize backend connection
+    const backendConnection = new BackendConnectionCore({
+      backendUrl: 'http://localhost:5000',
+      reconnectInterval: 5000,
+      healthCheckInterval: 15000,
+      maxRetry: Infinity,
+      timeout: 10000
+    });
+
+    // Initialize status UI
+    const backendUI = new BackendStatusUI(backendConnection, 'solidworks-backend-status');
+
+    // Start connection
+    backendConnection.start();
+
     console.log('🔧 SOLIDWORKS Mobile Portal Loaded - 5 Sections Ready');
   </script>
 
