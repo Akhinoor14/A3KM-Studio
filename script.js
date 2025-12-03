@@ -6130,10 +6130,21 @@ function renderProjects(projectsToShow = sampleProjects) {
     
     // Create and append dynamic cards
     projectsToShow.forEach((project, index) => {
-        // Skip SOLIDWORKS project since it's already embedded in HTML
-        if(project.title === 'SOLIDWORKS Beginner Projects') {
-            console.log('⏭️ Skipping SOLIDWORKS (already embedded)');
-            return;
+        // Skip projects that are already embedded in HTML
+        if(project.title) {
+            const skipProjects = [
+                'SOLIDWORKS', 
+                'Interactive Engineering Portfolio',
+                'Electronic Components Guide',
+                'Arduino UNO Projects',
+                'Electronics Tools',
+                'Component Comparison',
+                'Component Database'
+            ];
+            if(skipProjects.some(skip => project.title.includes(skip))) {
+                console.log('⏭️ Skipping (already embedded):', project.title);
+                return;
+            }
         }
         
         console.log('🎴 Creating dynamic card for:', project.title);
