@@ -7,6 +7,8 @@
   const POSTS_DIR = 'content/blog/posts/';
   const SITE_TITLE = 'Md Akhinoor Islam - Portfolio Blog';
   const SITE_URL = location.origin;
+  const DEFAULT_COVER = 'images/blog/default-cover.svg';
+  const WELCOME_COVER = 'images/blog/welcome-cover.svg';
   
   const qs = new URLSearchParams(location.search);
   const slugParam = qs.get('post');
@@ -130,7 +132,7 @@
           ${pageItems.length === 0 ? '<p class="loading">No posts found.</p>' : ''}
           ${pageItems.map(p=> `
             <div class="card" data-slug="${escapeHTML(p.slug)}">
-              ${p.coverImage ? `<div class="card-image"><img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy" /></div>` : ''}
+              <div class="card-image"><img src="${escapeHTML(p.coverImage || DEFAULT_COVER)}" alt="${escapeHTML(p.title)}" loading="lazy" /></div>
               <div class="card-content">
                 <h3>${escapeHTML(p.title)}</h3>
                 <div class="meta">${formatDate(p.date)} • ${(p.tags||[]).map(escapeHTML).join(', ')}</div>
@@ -292,7 +294,7 @@
             ${formatDate(frontMatter.date||'')} • ${minutes} min read
             ${(tags && tags.length) ? `<div class="post-tags">${tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>` : ''}
           </div>
-          ${frontMatter.coverImage ? `<img class="cover" src="${escapeHTML(frontMatter.coverImage)}" alt="${escapeHTML(frontMatter.title||slug)}" loading="lazy" />` : ''}
+          <img class="cover" src="${escapeHTML(frontMatter.coverImage || DEFAULT_COVER)}" alt="${escapeHTML(frontMatter.title||slug)}" loading="lazy" />
           <div class="content">${markdownToHtml(body)}</div>
           <div class="share">
             <button class="button" id="copy">📋 Copy Link</button>
@@ -310,7 +312,7 @@
       setMetaTags({
         title: frontMatter.title||slug,
         description: frontMatter.summary || body.substring(0,160),
-        image: frontMatter.coverImage,
+        image: frontMatter.coverImage || DEFAULT_COVER,
         url: postUrl
       });
       
@@ -320,7 +322,7 @@
         "@type": "BlogPosting",
         "headline": frontMatter.title||slug,
         "description": frontMatter.summary||'',
-        "image": frontMatter.coverImage ? `${SITE_URL}/${frontMatter.coverImage}` : '',
+        "image": `${SITE_URL}/${frontMatter.coverImage || DEFAULT_COVER}`,
         "datePublished": frontMatter.date,
         "author": {
           "@type": "Person",
