@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="mobile-clean.css">
     <link rel="stylesheet" href="mobile-boss-dashboard-fix.css">
-    <link rel="stylesheet" href="main-top-navbar.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); color: #ffffff; min-height: 100vh; }
@@ -340,15 +339,6 @@
                     <span style="font-size:1.2rem; color:#cc0000; vertical-align:middle;">Home</span>
                 </a>
             </div>
-            <!-- Mobile quick icons -->
-            <div class="nav-quick-icons" aria-label="Quick navigation">
-                <a href="home-mobile.html" class="nav-icon" aria-label="Home" title="Home"><i class="fas fa-home"></i></a>
-                <a href="about-mobile.html" class="nav-icon" aria-label="About" title="About"><i class="fas fa-user"></i></a>
-                <a href="projects.html" class="nav-icon" aria-label="Projects" title="Projects"><i class="fas fa-briefcase"></i></a>
-                <a href="blog-mobile.html" class="nav-icon" aria-label="Blog" title="Blog"><i class="fas fa-blog"></i></a>
-                <a href="contact-mobile.html" class="nav-icon" aria-label="Contact" title="Contact"><i class="fas fa-envelope"></i></a>
-                <a href="only-boss-dashboard.html" class="nav-icon active" aria-label="Only Boss" title="Only Boss"><i class="fas fa-crown"></i></a>
-            </div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
                 <li class="nav-item"><a href="projects.html" class="nav-link">Projects</a></li>
@@ -396,10 +386,10 @@
                 <h3 class="card-title">CV Manager</h3>
                 <p class="card-description">Upload and update your CV/Resume. Manage different versions.</p>
             </div>
-            <div class="admin-card" onclick="window.location.href='./solidworks-upload-manager.html'">
-                <div class="card-icon">📦</div>
-                <h3 class="card-title">SOLIDWORKS Projects</h3>
-                <p class="card-description">Upload SOLIDWORKS files (.SLDPRT, .SLDASM) and 3D models (.GLB, .GLTF) to CW/HW/Solo projects. Direct GitHub upload with frontend tokens.</p>
+            <div class="admin-card" onclick="openSolidworksUploadPanel()">
+                <div class="card-icon">🔧</div>
+                <h3 class="card-title">SOLIDWORKS Upload Manager</h3>
+                <p class="card-description">Upload SOLIDWORKS models to Basic/Intermediate/Pro/Paid categories. Auto folder creation (Model 01, 02...), file renaming, GitHub integration with real-time sync.</p>
             </div>
             <div class="admin-card" onclick="window.location.href='project-manager.html'">
                 <div class="card-icon">🚀</div>
@@ -2281,37 +2271,476 @@ This project is licensed under the MIT License.
             }, 1000);
         });
     </script>
-    
-    <!-- Mobile Fixed Navbar Script -->
+
+    <!-- SOLIDWORKS Upload Manager -->
+    <script src="solidworks-upload-manager.js"></script>
     <script>
-      if (window.innerWidth <= 768) {
-        const mobileNav = document.querySelector('.nav-quick-icons');
-        if (mobileNav) {
-          mobileNav.style.display = 'flex';
+        // Token Management Functions
+        async function validateAndSaveToken() {
+            const token = document.getElementById('sw-token-input').value.trim();
+            const remember = document.getElementById('sw-remember-token').checked;
+            
+            if (!token) {
+                alert('Please enter a token');
+                return;
+            }
+            
+            // Show loading
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            btn.disabled = true;
+            
+            // Validate token
+            const isValid = await window.SolidworksUploadManager.validateToken(token);
+            
+            if (isValid) {
+                // Save token
+                window.SolidworksUploadManager.setToken(token, remember);
+                
+                // Get user info
+                const response = await fetch('https://api.github.com/user', {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                const user = await response.json();
+                
+                // Update UI
+                document.getElementById('sw-token-section').style.display = 'none';
+                document.getElementById('sw-token-status').style.display = 'block';
+                document.getElementById('sw-token-user').textContent = user.login;
+                
+                alert('✅ Token validated successfully!');
+                
+                // Load category counts
+                loadCategoryCounts();
+            } else {
+                alert('❌ Invalid token. Please check and try again.');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         }
-        // Add margin to dashboard header
-        const dashboardHeader = document.querySelector('.dashboard-header');
-        if (dashboardHeader) {
-          dashboardHeader.style.marginTop = '56px';
+        
+        function showTokenSection() {
+            document.getElementById('sw-token-section').style.display = 'block';
+            document.getElementById('sw-token-status').style.display = 'none';
         }
-        // Hide desktop navbar on mobile
-        const navbar = document.querySelector('.navbar');
-        if (navbar) {
-          navbar.style.display = 'none';
+        
+        // Open SOLIDWORKS Upload Panel
+        async function openSolidworksUploadPanel() {
+            // Redirect to standalone upload manager page (V2 with auto-detection)
+            window.open('solidworks-upload-manager.html', '_blank');
         }
-      }
-    </script>
-    
-    <!-- Top Navbar Component (Mobile Only) -->
-    <script>
-    if (window.innerWidth <= 768) {
-      fetch('main-top-navbar.html')
-        .then(response => response.text())
-        .then(data => {
-          document.body.insertAdjacentHTML('afterbegin', data);
-        })
-        .catch(e => console.error('Failed to load top navbar:', e));
-    }
+        
+        // Old modal code removed - now using dedicated upload manager page
+        async function openSolidworksUploadPanel_OLD() {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'sw-upload-modal';
+            modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+            
+            modal.innerHTML = `
+                <div style="background: linear-gradient(135deg, #1a0000, #0a0a0a); border: 2px solid #CC0000; border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(204, 0, 0, 0.5);">
+                    <!-- Header -->
+                    <div style="padding: 24px; border-bottom: 1px solid rgba(204, 0, 0, 0.3); display: flex; align-items: center; justify-content: between; gap: 16px;">
+                        <div style="flex: 1;">
+                            <h2 style="margin: 0 0 8px 0; color: #CC0000; font-size: 1.8rem; display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-cube"></i>
+                                SOLIDWORKS Upload Manager
+                            </h2>
+                            <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">Auto folder creation • File renaming • Real-time sync</p>
+                        </div>
+                        <button onclick="closeSolidworksUploadPanel()" style="width: 40px; height: 40px; background: rgba(255,0,0,0.2); border: 1px solid rgba(255,0,0,0.4); border-radius: 50%; color: #ff6666; cursor: pointer; font-size: 1.2rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Token Setup -->
+                    <div id="sw-token-section" style="padding: 24px; border-bottom: 1px solid rgba(204, 0, 0, 0.3); display: none;">
+                        <div style="background: rgba(255,165,0,0.1); border: 1px solid rgba(255,165,0,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                            <p style="margin: 0 0 8px 0; color: #ffa500; font-weight: 600;">
+                                <i class="fas fa-key"></i> GitHub Token Required
+                            </p>
+                            <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.6;">
+                                To upload files, you need a GitHub Personal Access Token with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">repo</code> permissions.
+                                <a href="https://github.com/settings/tokens/new?scopes=repo&description=A3KM%20Studio%20Upload" target="_blank" style="color: #00ff00; text-decoration: underline;">Create Token</a>
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                            <input type="password" id="sw-token-input" placeholder="ghp_xxxxxxxxxxxxx" style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+                            <button onclick="validateAndSaveToken()" style="padding: 12px 24px; background: linear-gradient(135deg, #CC0000, #990000); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-check"></i> Validate
+                            </button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="sw-remember-token" style="cursor: pointer;">
+                            Remember token (stays after browser close)
+                        </label>
+                    </div>
+
+                    <!-- Token Status -->
+                    <div id="sw-token-status" style="padding: 16px 24px; background: rgba(0,255,0,0.1); border-bottom: 1px solid rgba(0,255,0,0.3); display: none;">
+                        <p style="margin: 0; color: #00ff00; font-size: 0.9rem;">
+                            <i class="fas fa-check-circle"></i> Token configured • <span id="sw-token-user"></span> • 
+                            <a href="javascript:void(0)" onclick="showTokenSection()" style="color: #00ff00; text-decoration: underline;">Change Token</a>
+                        </p>
+                    </div>
+
+                    <!-- Action Tabs -->
+                    <div style="padding: 16px 24px 0 24px; border-bottom: 1px solid rgba(204, 0, 0, 0.2); display: flex; gap: 8px;">
+                        <button onclick="switchTab('upload')" id="tab-upload" class="sw-action-tab" style="flex: 1; padding: 12px; background: linear-gradient(135deg, rgba(204,0,0,0.2), rgba(153,0,0,0.1)); border: none; border-bottom: 3px solid #CC0000; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-upload"></i> Upload New
+                        </button>
+                        <button onclick="switchTab('update')" id="tab-update" class="sw-action-tab" style="flex: 1; padding: 12px; background: transparent; border: none; border-bottom: 3px solid transparent; color: rgba(255,255,255,0.5); font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-edit"></i> Update Files
+                        </button>
+                        <button onclick="switchTab('delete')" id="tab-delete" class="sw-action-tab" style="flex: 1; padding: 12px; background: transparent; border: none; border-bottom: 3px solid transparent; color: rgba(255,255,255,0.5); font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+
+                    <!-- Upload Tab Content -->
+                    <div id="upload-tab-content" class="sw-tab-content">
+                        <!-- Category Selection -->
+                        <div style="padding: 24px;">
+                            <label style="display: block; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 12px; font-size: 1.05rem;">
+                                <i class="fas fa-folder-tree"></i> Select Category
+                            </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                            <button class="sw-category-btn active" data-category="basic" onclick="selectCategory('basic')" style="padding: 16px; background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(153, 0, 0, 0.1)); border: 2px solid rgba(204, 0, 0, 0.4); border-radius: 12px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s; text-align: left;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">🔧</div>
+                                <div>Basic</div>
+                                <div id="basic-count" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Loading...</div>
+                            </button>
+                            <button class="sw-category-btn" data-category="intermediate" onclick="selectCategory('intermediate')" style="padding: 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s; text-align: left;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">⚙️</div>
+                                <div>Intermediate</div>
+                                <div id="intermediate-count" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Loading...</div>
+                            </button>
+                            <button class="sw-category-btn" data-category="pro" onclick="selectCategory('pro')" style="padding: 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s; text-align: left;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">⭐</div>
+                                <div>Pro</div>
+                                <div id="pro-count" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Loading...</div>
+                            </button>
+                            <button class="sw-category-btn" data-category="paid" onclick="selectCategory('paid')" style="padding: 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s; text-align: left;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">💎</div>
+                                <div>Paid</div>
+                                <div id="paid-count" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Loading...</div>
+                            </button>
+                        </div>
+                        <div id="next-model-info" style="margin-top: 16px; padding: 12px; background: rgba(0,255,0,0.1); border: 1px solid rgba(0,255,0,0.3); border-radius: 8px; color: #00ff00; font-size: 0.9rem; text-align: center;">
+                            <i class="fas fa-info-circle"></i> Next model will be created as: <strong>Model 01</strong>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Area -->
+                    <div style="padding: 0 24px 24px 24px;">
+                        <label style="display: block; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 12px; font-size: 1.05rem;">
+                            <i class="fas fa-file-upload"></i> Select Files
+                        </label>
+                        <div onclick="document.getElementById('sw-file-input').click()" style="border: 2px dashed rgba(204, 0, 0, 0.4); border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: rgba(204, 0, 0, 0.05);">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #CC0000; margin-bottom: 16px;"></i>
+                            <p style="margin: 0 0 8px 0; color: rgba(255,255,255,0.9); font-size: 1.1rem; font-weight: 600;">Click to browse files</p>
+                            <p style="margin: 0; color: rgba(255,255,255,0.5); font-size: 0.9rem;">GLB, GLTF, SLDPRT, SLDASM, PDF, PNG, JPG (max 100MB)</p>
+                        </div>
+                        <input type="file" id="sw-file-input" multiple style="display: none;" onchange="handleFileSelect(event)" accept=".glb,.gltf,.sldprt,.sldasm,.slddrw,.pdf,.png,.jpg,.jpeg,.txt,.md">
+                    </div>
+
+                    <!-- File Preview -->
+                    <div id="sw-file-preview" style="padding: 0 24px 24px 24px; display: none;">
+                        <label style="display: block; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 12px; font-size: 1.05rem;">
+                            <i class="fas fa-list"></i> Selected Files (<span id="sw-file-count">0</span>)
+                        </label>
+                        <div id="sw-file-preview-list" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px;"></div>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div style="padding: 0 24px 24px 24px;">
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; height: 32px; border: 1px solid rgba(204, 0, 0, 0.3);">
+                            <div id="sw-upload-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #CC0000, #ff0000); transition: width 0.3s; display: flex; align-items: center; justify-content: center;">
+                                <span id="sw-upload-progress-text" style="color: #fff; font-size: 0.85rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Ready to upload</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <div style="padding: 0 24px 24px 24px;">
+                        <button id="sw-upload-btn" onclick="startUpload()" disabled style="width: 100%; padding: 16px; background: linear-gradient(135deg, #CC0000, #990000); border: none; border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 16px rgba(204, 0, 0, 0.4);">
+                            <i class="fas fa-upload"></i> Upload Files
+                        </button>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div style="padding: 0 24px 24px 24px;">
+                        <div style="background: rgba(0,102,204,0.1); border: 1px solid rgba(0,102,204,0.3); border-radius: 8px; padding: 16px;">
+                            <p style="margin: 0 0 8px 0; color: #66b3ff; font-weight: 600; font-size: 0.95rem;">
+                                <i class="fas fa-magic"></i> How it works:
+                            </p>
+                            <ul style="margin: 0; padding-left: 20px; color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.8;">
+                                <li>Files will be auto-renamed: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #00ff00;">Model XX Category.ext</code></li>
+                                <li>New folder created automatically: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #00ff00;">Model 01, 02, 03...</code></li>
+                                <li>README.md generated with file details</li>
+                                <li>Real-time sync to gallery pages</li>
+                                <li>3D viewer enabled for GLB files</li>
+                            </ul>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Update Tab Content -->
+                    <div id="update-tab-content" class="sw-tab-content" style="display: none; padding: 24px;">
+                        <p style="color: rgba(255,255,255,0.7); margin-bottom: 16px;"><i class="fas fa-info-circle"></i> Select a model folder to update files</p>
+                        <select id="update-model-select" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; color: #fff; margin-bottom: 16px;" onchange="loadModelFiles(this.value)">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <div id="update-files-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;"></div>
+                        <button onclick="performUpdate()" id="update-btn" disabled style="width: 100%; padding: 16px; background: linear-gradient(135deg, #FFA500, #FF8C00); border: none; border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer;">
+                            <i class="fas fa-edit"></i> Update Selected Files
+                        </button>
+                    </div>
+
+                    <!-- Delete Tab Content -->
+                    <div id="delete-tab-content" class="sw-tab-content" style="display: none; padding: 24px;">
+                        <p style="color: rgba(255,255,255,0.7); margin-bottom: 16px;"><i class="fas fa-exclamation-triangle"></i> Select items to delete (Cannot be undone!)</p>
+                        <select id="delete-model-select" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; color: #fff; margin-bottom: 16px;" onchange="loadDeleteOptions(this.value)">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <div id="delete-options" style="margin-bottom: 16px;">
+                            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,0,0,0.1); border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
+                                <input type="radio" name="delete-type" value="folder" checked>
+                                <span style="color: #fff; font-weight: 600;">Delete Entire Model Folder</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,0,0,0.1); border-radius: 8px; cursor: pointer;">
+                                <input type="radio" name="delete-type" value="files">
+                                <span style="color: #fff; font-weight: 600;">Delete Specific Files</span>
+                            </label>
+                        </div>
+                        <div id="delete-files-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 16px; display: none;"></div>
+                        <button onclick="performDelete()" id="delete-btn" disabled style="width: 100%; padding: 16px; background: linear-gradient(135deg, #FF0000, #CC0000); border: none; border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer;">
+                            <i class="fas fa-trash"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Check if token exists
+            const token = window.SolidworksUploadManager.getToken();
+            if (token) {
+                // Validate existing token
+                const isValid = await window.SolidworksUploadManager.validateToken(token);
+                if (isValid) {
+                    // Get user info
+                    try {
+                        const response = await fetch('https://api.github.com/user', {
+                            headers: { 'Authorization': `token ${token}` }
+                        });
+                        const user = await response.json();
+                        document.getElementById('sw-token-status').style.display = 'block';
+                        document.getElementById('sw-token-user').textContent = user.login || 'GitHub User';
+                    } catch (err) {
+                        document.getElementById('sw-token-section').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('sw-token-section').style.display = 'block';
+                }
+            } else {
+                document.getElementById('sw-token-section').style.display = 'block';
+            }
+            
+            loadCategoryCounts();
+        }
+
+        // Close panel
+        function closeSolidworksUploadPanel() {
+            const modal = document.getElementById('sw-upload-modal');
+            if (modal) modal.remove();
+        }
+
+        // Load category counts
+        async function loadCategoryCounts() {
+            for (const category of ['basic', 'intermediate', 'pro', 'paid']) {
+                try {
+                    const nextNum = await window.SolidworksUploadManager.detectNextModelNumber(category);
+                    const currentCount = nextNum - 1;
+                    document.getElementById(`${category}-count`).textContent = 
+                        currentCount > 0 ? `${currentCount} models • Next: Model ${nextNum}` : `Empty • Start: Model 01`;
+                } catch (err) {
+                    document.getElementById(`${category}-count`).textContent = 'Error loading';
+                }
+            }
+        }
+
+        // Select category
+        async function selectCategory(category) {
+            window.SolidworksUploadManager.setCategory(category);
+            
+            // Update UI
+            document.querySelectorAll('.sw-category-btn').forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.style.background = 'linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(153, 0, 0, 0.1))';
+                    btn.style.borderColor = 'rgba(204, 0, 0, 0.4)';
+                    btn.classList.add('active');
+                } else {
+                    btn.style.background = 'rgba(255,255,255,0.05)';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Update next model info
+            const nextNum = await window.SolidworksUploadManager.detectNextModelNumber(category);
+            document.getElementById('next-model-info').innerHTML = `
+                <i class="fas fa-info-circle"></i> Next model will be created as: <strong>Model ${String(nextNum).padStart(2, '0')}</strong> in <strong>${category}</strong> category
+            `;
+        }
+
+        // Handle file selection
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            
+            if (files.length === 0) return;
+            
+            // Validate
+            const errors = window.SolidworksUploadManager.validateFiles(files);
+            if (errors.length > 0) {
+                alert('File validation errors:\\n' + errors.join('\\n'));
+                event.target.value = '';
+                return;
+            }
+            
+            // Clear queue first
+            window.SolidworksUploadManager.clearQueue();
+
+            // Update UI
+            const fileList = document.getElementById('sw-file-preview-list');
+            fileList.innerHTML = files.map(file => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 8px;">
+                    <i class="fas fa-file" style="color: #CC0000; font-size: 1.2rem;"></i>
+                    <div style="flex: 1;">
+                        <div class="file-name" style="color: rgba(255,255,255,0.9); font-weight: 500; font-size: 0.9rem;">${file.name}</div>
+                        <div style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">${(file.size / 1024).toFixed(2)} KB</div>
+                    </div>
+                    <div class="file-status">
+                        <i class="fas fa-clock" style="color: rgba(255,255,255,0.5);"></i>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('sw-file-preview').style.display = 'block';
+            document.getElementById('sw-file-count').textContent = files.length;
+            document.getElementById('sw-upload-btn').disabled = false;
+            document.getElementById('sw-upload-btn').style.opacity = '1';
+            document.getElementById('sw-upload-btn').style.cursor = 'pointer';
+
+            // Add to queue
+            window.SolidworksUploadManager.addFiles(files);
+        }
+
+        // Start upload
+        function startUpload() {
+            document.getElementById('sw-upload-btn').disabled = true;
+            document.getElementById('sw-upload-btn').style.opacity = '0.6';
+            window.SolidworksUploadManager.startUpload();
+        }
+        
+        // Tab Switching
+        function switchTab(tabName) {
+            ['upload', 'update', 'delete'].forEach(tab => {
+                const content = document.getElementById(`${tab}-tab-content`);
+                const button = document.getElementById(`tab-${tab}`);
+                if (tab === tabName) {
+                    content.style.display = 'block';
+                    button.style.background = 'linear-gradient(135deg, rgba(204,0,0,0.2), rgba(153,0,0,0.1))';
+                    button.style.borderBottom = '3px solid #CC0000';
+                    button.style.color = '#fff';
+                } else {
+                    content.style.display = 'none';
+                    button.style.background = 'transparent';
+                    button.style.borderBottom = '3px solid transparent';
+                    button.style.color = 'rgba(255,255,255,0.5)';
+                }
+            });
+            
+            if (tabName === 'update') loadUpdateModels();
+            if (tabName === 'delete') loadDeleteModels();
+        }
+        
+        // Load models for update tab
+        async function loadUpdateModels() {
+            const select = document.getElementById('update-model-select');
+            select.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const category = document.querySelector('.sw-category-btn.active').dataset.category || 'basic';
+                const num = await window.SolidworksUploadManager.detectNextModelNumber(category);
+                const options = ['<option value="">-- Select Model --</option>'];
+                for (let i = 1; i < num; i++) {
+                    options.push(`<option value="${i}">Model ${String(i).padStart(2, '0')}</option>`);
+                }
+                select.innerHTML = options.join('');
+            } catch (err) {
+                select.innerHTML = '<option value="">Error loading models</option>';
+            }
+        }
+        
+        // Load models for delete tab
+        async function loadDeleteModels() {
+            const select = document.getElementById('delete-model-select');
+            select.innerHTML = '<option value="">Loading...</option>';
+            try {
+                const category = document.querySelector('.sw-category-btn.active').dataset.category || 'basic';
+                const num = await window.SolidworksUploadManager.detectNextModelNumber(category);
+                const options = ['<option value="">-- Select Model --</option>'];
+                for (let i = 1; i < num; i++) {
+                    options.push(`<option value="${i}">Model ${String(i).padStart(2, '0')}</option>`);
+                }
+                select.innerHTML = options.join('');
+                document.getElementById('delete-btn').disabled = true;
+            } catch (err) {
+                select.innerHTML = '<option value="">Error loading models</option>';
+            }
+        }
+        
+        // Load files for selected model (update)
+        async function loadModelFiles(modelNum) {
+            const filesList = document.getElementById('update-files-list');
+            const updateBtn = document.getElementById('update-btn');
+            if (!modelNum) {
+                filesList.innerHTML = '';
+                updateBtn.disabled = true;
+                return;
+            }
+            filesList.innerHTML = '<p style="color: rgba(255,255,255,0.5);">Loading files...</p>';
+            // TODO: Implement GitHub API file fetching
+            filesList.innerHTML = '<p style="color: rgba(255,255,255,0.7);">Update feature coming soon!</p>';
+        }
+        
+        // Load delete options
+        function loadDeleteOptions(modelNum) {
+            const deleteBtn = document.getElementById('delete-btn');
+            deleteBtn.disabled = !modelNum;
+        }
+        
+        // Perform update
+        function performUpdate() {
+            alert('Update feature coming soon! Will allow replacing existing files.');
+        }
+        
+        // Perform delete
+        async function performDelete() {
+            const modelNum = document.getElementById('delete-model-select').value;
+            if (!modelNum) return;
+            
+            const deleteType = document.querySelector('input[name="delete-type"]:checked').value;
+            const category = document.querySelector('.sw-category-btn.active').dataset.category || 'basic';
+            
+            if (deleteType === 'folder') {
+                if (!confirm(`⚠️ Delete Model ${modelNum} completely? This cannot be undone!`)) return;
+                alert(`Delete folder feature ready! Would delete: Solidwork Projects/${category}/Model ${modelNum}/\n\nImplement GitHub DELETE API to complete.`);
+            } else {
+                alert('Delete specific files feature coming soon!');
+            }
+        }
     </script>
     </body>
     </html>

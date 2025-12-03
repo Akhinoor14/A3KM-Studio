@@ -715,28 +715,6 @@
 </head>
 <body>
 
-  <!-- Fixed Top Navigation -->
-  <nav class="nav-quick-icons">
-    <a href="home-mobile.html" class="nav-icon" title="Home">
-      <i class="fas fa-home"></i>
-    </a>
-    <a href="about-mobile.html" class="nav-icon" title="About">
-      <i class="fas fa-user"></i>
-    </a>
-    <a href="projects.html" class="nav-icon active" title="Projects">
-      <i class="fas fa-folder"></i>
-    </a>
-    <a href="blog-mobile.html" class="nav-icon" title="Blog">
-      <i class="fas fa-blog"></i>
-    </a>
-    <a href="contact-mobile.html" class="nav-icon" title="Contact">
-      <i class="fas fa-envelope"></i>
-    </a>
-    <a href="only-boss.html" class="nav-icon" title="Only Boss">
-      <i class="fas fa-crown"></i>
-    </a>
-  </nav>
-
   <!-- Header -->
   <header class="header">
     <div class="header-container">
@@ -810,7 +788,13 @@
   <script>
     // Configuration
     const GITHUB_REPO = 'Akhinoor14/SOLIDWORKS-Projects';
-    const FOLDERS = ['CW', 'HW', 'Solo'];
+    const BASE_PATH = 'Solidwork Projects';
+    const FOLDERS = [
+      'Basic (Practice) Models',
+      'Intermediate (Practice) Models',
+      'Pro (Practice) Models',
+      'Paid (Selled) Models'
+    ];
     
     let allProjects = [];
     let total3DModels = 0;
@@ -942,7 +926,8 @@
         
         // Fetch from all folders using token system
         for (const folder of FOLDERS) {
-          const endpoint = `repos/${GITHUB_REPO}/contents/${encodeURIComponent(folder)}`;
+          const fullPath = `${BASE_PATH}/${folder}`;
+          const endpoint = `repos/${GITHUB_REPO}/contents/${encodeURIComponent(fullPath)}`;
           const response = await fetchWithTokens(`https://api.github.com/${endpoint}`);
           
           if (response.ok) {
@@ -950,10 +935,14 @@
             const folders = items.filter(item => item.type === 'dir');
             
             folders.forEach(item => {
+              // Extract category name (Basic/Intermediate/Pro/Paid)
+              const categoryShortName = folder.split(' ')[0]; // "Basic", "Intermediate", "Pro", "Paid"
+              
               projectsData.push({
-                name: `${folder} / ${item.name}`,
+                name: `${categoryShortName} / ${item.name}`,
                 originalName: item.name,
                 folder: folder,
+                categoryShort: categoryShortName,
                 url: item.url,
                 path: item.path
               });
@@ -989,18 +978,31 @@
     
     // Create project card
     function createProjectCard(project) {
+      // Category badge colors
+      const categoryColors = {
+        'Basic': '#4CAF50',
+        'Intermediate': '#2196F3',
+        'Pro': '#FF9800',
+        'Paid': '#9C27B0'
+      };
+      const badgeColor = categoryColors[project.categoryShort] || '#666';
+      
       return `
         <article class="project-card" 
                  data-project="${escapeAttr(project.name)}"
                  data-url="${project.url}"
                  data-path="${project.path}"
+                 data-category="${project.categoryShort}"
                  data-expanded="false"
                  data-loaded="false"
                  data-loading="false">
           
           <header class="project-card-header" data-action="toggle">
             <div class="project-info">
-              <h3>${escapeHtml(project.name)}</h3>
+              <h3>
+                <span class="category-badge" style="background: ${badgeColor}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-right: 0.5rem; font-weight: 600;">${escapeHtml(project.categoryShort)}</span>
+                ${escapeHtml(project.originalName)}
+              </h3>
               <p class="project-meta">
                 <i class="fas fa-folder-open"></i>
                 <span>Tap to expand</span>
@@ -1093,7 +1095,7 @@
         const files = await response.json();
         const fileItems = files.filter(item => item.type === 'file');
         
-        // Only show 3D models
+        // Only show 3D models (includes renamed files like "Model 36 Basic.glb")
         const models3D = fileItems.filter(f => /\.(glb|gltf)$/i.test(f.name));
         
         if (models3D.length === 0) {

@@ -547,28 +547,30 @@
         <!-- 🔥 LIVE BACKEND STATUS BAR 🔥 -->
         <!-- Backend removed - using direct token system -->
 
-        <!-- Backend API Status Panel -->
+        <!-- GitHub Token Panel -->
         <div class="token-panel">
             <div class="token-status">
                 <div class="token-info">
-                    <div class="token-indicator" id="backendIndicator"></div>
+                    <div class="token-indicator" id="tokenIndicator" style="background: #dc3545;"></div>
                     <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="token-text" id="backendStatusText">Checking backend...</span>
-                            <span id="backendSpinner" style="display: none;"><i class="fas fa-spinner fa-spin" style="font-size: 0.85rem;"></i></span>
-                        </div>
-                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 4px;" id="backendDetails">
-                            <span id="tokenCountText">Tokens: -</span> | 
-                            <span id="rateLimitText">Limit: -</span>
-                        </div>
+                        <label style="font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 0.5rem; display: block;">
+                            <i class="fas fa-key"></i> GitHub Personal Access Token
+                        </label>
+                        <input 
+                            type="password" 
+                            id="githubTokenInput" 
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
+                            style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: white; font-family: monospace; font-size: 0.85rem;"
+                            oninput="handleTokenInput()"
+                        />
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="change-token-btn" onclick="checkBackendStatus()" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i> Refresh
+                    <button class="change-token-btn" onclick="saveToken()" id="saveTokenBtn">
+                        <i class="fas fa-save"></i> Save
                     </button>
-                    <button class="change-token-btn" onclick="window.open('backend-token-manager.html', '_blank')">
-                        <i class="fas fa-cog"></i> Manage
+                    <button class="change-token-btn" onclick="clearToken()">
+                        <i class="fas fa-trash"></i> Clear
                     </button>
                 </div>
             </div>
@@ -576,21 +578,21 @@
 
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-            <button class="tab-btn active" onclick="switchTab('upload-cw')">
-                <i class="fas fa-book"></i>
-                <span>Upload CW</span>
+            <button class="tab-btn active" onclick="switchTab('upload-basic')">
+                <i class="fas fa-cube"></i>
+                <span>Basic Models</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('upload-hw')">
-                <i class="fas fa-home"></i>
-                <span>Upload HW</span>
+            <button class="tab-btn" onclick="switchTab('upload-intermediate')">
+                <i class="fas fa-layer-group"></i>
+                <span>Intermediate</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('upload-solo')">
-                <i class="fas fa-star"></i>
-                <span>Solo Projects</span>
+            <button class="tab-btn" onclick="switchTab('upload-pro')">
+                <i class="fas fa-crown"></i>
+                <span>Pro Models</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('upload-question')">
-                <i class="fas fa-question-circle"></i>
-                <span>Questions</span>
+            <button class="tab-btn" onclick="switchTab('upload-paid')">
+                <i class="fas fa-dollar-sign"></i>
+                <span>Paid Projects</span>
             </button>
             <button class="tab-btn" onclick="switchTab('update-files')">
                 <i class="fas fa-sync-alt"></i>
@@ -602,189 +604,171 @@
             </button>
         </div>
 
-        <!-- Tab Content: Upload CW -->
-        <div class="tab-content active" id="upload-cw">
+        <!-- Tab Content: Basic Models -->
+        <div class="tab-content active" id="upload-basic">
             <div class="upload-panel">
                 <h3 class="panel-title">
-                    <i class="fas fa-folder-plus"></i>
-                    Upload Class Work (CW) Files
+                    <i class="fas fa-cube"></i>
+                    Upload Basic (Practice) Models
                 </h3>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Select Day</label>
-                        <select id="cwDay" class="form-control">
-                            <option value="">-- Choose Day --</option>
-                        </select>
-                    </div>
+                <div class="info-banner" style="background: rgba(0,123,255,0.1); border: 1px solid rgba(0,123,255,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle" style="color: #007bff;"></i>
+                    <strong>Auto-Detection:</strong> Next model number will be automatically detected from existing folders.
+                    <span style="margin-left: 1rem; color: rgba(255,255,255,0.8);">Current: <strong id="basicCount">0</strong> models</span>
                 </div>
 
-                <div class="file-upload-zone" id="cwUploadZone" onclick="document.getElementById('cwFileInput').click()">
+                <div class="file-upload-zone" id="basicUploadZone" onclick="document.getElementById('basicFileInput').click()">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    <div class="upload-text">Drag & Drop SOLIDWORKS Files Here</div>
-                    <div class="upload-hint">or click to browse (.SLDPRT, .SLDASM, .SLDDRW, .GLB, .GLTF)</div>
-                    <input type="file" id="cwFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf">
+                    <div class="upload-text">Drag & Drop SOLIDWORKS Files + 3D Models Here</div>
+                    <div class="upload-hint">Upload .SLDPRT, .SLDASM, .SLDDRW, .GLB, .GLTF files</div>
+                    <input type="file" id="basicFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf">
                 </div>
 
-                <div class="selected-files" id="cwFilesList"></div>
-                <div class="file-summary" id="cwFileSummary"></div>
+                <div class="selected-files" id="basicFilesList"></div>
+                <div class="file-summary" id="basicFileSummary"></div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="clearFiles('cw')">
+                    <button class="btn btn-secondary" onclick="clearFiles('basic')">
                         <i class="fas fa-times"></i> Clear All
                     </button>
-                    <button class="btn btn-secondary" id="cwCancelBtn" style="display:none" onclick="cancelUpload('cw')">
+                    <button class="btn btn-secondary" id="basicCancelBtn" style="display:none" onclick="cancelUpload('basic')">
                         <i class="fas fa-ban"></i> Cancel
                     </button>
-                    <button class="btn btn-primary" id="cwUploadBtn" onclick="uploadFiles('cw')" disabled>
+                    <button class="btn btn-primary" id="basicUploadBtn" onclick="uploadFiles('basic')" disabled>
                         <i class="fas fa-upload"></i> Upload to GitHub
                     </button>
                 </div>
 
-                <div class="message" id="cwMessage"></div>
+                <div class="message" id="basicMessage"></div>
             </div>
         </div>
 
-        <!-- Tab Content: Upload HW -->
-        <div class="tab-content" id="upload-hw">
+        <!-- Tab Content: Intermediate Models -->
+        <div class="tab-content" id="upload-intermediate">
             <div class="upload-panel">
                 <h3 class="panel-title">
-                    <i class="fas fa-folder-plus"></i>
-                    Upload Home Work (HW) Files
+                    <i class="fas fa-layer-group"></i>
+                    Upload Intermediate (Practice) Models
                 </h3>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Select Day</label>
-                        <select id="hwDay" class="form-control">
-                            <option value="">-- Choose Day --</option>
-                        </select>
-                    </div>
+                <div class="info-banner" style="background: rgba(0,123,255,0.1); border: 1px solid rgba(0,123,255,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle" style="color: #007bff;"></i>
+                    <strong>Auto-Detection:</strong> Next model number will be automatically detected from existing folders.
+                    <span style="margin-left: 1rem; color: rgba(255,255,255,0.8);">Current: <strong id="intermediateCount">0</strong> models</span>
                 </div>
 
-                <div class="file-upload-zone" id="hwUploadZone" onclick="document.getElementById('hwFileInput').click()">
+                <div class="file-upload-zone" id="intermediateUploadZone" onclick="document.getElementById('intermediateFileInput').click()">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    <div class="upload-text">Drag & Drop SOLIDWORKS Files Here</div>
-                    <div class="upload-hint">or click to browse (.SLDPRT, .SLDASM, .SLDDRW, .GLB, .GLTF)</div>
-                    <input type="file" id="hwFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf">
+                    <div class="upload-text">Drag & Drop SOLIDWORKS Files + 3D Models Here</div>
+                    <div class="upload-hint">Upload .SLDPRT, .SLDASM, .SLDDRW, .GLB, .GLTF files</div>
+                    <input type="file" id="intermediateFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf">
                 </div>
 
-                <div class="selected-files" id="hwFilesList"></div>
-                <div class="file-summary" id="hwFileSummary"></div>
+                <div class="selected-files" id="intermediateFilesList"></div>
+                <div class="file-summary" id="intermediateFileSummary"></div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="clearFiles('hw')">
+                    <button class="btn btn-secondary" onclick="clearFiles('intermediate')">
                         <i class="fas fa-times"></i> Clear All
                     </button>
-                    <button class="btn btn-secondary" id="hwCancelBtn" style="display:none" onclick="cancelUpload('hw')">
+                    <button class="btn btn-secondary" id="intermediateCancelBtn" style="display:none" onclick="cancelUpload('intermediate')">
                         <i class="fas fa-ban"></i> Cancel
                     </button>
-                    <button class="btn btn-primary" id="hwUploadBtn" onclick="uploadFiles('hw')" disabled>
+                    <button class="btn btn-primary" id="intermediateUploadBtn" onclick="uploadFiles('intermediate')" disabled>
                         <i class="fas fa-upload"></i> Upload to GitHub
                     </button>
                 </div>
 
-                <div class="message" id="hwMessage"></div>
+                <div class="message" id="intermediateMessage"></div>
             </div>
         </div>
 
-        <!-- Tab Content: Solo Projects -->
-        <div class="tab-content" id="upload-solo">
+        <!-- Tab Content: Pro Models -->
+        <div class="tab-content" id="upload-pro">
             <div class="upload-panel">
                 <h3 class="panel-title">
-                    <i class="fas fa-star"></i>
-                    Solo Projects Management
+                    <i class="fas fa-crown"></i>
+                    Upload Pro (Practice) Models
                 </h3>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="fas fa-folder"></i> Project Name</label>
-                        <input type="text" id="soloProjectName" class="form-control" placeholder="e.g., Project 1">
-                        <span class="form-hint">Enter project folder name</span>
-                    </div>
+                <div class="info-banner" style="background: rgba(0,123,255,0.1); border: 1px solid rgba(0,123,255,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle" style="color: #007bff;"></i>
+                    <strong>Auto-Detection:</strong> Next model number will be automatically detected from existing folders.
+                    <span style="margin-left: 1rem; color: rgba(255,255,255,0.8);">Current: <strong id="proCount">0</strong> models</span>
                 </div>
 
-                <div class="file-upload-zone" id="soloUploadZone" onclick="document.getElementById('soloFileInput').click()">
+                <div class="file-upload-zone" id="proUploadZone" onclick="document.getElementById('proFileInput').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Drag & Drop SOLIDWORKS Files + 3D Models Here</div>
+                    <div class="upload-hint">Upload .SLDPRT, .SLDASM, .SLDDRW, .GLB, .GLTF files</div>
+                    <input type="file" id="proFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf">
+                </div>
+
+                <div class="selected-files" id="proFilesList"></div>
+                <div class="file-summary" id="proFileSummary"></div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="clearFiles('pro')">
+                        <i class="fas fa-times"></i> Clear All
+                    </button>
+                    <button class="btn btn-secondary" id="proCancelBtn" style="display:none" onclick="cancelUpload('pro')">
+                        <i class="fas fa-ban"></i> Cancel
+                    </button>
+                    <button class="btn btn-primary" id="proUploadBtn" onclick="uploadFiles('pro')" disabled>
+                        <i class="fas fa-upload"></i> Upload to GitHub
+                    </button>
+                </div>
+
+                <div class="message" id="proMessage"></div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Paid Projects -->
+        <div class="tab-content" id="upload-paid">
+            <div class="upload-panel">
+                <h3 class="panel-title">
+                    <i class="fas fa-dollar-sign"></i>
+                    Upload Paid (Selled) Projects
+                </h3>
+
+                <div class="info-banner" style="background: rgba(0,123,255,0.1); border: 1px solid rgba(0,123,255,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle" style="color: #007bff;"></i>
+                    <strong>Auto-Detection:</strong> Next model number will be automatically detected from existing folders.
+                    <span style="margin-left: 1rem; color: rgba(255,255,255,0.8);">Current: <strong id="paidCount">0</strong> models</span>
+                </div>
+
+                <div class="file-upload-zone" id="paidUploadZone" onclick="document.getElementById('paidFileInput').click()">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
                     <div class="upload-text">Drag & Drop Project Files Here</div>
-                    <div class="upload-hint">SOLIDWORKS files + 3D Models (GLB/GLTF) + Images/PDFs</div>
-                    <input type="file" id="soloFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf,.pdf,.png,.jpg,.jpeg">
+                    <div class="upload-hint">SOLIDWORKS + 3D Models + Images/PDFs supported</div>
+                    <input type="file" id="paidFileInput" class="file-input" multiple accept=".SLDPRT,.SLDASM,.SLDDRW,.sldprt,.sldasm,.slddrw,.GLB,.GLTF,.glb,.gltf,.pdf,.png,.jpg,.jpeg">
                 </div>
 
-                <div class="selected-files" id="soloFilesList"></div>
-                <div class="file-summary" id="soloFileSummary"></div>
+                <div class="selected-files" id="paidFilesList"></div>
+                <div class="file-summary" id="paidFileSummary"></div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="clearFiles('solo')">
+                    <button class="btn btn-secondary" onclick="clearFiles('paid')">
                         <i class="fas fa-times"></i> Clear All
                     </button>
-                    <button class="btn btn-secondary" id="soloCancelBtn" style="display:none" onclick="cancelUpload('solo')">
+                    <button class="btn btn-secondary" id="paidCancelBtn" style="display:none" onclick="cancelUpload('paid')">
                         <i class="fas fa-ban"></i> Cancel
                     </button>
-                    <button class="btn btn-primary" id="soloUploadBtn" onclick="uploadSoloProject()" disabled>
+                    <button class="btn btn-primary" id="paidUploadBtn" onclick="uploadPaidProject()" disabled>
                         <i class="fas fa-upload"></i> Upload Project
                     </button>
                 </div>
 
-                <div class="message" id="soloMessage"></div>
-            </div>
-        </div>
-
-        <!-- Tab Content: Upload Questions -->
-        <div class="tab-content" id="upload-question">
-            <div class="upload-panel">
-                <h3 class="panel-title">
-                    <i class="fas fa-file-pdf"></i>
-                    Upload Question Documents
-                </h3>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Select Day</label>
-                        <select id="questionDay" class="form-control">
-                            <option value="">-- Choose Day --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-tag"></i> Type</label>
-                        <select id="questionType" class="form-control">
-                            <option value="CW">Class Work</option>
-                            <option value="HW">Home Work</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="file-upload-zone" id="questionUploadZone" onclick="document.getElementById('questionFileInput').click()">
-                    <div class="upload-icon">
-                        <i class="fas fa-file-upload"></i>
-                    </div>
-                    <div class="upload-text">Upload Question File(s)</div>
-                    <div class="upload-hint">PDF, PNG, or JPG (multiple files supported)</div>
-                    <input type="file" id="questionFileInput" class="file-input" multiple accept=".pdf,.png,.jpg,.jpeg">
-                </div>
-
-                <div class="selected-files" id="questionFilesList"></div>
-                <div class="file-summary" id="questionFileSummary"></div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="clearFiles('question')">
-                        <i class="fas fa-times"></i> Clear
-                    </button>
-                    <button class="btn btn-secondary" id="questionCancelBtn" style="display:none" onclick="cancelUpload('question')">
-                        <i class="fas fa-ban"></i> Cancel
-                    </button>
-                    <button class="btn btn-primary" id="questionUploadBtn" onclick="uploadQuestions()" disabled>
-                        <i class="fas fa-upload"></i> Upload Question
-                    </button>
-                </div>
-
-                <div class="message" id="questionMessage"></div>
+                <div class="message" id="paidMessage"></div>
             </div>
         </div>
 
@@ -897,9 +881,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="github-uploader.js"></script>
-    <script src="website-updater.js"></script>
-    <script src="script.js"></script>
+    <script src="solidworks-upload-manager-v2.js"></script>
     <script>
         // Backend API Configuration
         const BACKEND_URL = 'http://localhost:5000';
