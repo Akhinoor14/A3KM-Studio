@@ -130,8 +130,12 @@
           ${pageItems.length === 0 ? '<p class="loading">No posts found.</p>' : ''}
           ${pageItems.map(p=> `
             <div class="card" data-slug="${escapeHTML(p.slug)}">
-              ${p.coverImage ? `<img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy" />` : ''}
-              <div>
+              ${p.coverImage ? `
+                <div class="card-image-container">
+                  <img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy" />
+                </div>
+              ` : ''}
+              <div class="card-body">
                 <h3>${escapeHTML(p.title)}</h3>
                 <div class="meta">${formatDate(p.date)} • ${(p.tags||[]).map(escapeHTML).join(', ')}</div>
                 <p>${escapeHTML(p.summary||'')}</p>
