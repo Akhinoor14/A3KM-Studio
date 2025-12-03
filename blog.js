@@ -130,11 +130,12 @@
           ${pageItems.length === 0 ? '<p class="loading">No posts found.</p>' : ''}
           ${pageItems.map(p=> `
             <div class="card" data-slug="${escapeHTML(p.slug)}">
-              ${p.coverImage ? `<img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy" />` : ''}
-              <div>
+              ${p.coverImage ? `<div class="card-image"><img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy" /></div>` : ''}
+              <div class="card-content">
                 <h3>${escapeHTML(p.title)}</h3>
                 <div class="meta">${formatDate(p.date)} • ${(p.tags||[]).map(escapeHTML).join(', ')}</div>
                 <p>${escapeHTML(p.summary||'')}</p>
+                ${(p.tags && p.tags.length) ? `<div class="tags">${p.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>` : ''}
               </div>
             </div>
           `).join('')}
@@ -284,13 +285,13 @@
       const postUrl = `${SITE_URL}/${location.pathname}?post=${encodeURIComponent(slug)}`;
       
       const html = `
-        <div class="header">
-          <div class="title">Blog</div>
-          <button class="button" id="back">← Back</button>
-        </div>
         <div class="container post">
+          <a href="${isMobile ? 'blog-mobile.html' : 'blog.html'}" class="back-button">Back to Blog</a>
           <h1>${escapeHTML(frontMatter.title||slug)}</h1>
-          <div class="meta">${formatDate(frontMatter.date||'')} • ${(tags||[]).map(escapeHTML).join(', ')} • ${minutes} min read</div>
+          <div class="meta">
+            ${formatDate(frontMatter.date||'')} • ${minutes} min read
+            ${(tags && tags.length) ? `<div class="post-tags">${tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>` : ''}
+          </div>
           ${frontMatter.coverImage ? `<img class="cover" src="${escapeHTML(frontMatter.coverImage)}" alt="${escapeHTML(frontMatter.title||slug)}" loading="lazy" />` : ''}
           <div class="content">${markdownToHtml(body)}</div>
           <div class="share">
@@ -332,11 +333,6 @@
       });
       
       // Event listeners
-      document.getElementById('back').addEventListener('click', ()=>{
-        qs.delete('post');
-        history.back();
-      });
-      
       document.getElementById('copy').addEventListener('click', async ()=>{
         try{
           await navigator.clipboard.writeText(postUrl);
