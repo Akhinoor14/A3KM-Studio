@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Project Viewer - A3KM Studio</title>
+    
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile-top-nav.css">
+    
+    <style>
+        :root {
+            --primary-red: #CC0000;
+            --primary-red-dark: #990000;
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(26, 0, 0, 0.95);
+            --border-primary: rgba(204, 0, 0, 0.3);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .viewer-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(10, 10, 10, 0.98);
+            border-bottom: 2px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(204, 0, 0, 0.3);
+            border-color: var(--primary-red);
+            transform: translateX(-5px);
+        }
+
+        .project-title-nav {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        /* Main Content */
+        .content-wrapper {
+            margin-top: 90px;
+            padding: 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Project Header */
+        .project-header {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .project-number {
+            display: inline-block;
+            padding: 6px 16px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .project-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            margin-bottom: 15px;
+        }
+
+        .project-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-item i {
+            color: var(--primary-red);
+        }
+
+        /* Content Sections */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .content-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.3rem;
+        }
+
+        /* Components List */
+        .components-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .component-item {
+            padding: 12px;
+            background: rgba(204, 0, 0, 0.08);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .component-item i {
+            color: var(--primary-red);
+            font-size: 1.1rem;
+        }
+
+        /* Circuit Diagram */
+        .circuit-image {
+            width: 100%;
+            border-radius: 12px;
+            border: 2px solid var(--border-primary);
+            margin: 20px 0;
+        }
+
+        /* Code Section */
+        .code-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .code-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+
+        .copy-btn {
+            padding: 6px 16px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(204, 0, 0, 0.3);
+        }
+
+        .code-content {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(204, 0, 0, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        /* Navigation Arrows */
+        .nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            gap: 20px;
+        }
+
+        .nav-arrow {
+            flex: 1;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-arrow:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-3px);
+        }
+
+        .nav-arrow.prev {
+            justify-content: flex-start;
+        }
+
+        .nav-arrow.next {
+            justify-content: flex-end;
+        }
+
+        .nav-arrow-icon {
+            font-size: 2rem;
+            color: var(--primary-red);
+        }
+
+        .nav-arrow-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .nav-arrow-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Mobile Navigation */
+        .mobile-top-nav {
+            display: none;
+        }
+
+        .navbar {
+            display: flex;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-top-nav {
+                display: flex !important;
+            }
+            .navbar {
+                display: none !important;
+            }
+            body {
+                padding-top: 60px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .project-title {
+                font-size: 1.8rem;
+            }
+
+            .nav-arrows {
+                flex-direction: column;
+            }
+
+            .viewer-nav {
+                height: 60px;
+                padding: 0 15px;
+            }
+
+            .project-title-nav {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Top Navigation -->
+    <nav class="mobile-top-nav">
+        <a href="home-mobile.html" class="nav-icon" title="Home">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="about-mobile.html" class="nav-icon" title="About">
+            <i class="fas fa-user"></i>
+        </a>
+        <a href="projects-mobile.html" class="nav-icon active" title="Projects">
+            <i class="fas fa-folder-open"></i>
+        </a>
+        <a href="blog-mobile.html" class="nav-icon" title="Blog">
+            <i class="fas fa-blog"></i>
+        </a>
+        <a href="contact-mobile.html" class="nav-icon" title="Contact">
+            <i class="fas fa-envelope"></i>
+        </a>
+        <a href="only-boss.html" class="nav-icon nav-boss" title="Only Boss">
+            <i class="fas fa-crown"></i>
+        </a>
+    </nav>
+
+    <!-- Desktop Navigation -->
+    <nav class="navbar">
+        <div class="nav-logo">
+            <h1 class="logo-text"><span class="logo-highlight">A3KM</span> Studio</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html" class="active">Projects</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="only-boss.html" class="nav-boss-link">Only Boss</a></li>
+        </ul>
+    </nav>
+
+    <!-- Top Navigation Bar -->
+    <div class="viewer-nav">
+        <a href="#" onclick="if(window.innerWidth <= 768) { window.location.href='projects-mobile.html'; } else { window.location.href='arduino-projects.html#arduino'; } return false;" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Projects</span>
+        </a>
+        <div class="project-title-nav" id="navTitle">Arduino Project</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <!-- Project Header -->
+        <div class="project-header">
+            <span class="project-number" id="projectNumber">Project 01</span>
+            <h1 class="project-title" id="projectTitle">LED Pattern Control</h1>
+            <p class="project-subtitle" id="projectSubtitle">Control LED blinking patterns using potentiometer</p>
+            
+            <div class="project-meta">
+                <div class="meta-item">
+                    <i class="fas fa-microchip"></i>
+                    <span>Arduino UNO</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>Md Akhinoor Islam</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span id="projectDate">2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Description -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Project Description
+                    </h2>
+                    <p id="projectDescription" style="color: var(--text-secondary); line-height: 1.8; font-size: 1rem;">
+                        Loading project description...
+                    </p>
+                </div>
+
+                <!-- Circuit Diagram -->
+                <div class="content-section" style="margin-top: 30px;">
+                    <h2 class="section-title">
+                        <i class="fas fa-project-diagram"></i>
+                        Circuit Diagram
+                    </h2>
+                    <img id="circuitImage" src="" alt="Circuit Diagram" class="circuit-image" style="display: none;">
+                    <p id="circuitPlaceholder" style="color: var(--text-secondary); padding: 40px; text-align: center; background: rgba(204, 0, 0, 0.05); border-radius: 8px;">
+                        <i class="fas fa-image" style="font-size: 3rem; color: var(--border-primary); margin-bottom: 15px; display: block;"></i>
+                        Circuit diagram not available
+                    </p>
+                </div>
+
+                <!-- Arduino Code -->
+                <div class="content-section" style="margin-top: 30px;">
+                    <h2 class="section-title">
+                        <i class="fas fa-code"></i>
+                        Arduino Code
+                    </h2>
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span class="code-title" id="codeFileName">sketch.ino</span>
+                            <button class="copy-btn" onclick="copyCode()">
+                                <i class="fas fa-copy"></i> Copy Code
+                            </button>
+                        </div>
+                        <pre class="code-content" id="codeContent">// Loading code...</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Components -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-tools"></i>
+                        Components
+                    </h2>
+                    <ul class="components-list" id="componentsList">
+                        <li class="component-item">
+                            <i class="fas fa-microchip"></i>
+                            Arduino UNO
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="#" id="tinkercadLink" class="action-btn" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Open in Tinkercad
+                    </a>
+                    <button class="action-btn secondary" onclick="downloadCode()">
+                        <i class="fas fa-download"></i>
+                        Download Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Arrows -->
+        <div class="nav-arrows">
+            <a href="#" class="nav-arrow prev" id="prevProject" style="display: none;">
+                <i class="fas fa-chevron-left nav-arrow-icon"></i>
+                <div>
+                    <div class="nav-arrow-text">Previous</div>
+                    <div class="nav-arrow-title" id="prevProjectTitle">Project Name</div>
+                </div>
+            </a>
+
+            <a href="#" class="nav-arrow next" id="nextProject" style="display: none;">
+                <div style="text-align: right;">
+                    <div class="nav-arrow-text">Next</div>
+                    <div class="nav-arrow-title" id="nextProjectTitle">Project Name</div>
+                </div>
+                <i class="fas fa-chevron-right nav-arrow-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Arduino projects data
+        const projects = [
+            {
+                id: 1,
+                folder: "01 LED Pattern",
+                title: "LED Pattern Control",
+                subtitle: "Control LED blinking patterns using potentiometer",
+                description: "This project uses a potentiometer to control the blinking pattern of 5 LEDs based on analog voltage levels. Learn about analog-to-digital conversion and conditional LED control.",
+                components: ["Arduino UNO", "Breadboard", "5× LED", "5× 220Ω Resistor", "Potentiometer", "Jumper Wires"],
+                tinkercad: "https://www.tinkercad.com/things/c3b3O8IGfQV-01-led-pattern",
+                codeFile: "Led-pattern.ino"
+            },
+            {
+                id: 2,
+                folder: "02 LED Flowing Blinking",
+                title: "LED Flowing Blinking",
+                subtitle: "Sequential LED animation pattern",
+                description: "Create a flowing LED animation effect where LEDs blink in sequence creating a smooth flowing pattern. Perfect for understanding timing and sequential logic.",
+                components: ["Arduino UNO", "Breadboard", "Multiple LEDs", "220Ω Resistors", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "LED.blinking.ino"
+            },
+            {
+                id: 3,
+                folder: "03 Breathing a LED",
+                title: "Breathing LED Effect",
+                subtitle: "PWM-based LED brightness control",
+                description: "Create a breathing effect where an LED smoothly fades in and out using PWM (Pulse Width Modulation). Learn about analog output simulation.",
+                components: ["Arduino UNO", "LED", "220Ω Resistor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "LED Breathing.ino"
+            },
+            {
+                id: 4,
+                folder: "04 Controlling LED brightness with AT-TINY85",
+                title: "ATtiny85 LED Brightness",
+                subtitle: "Control LED brightness with ATtiny85 microcontroller",
+                description: "Learn how to program ATtiny85 microcontroller to control LED brightness using PWM. Explore compact microcontroller programming.",
+                components: ["ATtiny85", "LED", "220Ω Resistor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "ATTINY85 Brightness.ino"
+            },
+            {
+                id: 5,
+                folder: "05 RGB LED Control with PWM",
+                title: "RGB LED Control (PWM)",
+                subtitle: "Multi-color LED control using PWM signals",
+                description: "Control RGB LED colors by mixing red, green, and blue using PWM. Create any color by adjusting individual LED brightness.",
+                components: ["Arduino UNO", "RGB LED", "3× 220Ω Resistor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "rgb-pwm.ino"
+            },
+            {
+                id: 6,
+                folder: "06. Interfacing servo motor with arduino",
+                title: "Servo Motor Interface",
+                subtitle: "Control servo motor position with Arduino",
+                description: "Learn how to interface and control servo motor position using Arduino. Understand PWM signals for precise angle control.",
+                components: ["Arduino UNO", "Servo Motor", "Breadboard", "Jumper Wires", "External Power (if needed)"],
+                tinkercad: "#",
+                codeFile: "servo-control.ino"
+            },
+            {
+                id: 7,
+                folder: "07 Interfacing an ultrasonic sensor with arduino",
+                title: "Ultrasonic Distance Sensor",
+                subtitle: "Distance measurement using HC-SR04 ultrasonic sensor",
+                description: "Measure distance using ultrasonic sensor HC-SR04. Learn about echo timing and distance calculation using sound waves.",
+                components: ["Arduino UNO", "HC-SR04 Ultrasonic Sensor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "ultrasonic-distance.ino"
+            },
+            {
+                id: 8,
+                folder: "08 Interfacing Neopixel strip 4",
+                title: "Neopixel LED Strip",
+                subtitle: "Control addressable RGB LED strips",
+                description: "Control addressable Neopixel LED strip with Arduino. Create colorful animations and patterns with individually controllable LEDs.",
+                components: ["Arduino UNO", "Neopixel LED Strip", "5V Power Supply", "1000µF Capacitor", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "neopixel-strip.ino"
+            },
+            {
+                id: 9,
+                folder: "09 Interfacing Neopixel jewel",
+                title: "Neopixel Jewel",
+                subtitle: "Circular Neopixel array patterns and animations",
+                description: "Control Neopixel Jewel (circular LED array) to create mesmerizing circular patterns and animations.",
+                components: ["Arduino UNO", "Neopixel Jewel", "5V Power Supply", "Capacitor", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "neopixel-jewel.ino"
+            },
+            {
+                id: 10,
+                folder: "10 Interfacing Photodiode",
+                title: "Photodiode Light Sensor",
+                subtitle: "Light intensity detection using photodiode sensor",
+                description: "Use photodiode to detect light intensity and create light-responsive projects. Learn about analog light sensing.",
+                components: ["Arduino UNO", "Photodiode", "10kΩ Resistor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "photo-diode.ino"
+            },
+            {
+                id: 11,
+                folder: "11 Temperature sensor",
+                title: "Temperature Sensor (TMP36)",
+                subtitle: "Temperature measurement using TMP36 sensor",
+                description: "Measure temperature using TMP36 analog temperature sensor. Convert voltage readings to temperature values.",
+                components: ["Arduino UNO", "TMP36 Temperature Sensor", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "temperature_sensor.ino"
+            },
+            {
+                id: 12,
+                folder: "12 Interfacing PIR sensor",
+                title: "PIR Motion Sensor",
+                subtitle: "Motion detection using PIR sensor",
+                description: "Detect motion using PIR (Passive Infrared) sensor. Create motion-activated projects and security systems.",
+                components: ["Arduino UNO", "PIR Motion Sensor", "LED (indicator)", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "Arduino C++ code.ino"
+            },
+            {
+                id: 13,
+                folder: "13 Interfacing a 4×4 Matrix Keypad",
+                title: "4×4 Matrix Keypad",
+                subtitle: "Input interface using matrix keypad",
+                description: "Interface 4×4 matrix keypad with Arduino for numeric input. Learn about matrix scanning and key detection.",
+                components: ["Arduino UNO", "4×4 Matrix Keypad", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "keypad-4x4.ino"
+            },
+            {
+                id: 14,
+                folder: "14 Attiny tmp36 rgb",
+                title: "ATtiny TMP36 RGB Control",
+                subtitle: "Temperature-based RGB LED color control",
+                description: "Use ATtiny85 with TMP36 sensor to control RGB LED colors based on temperature readings. 5 color temperature ranges.",
+                components: ["ATtiny85", "TMP36 Sensor", "RGB LED", "Resistors", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "attiny85-tmp36-5color.ino"
+            },
+            {
+                id: 15,
+                folder: "15 Interfacing 16-2 Lcd display",
+                title: "16×2 LCD Display",
+                subtitle: "Text display using 16×2 LCD module",
+                description: "Interface 16×2 LCD display with Arduino to show text and custom characters. Learn about LCD communication protocols.",
+                components: ["Arduino UNO", "16×2 LCD Display", "Potentiometer (contrast)", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "attiny85-lcd-clock.ino"
+            },
+            {
+                id: 16,
+                folder: "16 Dice with 7 segment display",
+                title: "Digital Dice with 7-Segment",
+                subtitle: "Electronic dice using 7-segment display",
+                description: "Create a digital dice that displays random numbers on a 7-segment display. Learn about random number generation and segment control.",
+                components: ["Arduino UNO", "7-Segment Display", "Push Button", "Resistors", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "dice.ino"
+            },
+            {
+                id: 17,
+                folder: "17 Solar system Tracker",
+                title: "Solar System Tracker",
+                subtitle: "Planetary position display system",
+                description: "Track and display solar system planetary positions. Educational project combining astronomy and electronics.",
+                components: ["Arduino UNO", "LCD Display", "RTC Module", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "solar-tracker.ino"
+            },
+            {
+                id: 18,
+                folder: "18 Piano with Uno",
+                title: "Arduino Piano",
+                subtitle: "Musical instrument using Arduino",
+                description: "Create a simple piano using Arduino and push buttons. Learn about tone generation and musical note frequencies.",
+                components: ["Arduino UNO", "Push Buttons", "Buzzer/Speaker", "Resistors", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "piano.ino"
+            },
+            {
+                id: 19,
+                folder: "19 tmp36 with 16-2 LCD display temperature",
+                title: "LCD Temperature Display",
+                subtitle: "Real-time temperature display on LCD",
+                description: "Display real-time temperature readings from TMP36 sensor on 16×2 LCD. Complete temperature monitoring system.",
+                components: ["Arduino UNO", "TMP36 Sensor", "16×2 LCD Display", "Potentiometer", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "tmp36-lcd.ino"
+            },
+            {
+                id: 20,
+                folder: "20 Light intensity Measurement using LDR sensor",
+                title: "Light Intensity Meter",
+                subtitle: "LDR-based light measurement system",
+                description: "Measure light intensity using LDR (Light Dependent Resistor). Create light-responsive automation projects.",
+                components: ["Arduino UNO", "LDR Sensor", "10kΩ Resistor", "LED (indicator)", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "ldr-light.ino"
+            },
+            {
+                id: 21,
+                folder: "21 Smart Parking",
+                title: "Smart Parking System",
+                subtitle: "Automated parking space detection",
+                description: "Create a smart parking system using ultrasonic sensors to detect available parking spaces. IoT-ready parking solution.",
+                components: ["Arduino UNO", "Ultrasonic Sensors", "Servo Motor", "LCD Display", "LEDs", "Breadboard"],
+                tinkercad: "#",
+                codeFile: "smart-parking.ino"
+            },
+            {
+                id: 22,
+                folder: "22 Digital Potentiometer",
+                title: "Digital Potentiometer",
+                subtitle: "Electronic variable resistance control",
+                description: "Control resistance digitally using Arduino. Learn about digital potentiometers and their applications in circuits.",
+                components: ["Arduino UNO", "Digital Potentiometer IC", "LED", "Resistors", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "digital-pot.ino"
+            },
+            {
+                id: 23,
+                folder: "23",
+                title: "Advanced Arduino Project",
+                subtitle: "Complex embedded system",
+                description: "Advanced Arduino project combining multiple sensors and actuators for a complete embedded system solution.",
+                components: ["Arduino UNO", "Multiple Sensors", "Actuators", "Display", "Breadboard", "Jumper Wires"],
+                tinkercad: "#",
+                codeFile: "advanced.ino"
+            }
+        ];
+
+        // Get project ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = parseInt(urlParams.get('id')) || 1;
+        const currentProject = projects.find(p => p.id === projectId) || projects[0];
+
+        // Load project data
+        function loadProject() {
+            // Update header
+            document.getElementById('projectNumber').textContent = `Project ${String(currentProject.id).padStart(2, '0')}`;
+            document.getElementById('projectTitle').textContent = currentProject.title;
+            document.getElementById('projectSubtitle').textContent = currentProject.subtitle;
+            document.getElementById('navTitle').textContent = currentProject.title;
+            
+            // Update description
+            document.getElementById('projectDescription').textContent = currentProject.description;
+            
+            // Update components
+            const componentsList = document.getElementById('componentsList');
+            componentsList.innerHTML = currentProject.components.map(comp => `
+                <li class="component-item">
+                    <i class="fas fa-check-circle"></i>
+                    ${comp}
+                </li>
+            `).join('');
+            
+            // Update Tinkercad link
+            const tinkercadLink = document.getElementById('tinkercadLink');
+            if (currentProject.tinkercad && currentProject.tinkercad !== '#') {
+                tinkercadLink.href = currentProject.tinkercad;
+            } else {
+                tinkercadLink.style.opacity = '0.5';
+                tinkercadLink.style.pointerEvents = 'none';
+            }
+            
+            // Update code filename
+            document.getElementById('codeFileName').textContent = currentProject.codeFile;
+            
+            // Load code (simulated - in real implementation, fetch from file)
+            loadCode();
+            
+            // Update navigation arrows
+            updateNavigation();
+        }
+
+        function loadCode() {
+            // Simulated code loading - in real implementation, fetch from Arduino folder
+            const codeContent = document.getElementById('codeContent');
+            codeContent.textContent = `// ${currentProject.title}\n// Arduino UNO Project\n// By Md Akhinoor Islam\n\nvoid setup() {\n  // Initialize your components\n  Serial.begin(9600);\n  // Add your setup code here\n}\n\nvoid loop() {\n  // Add your main code here\n  // This code will run repeatedly\n}`;
+        }
+
+        function updateNavigation() {
+            const prevProject = document.getElementById('prevProject');
+            const nextProject = document.getElementById('nextProject');
+            
+            if (currentProject.id > 1) {
+                const prev = projects.find(p => p.id === currentProject.id - 1);
+                prevProject.style.display = 'flex';
+                prevProject.href = `?id=${prev.id}`;
+                document.getElementById('prevProjectTitle').textContent = prev.title;
+            } else {
+                prevProject.style.display = 'none';
+            }
+            
+            if (currentProject.id < projects.length) {
+                const next = projects.find(p => p.id === currentProject.id + 1);
+                nextProject.style.display = 'flex';
+                nextProject.href = `?id=${next.id}`;
+                document.getElementById('nextProjectTitle').textContent = next.title;
+            } else {
+                nextProject.style.display = 'none';
+            }
+        }
+
+        function copyCode() {
+            const codeContent = document.getElementById('codeContent').textContent;
+            navigator.clipboard.writeText(codeContent).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+                }, 2000);
+            });
+        }
+
+        function downloadCode() {
+            const codeContent = document.getElementById('codeContent').textContent;
+            const blob = new Blob([codeContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentProject.codeFile;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Load project on page load
+        document.addEventListener('DOMContentLoaded', loadProject);
+    </script>
+</body>
+</html>

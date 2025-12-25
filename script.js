@@ -5715,7 +5715,6 @@ const sampleProjects = [
 console.log('🔍 Selecting DOM elements...');
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
-const themeToggle = document.getElementById('theme-toggle');
 const projectsGrid = document.getElementById('projects-grid');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const contactForm = document.querySelector('.contact-form');
@@ -5723,7 +5722,6 @@ const contactForm = document.querySelector('.contact-form');
 console.log('📌 DOM Elements found:', {
     hamburger: !!hamburger,
     navMenu: !!navMenu,
-    themeToggle: !!themeToggle,
     projectsGrid: !!projectsGrid,
     filterBtns: filterBtns.length,
     contactForm: !!contactForm
@@ -5747,31 +5745,18 @@ document.querySelectorAll('.nav-link').forEach(link => {
     });
 });
 
-// Theme Toggle
-function initializeTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
+// Set permanent dark mode
+document.documentElement.setAttribute('data-theme', 'dark');
+
+// Scroll Progress Bar
+const scrollProgressBar = document.getElementById('scrollProgressBar');
+if (scrollProgressBar) {
+    window.addEventListener('scroll', () => {
+        const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (window.scrollY / windowHeight) * 100;
+        scrollProgressBar.style.width = scrolled + '%';
+    });
 }
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeIcon(newTheme);
-}
-
-function updateThemeIcon(theme) {
-    const icon = themeToggle.querySelector('i');
-    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-}
-
-themeToggle.addEventListener('click', toggleTheme);
-
-// Initialize theme on page load
-initializeTheme();
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
