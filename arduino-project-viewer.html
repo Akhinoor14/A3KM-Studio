@@ -2,7 +2,10 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Arduino Project Viewer - A3KM Studio</title>
     
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -23,10 +26,40 @@
 
         body {
             background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+            background-attachment: fixed;
             min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
         }
 
-        /* Top Navigation */
+        /* Engineering Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+                repeating-linear-gradient(45deg, rgba(204,0,0,0.05) 0 2px, transparent 2px 20px);
+            background-size: 30px 30px, 30px 30px, 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* Content Layer */
+        .viewer-nav,
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Navigation - Always Visible */
         .viewer-nav {
             position: fixed;
             top: 0;
@@ -41,31 +74,51 @@
             padding: 0 20px;
             z-index: 1000;
             backdrop-filter: blur(20px);
+            box-shadow: 0 2px 20px rgba(204, 0, 0, 0.3);
         }
 
         .back-btn {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 20px;
-            background: rgba(204, 0, 0, 0.15);
+            padding: 12px 24px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(153, 0, 0, 0.15));
             border: 2px solid var(--border-primary);
             border-radius: 10px;
             color: var(--text-primary);
             text-decoration: none;
             transition: all 0.3s ease;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(204, 0, 0, 0.2);
+        }
+
+        .back-btn i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
         }
 
         .back-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
             border-color: var(--primary-red);
             transform: translateX(-5px);
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4);
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+        .back-btn:active {
+            transform: translateX(-2px) scale(0.98);
         }
 
         .project-title-nav {
             font-size: 1.2rem;
             font-weight: 700;
             color: var(--primary-red);
+            text-shadow: 0 2px 10px rgba(204, 0, 0, 0.5);
         }
 
         /* Main Content */
@@ -345,29 +398,235 @@
             .navbar {
                 display: none !important;
             }
+            
+            /* Mobile Body & Layout */
             body {
                 padding-top: 60px;
+                margin: 0;
             }
 
-            .content-grid {
-                grid-template-columns: 1fr;
+            .content-wrapper {
+                padding: 15px !important;
+                margin-top: 70px !important;
+                max-width: 100% !important;
+            }
+
+            /* Mobile Header */
+            .project-header {
+                padding: 20px 15px !important;
+                margin-bottom: 20px !important;
+                border-radius: 12px !important;
+            }
+
+            .project-number {
+                font-size: 0.75rem !important;
+                padding: 5px 12px !important;
+                margin-bottom: 12px !important;
             }
 
             .project-title {
-                font-size: 1.8rem;
+                font-size: 1.4rem !important;
+                margin-bottom: 10px !important;
             }
 
+            .project-subtitle {
+                font-size: 0.95rem !important;
+                margin-bottom: 15px !important;
+            }
+
+            .project-meta {
+                gap: 10px !important;
+                flex-wrap: wrap !important;
+            }
+
+            .meta-item {
+                padding: 6px 12px !important;
+                font-size: 0.8rem !important;
+                border-radius: 6px !important;
+            }
+
+            /* Mobile Content Grid */
+            .content-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+                margin-bottom: 20px !important;
+            }
+
+            /* Mobile Content Sections */
+            .content-section {
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+                border-radius: 12px !important;
+            }
+
+            .section-title {
+                font-size: 1.1rem !important;
+                margin-bottom: 15px !important;
+                gap: 8px !important;
+            }
+
+            .section-title i {
+                font-size: 1rem !important;
+            }
+
+            /* Mobile Components List */
+            .components-list {
+                padding: 0 !important;
+            }
+
+            .component-item {
+                padding: 10px !important;
+                margin-bottom: 8px !important;
+                font-size: 0.85rem !important;
+                gap: 8px !important;
+            }
+
+            .component-item i {
+                font-size: 0.95rem !important;
+            }
+
+            /* Mobile Circuit Image */
+            .circuit-image {
+                width: 100% !important;
+                border-radius: 10px !important;
+                margin: 15px 0 !important;
+                max-height: 400px !important;
+                object-fit: contain !important;
+            }
+
+            #circuitPlaceholder {
+                padding: 30px 15px !important;
+                font-size: 0.9rem !important;
+            }
+
+            #circuitPlaceholder i {
+                font-size: 2rem !important;
+                margin-bottom: 10px !important;
+            }
+
+            /* Mobile Code Section */
+            .code-container {
+                padding: 12px !important;
+                margin: 15px 0 !important;
+                border-radius: 10px !important;
+            }
+
+            .code-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                margin-bottom: 12px !important;
+                gap: 10px !important;
+            }
+
+            .code-title {
+                font-size: 0.85rem !important;
+            }
+
+            .copy-btn {
+                width: 100% !important;
+                padding: 8px 12px !important;
+                font-size: 0.75rem !important;
+                text-align: center !important;
+            }
+
+            .code-content {
+                padding: 12px !important;
+                font-size: 0.75rem !important;
+                line-height: 1.4 !important;
+                max-height: 300px !important;
+                overflow-y: auto !important;
+            }
+
+            /* Mobile Action Buttons */
+            .action-buttons {
+                flex-direction: column !important;
+                gap: 10px !important;
+                margin-top: 20px !important;
+            }
+
+            .action-btn {
+                width: 100% !important;
+                padding: 12px 20px !important;
+                font-size: 0.9rem !important;
+                justify-content: center !important;
+                gap: 8px !important;
+            }
+
+            .action-btn i {
+                font-size: 0.9rem !important;
+            }
+
+            /* Mobile Navigation Arrows */
             .nav-arrows {
-                flex-direction: column;
+                flex-direction: column !important;
+                margin-top: 20px !important;
+                gap: 12px !important;
             }
 
+            .nav-arrow {
+                padding: 15px !important;
+                border-radius: 10px !important;
+                font-size: 0.9rem !important;
+            }
+
+            .nav-arrow-icon {
+                font-size: 1.5rem !important;
+            }
+
+            .nav-arrow-text {
+                font-size: 0.7rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .nav-arrow-title {
+                font-size: 0.95rem !important;
+            }
+
+            /* Mobile Navigation Bar */
             .viewer-nav {
-                height: 60px;
-                padding: 0 15px;
+                height: 60px !important;
+                padding: 0 12px !important;
+            }
+
+            .back-btn {
+                padding: 8px 15px !important;
+                font-size: 0.8rem !important;
+                gap: 8px !important;
+                border-radius: 8px !important;
+            }
+
+            .back-btn i {
+                font-size: 0.9rem !important;
             }
 
             .project-title-nav {
-                font-size: 1rem;
+                font-size: 0.85rem !important;
+                max-width: 200px !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+
+            /* Mobile Description Text */
+            #projectDescription {
+                font-size: 0.9rem !important;
+                line-height: 1.5 !important;
+            }
+
+            /* Disable horizontal scrolling */
+            * {
+                max-width: 100% !important;
+            }
+
+            /* Mobile Spacing Overrides */
+            p {
+                margin: 0 0 10px 0 !important;
+            }
+
+            /* Mobile Image Scaling */
+            img {
+                max-width: 100% !important;
+                height: auto !important;
             }
         }
     </style>
@@ -802,18 +1061,44 @@
             
             // Update Tinkercad link
             const tinkercadLink = document.getElementById('tinkercadLink');
-            if (currentProject.tinkercad && currentProject.tinkercad !== '#') {
+            if (currentProject.tinkercad && currentProject.tinkercad !== '#' && currentProject.tinkercad !== '') {
                 tinkercadLink.href = currentProject.tinkercad;
+                tinkercadLink.target = '_blank';
+                tinkercadLink.rel = 'noopener noreferrer';
+                tinkercadLink.style.opacity = '1';
+                tinkercadLink.style.pointerEvents = 'auto';
+                tinkercadLink.style.cursor = 'pointer';
+                tinkercadLink.title = 'Open this project in TinkerCAD (opens in new tab)';
+                tinkercadLink.style.background = 'linear-gradient(135deg, var(--primary-red), var(--primary-red-dark))';
+                
+                // Add click tracking
+                tinkercadLink.onclick = function(e) {
+                    console.log(`Opening TinkerCAD project: ${currentProject.title}`);
+                    // Optional: Add analytics here
+                };
             } else {
-                tinkercadLink.style.opacity = '0.5';
+                tinkercadLink.href = 'javascript:void(0);';
+                tinkercadLink.style.opacity = '0.4';
                 tinkercadLink.style.pointerEvents = 'none';
+                tinkercadLink.style.cursor = 'not-allowed';
+                tinkercadLink.style.background = 'rgba(100, 100, 100, 0.3)';
+                tinkercadLink.title = 'TinkerCAD simulation not available for this project';
+                
+                // Change button text to indicate unavailable
+                tinkercadLink.innerHTML = `
+                    <i class="fas fa-ban"></i>
+                    TinkerCAD Not Available
+                `;
             }
             
             // Update code filename
             document.getElementById('codeFileName').textContent = currentProject.codeFile;
             
-            // Load code (simulated - in real implementation, fetch from file)
+            // Load code
             loadCode();
+            
+            // Load circuit image
+            loadCircuitImage();
             
             // Update navigation arrows
             updateNavigation();
@@ -823,6 +1108,70 @@
             // Simulated code loading - in real implementation, fetch from Arduino folder
             const codeContent = document.getElementById('codeContent');
             codeContent.textContent = `// ${currentProject.title}\n// Arduino UNO Project\n// By Md Akhinoor Islam\n\nvoid setup() {\n  // Initialize your components\n  Serial.begin(9600);\n  // Add your setup code here\n}\n\nvoid loop() {\n  // Add your main code here\n  // This code will run repeatedly\n}`;
+        }
+
+        function loadCircuitImage() {
+            const circuitImage = document.getElementById('circuitImage');
+            const circuitPlaceholder = document.getElementById('circuitPlaceholder');
+            
+            // Show loading state
+            circuitPlaceholder.innerHTML = `
+                <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--border-primary); margin-bottom: 15px; display: block;"></i>
+                <p style="color: var(--text-secondary);">Loading circuit diagram...</p>
+            `;
+            circuitPlaceholder.style.display = 'block';
+            circuitImage.style.display = 'none';
+            
+            // Generate possible circuit image paths
+            const basePaths = [
+                `Arduino UNO Projects with Tinkercad/${currentProject.folder}`,
+                `Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}`
+            ];
+            
+            const imageNames = ['Circuit.png', 'circuit.png', 'circuit-diagram.png', 'schematic.png', 'diagram.png'];
+            
+            const paths = [];
+            basePaths.forEach(base => {
+                imageNames.forEach(name => {
+                    paths.push(`${base}/${name}`);
+                });
+            });
+            
+            let currentIndex = 0;
+            let imageFound = false;
+            
+            function tryNextImage() {
+                if (currentIndex >= paths.length) {
+                    // No image found, show placeholder
+                    circuitImage.style.display = 'none';
+                    circuitPlaceholder.style.display = 'block';
+                    circuitPlaceholder.innerHTML = `
+                        <i class="fas fa-image" style="font-size: 3rem; color: var(--border-primary); margin-bottom: 15px; display: block;"></i>
+                        <p style="color: var(--text-secondary); margin-bottom: 10px;">Circuit diagram not available</p>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; opacity: 0.7;">View this project on TinkerCAD to see the circuit</p>
+                    `;
+                    return;
+                }
+                
+                const testImage = new Image();
+                testImage.onload = function() {
+                    // Image loaded successfully
+                    circuitImage.src = testImage.src;
+                    circuitImage.style.display = 'block';
+                    circuitPlaceholder.style.display = 'none';
+                    imageFound = true;
+                };
+                testImage.onerror = function() {
+                    // Try next path
+                    currentIndex++;
+                    tryNextImage();
+                };
+                
+                testImage.src = paths[currentIndex];
+            }
+            
+            // Start trying images
+            tryNextImage();
         }
 
         function updateNavigation() {
