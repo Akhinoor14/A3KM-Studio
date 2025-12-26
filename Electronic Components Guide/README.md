@@ -1,2 +1,0 @@
-# Electronic Components 
-Basic electronic components: names, functions, applications, and importance in modern technology. Understanding these components is crucial as they are the building blocks of virtually all electronic devices. Their characteristics dictate circuit behavior, making correct identification and application essential for successful electronic design. They are the foundation of complex electronic systems.

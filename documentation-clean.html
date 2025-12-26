@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Portfolio Development Documentation</title>
   <meta name="description" content="Complete development documentation for Md. Akhinoor Islam's portfolio website. Learn about architecture, challenges solved, and technical decisions." />
   <meta name="author" content="Md. Akhinoor Islam" />
@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-vsc-dark-plus.min.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="mobile-top-nav.css">
   
   <!-- Marked.js for Markdown Parsing -->
   <script src="https://cdn.jsdelivr.net/npm/marked@11.0.0/marked.min.js"></script>
@@ -905,7 +906,8 @@
       
       /* Adjust page spacing for mobile navbar */
       body {
-        padding-top: 60px;
+        padding-top: calc(60px + env(safe-area-inset-top));
+        padding-bottom: calc(60px + env(safe-area-inset-bottom));
       }
       
       /* Show TOC toggle button on mobile */
@@ -927,7 +929,7 @@
       /* Full-width content */
       .doc-content {
         margin-left: 0;
-        padding: 16px 12px 60px;
+        padding: 16px 12px calc(60px + env(safe-area-inset-bottom));
         max-width: 100%;
       }
       
@@ -1040,6 +1042,25 @@
   </style>
 </head>
 <body>
+
+  <!-- Mobile Top Navigation (Auto-shows on mobile) -->
+  <nav class="mobile-top-nav">
+    <a href="home-mobile.html" class="nav-icon" title="Home">
+      <i class="fas fa-home"></i>
+    </a>
+    <a href="projects-mobile.html" class="nav-icon active" title="Projects">
+      <i class="fas fa-briefcase"></i>
+    </a>
+    <a href="about-mobile.html" class="nav-icon" title="About">
+      <i class="fas fa-user"></i>
+    </a>
+    <a href="blog-mobile.html" class="nav-icon" title="Blog">
+      <i class="fas fa-rss"></i>
+    </a>
+    <a href="contact-mobile.html" class="nav-icon" title="Contact">
+      <i class="fas fa-envelope"></i>
+    </a>
+  </nav>
 
   <!-- Header with Controls -->
   <header class="doc-header" id="doc-header">
@@ -1164,25 +1185,68 @@
     
     async function loadDocumentation() {
       const container = document.getElementById('doc-content');
-      if (!container) return;
+      if (!container) {
+        console.error('[DOC] Container not found!');
+        return;
+      }
+      
+      // Check if marked.js is loaded
+      if (typeof marked === 'undefined') {
+        console.error('[DOC] marked.js library not loaded!');
+        container.innerHTML = `
+          <div class="doc-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h2>Library Loading Error</h2>
+            <p>Markdown parser (marked.js) failed to load from CDN.</p>
+            <p>Please check your internet connection and try again.</p>
+            <button onclick="location.reload()" class="doc-back-btn">
+              <i class="fas fa-redo"></i> Reload Page
+            </button>
+          </div>`;
+        return;
+      }
+      
       container.innerHTML = `
         <div class="doc-loading">
           <i class="fas fa-spinner fa-spin"></i>
           <p>Loading documentation…</p>
         </div>`;
+      
       try {
-        console.log('[DOC] Loading:', DOC_PATHS[currentLanguage]);
-        const res = await fetch(DOC_PATHS[currentLanguage], { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
-        let text = await res.text();
-        console.log('[DOC] Loaded successfully, length:', text.length);
+        const docPath = DOC_PATHS[currentLanguage];
+        console.log('[DOC] Loading from:', docPath);
+        console.log('[DOC] Current language:', currentLanguage);
         
+        const res = await fetch(docPath, { 
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'text/markdown'
+          }
+        });
+        
+        console.log('[DOC] Fetch response status:', res.status, res.statusText);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        }
+        
+        let text = await res.text();
+        console.log('[DOC] Content loaded, length:', text.length, 'chars');
+        
+        if (!text || text.trim().length === 0) {
+          throw new Error('Markdown file is empty');
+        }
+        
+        console.log('[DOC] Starting markdown parsing...');
         // ===== ENHANCED MARKDOWN PROCESSING =====
         // 1. Parse with marked.js
         const html = marked.parse(text);
+        console.log('[DOC] Parsing complete, HTML length:', html.length, 'chars');
         
+        console.log('[DOC] Rendering to container...');
         // 2. Render content
         container.innerHTML = `<article class="markdown-body md-narrow md-wrap">${html}</article>`;
+        console.log('[DOC] Content rendered successfully');
         
         // 3. Enhanced Syntax Highlighting
         try {
@@ -1219,10 +1283,13 @@
         });
         
         // 5. Process special elements
+        console.log('[DOC] Enhancing markdown elements...');
         enhanceMarkdownElements(container);
         
         // 6. Generate Table of Contents dynamically
+        console.log('[DOC] Generating table of contents...');
         generateTableOfContents(container);
+        console.log('[DOC] TOC generation complete');
         
         // 7. External links open in new tab
         container.querySelectorAll('a[href^="http"]').forEach(a => {
@@ -1246,17 +1313,21 @@
           window.scrollTo({ top: 0, behavior: 'instant' });
         }
         
+        console.log('[DOC] ✅ Documentation loaded successfully!');
+        
       } catch (err) {
-        console.error('Documentation load failed:', err);
+        console.error('[DOC ERROR] Failed:', err);
         container.innerHTML = `
           <div class="doc-error">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>Failed to load documentation.</strong>
-            <p>${(err && err.message) || 'Unknown error'}</p>
-            <button onclick="loadDocumentation()" style="margin-top:1rem;padding:8px 16px;border:1px solid #ff5555;background:rgba(255,85,85,0.1);color:#fff;border-radius:6px;cursor:pointer;">
+            <h2>Documentation Loading Error</h2>
+            <p>Failed to load documentation: ${err.message}</p>
+            <p>Please check if the markdown file exists at: <code>${DOC_PATHS[currentLanguage]}</code></p>
+            <button onclick="location.reload()" class="doc-back-btn">
               <i class="fas fa-redo"></i> Retry
             </button>
-          </div>`;
+          </div>
+        `;
       }
     }
     
@@ -1921,9 +1992,13 @@
     
     // ========== SMART BACK NAVIGATION ==========
     function goBack() {
-      window.location.href = 'projects.html';
-    }
-
+      const referrer = document.referrer;
+      
+      // Check if coming from internal page
+      if (referrer) {
+        if (referrer.includes('projects.html')) {
+          window.location.href = 'projects.html';
+        }
         else if (referrer.includes('portfolio-mobile.html')) {
           window.location.href = 'portfolio-mobile.html';
         }
@@ -1931,9 +2006,9 @@
         else if (window.history.length > 1) {
           window.history.back();
         }
-        // Fallback to mobile portfolio
+        // Fallback to projects
         else {
-          window.location.href = 'portfolio-mobile.html';
+          window.location.href = 'projects.html';
         }
       }
       // If no referrer or external, use browser back or fallback
@@ -1942,7 +2017,7 @@
       }
       // Ultimate fallback
       else {
-        window.location.href = 'portfolio-mobile.html';
+        window.location.href = 'projects.html';
       }
     }
     
