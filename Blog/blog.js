@@ -3,12 +3,12 @@
   'use strict';
   
   const isMobile = location.pathname.includes('blog-mobile');
-  const POSTS_INDEX = 'content/blog/posts.json';
-  const POSTS_DIR = 'content/blog/posts/';
+  const POSTS_INDEX = 'posts.json';
+  const POSTS_DIR = 'posts/';
   const SITE_TITLE = 'Md Akhinoor Islam - Portfolio Blog';
   const SITE_URL = location.origin;
-  const DEFAULT_COVER = 'images/blog/default-cover.svg';
-  const WELCOME_COVER = 'images/blog/welcome-cover.svg';
+  const DEFAULT_COVER = '../images/blog/default-cover.svg';
+  const WELCOME_COVER = '../images/blog/welcome-cover.svg';
   
   const qs = new URLSearchParams(location.search);
   const slugParam = qs.get('post');

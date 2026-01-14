@@ -34,7 +34,7 @@ const loginBtn = document.getElementById('step1Btn');
 const errorMsg = document.getElementById('error1');
 
 function showSuccess() {
-    window.location.href = './only-boss-dashboard.html';
+    window.location.href = 'only-boss-dashboard.html';
 }
 
 function showError(message) {
@@ -121,7 +121,7 @@ window.togglePassword = function(inputId, button) {
 
 // Always require password unless authenticated in this session
 if (isAuthenticated()) {
-    window.location.href = './only-boss-dashboard.html';
+    window.location.href = 'only-boss-dashboard.html';
     // Prevent auto-login after reload by requiring new session each time
     sessionStorage.removeItem('admin_session');
 } else {

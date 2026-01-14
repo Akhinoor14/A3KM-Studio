@@ -8,7 +8,7 @@ function isAuthenticated() { return sessionStorage.getItem('admin_session') !== 
 
 // Redirect if not authenticated
 if (!isAuthenticated()) {
-    window.location.href = './only-boss.html';
+    window.location.href = 'only-boss.html';
 }
 
 // ===========================

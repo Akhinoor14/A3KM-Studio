@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load certificates data from JSON
 async function loadCertificatesData() {
   try {
-    const response = await fetch('certificates-data.json');
+    const response = await fetch('../About me/certificates-data.json');
     certificatesData = await response.json();
   } catch (error) {
     console.error('Error loading certificates data:', error);
