@@ -33,13 +33,13 @@ function init(){
 function initGitHubUploader(){
   try{
     if(typeof GitHubUploader !== 'undefined'){
-      const token = localStorage.getItem('dashboard_github_token') || 'BACKEND_MANAGED';
-      githubUploader = new GitHubUploader(PROJECTS_REPO_OWNER, PROJECTS_REPO_NAME, token);
-      if(token === 'BACKEND_MANAGED'){
-        githubUploader.useBackendProxy = true;
-        githubUploader.backendUrl = BACKEND_URL;
+      const token = localStorage.getItem('dashboard_github_token') || '';
+      if(token){
+        githubUploader = new GitHubUploader(PROJECTS_REPO_OWNER, PROJECTS_REPO_NAME, token);
+        console.log('✅ GitHubUploader ready for Projects repo');
+      } else {
+        console.warn('⚠️ No GitHub token found in localStorage');
       }
-      console.log('✅ GitHubUploader ready for Projects repo');
     }
   }catch(e){
     console.warn('GitHubUploader not available:', e);

@@ -312,8 +312,7 @@ function createGitHubBrowserModal(owner, repo, projectTitle) {
     `;
     
     // No token UI initialization needed for public users
-    // Frontend token system (github-proxy-config.js) handles all authentication
-    // Users don't need to manage tokens - completely transparent
+    // Frontend system handles all authentication transparently
     
     return modal;
 }
