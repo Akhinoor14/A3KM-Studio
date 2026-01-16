@@ -477,7 +477,7 @@ function displayFileTree(contents, owner, repo, currentPath) {
             try {
                 if (typeof window.cvDownload === 'function') return window.cvDownload();
                 const a = document.createElement('a');
-                a.href = './CV/2313014 CV.pdf';
+                a.href = '/About%20me/CV/2313014%20CV.pdf';
                 a.download = 'Md_Akhinoor_Islam_CV.pdf';
                 a.style.display = 'none';
                 document.body.appendChild(a); 
@@ -485,7 +485,7 @@ function displayFileTree(contents, owner, repo, currentPath) {
                 setTimeout(() => a.remove(), 100);
             } catch(err) {
                 console.warn('downloadResume fallback error:', err);
-                window.open('./CV/2313014 CV.pdf', '_blank');
+                window.open('/About%20me/CV/2313014%20CV.pdf', '_blank');
             }
         };
     }
@@ -6690,7 +6690,7 @@ function openCVViewer() {
         }
 
         // Load PDF and show overlay (FIXED for mobile & desktop + SPACE ENCODING)
-        const pdfPath = './CV/2313014 CV.pdf'; // File has space in name
+        const pdfPath = '/About%20me/CV/2313014%20CV.pdf'; // File has space in name
         const encodedPath = encodeURI(pdfPath); // Encode spaces properly
         const pdfSrc = encodedPath + '#toolbar=1&navpanes=1&scrollbar=1&view=FitH';
         const iframe = overlay.querySelector('#cv-iframe');
@@ -6786,7 +6786,7 @@ function openCVViewer() {
     } catch (e) {
         console.error('CV overlay error:', e);
         // Fallback to direct open
-        window.open('./CV/2313014 CV.pdf', '_blank');
+        window.open('/About%20me/CV/2313014%20CV.pdf', '_blank');
     }
 }
 
@@ -6811,7 +6811,7 @@ function cvPrint() {
 function cvDownload() {
     console.log('⬇️ Downloading CV...');
     const a = document.createElement('a');
-    a.href = encodeURI('./CV/2313014 CV.pdf'); // Encode space in filename
+    a.href = encodeURI('/About%20me/CV/2313014%20CV.pdf'); // Encode space in filename
     a.download = 'Md_Akhinoor_Islam_CV.pdf';
     document.body.appendChild(a); 
     a.click(); 
@@ -6887,7 +6887,7 @@ window.cvZoomReset = cvZoomReset;
 // Download Resume Function
 function downloadResume() {
     // Download the actual PDF CV file
-    const cvPath = './CV/2313014 CV.pdf';
+    const cvPath = '/About%20me/CV/2313014%20CV.pdf';
     
     // Create a temporary link to download the CV
     const a = document.createElement('a');

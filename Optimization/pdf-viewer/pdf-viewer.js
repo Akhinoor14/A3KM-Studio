@@ -351,7 +351,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Backward compatibility aliases (CV viewer)
-const __CV_DEFAULT_PATH = window.CV_PDF_PATH || '/CV/2313014%20CV.pdf';
+const __CV_DEFAULT_PATH = window.CV_PDF_PATH || '/About%20me/CV/2313014%20CV.pdf';
 const __CV_DOWNLOAD_NAME = 'Md_Akhinoor_Islam_CV.pdf';
 
 function openCVViewer() {
