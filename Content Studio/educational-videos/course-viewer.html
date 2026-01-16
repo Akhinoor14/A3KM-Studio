@@ -6,14 +6,13 @@
   <title>Educational Course - Md Akhinoor Islam</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css" />
   <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link rel="stylesheet" href="../written-posts/post-viewer.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <meta name="theme-color" content="#CC0000" />
   <style>
-    .course-layout { max-width: 1400px; margin: 80px auto 60px; padding: 0 40px; display: grid; grid-template-columns: 1fr 350px; gap: 40px; }
+    .course-layout { max-width: 1400px; margin: 30px auto 60px; padding: 0 40px; display: grid; grid-template-columns: 1fr 350px; gap: 40px; }
     .course-main { min-width: 0; }
     .course-sidebar { position: sticky; top: 100px; height: fit-content; background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 16px; padding: 25px; }
     .video-player { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 20px; overflow: hidden; border: 3px solid rgba(204,0,0,0.3); box-shadow: 0 15px 60px rgba(0,0,0,0.8); margin-bottom: 30px; }
@@ -75,25 +74,6 @@
         
         <!-- PAGE CONTENT WRAPPER -->
         <div class="bg-system-content">
-  <nav class="desktop-navbar" id="desktopNavbar">
-    <div class="desktop-nav-container">
-      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
-        <div class="desktop-nav-brand">
-          <span class="desktop-nav-brand-name" data-text="A3KM Studio">A3KM Studio</span>
-          <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
-        </div>
-      </a>
-      <ul class="desktop-nav-menu">
-        <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a></li>
-        <li class="desktop-nav-item"><a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
-        <li class="desktop-nav-item"><a href="../../About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download><i class="fas fa-download"></i><span>CV</span></a></li>
-      </ul>
-    </div>
-  </nav>
-
   <div class="back-to-hub"><a href="../hub.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back to Content Studio</span></a></div>
 
   <div class="post-loading" id="courseLoading"><i class="fas fa-spinner fa-spin"></i><span>Loading course...</span></div>
@@ -153,6 +133,20 @@
     </aside>
   </div>
 
+  <!-- Navigation Section -->
+  <nav class="post-navigation" style="display: none;">
+    <a href="#" id="prevCourse" class="nav-post prev-post">
+      <span class="nav-label">← Previous Course</span>
+      <h4 class="nav-post-title" id="prevCourseTitle"></h4>
+      <p class="nav-post-excerpt" id="prevCourseExcerpt"></p>
+    </a>
+    <a href="#" id="nextCourse" class="nav-post next-post">
+      <span class="nav-label">Next Course →</span>
+      <h4 class="nav-post-title" id="nextCourseTitle"></h4>
+      <p class="nav-post-excerpt" id="nextCourseExcerpt"></p>
+    </a>
+  </nav>
+
   <footer class="footer">
     <div class="container">
       <p>&copy; 2025 Md Akhinoor Islam. All rights reserved.</p>
@@ -164,6 +158,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('id');
     let currentCourse = null;
+    let allCourses = [];
     let currentEpisodeIndex = 0;
 
     async function loadCourse() {
@@ -171,8 +166,12 @@
       try {
         const response = await fetch('courses.json');
         const data = await response.json();
-        currentCourse = data.courses.find(c => c.id === courseId);
-        if (currentCourse) renderCourse();
+        allCourses = data.courses || [];
+        currentCourse = allCourses.find(c => c.id === courseId);
+        if (currentCourse) {
+          renderCourse();
+          setupNavigation();
+        }
       } catch (error) { console.error('Error:', error); }
     }
 
@@ -259,6 +258,46 @@
     }
 
     function copyCourseLink() { navigator.clipboard.writeText(window.location.href); }
+
+    function setupNavigation() {
+      const currentIndex = allCourses.findIndex(c => c.id === courseId);
+      if (currentIndex === -1) return;
+
+      const prevCourse = currentIndex > 0 ? allCourses[currentIndex - 1] : null;
+      const nextCourse = currentIndex < allCourses.length - 1 ? allCourses[currentIndex + 1] : null;
+
+      const navSection = document.querySelector('.post-navigation');
+      const prevLink = document.getElementById('prevCourse');
+      const nextLink = document.getElementById('nextCourse');
+      const prevTitle = document.getElementById('prevCourseTitle');
+      const nextTitle = document.getElementById('nextCourseTitle');
+      const prevExcerpt = document.getElementById('prevCourseExcerpt');
+      const nextExcerpt = document.getElementById('nextCourseExcerpt');
+
+      if (!navSection) return;
+
+      if (prevCourse && prevLink) {
+        prevLink.href = `course-viewer.html?id=${prevCourse.id}`;
+        prevTitle.textContent = prevCourse.title;
+        prevExcerpt.textContent = prevCourse.summary || prevCourse.description || `Learn ${prevCourse.title}`;
+        prevLink.style.display = 'flex';
+      } else if (prevLink) {
+        prevLink.style.display = 'none';
+      }
+
+      if (nextCourse && nextLink) {
+        nextLink.href = `course-viewer.html?id=${nextCourse.id}`;
+        nextTitle.textContent = nextCourse.title;
+        nextExcerpt.textContent = nextCourse.summary || nextCourse.description || `Learn ${nextCourse.title}`;
+        nextLink.style.display = 'flex';
+      } else if (nextLink) {
+        nextLink.style.display = 'none';
+      }
+
+      if (prevCourse || nextCourse) {
+        navSection.style.display = 'block';
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', loadCourse);
   </script>

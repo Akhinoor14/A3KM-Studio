@@ -64,6 +64,7 @@
       setupEventListeners();
       updateViews();
       loadRelatedPosts();
+      setupNavigation();
     } catch (error) {
       console.error('Error loading post:', error);
       showError();
@@ -401,6 +402,81 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  /* ============================================
+     SETUP NAVIGATION
+     ============================================ */
+  function setupNavigation() {
+    // Find current post index
+    const currentIndex = allPosts.findIndex(p => p.id === postId);
+    
+    if (currentIndex === -1) {
+      hideNavigation();
+      return;
+    }
+
+    const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+    const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+
+    // Get navigation elements
+    const navSection = document.querySelector('.post-navigation');
+    const prevLink = document.getElementById('prevPost');
+    const nextLink = document.getElementById('nextPost');
+    const prevTitle = document.getElementById('prevPostTitle');
+    const nextTitle = document.getElementById('nextPostTitle');
+    const prevExcerpt = document.getElementById('prevPostExcerpt');
+    const nextExcerpt = document.getElementById('nextPostExcerpt');
+
+    if (!navSection) return;
+
+    // Setup previous post
+    if (prevPost && prevLink && prevTitle && prevExcerpt) {
+      prevLink.href = `post-viewer.html?id=${prevPost.id}`;
+      prevTitle.textContent = prevPost.title;
+      prevExcerpt.textContent = prevPost.description || extractExcerpt(prevPost);
+      prevLink.style.display = 'flex';
+    } else if (prevLink) {
+      prevLink.style.display = 'none';
+    }
+
+    // Setup next post
+    if (nextPost && nextLink && nextTitle && nextExcerpt) {
+      nextLink.href = `post-viewer.html?id=${nextPost.id}`;
+      nextTitle.textContent = nextPost.title;
+      nextExcerpt.textContent = nextPost.description || extractExcerpt(nextPost);
+      nextLink.style.display = 'flex';
+    } else if (nextLink) {
+      nextLink.style.display = 'none';
+    }
+
+    // Show navigation section if at least one link exists
+    if (prevPost || nextPost) {
+      navSection.style.display = 'block';
+    } else {
+      navSection.style.display = 'none';
+    }
+  }
+
+  /* ============================================
+     EXTRACT EXCERPT
+     ============================================ */
+  function extractExcerpt(post) {
+    if (post.excerpt) return post.excerpt;
+    if (post.description) return post.description;
+    
+    // Fallback: create a short excerpt from title
+    return `Read about ${post.title.toLowerCase()}`;
+  }
+
+  /* ============================================
+     HIDE NAVIGATION
+     ============================================ */
+  function hideNavigation() {
+    const navSection = document.querySelector('.post-navigation');
+    if (navSection) {
+      navSection.style.display = 'none';
+    }
   }
 
   /* ============================================

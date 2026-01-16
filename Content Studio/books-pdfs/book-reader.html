@@ -6,14 +6,13 @@
   <title>Book Reader - Md Akhinoor Islam</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css" />
   <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link rel="stylesheet" href="../written-posts/post-viewer.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <meta name="theme-color" content="#CC0000" />
   <style>
-    .book-container { max-width: 1200px; margin: 80px auto 60px; padding: 0 40px; }
+    .book-container { max-width: 1200px; margin: 30px auto 60px; padding: 0 40px; }
     .pdf-viewer-wrapper { background: rgba(10,10,10,0.95); border: 3px solid rgba(204,0,0,0.3); border-radius: 20px; padding: 20px; margin: 30px 0; box-shadow: 0 15px 60px rgba(0,0,0,0.8); }
     .pdf-controls { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.7); border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     .pdf-nav { display: flex; align-items: center; gap: 15px; }
@@ -68,25 +67,6 @@
         
         <!-- PAGE CONTENT WRAPPER -->
         <div class="bg-system-content">
-  <nav class="desktop-navbar" id="desktopNavbar">
-    <div class="desktop-nav-container">
-      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
-        <div class="desktop-nav-brand">
-          <span class="desktop-nav-brand-name" data-text="A3KM Studio">A3KM Studio</span>
-          <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
-        </div>
-      </a>
-      <ul class="desktop-nav-menu">
-        <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a></li>
-        <li class="desktop-nav-item"><a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
-        <li class="desktop-nav-item"><a href="../../About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download><i class="fas fa-download"></i><span>CV</span></a></li>
-      </ul>
-    </div>
-  </nav>
-
   <div class="back-to-hub"><a href="../hub.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back to Content Studio</span></a></div>
 
   <div class="post-loading" id="bookLoading"><i class="fas fa-spinner fa-spin"></i><span>Loading book...</span></div>
@@ -160,6 +140,20 @@
     </footer>
   </article>
 
+  <!-- Navigation Section -->
+  <nav class="post-navigation" style="display: none;">
+    <a href="#" id="prevBook" class="nav-post prev-post">
+      <span class="nav-label">← Previous Book</span>
+      <h4 class="nav-post-title" id="prevBookTitle"></h4>
+      <p class="nav-post-excerpt" id="prevBookExcerpt"></p>
+    </a>
+    <a href="#" id="nextBook" class="nav-post next-post">
+      <span class="nav-label">Next Book →</span>
+      <h4 class="nav-post-title" id="nextBookTitle"></h4>
+      <p class="nav-post-excerpt" id="nextBookExcerpt"></p>
+    </a>
+  </nav>
+
   <footer class="footer">
     <div class="container">
       <p>&copy; 2025 Md Akhinoor Islam. All rights reserved.</p>
@@ -177,6 +171,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const bookId = urlParams.get('id');
     let currentBook = null;
+    let allBooks = [];
     let currentPage = 1;
     let totalPages = 0;
     let zoomLevel = 1.0;
@@ -189,8 +184,12 @@
       try {
         const response = await fetch('books.json');
         const data = await response.json();
-        currentBook = data.books.find(b => b.id === bookId);
-        if (currentBook) renderBook();
+        allBooks = data.books || [];
+        currentBook = allBooks.find(b => b.id === bookId);
+        if (currentBook) {
+          renderBook();
+          setupNavigation();
+        }
       } catch (error) { console.error('Error:', error); }
     }
 
@@ -342,6 +341,46 @@
     }
 
     function copyBookLink() { navigator.clipboard.writeText(window.location.href); }
+
+    function setupNavigation() {
+      const currentIndex = allBooks.findIndex(b => b.id === bookId);
+      if (currentIndex === -1) return;
+
+      const prevBook = currentIndex > 0 ? allBooks[currentIndex - 1] : null;
+      const nextBook = currentIndex < allBooks.length - 1 ? allBooks[currentIndex + 1] : null;
+
+      const navSection = document.querySelector('.post-navigation');
+      const prevLink = document.getElementById('prevBook');
+      const nextLink = document.getElementById('nextBook');
+      const prevTitle = document.getElementById('prevBookTitle');
+      const nextTitle = document.getElementById('nextBookTitle');
+      const prevExcerpt = document.getElementById('prevBookExcerpt');
+      const nextExcerpt = document.getElementById('nextBookExcerpt');
+
+      if (!navSection) return;
+
+      if (prevBook && prevLink) {
+        prevLink.href = `book-reader.html?id=${prevBook.id}`;
+        prevTitle.textContent = prevBook.title;
+        prevExcerpt.textContent = prevBook.description || prevBook.summary || `Read ${prevBook.title}`;
+        prevLink.style.display = 'flex';
+      } else if (prevLink) {
+        prevLink.style.display = 'none';
+      }
+
+      if (nextBook && nextLink) {
+        nextLink.href = `book-reader.html?id=${nextBook.id}`;
+        nextTitle.textContent = nextBook.title;
+        nextExcerpt.textContent = nextBook.description || nextBook.summary || `Read ${nextBook.title}`;
+        nextLink.style.display = 'flex';
+      } else if (nextLink) {
+        nextLink.style.display = 'none';
+      }
+
+      if (prevBook || nextBook) {
+        navSection.style.display = 'block';
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadBook();

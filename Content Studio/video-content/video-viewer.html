@@ -6,7 +6,6 @@
   <title>Video Blog - Md Akhinoor Islam</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css" />
   <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link rel="stylesheet" href="../written-posts/post-viewer.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -18,7 +17,7 @@
   <style>
     .video-container {
       max-width: 1200px;
-      margin: 80px auto 60px;
+      margin: 30px auto 60px;
       padding: 0 40px;
     }
 
@@ -110,35 +109,6 @@
         <!-- PAGE CONTENT WRAPPER -->
         <div class="bg-system-content">
 
-  <!-- Navbar --><nav class="desktop-navbar" id="desktopNavbar">
-    <div class="desktop-nav-container">
-      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
-        <div class="desktop-nav-brand">
-          <span class="desktop-nav-brand-name" data-text="A3KM Studio">A3KM Studio</span>
-          <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
-        </div>
-      </a>
-      <ul class="desktop-nav-menu">
-        <li class="desktop-nav-item">
-          <a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a>
-        </li>
-        <li class="desktop-nav-item">
-          <a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a>
-        </li>
-        <li class="desktop-nav-item">
-          <a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a>
-        </li>
-        <li class="desktop-nav-item">
-          <a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
-        </li>
-        <li class="desktop-nav-item">
-          <a href="../../About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download><i class="fas fa-download"></i><span>CV</span></a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-
   <div class="back-to-hub">
     <a href="../hub.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back to Content Studio</span></a>
   </div>
@@ -187,6 +157,20 @@
     </div>
   </article>
 
+  <!-- Navigation Section -->
+  <nav class="post-navigation" style="display: none;">
+    <a href="#" id="prevVideo" class="nav-post prev-post">
+      <span class="nav-label">← Previous Video</span>
+      <h4 class="nav-post-title" id="prevVideoTitle"></h4>
+      <p class="nav-post-excerpt" id="prevVideoExcerpt"></p>
+    </a>
+    <a href="#" id="nextVideo" class="nav-post next-post">
+      <span class="nav-label">Next Video →</span>
+      <h4 class="nav-post-title" id="nextVideoTitle"></h4>
+      <p class="nav-post-excerpt" id="nextVideoExcerpt"></p>
+    </a>
+  </nav>
+
   <footer class="footer">
     <div class="container">
       <p>&copy; 2025 Md Akhinoor Islam. All rights reserved.</p>
@@ -198,14 +182,19 @@
     const urlParams = new URLSearchParams(window.location.search);
     const videoId = urlParams.get('id');
     let currentVideo = null;
+    let allVideos = [];
 
     async function loadVideo() {
       if (!videoId) return;
       try {
         const response = await fetch('videos.json');
         const data = await response.json();
-        currentVideo = data.videos.find(v => v.id === videoId);
-        if (currentVideo) renderVideo();
+        allVideos = data.videos || [];
+        currentVideo = allVideos.find(v => v.id === videoId);
+        if (currentVideo) {
+          renderVideo();
+          setupNavigation();
+        }
       } catch (error) {
         console.error('Error loading video:', error);
       }
@@ -234,6 +223,46 @@
 
       document.getElementById('videoLoading').style.display = 'none';
       document.getElementById('videoContent').style.display = 'block';
+    }
+
+    function setupNavigation() {
+      const currentIndex = allVideos.findIndex(v => v.id === videoId);
+      if (currentIndex === -1) return;
+
+      const prevVideo = currentIndex > 0 ? allVideos[currentIndex - 1] : null;
+      const nextVideo = currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
+
+      const navSection = document.querySelector('.post-navigation');
+      const prevLink = document.getElementById('prevVideo');
+      const nextLink = document.getElementById('nextVideo');
+      const prevTitle = document.getElementById('prevVideoTitle');
+      const nextTitle = document.getElementById('nextVideoTitle');
+      const prevExcerpt = document.getElementById('prevVideoExcerpt');
+      const nextExcerpt = document.getElementById('nextVideoExcerpt');
+
+      if (!navSection) return;
+
+      if (prevVideo && prevLink) {
+        prevLink.href = `video-viewer.html?id=${prevVideo.id}`;
+        prevTitle.textContent = prevVideo.title;
+        prevExcerpt.textContent = prevVideo.summary || `Watch ${prevVideo.title}`;
+        prevLink.style.display = 'flex';
+      } else if (prevLink) {
+        prevLink.style.display = 'none';
+      }
+
+      if (nextVideo && nextLink) {
+        nextLink.href = `video-viewer.html?id=${nextVideo.id}`;
+        nextTitle.textContent = nextVideo.title;
+        nextExcerpt.textContent = nextVideo.summary || `Watch ${nextVideo.title}`;
+        nextLink.style.display = 'flex';
+      } else if (nextLink) {
+        nextLink.style.display = 'none';
+      }
+
+      if (prevVideo || nextVideo) {
+        navSection.style.display = 'block';
+      }
     }
 
     function shareVideo(platform) {

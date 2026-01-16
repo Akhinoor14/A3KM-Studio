@@ -6,14 +6,13 @@
   <title>Research Paper - Md Akhinoor Islam</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css" />
   <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link rel="stylesheet" href="../written-posts/post-viewer.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <meta name="theme-color" content="#CC0000" />
   <style>
-    .paper-container { max-width: 1200px; margin: 80px auto 60px; padding: 0 40px; }
+    .paper-container { max-width: 1200px; margin: 30px auto 60px; padding: 0 40px; }
     .paper-abstract { background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 16px; padding: 30px; margin: 30px 0; border-left: 5px solid #CC0000; }
     .abstract-label { font-size: 1.2rem; font-weight: 700; color: #CC0000; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
     .abstract-text { font-size: 1.05rem; line-height: 1.8; color: rgba(255,255,255,0.9); }
@@ -35,24 +34,35 @@
   </style>
 </head>
 <body>
-  <nav class="desktop-navbar" id="desktopNavbar">
-    <div class="desktop-nav-container">
-      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
-        <div class="desktop-nav-brand">
-          <span class="desktop-nav-brand-name" data-text="A3KM Studio">A3KM Studio</span>
-          <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
+    <!-- CENTRALIZED BACKGROUND SYSTEM -->
+    <div class="bg-system-container">
+        <!-- Animated Background Elements -->
+        <div class="bg-hero-bg-elements">
+            <!-- Geometric Shapes -->
+            <div class="bg-geometric-shapes">
+                <div class="bg-shape bg-shape-1"></div>
+                <div class="bg-shape bg-shape-2"></div>
+                <div class="bg-shape bg-shape-3"></div>
+                <div class="bg-shape bg-shape-4"></div>
+                <div class="bg-shape bg-shape-5"></div>
+            </div>
+            
+            <!-- Gradient Orbs -->
+            <div class="bg-gradient-orbs">
+                <div class="bg-orb bg-orb-1"></div>
+                <div class="bg-orb bg-orb-2"></div>
+                <div class="bg-orb bg-orb-3"></div>
+            </div>
+            
+            <!-- Particle Canvas -->
+            <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
         </div>
-      </a>
-      <ul class="desktop-nav-menu">
-        <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a></li>
-        <li class="desktop-nav-item"><a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a></li>
-        <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
-        <li class="desktop-nav-item"><a href="../../About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download><i class="fas fa-download"></i><span>CV</span></a></li>
-      </ul>
-    </div>
-  </nav>
+        
+        <!-- Dark Overlay for Contrast -->
+        <div class="bg-system-overlay"></div>
+        
+        <!-- PAGE CONTENT WRAPPER -->
+        <div class="bg-system-content">
 
   <div class="back-to-hub"><a href="../hub.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back to Content Studio</span></a></div>
 
@@ -137,6 +147,20 @@
     </footer>
   </article>
 
+  <!-- Navigation Section -->
+  <nav class="post-navigation" style="display: none;">
+    <a href="#" id="prevPaper" class="nav-post prev-post">
+      <span class="nav-label">← Previous Paper</span>
+      <h4 class="nav-post-title" id="prevPaperTitle"></h4>
+      <p class="nav-post-excerpt" id="prevPaperExcerpt"></p>
+    </a>
+    <a href="#" id="nextPaper" class="nav-post next-post">
+      <span class="nav-label">Next Paper →</span>
+      <h4 class="nav-post-title" id="nextPaperTitle"></h4>
+      <p class="nav-post-excerpt" id="nextPaperExcerpt"></p>
+    </a>
+  </nav>
+
   <footer class="footer">
     <div class="container">
       <p>&copy; 2025 Md Akhinoor Islam. All rights reserved.</p>
@@ -148,14 +172,19 @@
     const urlParams = new URLSearchParams(window.location.search);
     const paperId = urlParams.get('id');
     let currentPaper = null;
+    let allPapers = [];
 
     async function loadPaper() {
       if (!paperId) return;
       try {
         const response = await fetch('papers.json');
         const data = await response.json();
-        currentPaper = data.papers.find(p => p.id === paperId);
-        if (currentPaper) renderPaper();
+        allPapers = data.papers || [];
+        currentPaper = allPapers.find(p => p.id === paperId);
+        if (currentPaper) {
+          renderPaper();
+          setupNavigation();
+        }
       } catch (error) { console.error('Error:', error); }
     }
 
@@ -242,6 +271,46 @@
     }
 
     function copyPaperLink() { navigator.clipboard.writeText(window.location.href); }
+
+    function setupNavigation() {
+      const currentIndex = allPapers.findIndex(p => p.id === paperId);
+      if (currentIndex === -1) return;
+
+      const prevPaper = currentIndex > 0 ? allPapers[currentIndex - 1] : null;
+      const nextPaper = currentIndex < allPapers.length - 1 ? allPapers[currentIndex + 1] : null;
+
+      const navSection = document.querySelector('.post-navigation');
+      const prevLink = document.getElementById('prevPaper');
+      const nextLink = document.getElementById('nextPaper');
+      const prevTitle = document.getElementById('prevPaperTitle');
+      const nextTitle = document.getElementById('nextPaperTitle');
+      const prevExcerpt = document.getElementById('prevPaperExcerpt');
+      const nextExcerpt = document.getElementById('nextPaperExcerpt');
+
+      if (!navSection) return;
+
+      if (prevPaper && prevLink) {
+        prevLink.href = `paper-viewer.html?id=${prevPaper.id}`;
+        prevTitle.textContent = prevPaper.title;
+        prevExcerpt.textContent = prevPaper.abstract || prevPaper.summary || `Read ${prevPaper.title}`;
+        prevLink.style.display = 'flex';
+      } else if (prevLink) {
+        prevLink.style.display = 'none';
+      }
+
+      if (nextPaper && nextLink) {
+        nextLink.href = `paper-viewer.html?id=${nextPaper.id}`;
+        nextTitle.textContent = nextPaper.title;
+        nextExcerpt.textContent = nextPaper.abstract || nextPaper.summary || `Read ${nextPaper.title}`;
+        nextLink.style.display = 'flex';
+      } else if (nextLink) {
+        nextLink.style.display = 'none';
+      }
+
+      if (prevPaper || nextPaper) {
+        navSection.style.display = 'block';
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', loadPaper);
   </script>
