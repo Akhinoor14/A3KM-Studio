@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Resistor Color Calculator - Electronics Tools</title>
+    <link rel="stylesheet" href="../../../Optimization/styles.css">
+    <link rel="stylesheet" href="../../../Optimization/navbar/desktop-navbar.css">
+    <link rel="stylesheet" href="../../../Optimization /Background/background-system.css">
+    <link rel="stylesheet" href="electronics-tools-shared.css">
+    <link rel="stylesheet" href="../../../Optimization /navbar/mobile-top-nav.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Mobile/Desktop Navbar Detection */
+        .mobile-top-nav {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-top-nav {
+                display: flex !important;
+            }
+            body {
+                padding-top: 60px;
+            }
+        }
+
+        /* Resistor Visual */
+        .resistor-visual {
+            background: rgba(245, 245, 245, 0.05);
+            border: 2px solid rgba(204, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 30px 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .resistor-body {
+            position: relative;
+            width: 280px;
+            height: 80px;
+            background: linear-gradient(to bottom, #d4c5a9 0%, #f0e6d2 50%, #d4c5a9 100%);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .resistor-body::before,
+        .resistor-body::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 4px;
+            background: linear-gradient(to right, #c0c0c0, #a8a8a8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .resistor-body::before { left: -40px; }
+        .resistor-body::after { right: -40px; }
+
+        .color-bands {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 30px;
+        }
+
+        .band {
+            width: 18px;
+            height: 100%;
+            border-radius: 2px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5),
+                        0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .band::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 20%;
+            width: 30%;
+            height: 60%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 2px;
+        }
+
+        /* Band Mode Toggle */
+        .band-mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .band-mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .band-mode-btn.active {
+            background: linear-gradient(135deg, #CC0000, #990000);
+            border-color: #CC0000;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(204, 0, 0, 0.4);
+        }
+
+        /* Color Selector */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .color-option {
+            aspect-ratio: 1;
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-option::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .color-option.selected {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+            transform: scale(1.05);
+        }
+
+        .color-option span {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            z-index: 1;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Reverse Calculator */
+        .reverse-input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .unit-selector {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .unit-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .unit-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        /* Tab Switcher */
+        .tab-switcher {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(204, 0, 0, 0.08);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            border-color: #FF9800;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Top Navigation -->
+    <nav class="mobile-top-nav">
+        <a href="home-mobile.html" class="nav-icon" title="Home">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="about-mobile.html" class="nav-icon" title="About">
+            <i class="fas fa-user"></i>
+        </a>
+        <a href="projects-mobile.html" class="nav-icon active" title="Projects">
+            <i class="fas fa-folder-open"></i>
+        </a>
+        <a href="../../../Blog/blog-mobile.html" class="nav-icon" title="Blog">
+            <i class="fas fa-blog"></i>
+        </a>
+        <a href="contact-mobile.html" class="nav-icon" title="Contact">
+            <i class="fas fa-envelope"></i>
+        </a>
+        <a href="../../../Only boss/only-boss.html" class="nav-icon nav-boss" title="Only Boss">
+            <i class="fas fa-crown"></i>
+        </a>
+    </nav>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-navbar" id="desktopNavbar">
+        <div class="desktop-nav-container">
+            <a href="index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+                <img src="images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+                <div class="desktop-nav-brand">
+                    <span class="desktop-nav-brand-name">A3KM Studio</span>
+                    <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
+                </div>
+            </a>
+            <ul class="desktop-nav-menu">
+                <li class="desktop-nav-item">
+                    <a href="about.html" class="desktop-nav-link" id="nav-about">
+                        <i class="fas fa-user-circle"></i>
+                        <span>About</span>
+                    </a>
+                </li>
+                <li class="desktop-nav-item">
+                    <a href="projects.html" class="desktop-nav-link active" id="nav-projects">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Projects</span>
+                    </a>
+                </li>
+                <li class="desktop-nav-item">
+                    <a href="../../../Blog/blog.html" class="desktop-nav-link" id="nav-blog">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Blog</span>
+                    </a>
+                </li>
+                <li class="desktop-nav-item">
+                    <a href="contact.html" class="desktop-nav-link" id="nav-contact">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact</span>
+                    </a>
+                </li>
+                <li class="desktop-nav-item">
+                    <a href="/About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV.pdf" title="Download CV">
+                        <i class="fas fa-download"></i>
+                        <span>CV</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="tool-header">
+        <a href="projects-mobile.html" class="tool-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1>Resistor Color Calculator</h1>
+    </header>
+
+    <main class="tool-content">
+        <!-- Info Box -->
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p><strong>Standard:</strong> IEC 60062:2016 - Color code for resistors and capacitors. Supports 4-band (±5% to ±10%), 5-band (±0.5% to ±2%), and 6-band (with temperature coefficient).</p>
+        </div>
+
+        <!-- Tab Switcher -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" data-tab="colors-to-value">
+                <i class="fas fa-palette"></i> Colors → Value
+            </button>
+            <button class="tab-btn" data-tab="value-to-colors">
+                <i class="fas fa-calculator"></i> Value → Colors
+            </button>
+        </div>
+
+        <!-- TAB 1: Colors to Value -->
+        <div id="colors-to-value" class="tab-content active">
+            <!-- Resistor Visual -->
+            <div class="resistor-visual">
+                <div class="resistor-body">
+                    <div class="color-bands" id="visualBands">
+                        <!-- Bands will be generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Band Mode Selector -->
+            <div class="tool-card">
+                <div class="form-label">Number of Bands</div>
+                <div class="band-mode-selector">
+                    <button class="band-mode-btn" data-bands="4">4 Bands</button>
+                    <button class="band-mode-btn active" data-bands="5">5 Bands</button>
+                    <button class="band-mode-btn" data-bands="6">6 Bands</button>
+                </div>
+            </div>
+
+            <!-- Band Selectors (Generated by JS) -->
+            <div id="bandSelectors"></div>
+
+            <!-- Calculate Button -->
+            <button class="btn-primary" onclick="calculateFromColors()">
+                <i class="fas fa-calculator"></i> Calculate Resistance
+            </button>
+
+            <!-- Result -->
+            <div id="colorResult"></div>
+        </div>
+
+        <!-- TAB 2: Value to Colors -->
+        <div id="value-to-colors" class="tab-content">
+            <div class="tool-card">
+                <div class="form-group">
+                    <label class="form-label">Enter Resistance Value</label>
+                    <div class="reverse-input-group">
+                        <input type="number" id="reverseValue" class="form-input" placeholder="e.g., 4.7, 10, 220" step="any" min="0">
+                        <select id="reverseUnit" class="form-select" style="width: 100px;">
+                            <option value="1">Ω</option>
+                            <option value="1000" selected>kΩ</option>
+                            <option value="1000000">MΩ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tolerance</label>
+                    <select id="reverseTolerance" class="form-select">
+                        <option value="brown">±1% (Brown)</option>
+                        <option value="red">±2% (Red)</option>
+                        <option value="gold" selected>±5% (Gold)</option>
+                        <option value="silver">±10% (Silver)</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary" onclick="calculateFromValue()">
+                    <i class="fas fa-palette"></i> Show Color Bands
+                </button>
+
+                <!-- Reverse Result -->
+                <div id="reverseResult"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="tool-footer">
+        <p class="source-citation">
+            <i class="fas fa-book"></i> Data Source: IEC 60062:2016 International Standard<br>
+            <a href="https://webstore.iec.ch/publication/160" target="_blank">IEC Color Codes for Resistors</a>
+        </p>
+    </footer>
+
+    <script src="resistor-calculator.js"></script>
+    <script src="../../../Optimization /script.js"></script>
+    <script>
+    (function() {
+      window.addEventListener('scroll', function() {
+        const navbar = document.getElementById('desktopNavbar');
+        if (navbar) {
+          if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+          } else {
+            navbar.classList.remove('scrolled');
+          }
+        }
+      });
+    })();
+    </script>
+</body>
+</html>
