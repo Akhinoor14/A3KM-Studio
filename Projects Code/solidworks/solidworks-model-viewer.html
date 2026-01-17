@@ -22,11 +22,11 @@
     <link rel="preconnect" href="https://ajax.googleapis.com">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     
-    <!-- JSZip for ZIP downloads - Defer -->
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- JSZip for ZIP downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
-    <!-- Model Data - Defer -->
-    <script defer src="solidworks-models-data.js"></script>
+    <!-- Model Data - Load Before Main Script -->
+    <script src="solidworks-models-data.js"></script>
     
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -1005,74 +1005,79 @@
     </nav>
 
     <script>
-        // Toast Notification System
-        function showToast(title, message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            const iconMap = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                info: 'fa-info-circle'
-            };
-            
-            toast.innerHTML = `
-                <i class="fas ${iconMap[type]} toast-icon"></i>
-                <div class="toast-content">
-                    <div class="toast-title">${title}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
-                <button class="toast-close">&times;</button>
-            `;
-            
-            container.appendChild(toast);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                toast.style.animation = 'slideOutToast 0.3s ease forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-            
-            // Manual close
-            toast.querySelector('.toast-close').addEventListener('click', () => {
-                toast.style.animation = 'slideOutToast 0.3s ease forwards';
-                setTimeout(() => toast.remove(), 300);
-            });
-        }
-
-        // Progress Bar Controller
-        const progressController = {
-            show: function(title = 'Preparing Download...') {
-                const progress = document.getElementById('downloadProgress');
-                const progressTitle = progress.querySelector('.progress-title');
-                progressTitle.textContent = title;
-                progress.classList.add('active');
-                this.update(0, 'Initializing...');
-            },
-            update: function(percent, status) {
-                const fill = document.getElementById('progressBarFill');
-                const statusText = document.getElementById('progressStatus');
-                fill.style.width = percent + '%';
-                statusText.textContent = status;
-            },
-            hide: function() {
-                const progress = document.getElementById('downloadProgress');
-                progress.classList.remove('active');
+        // Wait for DOM and all scripts to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toast Notification System
+            function showToast(title, message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const iconMap = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    info: 'fa-info-circle'
+                };
+                
+                toast.innerHTML = `
+                    <i class="fas ${iconMap[type]} toast-icon"></i>
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close">&times;</button>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    toast.style.animation = 'slideOutToast 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+                
+                // Manual close
+                toast.querySelector('.toast-close').addEventListener('click', () => {
+                    toast.style.animation = 'slideOutToast 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                });
             }
-        };
 
-        // Get model ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const modelId = urlParams.get('id') || 'model-01';
+            // Progress Bar Controller
+            const progressController = {
+                show: function(title = 'Preparing Download...') {
+                    const progress = document.getElementById('downloadProgress');
+                    if (!progress) return;
+                    const progressTitle = progress.querySelector('.progress-title');
+                    if (progressTitle) progressTitle.textContent = title;
+                    progress.classList.add('active');
+                    this.update(0, 'Initializing...');
+                },
+                update: function(percent, status) {
+                    const fill = document.getElementById('progressBarFill');
+                    const statusText = document.getElementById('progressStatus');
+                    if (fill) fill.style.width = percent + '%';
+                    if (statusText) statusText.textContent = status;
+                },
+                hide: function() {
+                    const progress = document.getElementById('downloadProgress');
+                    if (progress) progress.classList.remove('active');
+                }
+            };
 
-        // Get model data
-        let currentModel = getModelById(modelId);
-        const allModels = getAllModels();
-        const currentIndex = allModels.findIndex(m => m.id === modelId);
+            // Get model ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const modelId = urlParams.get('id') || 'model-01';
 
-        // Elements
-        const modelViewer = document.getElementById('modelViewer');
+            // Get model data
+            let currentModel = getModelById(modelId);
+            const allModels = getAllModels();
+            const currentIndex = allModels.findIndex(m => m.id === modelId);
+
+            // Elements - Use let for modelViewer so it can be reassigned
+            let modelViewer = document.getElementById('modelViewer');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const errorFallback = document.getElementById('errorFallback');
         const infoPanel = document.getElementById('infoPanel');
@@ -1123,16 +1128,11 @@
 
             // Load 3D model with better error handling
             if (model.glbPath) {
-                // Remove old listeners to prevent memory leaks
-                const oldViewer = modelViewer.cloneNode(true);
-                modelViewer.parentNode.replaceChild(oldViewer, modelViewer);
-                modelViewer = oldViewer;
-                
                 modelViewer.src = model.glbPath;
                 modelViewer.alt = model.name;
                 
                 modelViewer.addEventListener('load', () => {
-                    loadingOverlay.classList.add('hidden');
+                    if (loadingOverlay) loadingOverlay.classList.add('hidden');
                     showShortcutsHint();
                 }, { once: true });
 
@@ -1183,62 +1183,90 @@
             }, 500);
         }
 
-        // Auto-rotate toggle
-        const autoRotateBtn = document.getElementById('autoRotateBtn');
-        autoRotateBtn.addEventListener('click', () => {
-            const isRotating = modelViewer.autoRotate;
-            modelViewer.autoRotate = !isRotating;
-            autoRotateBtn.classList.toggle('active');
-        });
-
-        // Reset view
-        document.getElementById('resetViewBtn').addEventListener('click', () => {
-            modelViewer.cameraOrbit = '45deg 55deg auto';
-            modelViewer.fieldOfView = '45deg';
-        });
-
-        // Zoom controls
-        document.getElementById('zoomInBtn').addEventListener('click', () => {
-            const currentFOV = parseFloat(modelViewer.fieldOfView);
-            modelViewer.fieldOfView = `${Math.max(20, currentFOV - 5)}deg`;
-        });
-
-        document.getElementById('zoomOutBtn').addEventListener('click', () => {
-            const currentFOV = parseFloat(modelViewer.fieldOfView);
-            modelViewer.fieldOfView = `${Math.min(70, currentFOV + 5)}deg`;
-        });
-
-        // Fullscreen toggle
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                document.exitFullscreen();
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            // Auto-rotate toggle
+            const autoRotateBtn = document.getElementById('autoRotateBtn');
+            if (autoRotateBtn) {
+                autoRotateBtn.addEventListener('click', () => {
+                    if (!modelViewer) return;
+                    const isRotating = modelViewer.autoRotate;
+                    modelViewer.autoRotate = !isRotating;
+                    autoRotateBtn.classList.toggle('active');
+                });
             }
-        });
 
-        // Info panel toggle
-        document.getElementById('toggleInfoBtn').addEventListener('click', () => {
-            infoPanel.classList.toggle('hidden');
-        });
-
-        // Navigation buttons
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                const prevModel = allModels[currentIndex - 1];
-                window.location.href = `solidworks-model-viewer.html?id=${prevModel.id}`;
+            // Reset view
+            const resetViewBtn = document.getElementById('resetViewBtn');
+            if (resetViewBtn) {
+                resetViewBtn.addEventListener('click', () => {
+                    if (!modelViewer) return;
+                    modelViewer.cameraOrbit = '45deg 55deg auto';
+                    modelViewer.fieldOfView = '45deg';
+                });
             }
-        });
 
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            if (currentIndex < allModels.length - 1) {
-                const nextModel = allModels[currentIndex + 1];
-                window.location.href = `solidworks-model-viewer.html?id=${nextModel.id}`;
+            // Zoom controls
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                    if (!modelViewer) return;
+                    const currentFOV = parseFloat(modelViewer.fieldOfView);
+                    modelViewer.fieldOfView = `${Math.max(20, currentFOV - 5)}deg`;
+                });
             }
-        });
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                    if (!modelViewer) return;
+                    const currentFOV = parseFloat(modelViewer.fieldOfView);
+                    modelViewer.fieldOfView = `${Math.min(70, currentFOV + 5)}deg`;
+                });
+            }
+
+            // Fullscreen toggle
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                    } else {
+                        document.exitFullscreen();
+                        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                    }
+                });
+            }
+
+            // Info panel toggle
+            const toggleInfoBtn = document.getElementById('toggleInfoBtn');
+            if (toggleInfoBtn && infoPanel) {
+                toggleInfoBtn.addEventListener('click', () => {
+                    infoPanel.classList.toggle('hidden');
+                });
+            }
+
+            // Navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (currentIndex > 0) {
+                        const prevModel = allModels[currentIndex - 1];
+                        window.location.href = `solidworks-model-viewer.html?id=${prevModel.id}`;
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (currentIndex < allModels.length - 1) {
+                        const nextModel = allModels[currentIndex + 1];
+                        window.location.href = `solidworks-model-viewer.html?id=${nextModel.id}`;
+                    }
+                });
+            }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -1264,16 +1292,17 @@
             }
         });
 
-        // Download functionality with progress
-        document.getElementById('downloadBtn').addEventListener('click', async () => {
-            if (currentModel.files.length === 0) {
-                showToast('No Files', 'This model has no files available for download', 'error');
-                return;
-            }
-
+            // Download functionality with progress
             const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
-            downloadBtn.disabled = true;
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', async () => {
+            if (currentModel.files.length === 0) {
+                    showToast('No Files', 'This model has no files available for download', 'error');
+                    return;
+                }
+
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
+                downloadBtn.disabled = true;
             
             progressController.show('Preparing Download');
             progressController.update(10, 'Initializing...');
@@ -1416,15 +1445,17 @@
                 downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                 downloadBtn.disabled = false;
             }
-        });
+                });
+            }
 
-        // Initialize
-        loadModelData(currentModel);
+            // Initialize
+            loadModelData(currentModel);
 
-        // Mobile: Hide info panel by default
-        if (window.innerWidth <= 768) {
-            infoPanel.classList.add('hidden');
-        }
+            // Mobile: Hide info panel by default
+            if (window.innerWidth <= 768 && infoPanel) {
+                infoPanel.classList.add('hidden');
+            }
+        }); // End DOMContentLoaded
     </script>
     <script>
     (function() {
