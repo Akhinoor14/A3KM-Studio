@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="../../Optimization/styles.css">
     <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
-    <link rel="stylesheet" href="../../Optimization /navbar/mobile-top-nav.css">
+    <link rel="stylesheet" href="../../Optimization/navbar/mobile-top-nav.css">
     
     <style>
         /* Arduino Projects Page Styles - Engineering Theme */
@@ -417,6 +417,72 @@
             border-color: var(--primary-red);
         }
 
+        /* Difficulty Badges */
+        .difficulty-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .difficulty-beginner {
+            background: rgba(0, 255, 0, 0.15);
+            border: 1px solid rgba(0, 255, 0, 0.4);
+            color: #00ff00;
+        }
+
+        .difficulty-intermediate {
+            background: rgba(255, 165, 0, 0.15);
+            border: 1px solid rgba(255, 165, 0, 0.4);
+            color: #FFA500;
+        }
+
+        .difficulty-advanced {
+            background: rgba(255, 0, 0, 0.15);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            color: #FF3333;
+        }
+
+        /* Project Stats */
+        .project-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .project-stats span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .project-stats i {
+            color: var(--primary-red);
+            font-size: 0.9rem;
+        }
+
+        /* Hide/Show Animation */
+        .project-card.hidden {
+            display: none;
+        }
+
+        .project-card.filtered-out {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
         .project-link {
             display: inline-flex;
             align-items: center;
@@ -712,6 +778,39 @@
         <p style="color: rgba(255,255,255,0.7); font-size: 1.1rem; margin-top: 10px;">
             23 Interactive Circuits with Tinkercad Simulations
         </p>
+        
+        <!-- Progress Tracker -->
+        <div style="max-width: 800px; margin: 25px auto; padding: 20px; background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7); font-weight: 600;">Your Progress</span>
+                <span id="progressText" style="font-size: 0.9rem; color: #CC0000; font-weight: 700;">0 / 23 Projects</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #CC0000, #FF3333); transition: width 0.5s ease; border-radius: 10px;"></div>
+            </div>
+        </div>
+        
+        <!-- Search & Filter Controls -->
+        <div style="max-width: 1000px; margin: 25px auto; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+            <div style="flex: 1; min-width: 280px; max-width: 400px;">
+                <div style="position: relative;">
+                    <input type="text" id="searchInput" placeholder="Search projects..." style="width: 100%; padding: 14px 45px 14px 20px; background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; color: #fff; font-size: 0.95rem; transition: all 0.3s ease;" onfocus="this.style.borderColor='#CC0000'" onblur="this.style.borderColor='rgba(204,0,0,0.3)'">
+                    <i class="fas fa-search" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); font-size: 1rem;"></i>
+                </div>
+            </div>
+            <select id="difficultyFilter" style="padding: 14px 20px; background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; color: #fff; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease;" onfocus="this.style.borderColor='#CC0000'" onblur="this.style.borderColor='rgba(204,0,0,0.3)'">
+                <option value="all">All Levels</option>
+                <option value="Beginner">🟢 Beginner</option>
+                <option value="Intermediate">🟡 Intermediate</option>
+                <option value="Advanced">🔴 Advanced</option>
+            </select>
+            <button id="resetBtn" onclick="resetFilters()" style="padding: 14px 24px; background: rgba(204,0,0,0.15); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; color: #fff; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.background='rgba(204,0,0,0.25)'; this.style.borderColor='#CC0000'" onmouseout="this.style.background='rgba(204,0,0,0.15)'; this.style.borderColor='rgba(204,0,0,0.3)'">
+                <i class="fas fa-redo"></i> Reset
+            </button>
+        </div>
+        
+        <!-- Active Filters Display -->
+        <div id="activeFilters" style="max-width: 1000px; margin: 0 auto 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; min-height: 24px;"></div>
     </section>
 
     <!-- Projects -->
@@ -1045,12 +1144,19 @@
                     </a>
                 </div>
 
-                <div class="project-card">
+                <div class="project-card" data-difficulty="Advanced">
                     <span class="project-number">Project 23</span>
-                    <h3 class="project-title">Project 23</h3>
-                    <p class="project-description">Advanced Arduino project (details in folder)</p>
+                    <span class="difficulty-badge difficulty-advanced"><i class="fas fa-fire"></i> Advanced</span>
+                    <h3 class="project-title">Digital Voltmeter (ATtiny85)</h3>
+                    <p class="project-description">ATtiny85-based voltmeter with 74HC595 shift register and 3-digit 7-segment display</p>
                     <div class="project-tags">
-                        <span class="tag">Advanced</span>
+                        <span class="tag">ATtiny85</span>
+                        <span class="tag">Shift Register</span>
+                        <span class="tag">7-Segment</span>
+                    </div>
+                    <div class="project-stats">
+                        <span title="Components"><i class="fas fa-cubes"></i> 8</span>
+                        <span title="Lines of Code"><i class="fas fa-code"></i> 250+</span>
                     </div>
                     <a href="index.html#arduino" class="project-link">
                         View Details <i class="fas fa-arrow-right"></i>
@@ -1061,24 +1167,258 @@
 
     </main>
 
-    <script src="../../Optimization /script.js"></script>
+    <script src="../../Optimization/script.js"></script>
     <script>
-        // Update all project links to use arduino-project-viewer.html
+        // Project metadata with difficulty levels, components count, and code lines
+        const projectMetadata = {
+            1: { difficulty: 'Beginner', components: 4, codeLines: 50 },
+            2: { difficulty: 'Beginner', components: 5, codeLines: 60 },
+            3: { difficulty: 'Intermediate', components: 3, codeLines: 40 },
+            4: { difficulty: 'Intermediate', components: 4, codeLines: 70 },
+            5: { difficulty: 'Intermediate', components: 5, codeLines: 85 },
+            6: { difficulty: 'Intermediate', components: 4, codeLines: 95 },
+            7: { difficulty: 'Intermediate', components: 4, codeLines: 100 },
+            8: { difficulty: 'Advanced', components: 6, codeLines: 150 },
+            9: { difficulty: 'Advanced', components: 6, codeLines: 140 },
+            10: { difficulty: 'Intermediate', components: 5, codeLines: 75 },
+            11: { difficulty: 'Beginner', components: 4, codeLines: 60 },
+            12: { difficulty: 'Beginner', components: 4, codeLines: 55 },
+            13: { difficulty: 'Advanced', components: 6, codeLines: 180 },
+            14: { difficulty: 'Advanced', components: 7, codeLines: 200 },
+            15: { difficulty: 'Intermediate', components: 5, codeLines: 120 },
+            16: { difficulty: 'Intermediate', components: 6, codeLines: 110 },
+            17: { difficulty: 'Advanced', components: 8, codeLines: 220 },
+            18: { difficulty: 'Intermediate', components: 7, codeLines: 160 },
+            19: { difficulty: 'Intermediate', components: 5, codeLines: 130 },
+            20: { difficulty: 'Beginner', components: 4, codeLines: 65 },
+            21: { difficulty: 'Advanced', components: 7, codeLines: 190 },
+            22: { difficulty: 'Intermediate', components: 5, codeLines: 105 },
+            23: { difficulty: 'Advanced', components: 8, codeLines: 250 }
+        };
+
+        // Initialize everything when DOM loads
         document.addEventListener('DOMContentLoaded', () => {
+            enhanceProjectCards();
+            initializeFilters();
+            initializeProgressTracker();
+            updateProjectLinks();
+        });
+
+        // Enhance project cards with difficulty badges and stats
+        function enhanceProjectCards() {
             const projectCards = document.querySelectorAll('.project-card');
-            projectCards.forEach((card, index) => {
+            
+            projectCards.forEach((card) => {
+                const projectNumber = card.querySelector('.project-number')?.textContent;
+                const projectId = parseInt(projectNumber.replace('Project ', ''));
+                const metadata = projectMetadata[projectId];
+                
+                if (!metadata) return;
+                
+                // Add data attribute for filtering
+                card.setAttribute('data-difficulty', metadata.difficulty);
+                
+                // Skip if already enhanced (like Project 23)
+                if (card.querySelector('.difficulty-badge')) return;
+                
+                // Add difficulty badge
+                const difficultyBadge = document.createElement('span');
+                difficultyBadge.className = `difficulty-badge difficulty-${metadata.difficulty.toLowerCase()}`;
+                
+                let icon = '<i class=\"fas fa-seedling\"></i>';
+                if (metadata.difficulty === 'Intermediate') icon = '<i class=\"fas fa-layer-group\"></i>';
+                if (metadata.difficulty === 'Advanced') icon = '<i class=\"fas fa-fire\"></i>';
+                
+                difficultyBadge.innerHTML = `${icon} ${metadata.difficulty}`;
+                
+                // Insert after project number
+                const projectNumberEl = card.querySelector('.project-number');
+                projectNumberEl.after(difficultyBadge);
+                
+                // Add project stats
+                const stats = document.createElement('div');
+                stats.className = 'project-stats';
+                stats.innerHTML = `
+                    <span title=\"Components\"><i class=\"fas fa-cubes\"></i> ${metadata.components}</span>
+                    <span title=\"Lines of Code\"><i class=\"fas fa-code\"></i> ${metadata.codeLines}+</span>
+                `;
+                
+                // Insert before project link
+                const projectLink = card.querySelector('.project-link');
+                projectLink.parentNode.insertBefore(stats, projectLink);
+            });
+        }
+
+        // Initialize search and filter functionality
+        function initializeFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const difficultyFilter = document.getElementById('difficultyFilter');
+            const activeFiltersContainer = document.getElementById('activeFilters');
+            
+            if (!searchInput || !difficultyFilter) return;
+            
+            // Search functionality
+            searchInput.addEventListener('input', applyFilters);
+            
+            // Difficulty filter
+            difficultyFilter.addEventListener('change', applyFilters);
+            
+            // Tag click filtering
+            document.querySelectorAll('.tag').forEach(tag => {
+                tag.style.cursor = 'pointer';
+                tag.addEventListener('click', () => {
+                    searchInput.value = tag.textContent.trim();
+                    applyFilters();
+                });
+            });
+        }
+
+        // Apply search and filter
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const difficultyFilter = document.getElementById('difficultyFilter');
+            const projectCards = document.querySelectorAll('.project-card');
+            const activeFiltersContainer = document.getElementById('activeFilters');
+            
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const selectedDifficulty = difficultyFilter.value;
+            
+            let visibleCount = 0;
+            let activeFilters = [];
+            
+            projectCards.forEach(card => {
+                const title = card.querySelector('.project-title')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.project-description')?.textContent.toLowerCase() || '';
+                const tags = Array.from(card.querySelectorAll('.tag')).map(t => t.textContent.toLowerCase()).join(' ');
+                const difficulty = card.getAttribute('data-difficulty') || '';
+                
+                const matchesSearch = !searchTerm || 
+                                    title.includes(searchTerm) || 
+                                    description.includes(searchTerm) || 
+                                    tags.includes(searchTerm);
+                
+                const matchesDifficulty = selectedDifficulty === 'all' || difficulty === selectedDifficulty;
+                
+                if (matchesSearch && matchesDifficulty) {
+                    card.classList.remove('hidden');
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show active filters
+            if (searchTerm) {
+                activeFilters.push(`Search: \"${searchTerm}\"`);
+            }
+            if (selectedDifficulty !== 'all') {
+                activeFilters.push(`Level: ${selectedDifficulty}`);
+            }
+            
+            if (activeFilters.length > 0) {
+                activeFiltersContainer.innerHTML = activeFilters.map(filter => 
+                    `<span style=\"padding: 6px 12px; background: rgba(204,0,0,0.2); border: 1px solid rgba(204,0,0,0.4); border-radius: 15px; color: #fff; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;\">
+                        <i class=\"fas fa-filter\"></i> ${filter}
+                    </span>`
+                ).join('');
+            } else {
+                activeFiltersContainer.innerHTML = '';
+            }
+            
+            // Update category counts
+            document.querySelectorAll('.category-section').forEach(section => {
+                const visibleCards = section.querySelectorAll('.project-card:not(.hidden)').length;
+                const countBadge = section.querySelector('.category-count');
+                if (countBadge) {
+                    const match = countBadge.textContent.match(/\d+/);
+                    const originalCount = match ? match[0] : '0';
+                    if (visibleCards < parseInt(originalCount)) {
+                        countBadge.textContent = `${visibleCards} / ${originalCount} Projects`;
+                        countBadge.style.background = 'rgba(204, 0, 0, 0.2)';
+                    } else {
+                        countBadge.textContent = `${originalCount} Projects`;
+                        countBadge.style.background = 'rgba(0, 151, 157, 0.2)';
+                    }
+                }
+            });
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('difficultyFilter').value = 'all';
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.classList.remove('hidden');
+                card.style.display = '';
+            });
+            document.getElementById('activeFilters').innerHTML = '';
+            
+            // Reset category counts
+            document.querySelectorAll('.category-section').forEach(section => {
+                const countBadge = section.querySelector('.category-count');
+                if (countBadge) {
+                    const match = countBadge.textContent.match(/\d+/);
+                    const originalCount = match ? match[0] : '0';
+                    countBadge.textContent = `${originalCount} Projects`;
+                    countBadge.style.background = 'rgba(0, 151, 157, 0.2)';
+                }
+            });
+        }
+
+        // Initialize progress tracker
+        function initializeProgressTracker() {
+            const completed = JSON.parse(localStorage.getItem('arduinoProjectsCompleted') || '[]');
+            updateProgressDisplay(completed);
+            
+            // Add completion tracking on card click
+            document.querySelectorAll('.project-card').forEach(card => {
+                const projectNumber = card.querySelector('.project-number')?.textContent;
+                const projectId = parseInt(projectNumber.replace('Project ', ''));
+                
+                if (completed.includes(projectId)) {
+                    card.style.borderColor = 'rgba(0, 255, 0, 0.5)';
+                    card.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.2)';
+                }
+                
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.project-link')) {
+                        if (!completed.includes(projectId)) {
+                            completed.push(projectId);
+                            localStorage.setItem('arduinoProjectsCompleted', JSON.stringify(completed));
+                            updateProgressDisplay(completed);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Update progress display
+        function updateProgressDisplay(completed) {
+            const total = 23;
+            const count = completed.length;
+            const percentage = (count / total) * 100;
+            
+            document.getElementById('progressText').textContent = `${count} / ${total} Projects`;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+
+        // Update project links
+        function updateProjectLinks() {
+            const projectCards = document.querySelectorAll('.project-card');
+            projectCards.forEach((card) => {
                 const link = card.querySelector('.project-link');
-                const projectNumber = card.querySelector('.project-number').textContent;
+                const projectNumber = card.querySelector('.project-number')?.textContent;
                 const projectId = parseInt(projectNumber.replace('Project ', ''));
                 if (link && projectId) {
                     link.href = `arduino-project-viewer.html?id=${projectId}`;
                 }
             });
-        });
+        }
 
         // Mobile/Desktop Detection
         if (window.innerWidth <= 768) {
-            // Redirect to mobile version or show mobile layout
             document.body.classList.add('mobile-view');
         }
     </script>

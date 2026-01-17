@@ -480,6 +480,75 @@
   }
 
   /* ============================================
+     PDF DOWNLOAD FUNCTION
+     ============================================ */
+  window.downloadPostPDF = async function() {
+    try {
+      const contentElement = document.getElementById('postContent');
+      if (!contentElement) {
+        alert('❌ Post content not found!');
+        return;
+      }
+
+      // Check if content is loaded
+      const content = contentElement.innerHTML;
+      if (content.includes('Loading') || !currentPost) {
+        alert('⏳ Please wait for the post to load first!');
+        return;
+      }
+
+      // Check if PDF converter is available
+      if (typeof MDtoPDFConverter === 'undefined') {
+        alert('❌ PDF converter not loaded! Please refresh the page.');
+        return;
+      }
+
+      // Show loading state
+      const btn = document.getElementById('downloadPdfBtn');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generating PDF...</span>';
+      btn.disabled = true;
+
+      // Create converter instance
+      const converter = new MDtoPDFConverter({
+        debug: true
+      });
+
+      // Generate PDF
+      await converter.convertToPDF(
+        content,
+        currentPost.slug || 'blog_post',
+        {
+          projectTitle: currentPost.title || 'Blog Post',
+          documentType: 'Blog Article',
+          author: 'Md Akhinoor Islam',
+          description: currentPost.description || currentPost.summary || '',
+          category: 'Written Content',
+          date: currentPost.date || new Date().toLocaleDateString()
+        }
+      );
+
+      // Reset button
+      btn.innerHTML = '<i class="fas fa-check"></i> <span>Downloaded!</span>';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+      }, 2000);
+
+    } catch (error) {
+      console.error('❌ PDF Generation Error:', error);
+      alert('Failed to generate PDF. Please try again.');
+      
+      // Reset button on error
+      const btn = document.getElementById('downloadPdfBtn');
+      if (btn) {
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> <span>Download PDF</span>';
+        btn.disabled = false;
+      }
+    }
+  };
+
+  /* ============================================
      START APPLICATION
      ============================================ */
   document.addEventListener('DOMContentLoaded', init);

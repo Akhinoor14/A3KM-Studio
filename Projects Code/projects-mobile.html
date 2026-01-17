@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Mobile Top Nav CSS -->
-    <link rel="stylesheet" href="../Optimization /navbar/mobile-top-nav.css">
-    <link rel="stylesheet" href="../Optimization /Background/background-system.css">
+    <link rel="stylesheet" href="../Optimization/navbar/mobile-top-nav.css">
+    <link rel="stylesheet" href="../Optimization/Background/background-system.css">
     
     <style>
         /* ============================================================================
@@ -31,7 +31,7 @@
         :root {
             --primary-red: #CC0000;
             --primary-red-dark: #990000;
-            --accent-orange: #FF9800;
+            --primary-red-light: #FF0000;
             --bg-dark: rgba(10, 10, 10, 0.98);
             --bg-card: rgba(26, 0, 0, 0.95);
             --bg-sub-card: rgba(20, 10, 10, 0.9);
@@ -40,6 +40,7 @@
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.7);
             --text-dim: rgba(255, 255, 255, 0.5);
+            --glow-red: 0 0 20px rgba(204, 0, 0, 0.3);
         }
 
         * {
@@ -55,13 +56,59 @@
             color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
+            padding-top: 56px;
         }
 
-        /* Hero Section - Mobile */
+        /* Hero Section - Mobile Enhanced */
         .mobile-hero {
-            padding: 70px 16px 30px;
+            padding: 24px 16px 30px;
             text-align: center;
-            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(26,0,0,0.95));
+            background: linear-gradient(135deg, rgba(10,10,10,0.98) 0%, rgba(20,0,0,0.95) 50%, rgba(10,5,5,0.98) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(204, 0, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(204, 0, 0, 0.1) 0%, transparent 50%);
+            animation: heroGlow 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes heroGlow {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Floating Particles */
+        .hero-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-red);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; animation-duration: 6s; }
+        .hero-particle:nth-child(2) { left: 30%; top: 40%; animation-delay: 1s; animation-duration: 8s; }
+        .hero-particle:nth-child(3) { left: 60%; top: 30%; animation-delay: 2s; animation-duration: 7s; }
+        .hero-particle:nth-child(4) { left: 80%; top: 60%; animation-delay: 3s; animation-duration: 9s; }
+        .hero-particle:nth-child(5) { left: 20%; top: 70%; animation-delay: 1.5s; animation-duration: 7.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            25% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
+            50% { transform: translateY(-40px) scale(0.8); opacity: 0.2; }
+            75% { transform: translateY(-20px) scale(1.1); opacity: 0.4; }
         }
 
         .hero-icon {
@@ -100,6 +147,17 @@
             font-weight: 800;
             color: var(--primary-red);
             display: block;
+            background: linear-gradient(135deg, #CC0000, #FF3333, #CC0000);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
         .stat-label {
@@ -127,6 +185,7 @@
             padding: 14px 45px 14px 45px;
             background: rgba(204, 0, 0, 0.08);
             border: 2px solid var(--border-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 25px;
             color: var(--text-primary);
             font-size: 0.95rem;
@@ -135,6 +194,7 @@
         .search-input:focus {
             outline: none;
             border-color: var(--primary-red);
+            box-shadow: var(--glow-red);
         }
 
         .search-icon {
@@ -190,6 +250,7 @@
             background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
             border-color: var(--primary-red);
             color: #fff;
+            box-shadow: var(--glow-red);
         }
 
         /* Main Cards Container */
@@ -197,21 +258,42 @@
             padding: 0 16px 20px;
         }
 
-        /* Main Card - Mobile */
+        /* Main Card - Mobile Enhanced */
         .mobile-main-card {
-            background: var(--bg-card);
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
             border: 2px solid var(--border-primary);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 24px;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(180%);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.15), transparent);
+            transition: left 0.4s ease;
+        }
+
+        .mobile-main-card:active::before {
+            left: 100%;
         }
 
         .mobile-main-card:active {
-            transform: scale(0.98);
+            transform: scale(0.97) translateY(2px);
             border-color: var(--primary-red);
+            box-shadow: 0 12px 32px rgba(204, 0, 0, 0.5), 
+                        var(--glow-red),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .main-card-header {
@@ -235,6 +317,34 @@
             opacity: 0.6;
         }
 
+        .expand-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-red);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .expand-toggle:active {
+            transform: scale(0.9) rotate(90deg);
+            background: rgba(204, 0, 0, 0.3);
+        }
+
+        .expand-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
         .main-card-icon {
             width: 50px;
             height: 50px;
@@ -245,6 +355,7 @@
             justify-content: center;
             font-size: 1.5rem;
             flex-shrink: 0;
+            box-shadow: var(--glow-red);
         }
 
         .main-card-title-area {
@@ -291,38 +402,98 @@
             font-weight: 600;
         }
 
-        /* Sub-Cards - Hidden in Mobile Main View */
+        /* Sub-Cards - Expandable View */
         .sub-cards-list {
-            display: none;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 16px;
+            opacity: 1;
+            max-height: 2000px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sub-cards-list.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin-top: 0;
         }
 
         .sub-card {
-            background: var(--bg-sub-card);
+            background: linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(15, 5, 5, 0.9));
             border: 2px solid var(--border-primary);
             border-radius: 12px;
             padding: 16px;
             text-decoration: none;
             color: inherit;
             display: block;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .sub-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .sub-card:active::before {
+            left: 100%;
         }
 
         .sub-card:active {
-            transform: scale(0.98);
+            transform: scale(0.98) translateY(2px);
             border-color: var(--primary-red);
+            box-shadow: 0 4px 16px rgba(204, 0, 0, 0.3);
         }
 
-        .sub-card-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(255, 152, 0, 0.2);
-            border: 1px solid var(--accent-orange);
+        .sub-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, rgba(15, 5, 5, 0.8), rgba(10, 5, 5, 0.7));
+        }
+
+        .sub-card.locked::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(0, 0, 0, 0.1) 10px,
+                rgba(0, 0, 0, 0.1) 11px
+            );
+            pointer-events: none;
+        }
+
+        /* Floating Action Button */\n        .fab-container {\n            position: fixed;\n            bottom: 20px;\n            right: 20px;\n            z-index: 999;\n        }\n\n        .fab-button {\n            width: 56px;\n            height: 56px;\n            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));\n            border-radius: 50%;\n            border: none;\n            box-shadow: 0 8px 24px rgba(204, 0, 0, 0.4);\n            cursor: pointer;\n            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            color: #fff;\n            font-size: 1.5rem;\n        }\n\n        .fab-button:active {\n            transform: scale(0.9);\n        }\n\n        .fab-menu {\n            position: absolute;\n            bottom: 70px;\n            right: 0;\n            display: flex;\n            flex-direction: column;\n            gap: 12px;\n            opacity: 0;\n            pointer-events: none;\n            transform: translateY(10px);\n            transition: all 0.3s ease;\n        }\n\n        .fab-menu.active {\n            opacity: 1;\n            pointer-events: all;\n            transform: translateY(0);\n        }\n\n        .fab-menu-item {\n            width: 48px;\n            height: 48px;\n            background: rgba(204, 0, 0, 0.9);\n            border-radius: 50%;\n            border: 2px solid var(--border-primary);\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            color: #fff;\n            font-size: 1.2rem;\n            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);\n        }\n\n        /* Bottom Sheet Filter Modal */\n        .bottom-sheet {\n            position: fixed;\n            bottom: 0;\n            left: 0;\n            right: 0;\n            background: linear-gradient(180deg, rgba(20, 0, 0, 0.98), rgba(10, 10, 10, 0.98));\n            border-top-left-radius: 24px;\n            border-top-right-radius: 24px;\n            padding: 20px;\n            transform: translateY(100%);\n            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);\n            z-index: 1000;\n            max-height: 70vh;\n            overflow-y: auto;\n            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);\n        }\n\n        .bottom-sheet.active {\n            transform: translateY(0);\n        }\n\n        .bottom-sheet-handle {\n            width: 40px;\n            height: 4px;\n            background: rgba(255, 255, 255, 0.3);\n            border-radius: 2px;\n            margin: 0 auto 20px;\n        }\n\n        .bottom-sheet-title {\n            font-size: 1.2rem;\n            font-weight: 700;\n            color: var(--primary-red);\n            margin-bottom: 20px;\n            text-align: center;\n        }\n\n        .filter-options {\n            display: grid;\n            grid-template-columns: repeat(2, 1fr);\n            gap: 12px;\n        }\n\n        .filter-option {\n            padding: 14px;\n            background: rgba(204, 0, 0, 0.08);\n            border: 2px solid var(--border-primary);\n            border-radius: 12px;\n            text-align: center;\n            cursor: pointer;\n            transition: all 0.3s ease;\n        }\n\n        .filter-option.active {\n            background: var(--primary-red);\n            border-color: var(--primary-red);\n            color: #fff;\n        }\n\n        .sheet-overlay {\n            position: fixed;\n            top: 0;\n            left: 0;\n            right: 0;\n            bottom: 0;\n            background: rgba(0, 0, 0, 0.7);\n            opacity: 0;\n            pointer-events: none;\n            transition: opacity 0.3s ease;\n            z-index: 999;\n        }\n\n        .sheet-overlay.active {\n            opacity: 1;\n            pointer-events: all;\n        }\n\n        /* Pull to Refresh Indicator */\n        .pull-to-refresh {\n            position: absolute;\n            top: 60px;\n            left: 50%;\n            transform: translateX(-50%) translateY(-60px);\n            display: flex;\n            align-items: center;\n            gap: 10px;\n            color: var(--primary-red);\n            font-size: 0.9rem;\n            font-weight: 600;\n            opacity: 0;\n            transition: all 0.3s ease;\n        }\n\n        .pull-to-refresh.visible {\n            opacity: 1;\n            transform: translateX(-50%) translateY(0);\n        }\n\n        .pull-to-refresh i {\n            font-size: 1.2rem;\n            animation: spin 1s linear infinite;\n        }\n\n        @keyframes spin {\n            from { transform: rotate(0deg); }\n            to { transform: rotate(360deg); }\n        }\n\n        .sub-card-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.25), rgba(204, 0, 0, 0.15));
+            border: 1.5px solid var(--primary-red);
             border-radius: 12px;
             font-size: 0.7rem;
             font-weight: 700;
-            color: var(--accent-orange);
+            color: var(--primary-red);
             margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(204, 0, 0, 0.15);
+        }
+
+        .sub-card-badge.locked {
+            background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(80, 80, 80, 0.15));
+            border-color: rgba(150, 150, 150, 0.5);
+            color: rgba(200, 200, 200, 0.7);
         }
 
         .sub-card-title {
@@ -399,6 +570,11 @@
 
     <!-- Hero Section -->
     <section class="mobile-hero">
+        <div class="hero-particle"></div>
+        <div class="hero-particle"></div>
+        <div class="hero-particle"></div>
+        <div class="hero-particle"></div>
+        <div class="hero-particle"></div>
         <div class="hero-icon">
             <i class="fas fa-layer-group"></i>
         </div>
@@ -417,6 +593,17 @@
             <div class="stat-item">
                 <span class="stat-number">127+</span>
                 <span class="stat-label">Items</span>
+            </div>
+        </div>
+        
+        <!-- Progress Tracker -->
+        <div style="margin: 20px 0 0; padding: 15px; background: rgba(10,10,10,0.9); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; max-width: 500px; margin-left: auto; margin-right: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7); font-weight: 600;">Exploration Progress</span>
+                <span id="progressCount" style="font-size: 0.8rem; color: #CC0000; font-weight: 700;">0 viewed</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #CC0000, #FF3333); transition: width 0.5s ease; border-radius: 10px;"></div>
             </div>
         </div>
     </section>
@@ -441,11 +628,49 @@
         <button class="chip" data-filter="learning">AI</button>
     </div>
 
+    <!-- Pull to Refresh Indicator -->
+    <div class="pull-to-refresh" id="pullRefresh">
+        <i class="fas fa-sync-alt"></i>
+        <span>Pull to refresh</span>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <div class="fab-menu" id="fabMenu">
+            <button class="fab-menu-item" id="scrollTopBtn" title="Scroll to top">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <button class="fab-menu-item" id="filterBtn" title="Filter projects">
+                <i class="fas fa-filter"></i>
+            </button>
+        </div>
+        <button class="fab-button" id="fabButton">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+    </div>
+
+    <!-- Bottom Sheet Filter -->
+    <div class="sheet-overlay" id="sheetOverlay"></div>
+    <div class="bottom-sheet" id="bottomSheet">
+        <div class="bottom-sheet-handle"></div>
+        <h3 class="bottom-sheet-title">Filter Projects</h3>
+        <div class="filter-options">
+            <div class="filter-option active" data-category="all">All Projects</div>
+            <div class="filter-option" data-category="cad">CAD/Design</div>
+            <div class="filter-option" data-category="electronics">Electronics</div>
+            <div class="filter-option" data-category="web">Web Development</div>
+            <div class="filter-option" data-category="learning">AI & Learning</div>
+        </div>
+    </div>
+
     <!-- Projects Container -->
     <main class="mobile-projects">
 
         <!-- MAIN CARD 1: SOLIDWORKS -->
-        <div class="mobile-main-card" data-category="cad" data-page="solidworks-sub-cards-mobile.html" id="solidworks">
+        <div class="mobile-main-card" data-category="cad" id="solidworks">
+            <button class="expand-toggle expanded" onclick="toggleSubCards('solidworks-subs', this)" aria-label="Toggle subcards">
+                <i class="fas fa-chevron-down"></i>
+            </button>
             <div class="main-card-header">
                 <div class="main-card-icon">
                     <i class="fas fa-cube"></i>
@@ -465,7 +690,7 @@
                 <span class="tag">Mechanical</span>
             </div>
 
-            <div class="sub-cards-list expanded" id="solidworks-subs">
+            <div class="sub-cards-list" id="solidworks-subs">
                 <a href="solidworks/solidworks-basic-models.html" class="sub-card">
                     <div class="sub-card-badge">
                         <span class="difficulty-stars">⭐</span> Beginner
@@ -480,40 +705,44 @@
                     </div>
                 </a>
 
-                <div class="sub-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <div class="sub-card-badge">
+                <div class="sub-card locked" onclick="showLockedMessage('Intermediate models coming soon!')" title="Coming Soon">
+                    <div class="sub-card-badge locked">
+                        <i class="fas fa-lock"></i>
                         <span class="difficulty-stars">⭐⭐</span> Intermediate
                     </div>
                     <h3 class="sub-card-title">Intermediate Models</h3>
-                    <p class="sub-card-description">Complex assemblies and mechanisms</p>
+                    <p class="sub-card-description">Complex assemblies and mechanisms - Currently in development</p>
                     <div class="sub-card-footer">
-                        <span class="sub-card-stats">Coming Soon</span>
+                        <span class="sub-card-stats"><i class="fas fa-clock"></i> Coming Soon</span>
                         <span class="sub-card-link">
                             <i class="fas fa-lock"></i>
                         </span>
                     </div>
                 </div>
 
-                <div class="sub-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <div class="sub-card-badge">
+                <div class="sub-card locked" onclick="showLockedMessage('Professional models coming soon!')" title="Coming Soon">
+                    <div class="sub-card-badge locked">
+                        <i class="fas fa-lock"></i>
                         <span class="difficulty-stars">⭐⭐⭐</span> Professional
                     </div>
                     <h3 class="sub-card-title">Pro Models</h3>
-                    <p class="sub-card-description">Advanced professional projects</p>
+                    <p class="sub-card-description">Advanced professional projects - Premium content</p>
                     <div class="sub-card-footer">
-                        <span class="sub-card-stats">TBD</span>
+                        <span class="sub-card-stats"><i class="fas fa-star"></i> Premium</span>
                         <span class="sub-card-link">
                             <i class="fas fa-lock"></i>
                         </span>
                     </div>
                 </div>
 
-                <div class="sub-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <div class="sub-card-badge">💼 Commercial</div>
+                <div class="sub-card locked" onclick="showLockedMessage('Commercial portfolio under NDA')" title="Private">
+                    <div class="sub-card-badge locked">
+                        <i class="fas fa-lock"></i> 💼 Commercial
+                    </div>
                     <h3 class="sub-card-title">Paid Projects</h3>
-                    <p class="sub-card-description">Client work and commercial models</p>
+                    <p class="sub-card-description">Client work and commercial models - Confidential</p>
                     <div class="sub-card-footer">
-                        <span class="sub-card-stats">Portfolio</span>
+                        <span class="sub-card-stats"><i class="fas fa-briefcase"></i> Portfolio</span>
                         <span class="sub-card-link">
                             <i class="fas fa-lock"></i>
                         </span>
@@ -607,7 +836,7 @@
                     <p class="main-card-subtitle">Calculators & utilities</p>
                 </div>
                 <div class="main-card-count">
-                    5
+                    4
                 </div>
             </div>
 
@@ -665,7 +894,7 @@
                         <i class="fas fa-book-open"></i> Formulas
                     </div>
                     <h3 class="sub-card-title">Quick Reference</h3>
-                    <p class="sub-card-description">15 essential formulas</p>
+                    <p class="sub-card-description">33 essential formulas</p>
                     <div class="sub-card-footer">
                         <span class="sub-card-stats">Quick</span>
                         <span class="sub-card-link">
@@ -674,19 +903,6 @@
                     </div>
                 </a>
 
-                <a href="Electronics/circuit-simulators/circuit-simulators.html" class="sub-card">
-                    <div class="sub-card-badge">
-                        <i class="fas fa-project-diagram"></i> Sims
-                    </div>
-                    <h3 class="sub-card-title">Circuit Simulators</h3>
-                    <p class="sub-card-description">Best online simulators</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats">6 Platforms</span>
-                        <span class="sub-card-link">
-                            Open <i class="fas fa-chevron-right"></i>
-                        </span>
-                    </div>
-                </a>
             </div>
         </div>
 
@@ -749,11 +965,261 @@
                 const category = card.getAttribute('data-category');
                 const categoryPage = card.getAttribute('data-page');
                 
+                // Track viewed projects
+                trackProjectView(card.id);
+                
                 if (categoryPage) {
                     window.location.href = categoryPage;
                 }
             });
         });
+
+        // Progress Tracking System
+        function trackProjectView(projectId) {
+            const viewed = JSON.parse(localStorage.getItem('projectsViewed') || '[]');
+            if (!viewed.includes(projectId)) {
+                viewed.push(projectId);
+                localStorage.setItem('projectsViewed', JSON.stringify(viewed));
+                updateProgressDisplay();
+            }
+        }
+
+        function updateProgressDisplay() {
+            const viewed = JSON.parse(localStorage.getItem('projectsViewed') || '[]');
+            const total = document.querySelectorAll('.mobile-main-card').length;
+            const percentage = (viewed.length / total) * 100;
+            
+            const progressBar = document.getElementById('progressBar');
+            const progressCount = document.getElementById('progressCount');
+            
+            if (progressBar) progressBar.style.width = `${percentage}%`;
+            if (progressCount) progressCount.textContent = `${viewed.length} viewed`;
+        }
+
+        // Initialize progress on load
+        updateProgressDisplay();
+
+        // ========== ENHANCED MOBILE FEATURES ==========
+
+        // FAB Menu Toggle
+        const fabButton = document.getElementById('fabButton');
+        const fabMenu = document.getElementById('fabMenu');
+        let fabOpen = false;
+
+        fabButton?.addEventListener('click', () => {
+            fabOpen = !fabOpen;
+            fabMenu.classList.toggle('active', fabOpen);
+            fabButton.innerHTML = fabOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-ellipsis-v"></i>';
+        });
+
+        // Scroll to Top
+        document.getElementById('scrollTopBtn')?.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            fabMenu.classList.remove('active');
+            fabOpen = false;
+            fabButton.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+        });
+
+        // Bottom Sheet Filter
+        const filterBtn = document.getElementById('filterBtn');
+        const bottomSheet = document.getElementById('bottomSheet');
+        const sheetOverlay = document.getElementById('sheetOverlay');
+        const filterOptions = document.querySelectorAll('.filter-option');
+
+        filterBtn?.addEventListener('click', () => {
+            bottomSheet.classList.add('active');
+            sheetOverlay.classList.add('active');
+            fabMenu.classList.remove('active');
+            fabOpen = false;
+            fabButton.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+        });
+
+        sheetOverlay?.addEventListener('click', () => {
+            bottomSheet.classList.remove('active');
+            sheetOverlay.classList.remove('active');
+        });
+
+        filterOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const category = option.getAttribute('data-category');
+                
+                // Update active state
+                filterOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Apply filter to cards
+                mainCards.forEach(card => {
+                    const cardCategory = card.getAttribute('data-category');
+                    if (category === 'all' || cardCategory?.includes(category)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Update chip filter to match
+                const matchingChip = Array.from(chips).find(chip => chip.getAttribute('data-filter') === category);
+                if (matchingChip) {
+                    chips.forEach(c => c.classList.remove('active'));
+                    matchingChip.classList.add('active');
+                }
+                
+                // Close sheet
+                setTimeout(() => {
+                    bottomSheet.classList.remove('active');
+                    sheetOverlay.classList.remove('active');
+                }, 300);
+            });
+        });
+
+        // Pull to Refresh
+        const pullRefresh = document.getElementById('pullRefresh');
+        let startY = 0;
+        let currentY = 0;
+        let pullDistance = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0) {
+                startY = e.touches[0].clientY;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (window.scrollY === 0 && startY > 0) {
+                currentY = e.touches[0].clientY;
+                pullDistance = currentY - startY;
+                
+                if (pullDistance > 0 && pullDistance < 100) {
+                    pullRefresh.style.transform = `translateX(-50%) translateY(${pullDistance - 60}px)`;
+                    pullRefresh.classList.add('visible');
+                } else if (pullDistance >= 100) {
+                    pullRefresh.querySelector('span').textContent = 'Release to refresh';
+                }
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (pullDistance >= 100) {
+                pullRefresh.querySelector('span').textContent = 'Refreshing...';
+                
+                // Simulate refresh
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+            } else {
+                pullRefresh.classList.remove('visible');
+                pullRefresh.style.transform = 'translateX(-50%) translateY(-60px)';
+                pullRefresh.querySelector('span').textContent = 'Pull to refresh';
+            }
+            startY = 0;
+            pullDistance = 0;
+        });
+
+        // Swipe Gestures for Cards
+        mainCards.forEach(card => {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            card.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            card.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe(card);
+            });
+            
+            function handleSwipe(element) {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe left - could add to favorites or quick actions
+                        element.style.transform = 'translateX(-10px)';
+                        setTimeout(() => element.style.transform = '', 200);
+                    } else {
+                        // Swipe right - similar action
+                        element.style.transform = 'translateX(10px)';
+                        setTimeout(() => element.style.transform = '', 200);
+                    }
+                }
+            }
+        });
+
+        // Toggle Sub-Cards Expand/Collapse
+        function toggleSubCards(listId, button) {
+            const list = document.getElementById(listId);
+            const icon = button.querySelector('i');
+            
+            if (list.classList.contains('collapsed')) {
+                list.classList.remove('collapsed');
+                button.classList.add('expanded');
+                icon.className = 'fas fa-chevron-down';
+            } else {
+                list.classList.add('collapsed');
+                button.classList.remove('expanded');
+                icon.className = 'fas fa-chevron-right';
+            }
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Show Locked Message Toast
+        function showLockedMessage(message) {
+            const existingToast = document.querySelector('.locked-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = 'locked-toast';
+            toast.innerHTML = `
+                <i class="fas fa-lock"></i>
+                <span>${message}</span>
+            `;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%) translateY(20px);
+                background: linear-gradient(135deg, rgba(204, 0, 0, 0.95), rgba(153, 0, 0, 0.95));
+                color: white;
+                padding: 14px 24px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                font-size: 0.9rem;
+                font-weight: 600;
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([10, 50, 10]);
+            }
+            
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
 
         // Menu Toggle
         function toggleMenu() {
@@ -771,9 +1237,6 @@
         <div style="max-width: 1200px; margin: 0 auto;">
             <p style="color: rgba(255,255,255,0.9); margin-bottom: 8px;">&copy; 2025 Md Akhinoor Islam. All rights reserved.</p>
             <p style="font-size: 0.9rem; color: rgba(255,255,255,0.6);">Portfolio presented by <strong style="color: #CC0000;">A3KM Studio</strong> | Part of Noor Academy | Engineering · Education · Innovation</p>
-            <a href="../Only boss/only-boss.html" class="boss-crown-link" title="" style="display: inline-block; margin-top: 20px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: rgba(204, 0, 0, 0.6); font-size: 1.2rem; transition: all 0.3s ease; cursor: pointer; text-decoration: none; border-radius: 8px; background: rgba(204, 0, 0, 0.08);">
-              <i class="fas fa-crown"></i>
-            </a>
         </div>
     </footer>
 
