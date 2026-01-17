@@ -7,6 +7,23 @@
  * ============================================================================
  */
 
+// Base path for all SOLIDWORKS project files
+const SOLIDWORKS_BASE_PATH = "../../Projects Storage/Solidwork Projects/";
+
+// Helper function to fix paths with correct base path
+const fixModelPaths = (model) => {
+    if (model.glbPath && !model.glbPath.startsWith('../../')) {
+        model.glbPath = model.glbPath.replace('Solidwork Projects/', SOLIDWORKS_BASE_PATH);
+    }
+    if (model.thumbnailPath && !model.thumbnailPath.startsWith('../../')) {
+        model.thumbnailPath = model.thumbnailPath.replace('Solidwork Projects/', SOLIDWORKS_BASE_PATH);
+    }
+    if (model.zipPath && !model.zipPath.startsWith('../../')) {
+        model.zipPath = model.zipPath.replace('Solidwork Projects/', SOLIDWORKS_BASE_PATH);
+    }
+    return model;
+};
+
 const solidworksModelsData = {
     basic: [
         {
@@ -105,26 +122,13 @@ const solidworksModelsData = {
             name: "Model 08 - Basket Assembly",
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐ Intermediate",
-            description: "Complex assembly with multiple components and mold design",
-            files: [
-                "assembly.SLDASM",
-                "basket.SLDPRT",
-                "Core11[2].SLDPRT",
-                "Core16[1].SLDPRT",
-                "Core16[2].SLDPRT",
-                "Parting Line1.SLDPRT",
-                "Save Bodies1[1].SLDPRT",
-                "Save Bodies1[2].SLDPRT",
-                "Save Bodies1[3].SLDPRT",
-                "Save Bodies1[4].SLDPRT",
-                "Save Bodies1[5].SLDPRT",
-                "Tooling Split1[2].SLDPRT"
-            ],
+            description: "Complex assembly with multiple components and mold design (Download ZIP for all parts)",
+            files: ["Model-08-Assembly.zip"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 08/model-08.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 08/thumbnail.png",
-            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 08.zip",
+            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 08/Model-08-Assembly.zip",
             day: "Advanced",
-            tags: ["Assembly", "Mold", "Complex", "12 Parts"]
+            tags: ["Assembly", "Mold", "Complex", "ZIP Download"]
         },
         {
             id: "model-09",
@@ -144,65 +148,39 @@ const solidworksModelsData = {
             name: "Model 10 - Pin Assembly",
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐ Intermediate",
-            description: "Day 6 assembly with pin mechanism",
-            files: [
-                "cw 01 day 6 part 2 pin.SLDPRT",
-                "cw 01 day 6.SLDPRT",
-                "day 6 assembly.SLDASM",
-                "README.md"
-            ],
+            description: "Day 6 classwork 1 - Assembly with split pin mechanism (Download ZIP for all parts)",
+            files: ["Model-10-Assembly.zip"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 10/model-10.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 10/thumbnail.png",
-            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 10.zip",
+            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 10/Model-10-Assembly.zip",
             day: "Day 6",
-            tags: ["Assembly", "Pin", "Mechanism", "3 Parts"]
+            tags: ["Assembly", "Pin", "Mechanism", "ZIP Download"]
         },
         {
             id: "model-11",
             name: "Model 11 - Slider Mechanism",
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐⭐ Advanced",
-            description: "Complex Day 7 assembly with wheels, sliders, and connectors",
-            files: [
-                "Assem1 day 7.SLDASM",
-                "part 1 base day 7.SLDPRT",
-                "part 2 pin  day 7.SLDPRT",
-                "part 3 wheel   day 7.SLDPRT",
-                "part 4 connectr   day 7.SLDPRT",
-                "Part 5 slider day 7.SLDPRT",
-                "Part 6 pin short  day 7.SLDPRT",
-                "Part 7 two side connector  day 7.SLDPRT",
-                "Part 8 wheel base connector.SLDPRT",
-                "Part 9 tap collar day 7.SLDPRT",
-                "README.md"
-            ],
+            description: "Complex Day 7 assembly with wheels, sliders, and connectors (Download ZIP for all parts)",
+            files: ["Model-11-Assembly.zip"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 11/model-11.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 11/thumbnail.png",
-            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 11.zip",
+            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 11/Model-11-Assembly.zip",
             day: "Day 7",
-            tags: ["Assembly", "Mechanism", "Slider", "Wheels", "9 Parts"]
+            tags: ["Assembly", "Mechanism", "Slider", "Wheels", "ZIP Download"]
         },
         {
             id: "model-12",
             name: "Model 12 - Fork Assembly",
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐ Intermediate",
-            description: "Day 6 classwork 2 - Fork mechanism with pins and collar",
-            files: [
-                "cw 02 day 6 part 1 fork.SLDPRT",
-                "cw 02 day 6 part 2 pin.SLDPRT",
-                "cw 02 day 6 part 3 collar.SLDPRT",
-                "cw 02 day 6 part 4 tapper pin.SLDPRT",
-                "cw 02 day 6 part 5 centre block.SLDPRT",
-                "day 6 cw 2  assembly.SLDASM",
-                "Part2.SLDPRT",
-                "README.md"
-            ],
+            description: "Day 6 classwork 2 - Fork mechanism with pins and collar (Download ZIP for all parts)",
+            files: ["Model-12-Assembly.zip"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 12/model-12.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 12/thumbnail.png",
-            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 12.zip",
+            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 12/Model-12-Assembly.zip",
             day: "Day 6",
-            tags: ["Assembly", "Fork", "Pin", "6 Parts"]
+            tags: ["Assembly", "Fork", "Pin", "ZIP Download"]
         },
         {
             id: "model-13",
@@ -222,21 +200,13 @@ const solidworksModelsData = {
             name: "Model 14 - Day 6 Homework Assembly",
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐ Intermediate",
-            description: "Day 6 homework - 5 part assembly",
-            files: [
-                "day 6 hw Assem.SLDASM",
-                "day 6 hw part 1.SLDPRT",
-                "day 6 hw part 2.SLDPRT",
-                "day 6 hw part 3.SLDPRT",
-                "day 6 hw part 4.SLDPRT",
-                "day 6 hw part 5.SLDPRT",
-                "README.md"
-            ],
+            description: "Day 6 homework - 5 part assembly (Download ZIP for all parts)",
+            files: ["Model-14-Assembly.zip"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 14/model-14.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 14/thumbnail.png",
-            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 14.zip",
+            zipPath: "Solidwork Projects/Basic (Practice) Models/Model 14/Model-14-Assembly.zip",
             day: "Day 6",
-            tags: ["Assembly", "Homework", "5 Parts"]
+            tags: ["Assembly", "Homework", "5 Parts", "ZIP Download"]
         },
         {
             id: "model-15",
@@ -309,7 +279,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-20.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 20/model-20.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 20/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 20.zip",
@@ -322,7 +292,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-21.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 21/model-21.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 21/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 21.zip",
@@ -331,16 +301,16 @@ const solidworksModelsData = {
         },
         {
             id: "model-22",
-            name: "Model 22 - Practice Design",
+            name: "Model 22 - Bolt and Nut Assembly",
             category: "Basic (Practice) Models",
-            difficulty: "⭐ Beginner",
-            description: "Additional practice model",
-            files: [],
+            difficulty: "⭐⭐ Intermediate",
+            description: "Assembly project with threaded components",
+            files: ["Assem1.SLDASM", "bolt.SLDPRT", "nut.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 22/model-22.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 22/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 22.zip",
             day: "Practice",
-            tags: ["Part", "Practice"]
+            tags: ["Assembly", "Bolt", "Nut", "3 Parts"]
         },
         {
             id: "model-23",
@@ -348,7 +318,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-23.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 23/model-23.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 23/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 23.zip",
@@ -361,7 +331,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-24.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 24/model-24.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 24/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 24.zip",
@@ -374,7 +344,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-25.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 25/model-25.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 25/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 25.zip",
@@ -387,7 +357,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-26.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 26/model-26.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 26/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 26.zip",
@@ -400,7 +370,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-27.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 27/model-27.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 27/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 27.zip",
@@ -413,7 +383,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-28.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 28/model-28.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 28/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 28.zip",
@@ -426,7 +396,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-29.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 29/model-29.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 29/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 29.zip",
@@ -439,7 +409,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-30.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 30/model-30.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 30/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 30.zip",
@@ -452,7 +422,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-31.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 31/model-31.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 31/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 31.zip",
@@ -465,7 +435,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-32.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 32/model-32.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 32/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 32.zip",
@@ -478,7 +448,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-33.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 33/model-33.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 33/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 33.zip",
@@ -491,7 +461,7 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐ Beginner",
             description: "Additional practice model",
-            files: [],
+            files: ["model-34.SLDPRT"],
             glbPath: "Solidwork Projects/Basic (Practice) Models/Model 34/model-34.glb",
             thumbnailPath: "Solidwork Projects/Basic (Practice) Models/Model 34/thumbnail.png",
             zipPath: "Solidwork Projects/Basic (Practice) Models/Model 34.zip",
@@ -562,32 +532,39 @@ const solidworksModelsData = {
 // Helper functions
 const getAllModels = () => {
     return [
-        ...solidworksModelsData.basic,
-        ...solidworksModelsData.intermediate,
-        ...solidworksModelsData.professional,
-        ...solidworksModelsData.commercial
+        ...solidworksModelsData.basic.map(fixModelPaths),
+        ...solidworksModelsData.intermediate.map(fixModelPaths),
+        ...solidworksModelsData.professional.map(fixModelPaths),
+        ...solidworksModelsData.commercial.map(fixModelPaths)
     ];
 };
 
 const getModelById = (id) => {
-    return getAllModels().find(model => model.id === id);
+    const model = getAllModels().find(model => model.id === id);
+    return model ? fixModelPaths(model) : null;
 };
 
 const getModelsByCategory = (category) => {
+    let models;
     switch(category.toLowerCase()) {
         case 'basic':
-            return solidworksModelsData.basic;
+            models = solidworksModelsData.basic;
+            break;
         case 'intermediate':
-            return solidworksModelsData.intermediate;
+            models = solidworksModelsData.intermediate;
+            break;
         case 'professional':
         case 'pro':
-            return solidworksModelsData.professional;
+            models = solidworksModelsData.professional;
+            break;
         case 'commercial':
         case 'paid':
-            return solidworksModelsData.commercial;
+            models = solidworksModelsData.commercial;
+            break;
         default:
             return getAllModels();
     }
+    return models.map(fixModelPaths);
 };
 
 const getNextModel = (currentId) => {
@@ -608,17 +585,22 @@ const getPreviousModel = (currentId) => {
     return allModels[currentIndex - 1];
 };
 
-// Statistics
+// Statistics (cached for performance)
+let cachedStats = null;
 const getStatistics = () => {
-    return {
-        total: getAllModels().length,
+    if (cachedStats) return cachedStats;
+    
+    const allModels = getAllModels();
+    cachedStats = {
+        total: allModels.length,
         basic: solidworksModelsData.basic.length,
         intermediate: solidworksModelsData.intermediate.length,
         professional: solidworksModelsData.professional.length,
         commercial: solidworksModelsData.commercial.length,
-        assemblies: getAllModels().filter(m => m.files.some(f => f.includes('.SLDASM'))).length,
-        parts: getAllModels().filter(m => m.files.some(f => f.includes('.SLDPRT'))).length
+        assemblies: allModels.filter(m => m.files.some(f => f.includes('.SLDASM') || f.includes('.zip'))).length,
+        parts: allModels.filter(m => m.files.some(f => f.includes('.SLDPRT'))).length
     };
+    return cachedStats;
 };
 
 // Export for use in other files

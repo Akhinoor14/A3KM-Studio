@@ -18,14 +18,29 @@
     <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     
-    <!-- Google Model Viewer -->
+    <!-- Google Model Viewer - Preload -->
+    <link rel="preconnect" href="https://ajax.googleapis.com">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     
-    <!-- JSZip for ZIP downloads -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- JSZip for ZIP downloads - Defer -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
-    <!-- Model Data -->
-    <script src="solidworks-models-data.js"></script>
+    <!-- Model Data - Defer -->
+    <script defer src="solidworks-models-data.js"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "3DModel",
+        "name": "SOLIDWORKS CAD Model Viewer",
+        "description": "Interactive 3D viewer for SOLIDWORKS CAD models with download capability",
+        "author": {
+            "@type": "Person",
+            "name": "Md Akhinoor Islam"
+        }
+    }
+    </script>
     
     <style>
         /* ============================================================================
@@ -36,16 +51,20 @@
         ============================================================================ */
 
         :root {
-            --primary-red: #CC0000;
-            --primary-red-dark: #990000;
+            --primary-red: #8B0000;
+            --primary-red-dark: #5a0000;
+            --primary-red-light: #a00000;
             --bg-dark: rgba(10, 10, 10, 0.98);
-            --bg-card: rgba(26, 0, 0, 0.95);
-            --border-primary: rgba(204, 0, 0, 0.3);
-            --border-hover: rgba(204, 0, 0, 0.6);
+            --bg-card: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(15, 5, 5, 0.98));
+            --bg-card-hover: linear-gradient(135deg, rgba(40, 0, 0, 0.98), rgba(25, 5, 5, 1));
+            --border-primary: rgba(204, 0, 0, 0.5);
+            --border-hover: rgba(204, 0, 0, 0.9);
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.7);
             --text-dim: rgba(255, 255, 255, 0.5);
             --glow-red: 0 0 20px rgba(204, 0, 0, 0.3);
+            --glow-red-strong: 0 0 30px rgba(204, 0, 0, 0.6), 0 0 60px rgba(204, 0, 0, 0.3);
+            --texture-pattern: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(204, 0, 0, 0.03) 10px, rgba(204, 0, 0, 0.03) 11px);
         }
 
         * {
@@ -69,7 +88,7 @@
             left: 0;
             right: 0;
             height: 70px;
-            background: rgba(10, 10, 10, 0.98);
+            background: linear-gradient(180deg, rgba(10, 10, 10, 0.98), rgba(20, 5, 5, 0.95));
             border-bottom: 2px solid var(--border-primary);
             display: flex;
             align-items: center;
@@ -77,6 +96,7 @@
             padding: 0 20px;
             z-index: 1000;
             backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(204, 0, 0, 0.2);
         }
 
         .nav-left {
@@ -101,10 +121,10 @@
         }
 
         .back-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
             border-color: var(--primary-red);
             transform: scale(1.05);
-            box-shadow: var(--glow-red);
+            box-shadow: var(--glow-red-strong);
         }
 
         .model-title-area h1 {
@@ -151,10 +171,10 @@
         }
 
         .action-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
-            border-color: var(--primary-red);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.35), rgba(153, 0, 0, 0.25));
+            border-color: var(--border-hover);
             transform: translateY(-2px);
-            box-shadow: var(--glow-red);
+            box-shadow: var(--glow-red-strong);
         }
 
         .action-btn.primary {
@@ -165,6 +185,8 @@
 
         .action-btn.primary:hover {
             transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--glow-red-strong), 0 8px 25px rgba(204, 0, 0, 0.4);
+            background: linear-gradient(135deg, var(--primary-red-light), var(--primary-red));
         }
 
         /* Main Viewer Container */
@@ -182,6 +204,16 @@
             flex: 1;
             position: relative;
             background: linear-gradient(135deg, rgba(15,15,15,0.95), rgba(30,10,10,0.9));
+            position: relative;
+        }
+
+        .viewer-main::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--texture-pattern);
+            pointer-events: none;
+            opacity: 0.4;
         }
 
         model-viewer {
@@ -297,10 +329,10 @@
         }
 
         .control-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
-            border-color: var(--primary-red);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
+            border-color: var(--border-hover);
             transform: scale(1.1);
-            box-shadow: var(--glow-red);
+            box-shadow: var(--glow-red-strong);
         }
 
         .control-btn.active {
@@ -312,10 +344,11 @@
         /* Side Info Panel */
         .info-panel {
             width: 350px;
-            background: rgba(10, 10, 10, 0.98);
+            background: linear-gradient(180deg, rgba(10, 10, 10, 0.98), rgba(20, 5, 5, 0.95));
             border-left: 2px solid var(--border-primary);
             overflow-y: auto;
             transition: transform 0.3s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .info-panel.hidden {
@@ -429,10 +462,10 @@
         }
 
         .nav-btn:hover:not(:disabled) {
-            background: rgba(204, 0, 0, 0.3);
-            border-color: var(--primary-red);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.35), rgba(153, 0, 0, 0.25));
+            border-color: var(--border-hover);
             transform: translateY(-2px);
-            box-shadow: var(--glow-red);
+            box-shadow: var(--glow-red-strong);
         }
 
         .nav-btn:disabled {
@@ -476,10 +509,10 @@
         }
 
         .fullscreen-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
-            border-color: var(--primary-red);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
+            border-color: var(--border-hover);
             transform: scale(1.1);
-            box-shadow: var(--glow-red);
+            box-shadow: var(--glow-red-strong);
         }
 
         /* Mobile Responsive */
@@ -573,6 +606,152 @@
             10%, 90% { opacity: 1; }
         }
 
+        /* Toast Notification System */
+        .toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(26, 0, 0, 0.98);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transform: translateX(120%);
+            animation: slideInToast 0.3s ease forwards;
+            pointer-events: all;
+        }
+
+        .toast.success { border-color: #00cc00; }
+        .toast.error { border-color: var(--primary-red); }
+        .toast.info { border-color: #0099ff; }
+
+        .toast-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon { color: #00cc00; }
+        .toast.error .toast-icon { color: var(--primary-red); }
+        .toast.info .toast-icon { color: #0099ff; }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .toast-message {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            color: var(--text-primary);
+        }
+
+        @keyframes slideInToast {
+            to { transform: translateX(0); }
+        }
+
+        @keyframes slideOutToast {
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        /* Download Progress Bar */
+        .download-progress {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 0, 0, 0.98);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 350px;
+            z-index: 9999;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+            display: none;
+        }
+
+        .download-progress.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .progress-icon {
+            font-size: 1.5rem;
+            color: var(--primary-red);
+        }
+
+        .progress-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-red), #ff4444);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
         .shortcut-key {
             padding: 2px 6px;
             background: rgba(204, 0, 0, 0.2);
@@ -655,6 +834,21 @@
         </div>
     </nav>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Download Progress -->
+    <div class="download-progress" id="downloadProgress">
+        <div class="progress-header">
+            <i class="fas fa-download progress-icon"></i>
+            <span class="progress-title">Preparing Download...</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+        <div class="progress-status" id="progressStatus">Initializing...</div>
+    </div>
+
     <!-- Main Viewer Container -->
     <div class="viewer-container">
         <!-- 3D Viewer Area -->
@@ -677,6 +871,8 @@
                 exposure="1"
                 shadow-softness="1"
                 loading="eager"
+                aria-label="Interactive 3D SOLIDWORKS CAD model viewer"
+                role="img"
             ></model-viewer>
 
             <!-- Loading Overlay -->
@@ -809,6 +1005,63 @@
     </nav>
 
     <script>
+        // Toast Notification System
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const iconMap = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${iconMap[type]} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOutToast 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+            
+            // Manual close
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'slideOutToast 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+        }
+
+        // Progress Bar Controller
+        const progressController = {
+            show: function(title = 'Preparing Download...') {
+                const progress = document.getElementById('downloadProgress');
+                const progressTitle = progress.querySelector('.progress-title');
+                progressTitle.textContent = title;
+                progress.classList.add('active');
+                this.update(0, 'Initializing...');
+            },
+            update: function(percent, status) {
+                const fill = document.getElementById('progressBarFill');
+                const statusText = document.getElementById('progressStatus');
+                fill.style.width = percent + '%';
+                statusText.textContent = status;
+            },
+            hide: function() {
+                const progress = document.getElementById('downloadProgress');
+                progress.classList.remove('active');
+            }
+        };
+
         // Get model ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const modelId = urlParams.get('id') || 'model-01';
@@ -868,19 +1121,24 @@
             document.getElementById('currentIndex').textContent = currentIndex + 1;
             document.getElementById('totalModels').textContent = allModels.length;
 
-            // Load 3D model
+            // Load 3D model with better error handling
             if (model.glbPath) {
+                // Remove old listeners to prevent memory leaks
+                const oldViewer = modelViewer.cloneNode(true);
+                modelViewer.parentNode.replaceChild(oldViewer, modelViewer);
+                modelViewer = oldViewer;
+                
                 modelViewer.src = model.glbPath;
                 modelViewer.alt = model.name;
                 
                 modelViewer.addEventListener('load', () => {
                     loadingOverlay.classList.add('hidden');
                     showShortcutsHint();
-                });
+                }, { once: true });
 
                 modelViewer.addEventListener('error', () => {
                     showError();
-                });
+                }, { once: true });
             } else {
                 showError();
             }
@@ -889,6 +1147,18 @@
             document.getElementById('prevBtn').disabled = currentIndex === 0;
             document.getElementById('nextBtn').disabled = currentIndex === allModels.length - 1;
 
+            // Prefetch next model for instant navigation
+            if (currentIndex < allModels.length - 1) {
+                const nextModel = allModels[currentIndex + 1];
+                if (nextModel.glbPath) {
+                    const link = document.createElement('link');
+                    link.rel = 'prefetch';
+                    link.href = nextModel.glbPath;
+                    link.as = 'fetch';
+                    document.head.appendChild(link);
+                }
+            }
+
             // Update page title
             document.title = `${model.name} - 3D Viewer - A3KM Studio`;
         }
@@ -896,6 +1166,15 @@
         function showError() {
             loadingOverlay.classList.add('hidden');
             errorFallback.classList.add('active');
+            
+            // Update error message
+            const errorMessage = document.querySelector('.error-message');
+            const errorHint = document.querySelector('.error-hint');
+            if (errorMessage && errorHint) {
+                errorMessage.textContent = '3D Model Not Available';
+                errorHint.innerHTML = `Unable to load the 3D preview<br>
+                                      <small style="opacity: 0.7;">You can still download the SOLIDWORKS files below</small>`;
+            }
         }
 
         function showShortcutsHint() {
@@ -985,46 +1264,145 @@
             }
         });
 
-        // Download functionality
+        // Download functionality with progress
         document.getElementById('downloadBtn').addEventListener('click', async () => {
-            if (!currentModel.zipPath && currentModel.files.length === 0) {
-                alert('No files available for download');
+            if (currentModel.files.length === 0) {
+                showToast('No Files', 'This model has no files available for download', 'error');
                 return;
             }
 
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
             downloadBtn.disabled = true;
+            
+            progressController.show('Preparing Download');
+            progressController.update(10, 'Initializing...');
 
             try {
-                // Create ZIP file
+                const basePath = `../../Projects Storage/Solidwork Projects/${currentModel.category}/${currentModel.id}/`;
+                
+                // Check if it's a pre-packaged ZIP assembly
+                if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.zip')) {
+                    progressController.update(50, 'Starting download...');
+                    const zipFilePath = basePath + currentModel.files[0];
+                    const link = document.createElement('a');
+                    link.href = zipFilePath;
+                    link.download = currentModel.files[0];
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    progressController.update(100, 'Download complete!');
+                    setTimeout(() => progressController.hide(), 1000);
+                    showToast('Success!', `${currentModel.name} downloaded successfully`, 'success');
+                    
+                    downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                        downloadBtn.disabled = false;
+                    }, 2000);
+                    return;
+                }
+                
+                // Single SLDPRT file - Direct download
+                if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.SLDPRT')) {
+                    progressController.update(50, 'Starting download...');
+                    const filePath = basePath + currentModel.files[0];
+                    const link = document.createElement('a');
+                    link.href = filePath;
+                    link.download = currentModel.files[0];
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    progressController.update(100, 'Download complete!');
+                    setTimeout(() => progressController.hide(), 1000);
+                    showToast('Success!', `${currentModel.files[0]} downloaded successfully`, 'success');
+                    
+                    downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                        downloadBtn.disabled = false;
+                    }, 2000);
+                    return;
+                }
+                
+                // Multiple SLDPRT/SLDASM files - Create ZIP runtime
+                const isAssembly = currentModel.files.some(f => f.includes('.SLDASM'));
                 const zip = new JSZip();
-                const folder = zip.folder(currentModel.name.replace(/[^a-z0-9]/gi, '_'));
+                const folderName = currentModel.name.replace(/[^a-z0-9]/gi, '_');
+                const folder = zip.folder(folderName);
 
                 // Add README with model info
                 const readme = `# ${currentModel.name}\n\n` +
-                              `**Category:** ${currentModel.category}\n` +
-                              `**Difficulty:** ${currentModel.difficulty}\n` +
-                              `**Day:** ${currentModel.day}\n\n` +
-                              `**Description:**\n${currentModel.description}\n\n` +
-                              `**Tags:** ${currentModel.tags.join(', ')}\n\n` +
-                              `**Files Included:**\n${currentModel.files.map(f => `- ${f}`).join('\n')}\n\n` +
-                              `Downloaded from A3KM Studio\nAuthor: Md Akhinoor Islam`;
+                              `Category: ${currentModel.category}\n` +
+                              `Difficulty: ${currentModel.difficulty}\n` +
+                              `Day: ${currentModel.day}\n\n` +
+                              `Description:\n${currentModel.description}\n\n` +
+                              `Tags: ${currentModel.tags.join(', ')}\n\n` +
+                              `Files Included:\n${currentModel.files.map(f => `- ${f}`).join('\n')}\n\n` +
+                              `Type: ${isAssembly ? 'Assembly Project' : 'Part Files'}\n` +
+                              `Total Files: ${currentModel.files.length}\n\n` +
+                              `Instructions:\n` +
+                              `1. Open SOLIDWORKS 2020 or later\n` +
+                              `2. ${isAssembly ? 'Open the .SLDASM file to view the complete assembly' : 'Open the .SLDPRT file to view the part'}\n` +
+                              `3. All referenced parts are included in this package\n\n` +
+                              `Downloaded from A3KM Studio\n` +
+                              `Author: Md Akhinoor Islam\n` +
+                              `Website: https://github.com/Akhinoor14/A3KM-Studio`;
                 
                 folder.file('README.txt', readme);
 
-                // Note: In real implementation, you would fetch actual files from server
-                // For now, we'll just create the README
+                // Fetch files with progress
+                progressController.update(30, 'Fetching files...');
+                let fetchedCount = 0;
+                const sldFiles = currentModel.files.filter(f => f.endsWith('.SLDPRT') || f.endsWith('.SLDASM'));
+                
+                for (const fileName of sldFiles) {
+                    try {
+                        const filePath = basePath + fileName;
+                        const response = await fetch(filePath);
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            folder.file(fileName, blob);
+                            fetchedCount++;
+                            const progress = 30 + (fetchedCount / sldFiles.length) * 40;
+                            progressController.update(progress, `Fetching ${fetchedCount}/${sldFiles.length} files...`);
+                        } else {
+                            console.warn(`Could not fetch ${fileName}`);
+                        }
+                    } catch (err) {
+                        console.error(`Error fetching ${fileName}:`, err);
+                    }
+                }
+                
+                progressController.update(70, 'Creating ZIP archive...');
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Creating ZIP...</span>';
                 
                 // Generate ZIP
-                const content = await zip.generateAsync({type: 'blob'});
+                const content = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+                
+                progressController.update(90, 'Finalizing download...');
                 
                 // Trigger download
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
-                link.download = `${currentModel.id}_${currentModel.name.replace(/[^a-z0-9]/gi, '_')}.zip`;
+                link.download = `${currentModel.id}_${folderName}.zip`;
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
+                
+                // Cleanup
+                setTimeout(() => URL.revokeObjectURL(link.href), 100);
 
+                progressController.update(100, 'Download complete!');
+                setTimeout(() => progressController.hide(), 1500);
+                showToast('Success!', `${folderName}.zip downloaded with ${fetchedCount} files`, 'success');
+                
                 downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
                 setTimeout(() => {
                     downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
@@ -1033,7 +1411,8 @@
 
             } catch (error) {
                 console.error('Download error:', error);
-                alert('Error creating download file');
+                progressController.hide();
+                showToast('Download Failed', 'Error downloading files. Please try again.', 'error');
                 downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                 downloadBtn.disabled = false;
             }

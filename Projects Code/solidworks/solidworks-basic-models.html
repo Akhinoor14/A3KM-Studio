@@ -12,17 +12,22 @@
     <link rel="stylesheet" href="../../Optimization/styles.css">
     <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
-    <link rel="stylesheet" href="../../Optimization /mobile-top-nav.css">
-    <script src="solidworks-models-data.js"></script>
+    <script defer src="solidworks-models-data.js"></script>
     
     <style>
         :root {
-            --primary-red: #CC0000;
+            --primary-red: #8B0000;
+            --primary-red-dark: #5a0000;
+            --primary-red-light: #a00000;
             --bg-dark: rgba(10, 10, 10, 0.98);
-            --bg-card: rgba(26, 0, 0, 0.95);
-            --border-primary: rgba(204, 0, 0, 0.3);
+            --bg-card: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(15, 5, 5, 0.98));
+            --bg-card-hover: linear-gradient(135deg, rgba(40, 0, 0, 0.98), rgba(25, 5, 5, 1));
+            --border-primary: rgba(204, 0, 0, 0.5);
+            --border-hover: rgba(204, 0, 0, 0.9);
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.7);
+            --glow-red-strong: 0 0 30px rgba(204, 0, 0, 0.6), 0 0 60px rgba(204, 0, 0, 0.3);
+            --texture-pattern: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(204, 0, 0, 0.03) 10px, rgba(204, 0, 0, 0.03) 11px);
         }
 
         body {
@@ -72,9 +77,10 @@
         }
 
         .back-btn:hover {
-            background: rgba(204, 0, 0, 0.3);
-            border-color: var(--primary-red);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
+            border-color: var(--border-hover);
             transform: translateX(-5px);
+            box-shadow: var(--glow-red-strong);
         }
 
         .page-title {
@@ -171,6 +177,15 @@
             cursor: pointer;
         }
 
+        .model-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--texture-pattern);
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
         .model-card::before {
             content: '';
             position: absolute;
@@ -188,9 +203,10 @@
         }
 
         .model-card:hover {
-            border-color: var(--primary-red);
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
             transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(204, 0, 0, 0.4);
+            box-shadow: var(--glow-red-strong), 0 12px 40px rgba(204, 0, 0, 0.5);
         }
 
         .model-number {
@@ -425,9 +441,9 @@
         </div>
     </main>
 
-    <script src="../../Optimization /script.js"></script>
+    <script defer src="../../Optimization/script.js"></script>
     <script>
-        // Load basic models
+        // Load basic models with loading state
         document.addEventListener('DOMContentLoaded', () => {
             loadBasicModels();
         });
@@ -470,16 +486,23 @@
             document.getElementById('totalAssemblies').textContent = stats.assemblies;
         }
 
-        // Search functionality
+        // Debounced search for better performance
+        let searchTimeout;
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.model-card');
-            
-            cards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-            });
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = e.target.value.toLowerCase();
+                const cards = document.querySelectorAll('.model-card');
+                
+                // Batch DOM updates
+                requestAnimationFrame(() => {
+                    cards.forEach(card => {
+                        const text = card.textContent.toLowerCase();
+                        card.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                    });
+                });
+            }, 150); // 150ms debounce
         });
     </script>
     <script>
