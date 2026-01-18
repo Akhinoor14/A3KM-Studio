@@ -1364,214 +1364,222 @@
             }
         });
 
-            // Download functionality with progress
+            // Download functionality - GitHub Raw Content
             const downloadBtn = document.getElementById('downloadBtn');
             if (downloadBtn) {
                 downloadBtn.addEventListener('click', async () => {
-            if (currentModel.files.length === 0) {
-                    showToast('No Files', 'This model has no files available for download', 'error');
-                    return;
-                }
+                    if (currentModel.files.length === 0) {
+                        showToast('No Files', 'This model has no files available for download', 'error');
+                        return;
+                    }
 
-                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
-                downloadBtn.disabled = true;
-            
-            progressController.show('Preparing Download');
-            progressController.update(10, 'Initializing...');
-
-            try {
-                const basePath = `../../Projects%20Storage/Solidwork%20Projects/${encodeURIComponent(currentModel.category)}/${currentModel.id}/`;
+                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
+                    downloadBtn.disabled = true;
                 
-                // Check if it's a pre-packaged ZIP assembly
-                if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.zip')) {
-                    progressController.update(30, 'Fetching ZIP file...');
-                    const zipFilePath = basePath + encodeURIComponent(currentModel.files[0]);
-                    
-                    console.log(`📥 Downloading ZIP: ${zipFilePath}`);
-                    
+                    progressController.show('Preparing Download');
+                    progressController.update(10, 'Initializing...');
+
                     try {
-                        const response = await fetch(zipFilePath);
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        // GitHub repository information
+                        const GITHUB_USER = 'Akhinoor14';
+                        const GITHUB_REPO = 'A3KM-Studio';
+                        const GITHUB_BRANCH = 'main';
+                        
+                        // Construct GitHub raw content base URL
+                        const githubRawBase = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Projects%20Storage/Solidwork%20Projects`;
+                        const basePath = `${githubRawBase}/${encodeURIComponent(currentModel.category)}/${currentModel.id}`;
+                        
+                        console.log('📦 Download Base Path:', basePath);
+                        
+                        // Check if JSZip is available
+                        if (typeof JSZip === 'undefined') {
+                            progressController.hide();
+                            showToast('Error', 'Download library not loaded. Please refresh the page.', 'error');
+                            downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                            downloadBtn.disabled = false;
+                            return;
                         }
                         
-                        progressController.update(70, 'Processing ZIP...');
-                        const blob = await response.blob();
+                        // Create ZIP archive
+                        const isAssembly = currentModel.files.some(f => f.includes('.SLDASM'));
+                        const zip = new JSZip();
+                        const folderName = currentModel.name.replace(/[^a-z0-9\s]/gi, '_').replace(/\s+/g, '_');
+                        const folder = zip.folder(folderName);
+
+                        // Add comprehensive README
+                        progressController.update(20, 'Creating README...');
+                        const readme = 
+`╔════════════════════════════════════════════════════════════════╗
+║                        A3KM STUDIO                              ║
+║               SOLIDWORKS CAD Model Package                      ║
+╚════════════════════════════════════════════════════════════════╝
+
+Model: ${currentModel.name}
+ID: ${currentModel.id}
+Category: ${currentModel.category}
+Difficulty: ${currentModel.difficulty}
+Learning Day: ${currentModel.day}
+
+DESCRIPTION:
+${currentModel.description}
+
+PROJECT TAGS:
+${currentModel.tags.map(tag => `  • ${tag}`).join('\n')}
+
+FILES INCLUDED (${currentModel.files.length}):
+${currentModel.files.map((f, i) => `  ${i + 1}. ${f}`).join('\n')}
+
+PROJECT TYPE:
+${isAssembly ? '🔧 Assembly Project - Contains multiple parts working together' : '🔩 Single Part Model'}
+
+INSTRUCTIONS:
+1. Extract all files from this ZIP archive to a folder
+2. Open SOLIDWORKS 2020 or later version
+3. ${isAssembly ? 'Open the .SLDASM file to load the complete assembly' : 'Open the .SLDPRT file to view the part'}
+4. All referenced parts and dependencies are included
+5. Ensure all files remain in the same folder for proper references
+
+SYSTEM REQUIREMENTS:
+• SOLIDWORKS 2020 or later
+• Windows 10/11 (64-bit)
+• Minimum 16GB RAM recommended
+• Graphics card with certified OpenGL support
+
+LEARNING RESOURCES:
+• Full tutorial videos available at A3KM Studio
+• Step-by-step guides for beginners
+• Advanced techniques and tips
+
+AUTHOR INFORMATION:
+Name: Md Akhinoor Islam
+Portfolio: A3KM Studio
+GitHub: https://github.com/Akhinoor14/A3KM-Studio
+Contact: Available through GitHub repository
+
+LICENSE:
+Educational use - Free for learning and practice
+Commercial use - Please contact author
+
+Downloaded: ${new Date().toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+})}
+
+═══════════════════════════════════════════════════════════════════
+Thank you for using A3KM Studio! Happy Learning! 🚀
+═══════════════════════════════════════════════════════════════════`;
                         
+                        folder.file('📖 README.txt', readme);
+                        
+                        // Add file list for quick reference
+                        const fileList = currentModel.files.map((f, i) => `${i + 1}. ${f}`).join('\n');
+                        folder.file('📋 FILE_LIST.txt', `${currentModel.name}\n\nFiles in this package:\n\n${fileList}`);
+
+                        // Fetch files from GitHub with progress tracking
+                        progressController.update(30, 'Downloading files from GitHub...');
+                        let fetchedCount = 0;
+                        let failedCount = 0;
+                        const sldFiles = currentModel.files.filter(f => 
+                            f.endsWith('.SLDPRT') || 
+                            f.endsWith('.SLDASM') || 
+                            f.endsWith('.ZIP') || 
+                            f.endsWith('.zip')
+                        );
+                        
+                        console.log(`📥 Fetching ${sldFiles.length} files from GitHub...`);
+                        
+                        for (const fileName of sldFiles) {
+                            try {
+                                const fileUrl = `${basePath}/${fileName}`;
+                                console.log(`  → Fetching: ${fileName}`);
+                                
+                                const response = await fetch(fileUrl);
+                                
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    folder.file(fileName, blob);
+                                    fetchedCount++;
+                                    
+                                    const progress = 30 + (fetchedCount / sldFiles.length) * 40;
+                                    progressController.update(progress, `Downloaded ${fetchedCount}/${sldFiles.length} files...`);
+                                    console.log(`  ✅ Success: ${fileName} (${(blob.size / 1024).toFixed(2)} KB)`);
+                                } else {
+                                    failedCount++;
+                                    console.warn(`  ⚠️ Failed: ${fileName} (HTTP ${response.status})`);
+                                }
+                            } catch (err) {
+                                failedCount++;
+                                console.error(`  ❌ Error fetching ${fileName}:`, err.message);
+                            }
+                        }
+                        
+                        // Check if at least some files were downloaded
+                        if (fetchedCount === 0) {
+                            throw new Error('No files could be downloaded from GitHub. Files may not be available yet.');
+                        }
+                        
+                        // Create ZIP archive
+                        progressController.update(70, 'Creating ZIP archive...');
+                        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Creating ZIP...</span>';
+                        
+                        console.log(`📦 Creating ZIP with ${fetchedCount} files...`);
+                        
+                        const zipContent = await zip.generateAsync({
+                            type: 'blob',
+                            compression: 'DEFLATE',
+                            compressionOptions: { level: 6 }
+                        }, (metadata) => {
+                            const zipProgress = 70 + (metadata.percent * 0.2);
+                            progressController.update(zipProgress, `Compressing... ${metadata.percent.toFixed(0)}%`);
+                        });
+                        
+                        console.log(`✅ ZIP created: ${(zipContent.size / 1024 / 1024).toFixed(2)} MB`);
+                        
+                        // Trigger download
                         progressController.update(90, 'Starting download...');
-                        const url = window.URL.createObjectURL(blob);
+                        
+                        const downloadUrl = URL.createObjectURL(zipContent);
                         const link = document.createElement('a');
-                        link.href = url;
-                        link.download = currentModel.files[0];
+                        link.href = downloadUrl;
+                        link.download = `${currentModel.id}_${folderName}.zip`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                        window.URL.revokeObjectURL(url);
                         
+                        // Cleanup
+                        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
                         progressController.update(100, 'Download complete!');
-                        setTimeout(() => progressController.hide(), 1000);
-                        showToast('Success!', `${currentModel.name} downloaded successfully`, 'success');
+                        setTimeout(() => progressController.hide(), 1500);
+                        
+                        const successMsg = failedCount > 0 
+                            ? `Downloaded ${fetchedCount} files (${failedCount} failed)` 
+                            : `Successfully downloaded ${fetchedCount} files`;
+                        
+                        showToast('Success!', successMsg, 'success', 5000);
+                        console.log(`🎉 Download complete: ${successMsg}`);
                         
                         downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
                         setTimeout(() => {
                             downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                             downloadBtn.disabled = false;
-                        }, 2000);
-                        return;
-                    } catch (fetchError) {
-                        console.error('❌ ZIP download failed:', fetchError);
+                        }, 3000);
+
+                    } catch (error) {
+                        console.error('❌ Download error:', error);
                         progressController.hide();
-                        showToast('Download Failed', `Couldn't download ${currentModel.files[0]}: ${fetchError.message}`, 'error');
+                        
+                        const errorMsg = error.message.includes('GitHub') 
+                            ? 'Files not available on GitHub yet. Please try again later.' 
+                            : 'Download failed. Please try again.';
+                        
+                        showToast('Download Failed', errorMsg, 'error', 6000);
                         downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                         downloadBtn.disabled = false;
-                        return;
                     }
-                }
-                
-                // Single SLDPRT file - Direct download
-                if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.SLDPRT')) {
-                    progressController.update(30, 'Fetching file...');
-                    const filePath = basePath + encodeURIComponent(currentModel.files[0]);
-                    
-                    console.log(`📥 Downloading: ${filePath}`);
-                    
-                    try {
-                        const response = await fetch(filePath);
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        
-                        progressController.update(70, 'Processing file...');
-                        const blob = await response.blob();
-                        
-                        progressController.update(90, 'Starting download...');
-                        const url = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = currentModel.files[0];
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        window.URL.revokeObjectURL(url);
-                        
-                        progressController.update(100, 'Download complete!');
-                        setTimeout(() => progressController.hide(), 1000);
-                        showToast('Success!', `${currentModel.files[0]} downloaded successfully`, 'success');
-                        
-                        downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
-                        setTimeout(() => {
-                            downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
-                            downloadBtn.disabled = false;
-                        }, 2000);
-                        return;
-                    } catch (fetchError) {
-                        console.error('❌ Download failed:', fetchError);
-                        progressController.hide();
-                        showToast('Download Failed', `Couldn't download ${currentModel.files[0]}: ${fetchError.message}`, 'error');
-                        downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
-                        downloadBtn.disabled = false;
-                        return;
-                    }
-                }
-                
-                // Multiple SLDPRT/SLDASM files - Create ZIP runtime
-                if (typeof JSZip === 'undefined') {
-                    progressController.hide();
-                    showToast('Error', 'JSZip library not loaded. Please refresh the page or check browser settings.', 'error');
-                    downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
-                    downloadBtn.disabled = false;
-                    console.error('❌ JSZip not available - check browser tracking protection settings');
-                    return;
-                }
-                
-                const isAssembly = currentModel.files.some(f => f.includes('.SLDASM'));
-                const zip = new JSZip();
-                const folderName = currentModel.name.replace(/[^a-z0-9]/gi, '_');
-                const folder = zip.folder(folderName);
-
-                // Add README with model info
-                const readme = `# ${currentModel.name}\n\n` +
-                              `Category: ${currentModel.category}\n` +
-                              `Difficulty: ${currentModel.difficulty}\n` +
-                              `Day: ${currentModel.day}\n\n` +
-                              `Description:\n${currentModel.description}\n\n` +
-                              `Tags: ${currentModel.tags.join(', ')}\n\n` +
-                              `Files Included:\n${currentModel.files.map(f => `- ${f}`).join('\n')}\n\n` +
-                              `Type: ${isAssembly ? 'Assembly Project' : 'Part Files'}\n` +
-                              `Total Files: ${currentModel.files.length}\n\n` +
-                              `Instructions:\n` +
-                              `1. Open SOLIDWORKS 2020 or later\n` +
-                              `2. ${isAssembly ? 'Open the .SLDASM file to view the complete assembly' : 'Open the .SLDPRT file to view the part'}\n` +
-                              `3. All referenced parts are included in this package\n\n` +
-                              `Downloaded from A3KM Studio\n` +
-                              `Author: Md Akhinoor Islam\n` +
-                              `Website: https://github.com/Akhinoor14/A3KM-Studio`;
-                
-                folder.file('README.txt', readme);
-
-                // Fetch files with progress
-                progressController.update(30, 'Fetching files...');
-                let fetchedCount = 0;
-                const sldFiles = currentModel.files.filter(f => f.endsWith('.SLDPRT') || f.endsWith('.SLDASM'));
-                
-                for (const fileName of sldFiles) {
-                    try {
-                        const filePath = basePath + encodeURIComponent(fileName);
-                        const response = await fetch(filePath);
-                        if (response.ok) {
-                            const blob = await response.blob();
-                            folder.file(fileName, blob);
-                            fetchedCount++;
-                            const progress = 30 + (fetchedCount / sldFiles.length) * 40;
-                            progressController.update(progress, `Fetching ${fetchedCount}/${sldFiles.length} files...`);
-                        } else {
-                            console.warn(`Could not fetch ${fileName}`);
-                        }
-                    } catch (err) {
-                        console.error(`Error fetching ${fileName}:`, err);
-                    }
-                }
-                
-                progressController.update(70, 'Creating ZIP archive...');
-                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Creating ZIP...</span>';
-                
-                // Generate ZIP
-                const content = await zip.generateAsync({
-                    type: 'blob',
-                    compression: 'DEFLATE',
-                    compressionOptions: { level: 6 }
-                });
-                
-                progressController.update(90, 'Finalizing download...');
-                
-                // Trigger download
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = `${currentModel.id}_${folderName}.zip`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Cleanup
-                setTimeout(() => URL.revokeObjectURL(link.href), 100);
-
-                progressController.update(100, 'Download complete!');
-                setTimeout(() => progressController.hide(), 1500);
-                showToast('Success!', `${folderName}.zip downloaded with ${fetchedCount} files`, 'success');
-                
-                downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
-                setTimeout(() => {
-                    downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
-                    downloadBtn.disabled = false;
-                }, 2000);
-
-            } catch (error) {
-                console.error('Download error:', error);
-                progressController.hide();
-                showToast('Download Failed', 'Error downloading files. Please try again.', 'error');
-                downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
-                downloadBtn.disabled = false;
-            }
                 });
             }
 
