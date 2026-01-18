@@ -85,7 +85,7 @@
         /* Top Navigation Bar */
         .viewer-nav {
             position: fixed;
-            top: 0;
+            top: 85px;
             left: 0;
             right: 0;
             height: 70px;
@@ -104,6 +104,33 @@
             display: flex;
             align-items: center;
             gap: 20px;
+        }
+
+        .nav-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-red);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:not(:disabled):hover {
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.3));
+            border-color: var(--primary-red);
+            transform: scale(1.05);
+            box-shadow: var(--glow-red-strong);
         }
 
         .back-btn {
@@ -193,7 +220,7 @@
         /* Main Viewer Container */
         .viewer-container {
             position: fixed;
-            top: 70px;
+            top: 155px;
             left: 0;
             right: 0;
             bottom: 80px;
@@ -814,12 +841,19 @@
             <button class="back-btn" onclick="window.location.href='solidworks-basic-models.html'" title="Back to Gallery">
                 <i class="fas fa-arrow-left"></i>
             </button>
+            <button class="nav-btn" id="prevBtn" title="Previous Model (Left Arrow)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="nav-btn" id="nextBtn" title="Next Model (Right Arrow)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
             <div class="model-title-area">
                 <h1 id="modelName">Loading Model...</h1>
                 <div class="model-meta">
                     <span class="meta-badge" id="modelDifficulty">⭐ Beginner</span>
                     <span class="meta-badge" id="modelDay">Day 1</span>
                     <span class="meta-badge" id="modelCategory">Basic</span>
+                    <span class="meta-badge" id="modelPosition">1 / 35</span>
                 </div>
             </div>
         </div>
@@ -1096,6 +1130,7 @@
             document.getElementById('modelDifficulty').textContent = model.difficulty;
             document.getElementById('modelDay').textContent = model.day;
             document.getElementById('modelCategory').textContent = model.category.split('(')[0].trim();
+            document.getElementById('modelPosition').textContent = `${currentIndex + 1} / ${allModels.length}`;
 
             // Update info panel
             document.getElementById('infoId').textContent = model.id;
@@ -1251,44 +1286,77 @@
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             
+            let isNavigating = false; // Prevent multiple rapid clicks
+            
             if (prevBtn) {
                 prevBtn.addEventListener('click', () => {
-                    if (currentIndex > 0) {
-                        const prevModel = allModels[currentIndex - 1];
+                    if (isNavigating || currentIndex === 0) return;
+                    isNavigating = true;
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    
+                    const prevModel = allModels[currentIndex - 1];
+                    
+                    // Show loading state
+                    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+                    
+                    // Small delay to allow UI update
+                    setTimeout(() => {
                         window.location.href = `solidworks-model-viewer.html?id=${prevModel.id}`;
-                    }
+                    }, 100);
                 });
             }
 
             if (nextBtn) {
                 nextBtn.addEventListener('click', () => {
-                    if (currentIndex < allModels.length - 1) {
-                        const nextModel = allModels[currentIndex + 1];
+                    if (isNavigating || currentIndex >= allModels.length - 1) return;
+                    isNavigating = true;
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    
+                    const nextModel = allModels[currentIndex + 1];
+                    
+                    // Show loading state
+                    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+                    
+                    // Small delay to allow UI update
+                    setTimeout(() => {
                         window.location.href = `solidworks-model-viewer.html?id=${nextModel.id}`;
-                    }
+                    }, 100);
                 });
             }
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts with debouncing
+        let keyDebounce = false;
         document.addEventListener('keydown', (e) => {
+            if (keyDebounce) return; // Prevent rapid key presses
+            
             switch(e.key) {
                 case 'ArrowLeft':
-                    if (currentIndex > 0) document.getElementById('prevBtn').click();
+                    if (currentIndex > 0 && !isNavigating) {
+                        keyDebounce = true;
+                        document.getElementById('prevBtn').click();
+                        setTimeout(() => keyDebounce = false, 500);
+                    }
                     break;
                 case 'ArrowRight':
-                    if (currentIndex < allModels.length - 1) document.getElementById('nextBtn').click();
+                    if (currentIndex < allModels.length - 1 && !isNavigating) {
+                        keyDebounce = true;
+                        document.getElementById('nextBtn').click();
+                        setTimeout(() => keyDebounce = false, 500);
+                    }
                     break;
                 case 'r':
                 case 'R':
-                    autoRotateBtn.click();
+                    if (autoRotateBtn) autoRotateBtn.click();
                     break;
                 case 'f':
                 case 'F':
-                    fullscreenBtn.click();
+                    if (fullscreenBtn) fullscreenBtn.click();
                     break;
                 case 'i':
                 case 'I':
-                    document.getElementById('toggleInfoBtn').click();
+                    document.getElementById('toggleInfoBtn')?.click();
                     break;
             }
         });

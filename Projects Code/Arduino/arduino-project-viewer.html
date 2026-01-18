@@ -1170,7 +1170,7 @@
     <!-- Desktop Navigation -->
     <nav class="desktop-navbar" id="desktopNavbar">
         <div class="desktop-nav-container">
-            <a href="../../index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+            <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
                 <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
                 <div class="desktop-nav-brand">
                     <span class="desktop-nav-brand-name">A3KM Studio</span>
@@ -1185,7 +1185,7 @@
                     </a>
                 </li>
                 <li class="desktop-nav-item">
-                    <a href="../Portfolio/portfolio-projects.html" class="desktop-nav-link active" id="nav-projects">
+                    <a href="../projects.html" class="desktop-nav-link active" id="nav-projects">
                         <i class="fas fa-folder-open"></i>
                         <span>Projects</span>
                     </a>
@@ -1405,6 +1405,16 @@
 
     <script src="../../Optimization /script.js"></script>
     <script>
+        // Base path configuration for file loading
+        const ARDUINO_BASE_PATH = '../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/';
+        
+        // Helper function to build file path
+        function buildFilePath(folder, fileName) {
+            const folderEncoded = folder.replace(/ /g, '%20');
+            const fileEncoded = fileName.replace(/ /g, '%20');
+            return `${ARDUINO_BASE_PATH}${folderEncoded}/${fileEncoded}`;
+        }
+        
         // Arduino projects data
         const projects = [
             {
@@ -1748,8 +1758,10 @@
 
         // Load all documentation files
         async function loadDocumentation() {
+            console.log('📚 Loading documentation for:', currentProject.title);
             await loadExplanationDoc();
             await loadReadmeDoc();
+            console.log('✅ Documentation loading complete');
         }
 
         // Load Code Explanation document
@@ -1763,9 +1775,12 @@
                     'Code Explaination (for beginner)_NEW.md',
                     'Code Explanation (for beginner)_NEW.md',
                     'Code & Circuit Explanation(for beginner).md',
+                    'Code & Circuit Explanation (for beginner).md',
                     'Code & Circuit Explanation(for beginner)_NEW.md',
                     'Code & CIRCUIT Explanation (for beginner).md',
-                    'Code & CIRCUIT Explanation (for beginner)_NEW.md'
+                    'Code & CIRCUIT Explanation (for beginner)_NEW.md',
+                    'Code Explaination(for beginner).md',
+                    'Code Explanation(for beginner).md'
                 ];
                 
                 let loaded = false;
@@ -1773,24 +1788,19 @@
                 for (const fileName of fileVariations) {
                     if (loaded) break;
                     
-                    const urls = [
-                        `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${fileName}`,
-                        `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${encodeURIComponent(fileName)}`
-                    ];
+                    const url = buildFilePath(currentProject.folder, fileName);
                     
-                    for (const url of urls) {
-                        try {
-                            const response = await fetch(url);
-                            if (response.ok) {
-                                const content = await response.text();
-                                explanationContent.innerHTML = convertMarkdownToHTML(content);
-                                loaded = true;
-                                console.log(`✅ Loaded explanation from: ${url}`);
-                                break;
-                            }
-                        } catch (err) {
-                            // Continue trying
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const content = await response.text();
+                            explanationContent.innerHTML = convertMarkdownToHTML(content);
+                            loaded = true;
+                            console.log(`✅ Loaded explanation from: ${url}`);
+                            break;
                         }
+                    } catch (err) {
+                        console.log(`Failed: ${url}`);
                     }
                 }
                 
@@ -1830,42 +1840,38 @@
                 for (const fileName of fileVariations) {
                     if (loaded) break;
                     
-                    const urls = [
-                        `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${fileName}`,
-                        `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${encodeURIComponent(fileName)}`
-                    ];
+                    const url = buildFilePath(currentProject.folder, fileName);
                     
-                    for (const url of urls) {
-                        try {
-                            const response = await fetch(url);
-                            if (response.ok) {
-                                const content = await response.text();
-                                readmeContent.innerHTML = convertMarkdownToHTML(content);
-                                loaded = true;
-                                console.log(`✅ Loaded README from: ${url}`);
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const content = await response.text();
+                            readmeContent.innerHTML = convertMarkdownToHTML(content);
+                            loaded = true;
+                            console.log(`✅ Loaded README from: ${url}`);
+                            
+                            // Extract TinkerCAD link if not set
+                            if (!currentProject.tinkercad || currentProject.tinkercad === '#') {
+                                const patterns = [
+                                    /https?:\/\/(?:www\.)?tinkercad\.com\/things\/[a-zA-Z0-9-]+/i,
+                                    /\[.*?\]\((https?:\/\/(?:www\.)?tinkercad\.com\/things\/[a-zA-Z0-9-]+)\)/i
+                                ];
                                 
-                                // Extract TinkerCAD link if not set
-                                if (!currentProject.tinkercad || currentProject.tinkercad === '#') {
-                                    const patterns = [
-                                        /https?:\/\/(?:www\.)?tinkercad\.com\/things\/[a-zA-Z0-9-]+/i,
-                                        /\[.*?\]\((https?:\/\/(?:www\.)?tinkercad\.com\/things\/[a-zA-Z0-9-]+)\)/i
-                                    ];
-                                    
-                                    for (const pattern of patterns) {
-                                        const match = content.match(pattern);
-                                        if (match) {
-                                            currentProject.tinkercad = match[1] || match[0];
-                                            updateTinkercadButton();
-                                            break;
-                                        }
+                                for (const pattern of patterns) {
+                                    const match = content.match(pattern);
+                                    if (match) {
+                                        currentProject.tinkercad = match[1] || match[0];
+                                        updateTinkercadButton();
+                                        break;
                                     }
                                 }
-                                break;
                             }
-                        } catch (err) {
-                            // Continue trying
+                            break;
                         }
+                    } catch (err) {
+                        console.log(`Failed: ${url}`);
                     }
+                }
                 }
                 
                 if (!loaded) {
@@ -1934,24 +1940,19 @@
                     for (const fileName of possibleNames) {
                         if (codeLoaded) break;
                         
-                        const urls = [
-                            `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${fileName}`,
-                            `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${encodeURIComponent(fileName)}`
-                        ];
+                        const url = buildFilePath(currentProject.folder, fileName);
                         
-                        for (const url of urls) {
-                            try {
-                                const response = await fetch(url);
-                                if (response.ok) {
-                                    const code = await response.text();
-                                    codeContent.textContent = code;
-                                    codeLoaded = true;
-                                    console.log(`✅ Loaded code from: ${url}`);
-                                    break;
-                                }
-                            } catch (err) {
-                                console.log(`Failed to load from ${url}`);
+                        try {
+                            const response = await fetch(url);
+                            if (response.ok) {
+                                const code = await response.text();
+                                codeContent.textContent = code;
+                                codeLoaded = true;
+                                console.log(`✅ Loaded code from: ${url}`);
+                                break;
                             }
+                        } catch (err) {
+                            console.log(`Failed to load from ${url}`);
                         }
                     }
                     
@@ -1967,22 +1968,19 @@
         
         async function loadSingleCode(fileName) {
             const codeContent = document.getElementById('codeContent');
-            const urls = [
-                `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${fileName}`,
-                `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${encodeURIComponent(fileName)}`
-            ];
+            const url = buildFilePath(currentProject.folder, fileName);
             
-            for (const url of urls) {
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const code = await response.text();
-                        codeContent.textContent = code;
-                        document.getElementById('codeFileName').textContent = fileName;
-                        console.log(`✅ Loaded: ${fileName}`);
-                        return true;
-                    }
-                } catch (err) {}
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const code = await response.text();
+                    codeContent.textContent = code;
+                    document.getElementById('codeFileName').textContent = fileName;
+                    console.log(`✅ Loaded: ${fileName}`);
+                    return true;
+                }
+            } catch (err) {
+                console.log(`Failed: ${url}`);
             }
             return false;
         }
@@ -2049,21 +2047,15 @@
             for (const fileName of knownFilePatterns) {
                 if (!fileName || fileName === '#') continue;
                 
-                const urls = [
-                    `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${fileName}`,
-                    `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${encodeURIComponent(fileName)}`
-                ];
+                const url = buildFilePath(currentProject.folder, fileName);
                 
-                for (const url of urls) {
-                    try {
-                        const response = await fetch(url, { method: 'HEAD' });
-                        if (response.ok && !foundFiles.includes(fileName)) {
-                            foundFiles.push(fileName);
-                            console.log(`✅ Found: ${fileName}`);
-                            break;
-                        }
-                    } catch (err) {}
-                }
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    if (response.ok && !foundFiles.includes(fileName)) {
+                        foundFiles.push(fileName);
+                        console.log(`✅ Found: ${fileName}`);
+                    }
+                } catch (err) {}
             }
             return foundFiles;
         }
@@ -2209,19 +2201,18 @@
             circuitImage.style.display = 'none';
             
             // Generate possible circuit image paths
-            const basePaths = [
-                `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}`,
-                `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}`
+            const imageNames = [
+                'circuit.png',
+                'Circuit.png', 
+                'CIRCUIT.png',
+                'circuit-diagram.png', 
+                'Circuit-diagram.png',
+                'schematic.png',
+                'Schematic.png',
+                'diagram.png',
+                'Diagram.png'
             ];
-            
-            const imageNames = ['Circuit.png', 'circuit.png', 'circuit-diagram.png', 'schematic.png', 'diagram.png'];
-            
-            const paths = [];
-            basePaths.forEach(base => {
-                imageNames.forEach(name => {
-                    paths.push(`${base}/${name}`);
-                });
-            });
+            const paths = imageNames.map(name => buildFilePath(currentProject.folder, name));
             
             let currentIndex = 0;
             let imageFound = false;
@@ -2320,10 +2311,17 @@
                     alert('⏳ Please wait for the explanation to load first!');
                     return;
                 }
+                
+                // Check if explanation is actually available
+                if (content.includes('not available') || content.includes('fa-file-excel')) {
+                    alert('📄 This project does not have a Code Explanation document available.');
+                    return;
+                }
 
                 // Check if PDF converter is available
                 if (typeof MDtoPDFConverter === 'undefined') {
                     alert('❌ PDF converter not loaded! Please refresh the page.');
+                    console.error('MDtoPDFConverter is undefined');
                     return;
                 }
 
@@ -2385,10 +2383,17 @@
                     alert('⏳ Please wait for the README to load first!');
                     return;
                 }
+                
+                // Check if README is actually available
+                if (content.includes('not available') || content.includes('fa-file-excel')) {
+                    alert('📄 This project does not have a README document available.');
+                    return;
+                }
 
                 // Check if PDF converter is available
                 if (typeof MDtoPDFConverter === 'undefined') {
                     alert('❌ PDF converter not loaded! Please refresh the page.');
+                    console.error('MDtoPDFConverter is undefined');
                     return;
                 }
 
