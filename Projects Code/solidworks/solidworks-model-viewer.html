@@ -1384,48 +1384,94 @@
                 
                 // Check if it's a pre-packaged ZIP assembly
                 if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.zip')) {
-                    progressController.update(50, 'Starting download...');
+                    progressController.update(30, 'Fetching ZIP file...');
                     const zipFilePath = basePath + encodeURIComponent(currentModel.files[0]);
-                    const link = document.createElement('a');
-                    link.href = zipFilePath;
-                    link.download = currentModel.files[0];
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
                     
-                    progressController.update(100, 'Download complete!');
-                    setTimeout(() => progressController.hide(), 1000);
-                    showToast('Success!', `${currentModel.name} downloaded successfully`, 'success');
+                    console.log(`📥 Downloading ZIP: ${zipFilePath}`);
                     
-                    downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
-                    setTimeout(() => {
+                    try {
+                        const response = await fetch(zipFilePath);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        progressController.update(70, 'Processing ZIP...');
+                        const blob = await response.blob();
+                        
+                        progressController.update(90, 'Starting download...');
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = currentModel.files[0];
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        progressController.update(100, 'Download complete!');
+                        setTimeout(() => progressController.hide(), 1000);
+                        showToast('Success!', `${currentModel.name} downloaded successfully`, 'success');
+                        
+                        downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+                        setTimeout(() => {
+                            downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                            downloadBtn.disabled = false;
+                        }, 2000);
+                        return;
+                    } catch (fetchError) {
+                        console.error('❌ ZIP download failed:', fetchError);
+                        progressController.hide();
+                        showToast('Download Failed', `Couldn't download ${currentModel.files[0]}: ${fetchError.message}`, 'error');
                         downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                         downloadBtn.disabled = false;
-                    }, 2000);
-                    return;
+                        return;
+                    }
                 }
                 
                 // Single SLDPRT file - Direct download
                 if (currentModel.files.length === 1 && currentModel.files[0].endsWith('.SLDPRT')) {
-                    progressController.update(50, 'Starting download...');
+                    progressController.update(30, 'Fetching file...');
                     const filePath = basePath + encodeURIComponent(currentModel.files[0]);
-                    const link = document.createElement('a');
-                    link.href = filePath;
-                    link.download = currentModel.files[0];
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
                     
-                    progressController.update(100, 'Download complete!');
-                    setTimeout(() => progressController.hide(), 1000);
-                    showToast('Success!', `${currentModel.files[0]} downloaded successfully`, 'success');
+                    console.log(`📥 Downloading: ${filePath}`);
                     
-                    downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
-                    setTimeout(() => {
+                    try {
+                        const response = await fetch(filePath);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        progressController.update(70, 'Processing file...');
+                        const blob = await response.blob();
+                        
+                        progressController.update(90, 'Starting download...');
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = currentModel.files[0];
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        progressController.update(100, 'Download complete!');
+                        setTimeout(() => progressController.hide(), 1000);
+                        showToast('Success!', `${currentModel.files[0]} downloaded successfully`, 'success');
+                        
+                        downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+                        setTimeout(() => {
+                            downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                            downloadBtn.disabled = false;
+                        }, 2000);
+                        return;
+                    } catch (fetchError) {
+                        console.error('❌ Download failed:', fetchError);
+                        progressController.hide();
+                        showToast('Download Failed', `Couldn't download ${currentModel.files[0]}: ${fetchError.message}`, 'error');
                         downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
                         downloadBtn.disabled = false;
-                    }, 2000);
-                    return;
+                        return;
+                    }
                 }
                 
                 // Multiple SLDPRT/SLDASM files - Create ZIP runtime
