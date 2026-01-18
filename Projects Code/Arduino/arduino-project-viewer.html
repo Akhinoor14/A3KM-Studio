@@ -1289,19 +1289,19 @@
                         Documentation
                     </h2>
                     <div class="doc-tabs">
-                        <button class="doc-tab active" onclick="switchDocTab('code')">
+                        <button class="doc-tab active" data-tab="code">
                             <i class="fas fa-code"></i> Arduino Code
                         </button>
-                        <button class="doc-tab" onclick="switchDocTab('explanation')">
+                        <button class="doc-tab" data-tab="explanation">
                             <i class="fas fa-graduation-cap"></i> Code Explanation
                         </button>
-                        <button class="doc-tab" onclick="switchDocTab('readme')">
+                        <button class="doc-tab" data-tab="readme">
                             <i class="fas fa-file-alt"></i> README
                         </button>
-                        <button class="doc-tab pdf-download-btn" onclick="downloadExplanationPDF()" title="Download Code Explanation as PDF">
+                        <button class="doc-tab pdf-download-btn" data-action="explanation" title="Download Code Explanation as PDF">
                             <i class="fas fa-file-pdf"></i> Download Explanation
                         </button>
-                        <button class="doc-tab pdf-download-btn" onclick="downloadReadmePDF()" title="Download README as PDF">
+                        <button class="doc-tab pdf-download-btn" data-action="readme" title="Download README as PDF">
                             <i class="fas fa-file-pdf"></i> Download README
                         </button>
                     </div>
@@ -1312,10 +1312,10 @@
                             <div class="code-header">
                                 <span class="code-title" id="codeFileName">sketch.ino</span>
                                 <div style="display: flex; gap: 10px;">
-                                    <button class="copy-btn" onclick="downloadCode()" title="Download .ino file">
+                                    <button class="copy-btn" data-action="download" title="Download .ino file">
                                         <i class="fas fa-download"></i> Download
                                     </button>
-                                    <button class="copy-btn" onclick="copyCode()">
+                                    <button class="copy-btn" data-action="copy">
                                         <i class="fas fa-copy"></i> Copy Code
                                     </button>
                                 </div>
@@ -1368,7 +1368,7 @@
                         <i class="fas fa-external-link-alt"></i>
                         Open in Tinkercad
                     </a>
-                    <button class="action-btn secondary" onclick="downloadCode()">
+                    <button class="action-btn secondary" data-action="download-sidebar">
                         <i class="fas fa-download"></i>
                         Download Code
                     </button>
@@ -1880,7 +1880,6 @@
                     } catch (err) {
                         console.log(`Failed: ${url}`);
                     }
-                }
                 }
                 
                 if (!loaded) {
@@ -2469,9 +2468,57 @@
         });
 
         // Load project on page load (fallback if DOMContentLoaded already fired)
-        document.addEventListener('DOMContentLoaded', loadProject);
+        function setupEventListeners() {
+            // Doc tab buttons (navigation tabs)
+            document.querySelectorAll('.doc-tab[data-tab]').forEach(btn => {
+                if (!btn.dataset.listenerAttached) {
+                    const tabName = btn.dataset.tab;
+                    btn.addEventListener('click', () => switchDocTab(tabName));
+                    btn.dataset.listenerAttached = 'true';
+                }
+            });
+            
+            // PDF download buttons
+            document.querySelectorAll('.pdf-download-btn[data-action]').forEach(btn => {
+                if (!btn.dataset.listenerAttached) {
+                    const action = btn.dataset.action;
+                    if (action === 'explanation') {
+                        btn.addEventListener('click', downloadExplanationPDF);
+                    } else if (action === 'readme') {
+                        btn.addEventListener('click', downloadReadmePDF);
+                    }
+                    btn.dataset.listenerAttached = 'true';
+                }
+            });
+            
+            // Code download and copy buttons
+            document.querySelectorAll('.copy-btn[data-action]').forEach(btn => {
+                if (!btn.dataset.listenerAttached) {
+                    const action = btn.dataset.action;
+                    if (action === 'download') {
+                        btn.addEventListener('click', downloadCode);
+                    } else if (action === 'copy') {
+                        btn.addEventListener('click', copyCode);
+                    }
+                    btn.dataset.listenerAttached = 'true';
+                }
+            });
+            
+            // Sidebar download button
+            const sidebarBtn = document.querySelector('.action-btn.secondary[data-action="download-sidebar"]');
+            if (sidebarBtn && !sidebarBtn.dataset.listenerAttached) {
+                sidebarBtn.addEventListener('click', downloadCode);
+                sidebarBtn.dataset.listenerAttached = 'true';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProject();
+            setupEventListeners();
+        });
         if (document.readyState !== 'loading') {
             loadProject();
+            setupEventListeners();
         }
     </script>
 </body>

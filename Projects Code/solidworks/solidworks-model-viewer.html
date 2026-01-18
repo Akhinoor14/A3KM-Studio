@@ -24,7 +24,10 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     
     <!-- JSZip for ZIP downloads -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" 
+            integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" 
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer"></script>
     
     <!-- Model Data - Load Before Main Script -->
     <script src="solidworks-models-data.js"></script>
@@ -1426,6 +1429,15 @@
                 }
                 
                 // Multiple SLDPRT/SLDASM files - Create ZIP runtime
+                if (typeof JSZip === 'undefined') {
+                    progressController.hide();
+                    showToast('Error', 'JSZip library not loaded. Please refresh the page or check browser settings.', 'error');
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                    downloadBtn.disabled = false;
+                    console.error('❌ JSZip not available - check browser tracking protection settings');
+                    return;
+                }
+                
                 const isAssembly = currentModel.files.some(f => f.includes('.SLDASM'));
                 const zip = new JSZip();
                 const folderName = currentModel.name.replace(/[^a-z0-9]/gi, '_');
@@ -1524,6 +1536,17 @@
             if (window.innerWidth <= 768 && infoPanel) {
                 infoPanel.classList.add('hidden');
             }
+            
+            // Check if JSZip loaded successfully
+            setTimeout(() => {
+                if (typeof JSZip === 'undefined') {
+                    console.error('⚠️ JSZip not loaded - Downloads may not work');
+                    console.info('💡 Try disabling tracking protection for this site or refresh the page');
+                    showToast('Warning', 'Download library blocked by browser. Please disable tracking protection for this site.', 'warning', 8000);
+                } else {
+                    console.log('✅ JSZip loaded successfully');
+                }
+            }, 500);
         }); // End DOMContentLoaded
     </script>
     <script>
