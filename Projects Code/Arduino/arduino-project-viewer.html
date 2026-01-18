@@ -12,12 +12,13 @@
     <link rel="stylesheet" href="../../Optimization/navbar/mobile-top-nav.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     
-    <!-- MD to PDF Converter -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="../../Optimization/md-to-pdf-downloader/pdf-styles.css">
-    <script src="../../Optimization/md-to-pdf-downloader/pdf-config.js"></script>
-    <script src="../../Optimization/md-to-pdf-downloader/watermark-handler.js"></script>
-    <script src="../../Optimization/md-to-pdf-downloader/md-to-pdf-converter.js"></script>
+    <!-- PDF Library for watermark/header/footer injection -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <!-- Markdown & Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     
     <style>
         :root {
@@ -110,6 +111,81 @@
 
         .back-btn:hover i {
             transform: translateX(-3px);
+        }
+
+        /* Navigation Controls */
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-control-btn {
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(153, 0, 0, 0.3));
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .nav-control-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.5));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+        }
+
+        .nav-control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, rgba(80, 80, 80, 0.2), rgba(60, 60, 60, 0.3));
+            border-color: rgba(100, 100, 100, 0.3);
+        }
+
+        .nav-control-btn i {
+            color: var(--primary-red);
+        }
+
+        .nav-control-btn:disabled i {
+            color: rgba(150, 150, 150, 0.5);
+        }
+
+        .project-counter {
+            background: rgba(204, 0, 0, 0.2);
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .keyboard-hint-badge {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .keyboard-hint-badge kbd {
+            background: rgba(204, 0, 0, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--primary-red);
         }
 
         .content-wrapper {
@@ -312,6 +388,104 @@
             font-size: 1.2rem;
         }
 
+        /* Disabled PDF button state */
+        .doc-tab.pdf-download-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(80, 80, 80, 0.25));
+            border-color: rgba(100, 100, 100, 0.3);
+            position: relative;
+        }
+
+        .doc-tab.pdf-download-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(80, 80, 80, 0.25));
+        }
+
+        .doc-tab.pdf-download-btn.disabled i {
+            color: rgba(150, 150, 150, 0.6);
+        }
+
+        .doc-tab.pdf-download-btn.disabled::after {
+            content: '🔒';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        /* Fullscreen Button */
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.3), rgba(153, 0, 0, 0.4));
+            border: 2px solid rgba(204, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            z-index: 100;
+        }
+
+        .fullscreen-btn:hover {
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.5), rgba(153, 0, 0, 0.6));
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4);
+        }
+
+        .fullscreen-btn i {
+            font-size: 1.1rem;
+            color: var(--primary-red);
+        }
+
+        /* Fullscreen Mode */
+        .documentation-section.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+            padding: 80px 40px 40px 40px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .documentation-section.fullscreen .section-title {
+            display: none;
+        }
+
+        .documentation-section.fullscreen .doc-tabs {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid rgba(204, 0, 0, 0.4);
+        }
+
+        .documentation-section.fullscreen .markdown-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.7);
+            border-radius: 15px;
+            border: 2px solid rgba(204, 0, 0, 0.3);
+        }
+
         .doc-content {
             display: none;
             animation: fadeIn 0.4s ease;
@@ -403,12 +577,12 @@
         }
 
         .markdown-content {
-            color: var(--text-secondary);
+            color: var(--text-white);
             line-height: 1.8;
             padding: 30px;
             background: rgba(20, 0, 0, 0.4);
             border-radius: 0 0 12px 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             max-height: 700px;
             overflow-y: auto;
             min-height: 500px;
@@ -417,35 +591,26 @@
         .markdown-content h1,
         .markdown-content h2,
         .markdown-content h3,
-        .markdown-content h4 {
-            color: var(--primary-red);
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            color: var(--text-white);
             font-weight: 700;
-            margin-bottom: 16px;
-        }
-        
-        .markdown-content h1 { 
-            font-size: 2rem; 
-            margin-top: 0;
-            padding-bottom: 8px;
+            line-height: 1.3;
+            margin: 2em 0 1em;
+            padding-bottom: 0.3em;
             border-bottom: 2px solid rgba(204, 0, 0, 0.3);
         }
-        .markdown-content h2 { 
-            font-size: 1.6rem;
-            margin-top: 28px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(204, 0, 0, 0.2);
-        }
-        .markdown-content h3 { 
-            font-size: 1.3rem;
-            margin-top: 24px;
-        }
-        .markdown-content h4 { 
-            font-size: 1.1rem;
-            margin-top: 20px;
-        }
+        
+        .markdown-content h1 { font-size: 2.5rem; }
+        .markdown-content h2 { font-size: 2rem; }
+        .markdown-content h3 { font-size: 1.6rem; }
+        .markdown-content h4 { font-size: 1.3rem; }
+        .markdown-content h5 { font-size: 1.1rem; }
+        .markdown-content h6 { font-size: 1rem; }
         
         .markdown-content p {
-            margin-bottom: 16px;
+            margin: 1.5em 0;
             line-height: 1.8;
             color: var(--text-secondary);
         }
@@ -453,36 +618,38 @@
         .markdown-content code {
             background: rgba(204, 0, 0, 0.15);
             padding: 3px 8px;
-            border-radius: 4px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            color: rgba(255, 200, 200, 0.95);
-            font-size: 0.9em;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            color: var(--primary-red);
+            border: 1px solid var(--border-primary);
         }
         
         .markdown-content pre {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid rgba(204, 0, 0, 0.3);
+            background: rgba(10, 10, 10, 0.95);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow-x: auto;
-            margin: 20px 0;
+            margin: 2em 0;
+            border: 2px solid var(--border-primary);
         }
         
         .markdown-content pre code {
             background: none;
             padding: 0;
-            color: #d4d4d4;
-            font-size: 0.9rem;
+            border: none;
+            color: inherit;
+            font-size: 0.9em;
         }
         
         .markdown-content ul,
         .markdown-content ol {
-            margin: 16px 0;
-            padding-left: 30px;
+            margin: 1.5em 0;
+            padding-left: 2em;
         }
         
         .markdown-content li {
-            margin-bottom: 8px;
+            margin: 0.8em 0;
             line-height: 1.7;
             color: var(--text-secondary);
         }
@@ -507,73 +674,77 @@
         }
 
         .markdown-content blockquote {
-            border-left: 4px solid var(--primary-red);
-            padding: 16px 20px;
-            margin: 20px 0;
-            color: rgba(255, 255, 255, 0.8);
-            background: rgba(204, 0, 0, 0.08);
-            border-radius: 0 8px 8px 0;
+            margin: 2em 0;
+            padding: 1.5em 2em;
+            background: rgba(204, 0, 0, 0.1);
+            border-left: 5px solid var(--primary-red);
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            color: var(--text-white);
         }
 
         .markdown-content hr {
             border: none;
-            border-top: 2px solid rgba(204, 0, 0, 0.3);
-            margin: 30px 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-red), transparent);
+            margin: 3em 0;
         }
 
         .markdown-content a {
             color: var(--primary-red);
-            text-decoration: none;
-            border-bottom: 1px solid rgba(204, 0, 0, 0.3);
-            transition: all 0.3s ease;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: color 0.3s ease;
         }
 
         .markdown-content a:hover {
-            border-bottom-color: var(--primary-red);
-            color: #ff3333;
+            color: #FF0000;
         }
 
         .markdown-content img {
             max-width: 100%;
             height: auto;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 15px;
+            margin: 2em 0;
+            border: 3px solid var(--border-primary);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .markdown-content table {
+        /* Table styling matching blog */
+        .markdown-content .table-wrapper {
+            overflow-x: auto;
+            margin: 2em 0;
+        }
+
+        .markdown-content table,
+        .markdown-content .markdown-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 25px 0;
-            border: 2px solid rgba(204, 0, 0, 0.4);
-            border-radius: 8px;
+            margin: 2em 0;
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
             overflow: hidden;
         }
 
-        .markdown-content thead {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.4), rgba(153, 0, 0, 0.5));
-        }
-
         .markdown-content th {
-            padding: 14px 16px;
+            padding: 12px 15px;
+            border: 1px solid var(--border-primary);
             text-align: left;
-            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-red), #990000);
+            color: var(--text-white);
             font-weight: 700;
-            border-bottom: 2px solid rgba(204, 0, 0, 0.5);
         }
 
         .markdown-content td {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(204, 0, 0, 0.2);
+            padding: 12px 15px;
+            border: 1px solid var(--border-primary);
+            text-align: left;
             color: var(--text-secondary);
         }
 
         .markdown-content tbody tr:hover {
-            background: rgba(204, 0, 0, 0.05);
-        }
-
-        .markdown-content tbody tr:last-child td {
-            border-bottom: none;
+            background: rgba(204, 0, 0, 0.08);
         }
 
         .markdown-content::-webkit-scrollbar {
@@ -836,12 +1007,197 @@
             to { opacity: 0; transform: translateY(10px); }
         }
 
+        /* ============================================
+           READING PROGRESS BAR
+           ============================================ */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-red), #ff3333);
+            width: 0%;
+            z-index: 10000;
+            transition: width 0.1s ease;
+            box-shadow: 0 2px 10px rgba(204, 0, 0, 0.5);
+        }
+
+        /* ============================================
+           TABLE OF CONTENTS (TOC)
+           ============================================ */
+        /* Floating TOC Button */
+        .toc-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border: 3px solid var(--border-primary);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 900;
+            box-shadow: 0 8px 30px rgba(204, 0, 0, 0.6);
+        }
+
+        .toc-toggle:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 40px rgba(204, 0, 0, 0.8);
+        }
+
+        /* TOC Sidebar */
+        .toc-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 350px;
+            height: 100vh;
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 3px solid var(--primary-red);
+            padding: 30px;
+            overflow-y: auto;
+            transition: right 0.4s ease;
+            z-index: 1500;
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .toc-sidebar.active {
+            right: 0;
+        }
+
+        .toc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-primary);
+        }
+
+        .toc-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .toc-close {
+            width: 35px;
+            height: 35px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--primary-red);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .toc-close:hover {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .toc-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .toc-nav a {
+            display: block;
+            padding: 10px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-left: 3px solid var(--border-primary);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .toc-nav a:hover {
+            color: var(--text-primary);
+            border-left-color: var(--primary-red);
+            padding-left: 20px;
+            background: rgba(204, 0, 0, 0.1);
+        }
+
+        .toc-nav a.active {
+            color: var(--primary-red);
+            border-left-color: var(--primary-red);
+            background: rgba(204, 0, 0, 0.15);
+            font-weight: 700;
+        }
+
+        /* TOC heading level indentation with proper spacing */
+        .toc-link.toc-h1 { 
+            padding-left: 15px !important;
+            font-size: 1rem; 
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .toc-link.toc-h2 { 
+            padding-left: 30px !important;
+            font-size: 0.95rem; 
+            font-weight: 600;
+        }
+        
+        .toc-link.toc-h3 { 
+            padding-left: 45px !important;
+            font-size: 0.9rem; 
+            font-weight: 500;
+        }
+        
+        .toc-link.toc-h4 { 
+            padding-left: 60px !important;
+            font-size: 0.85rem; 
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
         /* Mobile Navigation */
         .mobile-top-nav {
             display: none;
         }
 
         @media (max-width: 768px) {
+            /* TOC for Mobile */
+            .toc-toggle {
+                width: 50px;
+                height: 50px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 1.2rem;
+            }
+
+            .toc-sidebar {
+                width: 100%;
+                right: -100%;
+                padding: 20px;
+            }
+
+            .toc-sidebar.active {
+                right: 0;
+            }
+
+            /* Reading Progress Bar */
+            .reading-progress {
+                height: 3px;
+            }
+
+            /* Mobile Top Nav */
             .mobile-top-nav {
                 display: flex !important;
             }
@@ -941,6 +1297,27 @@
     </style>
 </head>
 <body>
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress" id="readingProgress"></div>
+
+    <!-- Table of Contents Floating Button -->
+    <button class="toc-toggle" id="tocToggle" title="Table of Contents">
+        <i class="fas fa-list"></i>
+    </button>
+
+    <!-- Table of Contents Sidebar -->
+    <aside class="toc-sidebar" id="tocSidebar">
+        <div class="toc-header">
+            <h3><i class="fas fa-list-ul"></i> Table of Contents</h3>
+            <button class="toc-close" id="tocClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="toc-nav" id="tocNav">
+            <!-- TOC links will be generated dynamically -->
+        </nav>
+    </aside>
+
     <!-- Mobile Top Navigation -->
     <nav class="mobile-top-nav">
         <a href="../../Home/home-mobile.html" class="nav-icon" title="Home">
@@ -1007,6 +1384,28 @@
         <a href="arduino-projects.html" class="back-btn">
             <i class="fas fa-arrow-left"></i> Back to Projects
         </a>
+        
+        <div class="nav-controls">
+            <button class="nav-control-btn" id="prevProjectBtn" title="Previous Project (Left Arrow)">
+                <i class="fas fa-chevron-left"></i>
+                Previous
+            </button>
+            
+            <div class="project-counter" id="projectCounter">
+                <i class="fas fa-microchip"></i> <span id="currentProjectNum">1</span> / <span id="totalProjects">23</span>
+            </div>
+            
+            <button class="nav-control-btn" id="nextProjectBtn" title="Next Project (Right Arrow)">
+                Next
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <div class="keyboard-hint-badge">
+                <i class="fas fa-keyboard"></i>
+                <kbd>←</kbd> <kbd>→</kbd>
+            </div>
+        </div>
+        
         <div class="project-title-nav" id="navTitle">Arduino Project</div>
     </div>
 
@@ -1048,8 +1447,15 @@
         </div>
 
         <!-- Documentation Section (Full Width) -->
-        <div class="content-section documentation-section">
+        <div class="content-section documentation-section" id="documentationSection">
             <h2 class="section-title"><i class="fas fa-book-open"></i> Documentation</h2>
+            
+            <!-- Fullscreen Button -->
+            <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">
+                <i class="fas fa-expand"></i>
+                <span>Fullscreen</span>
+            </button>
+            
             <div class="doc-tabs" id="docTabs">
                 <button class="doc-tab active" data-tab="readme">
                     <i class="fas fa-file-alt"></i> README
@@ -1060,10 +1466,10 @@
                 <button class="doc-tab" data-tab="code">
                     <i class="fas fa-code"></i> Code
                 </button>
-                <button class="doc-tab pdf-download-btn" data-action="explanation" title="Download Code Explanation as PDF">
+                <button class="doc-tab pdf-download-btn" data-action="explanation" title="Download Explanation PDF with Watermark">
                     <i class="fas fa-file-pdf"></i> PDF Explanation
                 </button>
-                <button class="doc-tab pdf-download-btn" data-action="readme" title="Download README as PDF">
+                <button class="doc-tab pdf-download-btn" data-action="readme" title="Download README PDF with Watermark">
                     <i class="fas fa-file-pdf"></i> PDF README
                 </button>
             </div>
@@ -1184,6 +1590,9 @@
             loadReadme();
             loadCircuitImage();
             updateNavigation();
+            
+            // Update navigation buttons (for new navbar controls)
+            setTimeout(() => updateNavigationButtons(), 100);
         }
 
         // Load circuit image with multiple format support
@@ -1493,314 +1902,256 @@
             }, 5000);
         }
 
-        // PDF Download Functions (Using Original Inline Code)
+        // ========== NEW PDF SYSTEM: Load & Inject Watermark/Header/Footer ==========
+        
+        // PDF Download for Explanation
         async function downloadExplanationPDF() {
-            const content = document.getElementById('explanationContent');
-            if (!content || content.textContent.includes('not available')) {
-                alert('⚠️ Explanation content is not available for PDF download.');
-                return;
-            }
+            const pdfUrl = buildFilePath(currentProject.folder, 'explanation.pdf');
+            console.log('📄 Loading PDF:', pdfUrl);
             
             try {
-                // Create a properly styled container for PDF
-                const pdfContainer = createPDFContainer(content, `${currentProject.title} - Explanation`);
+                // Show loading indicator
+                const loadingMsg = document.createElement('div');
+                loadingMsg.id = 'pdfLoadingMsg';
+                loadingMsg.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: rgba(10, 10, 10, 0.95); padding: 30px 50px; border-radius: 12px;
+                    border: 2px solid var(--primary-red); z-index: 10000; text-align: center;
+                `;
+                loadingMsg.innerHTML = `
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-red); margin-bottom: 10px;"></i>
+                    <p style="color: var(--text-primary); margin: 0;">Processing PDF...</p>
+                `;
+                document.body.appendChild(loadingMsg);
                 
-                const opt = {
-                    margin: [25, 15, 20, 15],
-                    filename: `${currentProject.folder}_Explanation.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { 
-                        scale: 2, 
-                        useCORS: true, 
-                        backgroundColor: null,
-                        logging: false,
-                        letterRendering: true
-                    },
-                    jsPDF: { 
-                        unit: 'mm', 
-                        format: 'a4', 
-                        orientation: 'portrait',
-                        compress: true
-                    },
-                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-                };
+                // Fetch the PDF
+                const response = await fetch(pdfUrl);
+                if (!response.ok) {
+                    throw new Error(`PDF not found: ${pdfUrl}`);
+                }
                 
-                console.log('📄 Generating Explanation PDF...');
+                const existingPdfBytes = await response.arrayBuffer();
                 
-                // Make container visible temporarily for capture
-                pdfContainer.style.opacity = '1';
-                pdfContainer.style.zIndex = '9999';
+                // Load PDF with pdf-lib
+                const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
                 
-                const pdf = await html2pdf().set(opt).from(pdfContainer).toPdf().get('pdf');
+                // Add watermark, header, footer to all pages
+                await addWatermarkHeaderFooter(pdfDoc, `${currentProject.title} - Explanation`);
                 
-                // Hide container again
-                pdfContainer.style.opacity = '0';
-                pdfContainer.style.zIndex = '-9999';
+                // Save modified PDF
+                const pdfBytes = await pdfDoc.save();
                 
-                // Add watermark, header and footer to all pages
-                addPDFWatermarkAndFooter(pdf, `${currentProject.title} - Explanation`);
+                // Download
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentProject.folder}_Explanation_A3KM.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
                 
-                // Save the PDF
-                pdf.save(`${currentProject.folder}_Explanation.pdf`);
-                document.body.removeChild(pdfContainer);
-                console.log('✅ PDF downloaded successfully');
+                // Remove loading indicator
+                document.body.removeChild(loadingMsg);
+                console.log('✅ PDF downloaded with watermark/header/footer');
+                
             } catch (error) {
-                console.error('❌ PDF generation error:', error);
-                alert('Error generating PDF. Please try again.');
+                console.error('❌ PDF loading error:', error);
+                const loadingMsg = document.getElementById('pdfLoadingMsg');
+                if (loadingMsg) document.body.removeChild(loadingMsg);
+                alert(`Error loading PDF: ${error.message}\n\nPlease ensure explanation.pdf exists in the project folder.`);
             }
         }
 
+        // PDF Download for README
         async function downloadReadmePDF() {
-            const content = document.getElementById('readmeContent');
-            if (!content || content.textContent.includes('not available')) {
-                alert('⚠️ README content is not available for PDF download.');
-                return;
-            }
+            const pdfUrl = buildFilePath(currentProject.folder, 'readme.pdf');
+            console.log('📄 Loading PDF:', pdfUrl);
             
             try {
-                // Create a properly styled container for PDF
-                const pdfContainer = createPDFContainer(content, `${currentProject.title} - README`);
+                // Show loading indicator
+                const loadingMsg = document.createElement('div');
+                loadingMsg.id = 'pdfLoadingMsg';
+                loadingMsg.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: rgba(10, 10, 10, 0.95); padding: 30px 50px; border-radius: 12px;
+                    border: 2px solid var(--primary-red); z-index: 10000; text-align: center;
+                `;
+                loadingMsg.innerHTML = `
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-red); margin-bottom: 10px;"></i>
+                    <p style="color: var(--text-primary); margin: 0;">Processing PDF...</p>
+                `;
+                document.body.appendChild(loadingMsg);
                 
-                const opt = {
-                    margin: [25, 15, 20, 15],
-                    filename: `${currentProject.folder}_README.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { 
-                        scale: 2, 
-                        useCORS: true, 
-                        backgroundColor: null,
-                        logging: false,
-                        letterRendering: true
-                    },
-                    jsPDF: { 
-                        unit: 'mm', 
-                        format: 'a4', 
-                        orientation: 'portrait',
-                        compress: true
-                    },
-                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-                };
+                // Fetch the PDF
+                const response = await fetch(pdfUrl);
+                if (!response.ok) {
+                    throw new Error(`PDF not found: ${pdfUrl}`);
+                }
                 
-                console.log('📄 Generating README PDF...');
+                const existingPdfBytes = await response.arrayBuffer();
                 
-                // Make container visible temporarily for capture
-                pdfContainer.style.opacity = '1';
-                pdfContainer.style.zIndex = '9999';
+                // Load PDF with pdf-lib
+                const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
                 
-                const pdf = await html2pdf().set(opt).from(pdfContainer).toPdf().get('pdf');
+                // Add watermark, header, footer to all pages
+                await addWatermarkHeaderFooter(pdfDoc, `${currentProject.title} - README`);
                 
-                // Hide container again
-                pdfContainer.style.opacity = '0';
-                pdfContainer.style.zIndex = '-9999';
+                // Save modified PDF
+                const pdfBytes = await pdfDoc.save();
                 
-                // Add watermark, header and footer to all pages
-                addPDFWatermarkAndFooter(pdf, `${currentProject.title} - README`);
+                // Download
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentProject.folder}_README_A3KM.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
                 
-                // Save the PDF
-                pdf.save(`${currentProject.folder}_README.pdf`);
-                document.body.removeChild(pdfContainer);
-                console.log('✅ PDF downloaded successfully');
+                // Remove loading indicator
+                document.body.removeChild(loadingMsg);
+                console.log('✅ PDF downloaded with watermark/header/footer');
+                
             } catch (error) {
-                console.error('❌ PDF generation error:', error);
-                alert('Error generating PDF. Please try again.');
+                console.error('❌ PDF loading error:', error);
+                const loadingMsg = document.getElementById('pdfLoadingMsg');
+                if (loadingMsg) document.body.removeChild(loadingMsg);
+                alert(`Error loading PDF: ${error.message}\n\nPlease ensure readme.pdf exists in the project folder.`);
             }
         }
 
-        // Add watermark, header and footer to PDF
-        function addPDFWatermarkAndFooter(pdf, documentTitle) {
-            const totalPages = pdf.internal.getNumberOfPages();
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
+        // Add Watermark, Header, and Footer to PDF using pdf-lib
+        async function addWatermarkHeaderFooter(pdfDoc, documentTitle) {
+            const pages = pdfDoc.getPages();
+            const totalPages = pages.length;
             const currentDate = new Date().toLocaleDateString('en-GB', { 
                 day: '2-digit', 
                 month: 'short', 
                 year: 'numeric' 
             });
             
-            for (let i = 1; i <= totalPages; i++) {
-                pdf.setPage(i);
+            // Embed fonts
+            const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            const helveticaOblique = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaOblique);
+            
+            for (let i = 0; i < totalPages; i++) {
+                const page = pages[i];
+                const { width, height } = page.getSize();
                 
-                // Add watermark "Noor Academy" in center
-                pdf.saveGraphicsState();
-                pdf.setGState(new pdf.GState({ opacity: 0.12 }));
-                pdf.setTextColor(190, 220, 240);
-                pdf.setFontSize(55);
-                pdf.setFont('helvetica', 'bold');
-                
+                // ========== WATERMARK: "Noor Academy" Center Diagonal ==========
                 const watermarkText = 'Noor Academy';
-                const centerX = pageWidth / 2;
-                const centerY = pageHeight / 2;
+                const watermarkSize = 60;
+                const watermarkWidth = helveticaBold.widthOfTextAtSize(watermarkText, watermarkSize);
                 
-                pdf.text(watermarkText, centerX, centerY, {
-                    align: 'center',
-                    angle: 45,
-                    baseline: 'middle'
+                page.drawText(watermarkText, {
+                    x: (width - watermarkWidth) / 2,
+                    y: height / 2 - watermarkSize / 2,
+                    size: watermarkSize,
+                    font: helveticaBold,
+                    color: PDFLib.rgb(0.75, 0.86, 0.94), // Light blue-gray
+                    opacity: 0.12,
+                    rotate: PDFLib.degrees(45)
                 });
-                pdf.restoreGraphicsState();
                 
-                // Add header with logo
-                // Note: Logo positioned at left, text beside it
-                pdf.setTextColor(204, 0, 0);
-                pdf.setFontSize(10);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('A3KM Studio', 25, 12); // Moved right to make space for logo
+                // ========== HEADER: A3KM Studio Logo + Text ==========
+                // Logo (simplified shape representation)
+                page.drawRectangle({
+                    x: 40,
+                    y: height - 45,
+                    width: 22,
+                    height: 22,
+                    borderColor: PDFLib.rgb(0.8, 0, 0),
+                    borderWidth: 1,
+                    color: PDFLib.rgb(0.06, 0.06, 0.06),
+                    opacity: 1
+                });
                 
-                pdf.setTextColor(100, 100, 100);
-                pdf.setFontSize(7);
-                pdf.setFont('helvetica', 'normal');
-                pdf.text('Engineering · Innovation · Projects', 25, 16);
+                page.drawCircle({
+                    x: 51,
+                    y: height - 34,
+                    size: 4,
+                    borderColor: PDFLib.rgb(1, 1, 1),
+                    borderWidth: 1.2,
+                    opacity: 1
+                });
                 
-                // Add logo icon (simplified geometric representation)
-                // Using basic shapes since SVG not directly supported in jsPDF
-                pdf.setDrawColor(204, 0, 0);
-                pdf.setLineWidth(0.3);
+                page.drawLine({
+                    start: { x: 42, y: height - 44 },
+                    end: { x: 60, y: height - 44 },
+                    thickness: 2,
+                    color: PDFLib.rgb(0.8, 0, 0),
+                    opacity: 1
+                });
                 
-                // Logo box frame
-                pdf.setFillColor(15, 15, 15);
-                pdf.roundedRect(15, 8, 8, 8, 1, 1, 'FD');
+                // Header text
+                page.drawText('A3KM Studio', {
+                    x: 70,
+                    y: height - 32,
+                    size: 12,
+                    font: helveticaBold,
+                    color: PDFLib.rgb(0.8, 0, 0) // Red
+                });
                 
-                // Center circle
-                pdf.setDrawColor(255, 255, 255);
-                pdf.setLineWidth(0.4);
-                pdf.circle(19, 12, 1.5, 'S');
+                page.drawText('Engineering · Innovation · Projects', {
+                    x: 70,
+                    y: height - 44,
+                    size: 8,
+                    font: helvetica,
+                    color: PDFLib.rgb(0.4, 0.4, 0.4) // Gray
+                });
                 
-                // Red baseline accent
-                pdf.setDrawColor(204, 0, 0);
-                pdf.setLineWidth(0.8);
-                pdf.line(16, 15, 22, 15);
+                // Header line
+                page.drawLine({
+                    start: { x: 40, y: height - 50 },
+                    end: { x: width - 40, y: height - 50 },
+                    thickness: 1.5,
+                    color: PDFLib.rgb(0.8, 0, 0),
+                    opacity: 0.5
+                });
                 
-                pdf.setDrawColor(204, 0, 0);
-                pdf.setLineWidth(0.5);
-                pdf.line(15, 18, pageWidth - 15, 18);
+                // ========== FOOTER: Title, Date, Page Number ==========
+                // Footer line
+                page.drawLine({
+                    start: { x: 40, y: 45 },
+                    end: { x: width - 40, y: 45 },
+                    thickness: 1,
+                    color: PDFLib.rgb(0.8, 0, 0),
+                    opacity: 0.3
+                });
                 
-                // Add footer
-                pdf.setDrawColor(204, 0, 0);
-                pdf.setLineWidth(0.3);
-                pdf.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
-                
-                pdf.setTextColor(80, 80, 80);
-                pdf.setFontSize(7);
-                pdf.setFont('helvetica', 'italic');
+                // Document title (left)
                 const shortTitle = documentTitle.length > 50 ? documentTitle.substring(0, 47) + '...' : documentTitle;
-                pdf.text(shortTitle, 15, pageHeight - 10);
+                page.drawText(shortTitle, {
+                    x: 40,
+                    y: 30,
+                    size: 8,
+                    font: helveticaOblique,
+                    color: PDFLib.rgb(0.31, 0.31, 0.31)
+                });
                 
-                pdf.setFont('helvetica', 'normal');
-                pdf.text(`Generated: ${currentDate}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                // Generation date (center)
+                const dateText = `Generated: ${currentDate}`;
+                const dateWidth = helvetica.widthOfTextAtSize(dateText, 8);
+                page.drawText(dateText, {
+                    x: (width - dateWidth) / 2,
+                    y: 30,
+                    size: 8,
+                    font: helvetica,
+                    color: PDFLib.rgb(0.31, 0.31, 0.31)
+                });
                 
-                pdf.setFont('helvetica', 'bold');
-                pdf.setTextColor(204, 0, 0);
-                pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: 'right' });
+                // Page number (right)
+                const pageText = `Page ${i + 1} of ${totalPages}`;
+                const pageWidth = helveticaBold.widthOfTextAtSize(pageText, 8);
+                page.drawText(pageText, {
+                    x: width - 40 - pageWidth,
+                    y: 30,
+                    size: 8,
+                    font: helveticaBold,
+                    color: PDFLib.rgb(0.8, 0, 0)
+                });
             }
-        }
-
-        // Create PDF container with dark theme styling
-        function createPDFContainer(sourceContent, title) {
-            const container = document.createElement('div');
-            container.style.cssText = `
-                position: fixed;
-                left: 0;
-                top: 0;
-                width: 210mm;
-                background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
-                padding: 20mm;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                color: rgba(255, 255, 255, 0.95);
-                font-size: 11pt;
-                line-height: 1.6;
-                z-index: -9999;
-                opacity: 0;
-                pointer-events: none;
-            `;
-            
-            // Add title header
-            const header = document.createElement('div');
-            header.style.cssText = `
-                border-bottom: 3px solid rgba(204, 0, 0, 0.7);
-                padding-bottom: 10px;
-                margin-bottom: 20px;
-                background: rgba(26, 0, 0, 0.5);
-                padding: 15px;
-                border-radius: 8px;
-            `;
-            header.innerHTML = `
-                <h1 style="color: #CC0000; margin: 0; font-size: 20pt; font-weight: 700;">${title}</h1>
-                <p style="color: rgba(255, 255, 255, 0.7); margin: 5px 0 0 0; font-size: 9pt;">A3KM Studio - Projects</p>
-            `;
-            container.appendChild(header);
-            
-            // Clone and style content
-            const contentClone = sourceContent.cloneNode(true);
-            const styledContent = document.createElement('div');
-            styledContent.style.cssText = `
-                font-size: 11pt;
-                line-height: 1.7;
-                color: rgba(255, 255, 255, 0.9);
-            `;
-            
-            // Process and style all elements
-            const processElement = (element) => {
-                if (element.nodeType === Node.TEXT_NODE) return;
-                if (!element.style) return;
-                
-                if (element.tagName === 'H1') {
-                    element.style.cssText = 'color: #FF3333 !important; font-size: 18pt; font-weight: 700; margin: 25px 0 12px 0; page-break-after: avoid; display: block; text-shadow: 0 0 10px rgba(204, 0, 0, 0.5);';
-                } else if (element.tagName === 'H2') {
-                    element.style.cssText = 'color: #FF3333 !important; font-size: 16pt; font-weight: 700; margin: 22px 0 10px 0; page-break-after: avoid; display: block; border-bottom: 2px solid rgba(204, 0, 0, 0.4); padding-bottom: 6px;';
-                } else if (element.tagName === 'H3') {
-                    element.style.cssText = 'color: #FF5555 !important; font-size: 14pt; font-weight: 700; margin: 18px 0 8px 0; page-break-after: avoid; display: block;';
-                } else if (element.tagName === 'H4') {
-                    element.style.cssText = 'color: #FF5555 !important; font-size: 12pt; font-weight: 700; margin: 15px 0 6px 0; page-break-after: avoid; display: block;';
-                } else if (element.tagName === 'P') {
-                    element.style.cssText = 'margin: 0 0 12px 0; line-height: 1.7; color: rgba(255, 255, 255, 0.85) !important; text-align: justify; display: block;';
-                } else if (element.tagName === 'PRE') {
-                    element.style.cssText = 'background: rgba(0, 0, 0, 0.6) !important; padding: 15px; border: 2px solid rgba(204, 0, 0, 0.4); border-left: 4px solid #CC0000; border-radius: 4px; overflow-x: auto; margin: 15px 0; page-break-inside: avoid; display: block;';
-                    const code = element.querySelector('code');
-                    if (code) {
-                        code.style.cssText = 'font-family: "Courier New", Courier, monospace; font-size: 9pt; color: #d4d4d4 !important; line-height: 1.5; display: inline; background: transparent !important;';
-                    }
-                } else if (element.tagName === 'CODE') {
-                    element.style.cssText = 'background: rgba(204, 0, 0, 0.2) !important; padding: 2px 6px; border-radius: 3px; font-family: "Courier New", Courier, monospace; font-size: 10pt; color: rgba(255, 200, 200, 0.95) !important; border: 1px solid rgba(204, 0, 0, 0.3); display: inline;';
-                } else if (element.tagName === 'UL' || element.tagName === 'OL') {
-                    element.style.cssText = 'margin: 10px 0 10px 20px; padding-left: 20px; display: block; color: rgba(255, 255, 255, 0.85) !important;';
-                } else if (element.tagName === 'LI') {
-                    element.style.cssText = 'margin: 6px 0; line-height: 1.6; color: rgba(255, 255, 255, 0.85) !important; display: list-item;';
-                } else if (element.tagName === 'BLOCKQUOTE') {
-                    element.style.cssText = 'border-left: 4px solid #CC0000; padding: 12px 20px; margin: 15px 0; background: rgba(204, 0, 0, 0.1) !important; color: rgba(255, 255, 255, 0.8) !important; font-style: italic; display: block; border-radius: 0 8px 8px 0;';
-                } else if (element.tagName === 'A') {
-                    element.style.cssText = 'color: #FF3333 !important; text-decoration: underline; font-weight: 600;';
-                } else if (element.tagName === 'STRONG' || element.tagName === 'B') {
-                    element.style.cssText = 'font-weight: 700; color: rgba(255, 255, 255, 0.95) !important;';
-                } else if (element.tagName === 'EM' || element.tagName === 'I') {
-                    element.style.cssText = 'font-style: italic; color: rgba(255, 255, 255, 0.8) !important;';
-                } else if (element.tagName === 'HR') {
-                    element.style.cssText = 'border: none; border-top: 2px solid rgba(204, 0, 0, 0.5); margin: 20px 0; display: block;';
-                } else if (element.tagName === 'TABLE') {
-                    element.style.cssText = 'width: 100%; border-collapse: collapse; margin: 15px 0; page-break-inside: avoid; display: table; border: 2px solid rgba(204, 0, 0, 0.5); border-radius: 8px; overflow: hidden;';
-                } else if (element.tagName === 'THEAD') {
-                    element.style.cssText = 'display: table-header-group; background: linear-gradient(135deg, rgba(204, 0, 0, 0.5), rgba(153, 0, 0, 0.6)) !important;';
-                } else if (element.tagName === 'TBODY') {
-                    element.style.cssText = 'display: table-row-group;';
-                } else if (element.tagName === 'TR') {
-                    element.style.cssText = 'display: table-row;';
-                } else if (element.tagName === 'TH') {
-                    element.style.cssText = 'background: rgba(204, 0, 0, 0.4) !important; color: rgba(255, 255, 255, 0.95) !important; padding: 10px; border: 1px solid rgba(204, 0, 0, 0.4); font-weight: 700; text-align: left; display: table-cell;';
-                } else if (element.tagName === 'TD') {
-                    element.style.cssText = 'padding: 8px 10px; border: 1px solid rgba(204, 0, 0, 0.3); background: rgba(20, 0, 0, 0.3) !important; color: rgba(255, 255, 255, 0.85) !important; display: table-cell;';
-                } else if (element.tagName === 'IMG') {
-                    element.style.cssText = 'max-width: 100%; height: auto; margin: 15px 0; border: 2px solid rgba(204, 0, 0, 0.4); border-radius: 4px; display: block;';
-                } else {
-                    element.style.color = 'rgba(255, 255, 255, 0.85)';
-                }
-                
-                Array.from(element.children).forEach(processElement);
-            };
-            
-            Array.from(contentClone.children).forEach(processElement);
-            styledContent.appendChild(contentClone);
-            container.appendChild(styledContent);
-            
-            document.body.appendChild(container);
-            return container;
         }
 
         // Load Arduino code with multiple file support
@@ -1972,6 +2323,12 @@
                         const text = await response.text();
                         explanationContent.innerHTML = convertMarkdown(text);
                         console.log('✅ Explanation loaded');
+                        
+                        // Generate TOC after content loaded
+                        setTimeout(() => {
+                            generateTOC();
+                        }, 200);
+                        
                         return;
                     }
                 } catch (error) {
@@ -1995,6 +2352,11 @@
                     
                     // Extract Tinkercad link from README
                     extractTinkercadLink(text);
+                    
+                    // Generate TOC after content loaded
+                    setTimeout(() => {
+                        generateTOC();
+                    }, 200);
                 } else {
                     readmeContent.innerHTML = '<p style="text-align:center;padding:40px;color:rgba(255,255,255,0.5);">README not available</p>';
                 }
@@ -2051,8 +2413,61 @@
             }
         }
 
-        // Enhanced markdown converter with proper table support
+        // Enhanced markdown converter using marked.js with syntax highlighting
         function convertMarkdown(text) {
+            if (!text) return '';
+            
+            // Wait for marked.js to load
+            if (typeof marked === 'undefined') {
+                console.warn('⚠️ marked.js not loaded yet, using fallback');
+                return convertMarkdownFallback(text);
+            }
+            
+            try {
+                // Configure marked.js for better rendering
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: true,
+                    mangle: false,
+                    pedantic: false,
+                    sanitize: false,
+                    smartLists: true,
+                    smartypants: false,
+                    highlight: function(code, lang) {
+                        // Syntax highlighting with highlight.js
+                        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (err) {
+                                console.warn('Highlight error:', err);
+                            }
+                        }
+                        return code;
+                    }
+                });
+                
+                // Parse markdown with marked.js
+                const html = marked.parse(text);
+                
+                // Apply syntax highlighting to code blocks after rendering
+                setTimeout(() => {
+                    if (typeof hljs !== 'undefined') {
+                        document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
+                            hljs.highlightElement(block);
+                        });
+                    }
+                }, 100);
+                
+                return html;
+            } catch (error) {
+                console.error('❌ marked.js parsing error:', error);
+                return convertMarkdownFallback(text);
+            }
+        }
+        
+        // Fallback markdown converter (original bulletproof version)
+        function convertMarkdownFallback(text) {
             if (!text) return '';
             
             let html = text
@@ -2066,28 +2481,63 @@
                 return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
             });
             
-            // Tables - Robust matching for all line endings
-            html = html.replace(/(\|.+\|)[\r\n]+(\|[\s\-:]+\|)[\r\n]+((?:\|.+\|[\r\n]*)+)/g, (match, header, separator, body) => {
-                console.log('📊 Table detected:', match.substring(0, 100));
+            // BULLETPROOF TABLE PARSER - Handles all markdown table formats
+            html = html.replace(/^(\|.+\|)\s*[\r\n]+(\|[\s\-:|]+\|)\s*[\r\n]+((?:\|.+\|[\r\n]*)*)/gm, (match, header, separator, body) => {
+                console.log('📊 Table detected');
                 
-                // Parse header
-                const headerCells = header.split('|').filter(c => c.trim()).map(c => c.trim());
-                if (headerCells.length === 0) return match; // Invalid table
+                // Clean and parse header
+                const headerCells = header
+                    .trim()
+                    .split('|')
+                    .slice(1, -1) // Remove leading/trailing empty from split
+                    .map(cell => cell.trim())
+                    .filter(cell => cell.length > 0);
                 
-                const headerRow = '<tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr>';
+                if (headerCells.length === 0) {
+                    console.warn('⚠️ Invalid table header');
+                    return match;
+                }
+                
+                // Parse alignment from separator
+                const alignments = separator
+                    .trim()
+                    .split('|')
+                    .slice(1, -1)
+                    .map(sep => {
+                        const s = sep.trim();
+                        if (s.startsWith(':') && s.endsWith(':')) return 'center';
+                        if (s.endsWith(':')) return 'right';
+                        return 'left';
+                    });
+                
+                // Build header with alignment
+                const headerRow = '<tr>' + headerCells.map((cell, i) => 
+                    `<th style="text-align: ${alignments[i] || 'left'}">${cell}</th>`
+                ).join('') + '</tr>';
                 
                 // Parse body rows
-                const rows = body.split(/[\r\n]+/).filter(r => r.trim() && r.includes('|'));
-                const bodyRows = rows.map(row => {
-                    const cells = row.split('|').filter(c => c.trim()).map(c => c.trim());
-                    if (cells.length !== headerCells.length) {
-                        console.warn('⚠️ Row has different column count:', cells.length, 'vs', headerCells.length);
+                const bodyLines = body.trim().split(/[\r\n]+/).filter(line => line.trim().includes('|'));
+                
+                const bodyRows = bodyLines.map(line => {
+                    const cells = line
+                        .trim()
+                        .split('|')
+                        .slice(1, -1)
+                        .map(cell => cell.trim());
+                    
+                    // Pad cells if needed
+                    while (cells.length < headerCells.length) {
+                        cells.push('');
                     }
-                    return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+                    
+                    return '<tr>' + cells.slice(0, headerCells.length).map((cell, i) => 
+                        `<td style="text-align: ${alignments[i] || 'left'}">${cell}</td>`
+                    ).join('') + '</tr>';
                 }).join('');
                 
-                const table = `\n<table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>\n`;
-                console.log('✅ Table created:', headerCells.length, 'columns,', rows.length, 'rows');
+                const table = `\n<div class="table-wrapper">\n<table class="markdown-table">\n<thead>${headerRow}</thead>\n<tbody>${bodyRows}</tbody>\n</table>\n</div>\n`;
+                
+                console.log(`✅ Table created: ${headerCells.length} columns × ${bodyLines.length} rows`);
                 return table;
             });
             
@@ -2230,6 +2680,7 @@
             document.querySelectorAll('.pdf-download-btn[data-action]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    
                     const action = btn.dataset.action;
                     
                     if (action === 'explanation') {
@@ -2239,13 +2690,311 @@
                     }
                 });
             });
+
+            // Fullscreen toggle
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const docSection = document.getElementById('documentationSection');
+            
+            if (fullscreenBtn && docSection) {
+                fullscreenBtn.addEventListener('click', () => {
+                    docSection.classList.toggle('fullscreen');
+                    
+                    const isFullscreen = docSection.classList.contains('fullscreen');
+                    const icon = fullscreenBtn.querySelector('i');
+                    const text = fullscreenBtn.querySelector('span');
+                    
+                    if (isFullscreen) {
+                        icon.className = 'fas fa-compress';
+                        text.textContent = 'Exit Fullscreen';
+                        fullscreenBtn.title = 'Exit Fullscreen';
+                    } else {
+                        icon.className = 'fas fa-expand';
+                        text.textContent = 'Fullscreen';
+                        fullscreenBtn.title = 'Toggle Fullscreen';
+                    }
+                });
+                
+                // ESC key to exit fullscreen
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && docSection.classList.contains('fullscreen')) {
+                        docSection.classList.remove('fullscreen');
+                        const icon = fullscreenBtn.querySelector('i');
+                        const text = fullscreenBtn.querySelector('span');
+                        icon.className = 'fas fa-expand';
+                        text.textContent = 'Fullscreen';
+                        fullscreenBtn.title = 'Toggle Fullscreen';
+                    }
+                });
+            }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadProject();
             setupEventListeners();
+            setupKeyboardNavigation();
         });
+
+        // Keyboard Navigation Setup
+        function setupKeyboardNavigation() {
+            const prevBtn = document.getElementById('prevProjectBtn');
+            const nextBtn = document.getElementById('nextProjectBtn');
+            
+            // Update button states
+            updateNavigationButtons();
+            
+            // Previous button click
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => navigateToProject('prev'));
+            }
+            
+            // Next button click
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => navigateToProject('next'));
+            }
+            
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger if typing in input fields
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+                
+                // Don't trigger in fullscreen mode
+                const docSection = document.getElementById('documentationSection');
+                if (docSection && docSection.classList.contains('fullscreen')) {
+                    return;
+                }
+                
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    navigateToProject('prev');
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    navigateToProject('next');
+                }
+            });
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevProjectBtn');
+            const nextBtn = document.getElementById('nextProjectBtn');
+            const currentNumSpan = document.getElementById('currentProjectNum');
+            const totalSpan = document.getElementById('totalProjects');
+            
+            if (!currentProject) return;
+            
+            const currentIndex = projects.findIndex(p => p.folder === currentProject.folder);
+            
+            // Update counter
+            if (currentNumSpan) currentNumSpan.textContent = currentIndex + 1;
+            if (totalSpan) totalSpan.textContent = projects.length;
+            
+            // Update button states
+            if (prevBtn) {
+                prevBtn.disabled = currentIndex === 0;
+            }
+            
+            if (nextBtn) {
+                nextBtn.disabled = currentIndex === projects.length - 1;
+            }
+        }
+
+        function navigateToProject(direction) {
+            const currentIndex = projects.findIndex(p => p.folder === currentProject.folder);
+            let newIndex;
+            
+            if (direction === 'prev') {
+                newIndex = currentIndex - 1;
+                if (newIndex < 0) return; // Already at first project
+            } else if (direction === 'next') {
+                newIndex = currentIndex + 1;
+                if (newIndex >= projects.length) return; // Already at last project
+            }
+            
+            const newProject = projects[newIndex];
+            
+            // Update URL and reload
+            const newUrl = `arduino-project-viewer.html?project=${encodeURIComponent(newProject.folder)}`;
+            window.location.href = newUrl;
+        }
+
+        /* ============================================
+           TABLE OF CONTENTS (TOC) FUNCTIONALITY
+           ============================================ */
+        function generateTOC() {
+            const tocNav = document.getElementById('tocNav');
+            if (!tocNav) return;
+
+            // Get markdown content containers
+            const readmeContent = document.getElementById('readmeContent');
+            const explanationContent = document.getElementById('explanationContent');
+            
+            // Determine which tab is active
+            const readmeTab = document.getElementById('readmeTab');
+            const activeContent = readmeTab?.classList.contains('active') 
+                ? readmeContent 
+                : explanationContent;
+            
+            if (!activeContent) {
+                console.warn('⚠️ No active markdown content found for TOC');
+                return;
+            }
+
+            // Get all headings (h1-h4) from active content
+            const headings = activeContent.querySelectorAll('h1, h2, h3, h4');
+            
+            if (headings.length === 0) {
+                tocNav.innerHTML = '<p style="color: var(--text-secondary); padding: 10px; text-align: center;">No headings found</p>';
+                return;
+            }
+
+            // Generate TOC links
+            let tocHTML = '';
+            headings.forEach((heading, index) => {
+                const level = heading.tagName.toLowerCase();
+                const text = heading.textContent.trim();
+                const id = heading.id || `heading-${index}`;
+                
+                // Ensure heading has an ID
+                if (!heading.id) {
+                    heading.id = id;
+                }
+                
+                // Calculate indent based on heading level
+                const indent = (parseInt(level.charAt(1)) - 1) * 15;
+                
+                tocHTML += `
+                    <a href="#${id}" 
+                       class="toc-link toc-${level}" 
+                       data-target="${id}"
+                       style="padding-left: ${20 + indent}px;">
+                        ${text}
+                    </a>
+                `;
+            });
+            
+            tocNav.innerHTML = tocHTML;
+            
+            // Add click handlers for smooth scroll
+            tocNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('data-target');
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                        
+                        // Close sidebar on mobile after clicking
+                        if (window.innerWidth <= 768) {
+                            document.getElementById('tocSidebar')?.classList.remove('active');
+                        }
+                    }
+                });
+            });
+            
+            console.log(`📋 TOC generated with ${headings.length} headings`);
+        }
+
+        // Update active TOC link based on scroll position
+        function updateActiveTOC() {
+            const tocLinks = document.querySelectorAll('.toc-link');
+            if (tocLinks.length === 0) return;
+
+            // Get all heading positions
+            const headings = Array.from(document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4'));
+            if (headings.length === 0) return;
+
+            const scrollPosition = window.scrollY + 150; // Offset for fixed header
+
+            // Find the current active heading
+            let activeHeading = headings[0];
+            for (const heading of headings) {
+                if (heading.offsetTop <= scrollPosition) {
+                    activeHeading = heading;
+                } else {
+                    break;
+                }
+            }
+
+            // Update TOC active state
+            tocLinks.forEach(link => {
+                const targetId = link.getAttribute('data-target');
+                if (targetId === activeHeading.id) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // TOC Toggle Button Event Listeners
+        document.getElementById('tocToggle')?.addEventListener('click', () => {
+            const sidebar = document.getElementById('tocSidebar');
+            sidebar?.classList.toggle('active');
+        });
+
+        document.getElementById('tocClose')?.addEventListener('click', () => {
+            document.getElementById('tocSidebar')?.classList.remove('active');
+        });
+
+        // Close TOC on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('tocSidebar')?.classList.remove('active');
+            }
+        });
+
+        // Close TOC when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('tocSidebar');
+            const toggleBtn = document.getElementById('tocToggle');
+            
+            if (sidebar?.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn?.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        /* ============================================
+           READING PROGRESS BAR
+           ============================================ */
+        function updateProgressBar() {
+            const progressBar = document.getElementById('readingProgress');
+            if (!progressBar) return;
+
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.scrollY;
+
+            const scrollableHeight = documentHeight - windowHeight;
+            const scrollPercentage = (scrollTop / scrollableHeight) * 100;
+
+            progressBar.style.width = Math.min(scrollPercentage, 100) + '%';
+        }
+
+        // Scroll event listener for TOC and Progress Bar
+        window.addEventListener('scroll', () => {
+            updateProgressBar();
+            updateActiveTOC();
+        });
+
+        // Re-generate TOC when switching tabs
+        document.getElementById('readmeTab')?.addEventListener('click', () => {
+            setTimeout(generateTOC, 300); // Wait for content to load
+        });
+
+        document.getElementById('explanationTab')?.addEventListener('click', () => {
+            setTimeout(generateTOC, 300);
+        });
+
+        // Initialize Progress Bar
+        updateProgressBar();
     </script>
 </body>
 </html>
