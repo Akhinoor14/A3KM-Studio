@@ -1493,49 +1493,7 @@
             }, 5000);
         }
 
-        // Initialize MD to PDF Converter with Dark Theme
-        let pdfConverter;
-        function initPDFConverter() {
-            if (!pdfConverter) {
-                // Configure for dark theme
-                const customConfig = {
-                    theme: {
-                        mode: 'dark' // Enable dark theme
-                    },
-                    header: {
-                        content: {
-                            left: 'projectTitle',
-                            center: 'A3KM Studio',
-                            right: 'Projects'
-                        }
-                    },
-                    footer: {
-                        content: {
-                            right: '© Noor Academy 2026'
-                        }
-                    },
-                    watermark: {
-                        text: 'NOOR ACADEMY',
-                        fontSize: '55px',
-                        color: 'rgba(190, 220, 240, 0.12)',
-                        rotation: 45,
-                        position: 'center',
-                        repeat: false,
-                        style: 'diagonal'
-                    },
-                    debug: {
-                        enabled: true,
-                        logConversionTime: true
-                    }
-                };
-                
-                pdfConverter = new MDtoPDFConverter(customConfig);
-                console.log('✅ PDF Converter initialized with dark theme');
-            }
-            return pdfConverter;
-        }
-
-        // PDF Download Functions (Using Centralized System)
+        // PDF Download Functions (Using Original Inline Code)
         async function downloadExplanationPDF() {
             const content = document.getElementById('explanationContent');
             if (!content || content.textContent.includes('not available')) {
@@ -1544,19 +1502,38 @@
             }
             
             try {
-                const converter = initPDFConverter();
-                const metadata = {
-                    projectTitle: currentProject.title,
-                    documentType: 'Explanation',
-                    author: 'Md Akhinoor Islam'
+                // Create a properly styled container for PDF
+                const pdfContainer = createPDFContainer(content, `${currentProject.title} - Explanation`);
+                
+                const opt = {
+                    margin: [25, 15, 20, 15],
+                    filename: `${currentProject.folder}_Explanation.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2, 
+                        useCORS: true, 
+                        backgroundColor: null,
+                        logging: false,
+                        letterRendering: true
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
                 
-                console.log('📄 Generating Explanation PDF with dark theme...');
-                await converter.convertToPDF(
-                    content,
-                    `${currentProject.folder}_Explanation`,
-                    metadata
-                );
+                console.log('📄 Generating Explanation PDF...');
+                const pdf = await html2pdf().set(opt).from(pdfContainer).toPdf().get('pdf');
+                
+                // Add watermark, header and footer to all pages
+                addPDFWatermarkAndFooter(pdf, `${currentProject.title} - Explanation`);
+                
+                // Save the PDF
+                pdf.save(`${currentProject.folder}_Explanation.pdf`);
+                document.body.removeChild(pdfContainer);
                 console.log('✅ PDF downloaded successfully');
             } catch (error) {
                 console.error('❌ PDF generation error:', error);
@@ -1572,24 +1549,237 @@
             }
             
             try {
-                const converter = initPDFConverter();
-                const metadata = {
-                    projectTitle: currentProject.title,
-                    documentType: 'README',
-                    author: 'Md Akhinoor Islam'
+                // Create a properly styled container for PDF
+                const pdfContainer = createPDFContainer(content, `${currentProject.title} - README`);
+                
+                const opt = {
+                    margin: [25, 15, 20, 15],
+                    filename: `${currentProject.folder}_README.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2, 
+                        useCORS: true, 
+                        backgroundColor: null,
+                        logging: false,
+                        letterRendering: true
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
                 
-                console.log('📄 Generating README PDF with dark theme...');
-                await converter.convertToPDF(
-                    content,
-                    `${currentProject.folder}_README`,
-                    metadata
-                );
+                console.log('📄 Generating README PDF...');
+                const pdf = await html2pdf().set(opt).from(pdfContainer).toPdf().get('pdf');
+                
+                // Add watermark, header and footer to all pages
+                addPDFWatermarkAndFooter(pdf, `${currentProject.title} - README`);
+                
+                // Save the PDF
+                pdf.save(`${currentProject.folder}_README.pdf`);
+                document.body.removeChild(pdfContainer);
                 console.log('✅ PDF downloaded successfully');
             } catch (error) {
                 console.error('❌ PDF generation error:', error);
                 alert('Error generating PDF. Please try again.');
             }
+        }
+
+        // Add watermark, header and footer to PDF
+        function addPDFWatermarkAndFooter(pdf, documentTitle) {
+            const totalPages = pdf.internal.getNumberOfPages();
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const currentDate = new Date().toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+            
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                
+                // Add watermark "Noor Academy" in center
+                pdf.saveGraphicsState();
+                pdf.setGState(new pdf.GState({ opacity: 0.12 }));
+                pdf.setTextColor(190, 220, 240);
+                pdf.setFontSize(55);
+                pdf.setFont('helvetica', 'bold');
+                
+                const watermarkText = 'Noor Academy';
+                const centerX = pageWidth / 2;
+                const centerY = pageHeight / 2;
+                
+                pdf.text(watermarkText, centerX, centerY, {
+                    align: 'center',
+                    angle: 45,
+                    baseline: 'middle'
+                });
+                pdf.restoreGraphicsState();
+                
+                // Add header with logo
+                // Note: Logo positioned at left, text beside it
+                pdf.setTextColor(204, 0, 0);
+                pdf.setFontSize(10);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('A3KM Studio', 25, 12); // Moved right to make space for logo
+                
+                pdf.setTextColor(100, 100, 100);
+                pdf.setFontSize(7);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('Engineering · Innovation · Projects', 25, 16);
+                
+                // Add logo icon (simplified geometric representation)
+                // Using basic shapes since SVG not directly supported in jsPDF
+                pdf.setDrawColor(204, 0, 0);
+                pdf.setLineWidth(0.3);
+                
+                // Logo box frame
+                pdf.setFillColor(15, 15, 15);
+                pdf.roundedRect(15, 8, 8, 8, 1, 1, 'FD');
+                
+                // Center circle
+                pdf.setDrawColor(255, 255, 255);
+                pdf.setLineWidth(0.4);
+                pdf.circle(19, 12, 1.5, 'S');
+                
+                // Red baseline accent
+                pdf.setDrawColor(204, 0, 0);
+                pdf.setLineWidth(0.8);
+                pdf.line(16, 15, 22, 15);
+                
+                pdf.setDrawColor(204, 0, 0);
+                pdf.setLineWidth(0.5);
+                pdf.line(15, 18, pageWidth - 15, 18);
+                
+                // Add footer
+                pdf.setDrawColor(204, 0, 0);
+                pdf.setLineWidth(0.3);
+                pdf.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+                
+                pdf.setTextColor(80, 80, 80);
+                pdf.setFontSize(7);
+                pdf.setFont('helvetica', 'italic');
+                const shortTitle = documentTitle.length > 50 ? documentTitle.substring(0, 47) + '...' : documentTitle;
+                pdf.text(shortTitle, 15, pageHeight - 10);
+                
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(`Generated: ${currentDate}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                
+                pdf.setFont('helvetica', 'bold');
+                pdf.setTextColor(204, 0, 0);
+                pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: 'right' });
+            }
+        }
+
+        // Create PDF container with dark theme styling
+        function createPDFContainer(sourceContent, title) {
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: absolute;
+                left: -9999px;
+                top: 0;
+                width: 210mm;
+                background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+                padding: 20mm;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                color: rgba(255, 255, 255, 0.95);
+                font-size: 11pt;
+                line-height: 1.6;
+            `;
+            
+            // Add title header
+            const header = document.createElement('div');
+            header.style.cssText = `
+                border-bottom: 3px solid rgba(204, 0, 0, 0.7);
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+                background: rgba(26, 0, 0, 0.5);
+                padding: 15px;
+                border-radius: 8px;
+            `;
+            header.innerHTML = `
+                <h1 style="color: #CC0000; margin: 0; font-size: 20pt; font-weight: 700;">${title}</h1>
+                <p style="color: rgba(255, 255, 255, 0.7); margin: 5px 0 0 0; font-size: 9pt;">A3KM Studio - Projects</p>
+            `;
+            container.appendChild(header);
+            
+            // Clone and style content
+            const contentClone = sourceContent.cloneNode(true);
+            const styledContent = document.createElement('div');
+            styledContent.style.cssText = `
+                font-size: 11pt;
+                line-height: 1.7;
+                color: rgba(255, 255, 255, 0.9);
+            `;
+            
+            // Process and style all elements
+            const processElement = (element) => {
+                if (element.nodeType === Node.TEXT_NODE) return;
+                if (!element.style) return;
+                
+                if (element.tagName === 'H1') {
+                    element.style.cssText = 'color: #FF3333 !important; font-size: 18pt; font-weight: 700; margin: 25px 0 12px 0; page-break-after: avoid; display: block; text-shadow: 0 0 10px rgba(204, 0, 0, 0.5);';
+                } else if (element.tagName === 'H2') {
+                    element.style.cssText = 'color: #FF3333 !important; font-size: 16pt; font-weight: 700; margin: 22px 0 10px 0; page-break-after: avoid; display: block; border-bottom: 2px solid rgba(204, 0, 0, 0.4); padding-bottom: 6px;';
+                } else if (element.tagName === 'H3') {
+                    element.style.cssText = 'color: #FF5555 !important; font-size: 14pt; font-weight: 700; margin: 18px 0 8px 0; page-break-after: avoid; display: block;';
+                } else if (element.tagName === 'H4') {
+                    element.style.cssText = 'color: #FF5555 !important; font-size: 12pt; font-weight: 700; margin: 15px 0 6px 0; page-break-after: avoid; display: block;';
+                } else if (element.tagName === 'P') {
+                    element.style.cssText = 'margin: 0 0 12px 0; line-height: 1.7; color: rgba(255, 255, 255, 0.85) !important; text-align: justify; display: block;';
+                } else if (element.tagName === 'PRE') {
+                    element.style.cssText = 'background: rgba(0, 0, 0, 0.6) !important; padding: 15px; border: 2px solid rgba(204, 0, 0, 0.4); border-left: 4px solid #CC0000; border-radius: 4px; overflow-x: auto; margin: 15px 0; page-break-inside: avoid; display: block;';
+                    const code = element.querySelector('code');
+                    if (code) {
+                        code.style.cssText = 'font-family: "Courier New", Courier, monospace; font-size: 9pt; color: #d4d4d4 !important; line-height: 1.5; display: inline; background: transparent !important;';
+                    }
+                } else if (element.tagName === 'CODE') {
+                    element.style.cssText = 'background: rgba(204, 0, 0, 0.2) !important; padding: 2px 6px; border-radius: 3px; font-family: "Courier New", Courier, monospace; font-size: 10pt; color: rgba(255, 200, 200, 0.95) !important; border: 1px solid rgba(204, 0, 0, 0.3); display: inline;';
+                } else if (element.tagName === 'UL' || element.tagName === 'OL') {
+                    element.style.cssText = 'margin: 10px 0 10px 20px; padding-left: 20px; display: block; color: rgba(255, 255, 255, 0.85) !important;';
+                } else if (element.tagName === 'LI') {
+                    element.style.cssText = 'margin: 6px 0; line-height: 1.6; color: rgba(255, 255, 255, 0.85) !important; display: list-item;';
+                } else if (element.tagName === 'BLOCKQUOTE') {
+                    element.style.cssText = 'border-left: 4px solid #CC0000; padding: 12px 20px; margin: 15px 0; background: rgba(204, 0, 0, 0.1) !important; color: rgba(255, 255, 255, 0.8) !important; font-style: italic; display: block; border-radius: 0 8px 8px 0;';
+                } else if (element.tagName === 'A') {
+                    element.style.cssText = 'color: #FF3333 !important; text-decoration: underline; font-weight: 600;';
+                } else if (element.tagName === 'STRONG' || element.tagName === 'B') {
+                    element.style.cssText = 'font-weight: 700; color: rgba(255, 255, 255, 0.95) !important;';
+                } else if (element.tagName === 'EM' || element.tagName === 'I') {
+                    element.style.cssText = 'font-style: italic; color: rgba(255, 255, 255, 0.8) !important;';
+                } else if (element.tagName === 'HR') {
+                    element.style.cssText = 'border: none; border-top: 2px solid rgba(204, 0, 0, 0.5); margin: 20px 0; display: block;';
+                } else if (element.tagName === 'TABLE') {
+                    element.style.cssText = 'width: 100%; border-collapse: collapse; margin: 15px 0; page-break-inside: avoid; display: table; border: 2px solid rgba(204, 0, 0, 0.5); border-radius: 8px; overflow: hidden;';
+                } else if (element.tagName === 'THEAD') {
+                    element.style.cssText = 'display: table-header-group; background: linear-gradient(135deg, rgba(204, 0, 0, 0.5), rgba(153, 0, 0, 0.6)) !important;';
+                } else if (element.tagName === 'TBODY') {
+                    element.style.cssText = 'display: table-row-group;';
+                } else if (element.tagName === 'TR') {
+                    element.style.cssText = 'display: table-row;';
+                } else if (element.tagName === 'TH') {
+                    element.style.cssText = 'background: rgba(204, 0, 0, 0.4) !important; color: rgba(255, 255, 255, 0.95) !important; padding: 10px; border: 1px solid rgba(204, 0, 0, 0.4); font-weight: 700; text-align: left; display: table-cell;';
+                } else if (element.tagName === 'TD') {
+                    element.style.cssText = 'padding: 8px 10px; border: 1px solid rgba(204, 0, 0, 0.3); background: rgba(20, 0, 0, 0.3) !important; color: rgba(255, 255, 255, 0.85) !important; display: table-cell;';
+                } else if (element.tagName === 'IMG') {
+                    element.style.cssText = 'max-width: 100%; height: auto; margin: 15px 0; border: 2px solid rgba(204, 0, 0, 0.4); border-radius: 4px; display: block;';
+                } else {
+                    element.style.color = 'rgba(255, 255, 255, 0.85)';
+                }
+                
+                Array.from(element.children).forEach(processElement);
+            };
+            
+            Array.from(contentClone.children).forEach(processElement);
+            styledContent.appendChild(contentClone);
+            container.appendChild(styledContent);
+            
+            document.body.appendChild(container);
+            return container;
         }
 
         // Load Arduino code with multiple file support
@@ -1855,21 +2045,29 @@
                 return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
             });
             
-            // Tables (improved parsing with proper structure)
-            const tableRegex = /^(\|.+\|)\r?\n(\|[-: ]+\|)\r?\n((?:\|.+\|\r?\n?)+)/gm;
-            html = html.replace(tableRegex, (match, header, separator, body) => {
+            // Tables - Robust matching for all line endings
+            html = html.replace(/(\|.+\|)[\r\n]+(\|[\s\-:]+\|)[\r\n]+((?:\|.+\|[\r\n]*)+)/g, (match, header, separator, body) => {
+                console.log('📊 Table detected:', match.substring(0, 100));
+                
                 // Parse header
-                const headerCells = header.trim().split('|').filter(c => c.trim()).map(c => c.trim());
+                const headerCells = header.split('|').filter(c => c.trim()).map(c => c.trim());
+                if (headerCells.length === 0) return match; // Invalid table
+                
                 const headerRow = '<tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr>';
                 
                 // Parse body rows
-                const rows = body.trim().split('\n').filter(r => r.trim());
+                const rows = body.split(/[\r\n]+/).filter(r => r.trim() && r.includes('|'));
                 const bodyRows = rows.map(row => {
-                    const cells = row.trim().split('|').filter(c => c.trim()).map(c => c.trim());
+                    const cells = row.split('|').filter(c => c.trim()).map(c => c.trim());
+                    if (cells.length !== headerCells.length) {
+                        console.warn('⚠️ Row has different column count:', cells.length, 'vs', headerCells.length);
+                    }
                     return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
                 }).join('');
                 
-                return `<table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>`;
+                const table = `\n<table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>\n`;
+                console.log('✅ Table created:', headerCells.length, 'columns,', rows.length, 'rows');
+                return table;
             });
             
             // Headers (must be before other inline formatting)
