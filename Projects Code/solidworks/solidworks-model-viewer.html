@@ -1267,7 +1267,7 @@
             }
         });
 
-            // Simple Download - Direct from GitHub
+            // Simple Download - Direct from GitHub (supports both .SLDPRT and .zip files)
             const downloadBtn = document.getElementById('downloadBtn');
             if (downloadBtn) {
                 downloadBtn.addEventListener('click', async () => {
@@ -1288,15 +1288,31 @@
                         // Convert model-01 → Model 01 (folder name format)
                         const folderName = modelId.replace('model-', 'Model ').replace(/-/g, ' ');
                         
-                        // GitHub raw file URL with correct path structure
-                        // Format: Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 01/model-01.SLDPRT
-                        const githubUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Storage/Solidwork%20Projects/${encodeURIComponent(category)}/${encodeURIComponent(folderName)}/${fileName}`;
+                        // Check if file is .zip (assembly with multiple files)
+                        const isZipFile = fileName.toLowerCase().endsWith('.zip');
+                        
+                        let githubUrl;
+                        let downloadFileName;
+                        
+                        if (isZipFile) {
+                            // For ZIP files: Use folder name + .zip
+                            // Format: Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 01.zip
+                            downloadFileName = `${folderName}.zip`;
+                            githubUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Storage/Solidwork%20Projects/${encodeURIComponent(category)}/${encodeURIComponent(downloadFileName)}`;
+                        } else {
+                            // For individual files: Use folder/filename
+                            // Format: Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 01/model-01.SLDPRT
+                            downloadFileName = fileName;
+                            githubUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Storage/Solidwork%20Projects/${encodeURIComponent(category)}/${encodeURIComponent(folderName)}/${fileName}`;
+                        }
                         
                         console.log('📥 Download Details:');
                         console.log('  Model ID:', modelId);
                         console.log('  Folder Name:', folderName);
                         console.log('  Category:', category);
                         console.log('  File:', fileName);
+                        console.log('  Is ZIP:', isZipFile);
+                        console.log('  Download Name:', downloadFileName);
                         console.log('  URL:', githubUrl);
                         
                         // Fetch file
@@ -1314,14 +1330,15 @@
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = fileName;
+                        a.download = downloadFileName;
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                         
                         // Success
-                        showToast('Success', 'Download complete!', 'success');
+                        const fileType = isZipFile ? 'ZIP archive' : 'SLDPRT file';
+                        showToast('Success', `${fileType} downloaded successfully!`, 'success');
                         downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
                         
                         setTimeout(() => {

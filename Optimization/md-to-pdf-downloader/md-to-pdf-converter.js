@@ -99,24 +99,28 @@ class MDtoPDFConverter {
      * Create PDF container with content, header, and footer
      */
     createPDFContainer(content, metadata) {
+        // Get current theme
+        const isDark = this.config.theme.mode === 'dark';
+        const theme = isDark ? this.config.theme.dark : this.config.theme.light;
+        
         const container = document.createElement('div');
         container.className = 'pdf-document-container';
         container.style.cssText = `
             width: ${this.config.pdf.pageSize.width}mm;
             min-height: ${this.config.pdf.pageSize.height}mm;
-            background: white;
+            background: ${theme.background};
             position: relative;
             font-family: ${this.config.content.fontFamily};
             font-size: ${this.config.content.fontSize};
             line-height: ${this.config.content.lineHeight};
-            color: ${this.config.content.color};
+            color: ${theme.textColor};
             padding: 0;
             margin: 0;
         `;
         
         // Add header
         if (this.config.header.show) {
-            container.appendChild(this.createHeader(metadata));
+            container.appendChild(this.createHeader(metadata, theme));
         }
         
         // Add content
@@ -134,13 +138,13 @@ class MDtoPDFConverter {
             contentWrapper.appendChild(content.cloneNode(true));
         }
         
-        // Apply content styling
-        this.applyContentStyling(contentWrapper);
+        // Apply content styling with theme
+        this.applyContentStyling(contentWrapper, theme);
         container.appendChild(contentWrapper);
         
         // Add footer
         if (this.config.footer.show) {
-            container.appendChild(this.createFooter(metadata));
+            container.appendChild(this.createFooter(metadata, theme));
         }
         
         return container;
@@ -149,14 +153,20 @@ class MDtoPDFConverter {
     /**
      * Create header element
      */
-    createHeader(metadata) {
+    createHeader(metadata, theme) {
+        const isDark = this.config.theme.mode === 'dark';
+        const headerBg = isDark ? 'rgba(26, 0, 0, 0.5)' : this.config.header.backgroundColor;
+        const borderColor = isDark ? 'rgba(204, 0, 0, 0.7)' : '#CC0000';
+        const textColor = isDark ? theme.headingColor : this.config.header.style.color;
+        
         const header = document.createElement('div');
         header.className = 'pdf-header';
         header.style.cssText = `
             width: 100%;
             height: ${this.config.header.height}mm;
-            background: ${this.config.header.backgroundColor};
-            border-bottom: ${this.config.header.borderBottom};
+            background: ${headerBg};
+            border-bottom: 3px solid ${borderColor};
+            border-radius: 8px 8px 0 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -165,7 +175,7 @@ class MDtoPDFConverter {
             z-index: 3;
             font-size: ${this.config.header.style.fontSize};
             font-weight: ${this.config.header.style.fontWeight};
-            color: ${this.config.header.style.color};
+            color: ${textColor};
             font-family: ${this.config.header.style.fontFamily};
         `;
         
@@ -182,7 +192,7 @@ class MDtoPDFConverter {
         // Right content
         const right = document.createElement('div');
         right.textContent = this.replaceVariables(this.config.header.content.right, metadata);
-        right.style.cssText = 'flex: 1; text-align: right;';
+        right.style.cssText = 'flex: 1; text-align: right; font-size: 8pt; opacity: 0.8;';
         
         header.appendChild(left);
         header.appendChild(center);
@@ -194,14 +204,19 @@ class MDtoPDFConverter {
     /**
      * Create footer element
      */
-    createFooter(metadata) {
+    createFooter(metadata, theme) {
+        const isDark = this.config.theme.mode === 'dark';
+        const footerBg = isDark ? 'rgba(10, 10, 10, 0.8)' : this.config.footer.backgroundColor;
+        const borderColor = isDark ? 'rgba(204, 0, 0, 0.4)' : '#CCCCCC';
+        const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : this.config.footer.style.color;
+        
         const footer = document.createElement('div');
         footer.className = 'pdf-footer';
         footer.style.cssText = `
             width: 100%;
             height: ${this.config.footer.height}mm;
-            background: ${this.config.footer.backgroundColor};
-            border-top: ${this.config.footer.borderTop};
+            background: ${footerBg};
+            border-top: 1px solid ${borderColor};
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -209,7 +224,7 @@ class MDtoPDFConverter {
             position: relative;
             z-index: 3;
             font-size: ${this.config.footer.style.fontSize};
-            color: ${this.config.footer.style.color};
+            color: ${textColor};
             font-family: ${this.config.footer.style.fontFamily};
         `;
         
@@ -239,45 +254,227 @@ class MDtoPDFConverter {
     /**
      * Apply styling to content for PDF
      */
-    applyContentStyling(contentWrapper) {
+    applyContentStyling(contentWrapper, theme) {
+        const isDark = this.config.theme.mode === 'dark';
+        
         // Headers
         const headers = contentWrapper.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        headers.forEach(h => {
-            h.style.color = this.config.content.headingColor;
-            h.style.pageBreakAfter = 'avoid';
-            h.style.marginTop = '15px';
-            h.style.marginBottom = '10px';
+        headers.forEach((h, idx) => {
+            const level = parseInt(h.tagName[1]);
+            const sizes = ['18pt', '16pt', '14pt', '12pt'];
+            const fontSize = sizes[level - 1] || '11pt';
+            
+            h.style.cssText = `
+                color: ${theme.headingColor} !important;
+                font-size: ${fontSize};
+                font-weight: 700;
+                margin: ${25 - (level * 3)}px 0 ${12 - (level * 2)}px 0;
+                page-break-after: avoid;
+                display: block;
+                ${level === 1 ? `border-bottom: 2px solid ${theme.accentColor}; padding-bottom: 6px;` : ''}
+                ${isDark && level === 1 ? `text-shadow: 0 0 10px rgba(204, 0, 0, 0.5);` : ''}
+            `;
         });
         
-        // Code blocks
-        const codeBlocks = contentWrapper.querySelectorAll('pre, code');
-        codeBlocks.forEach(code => {
-            code.style.fontFamily = this.config.content.codeFont;
-            code.style.fontSize = '9pt';
-            code.style.pageBreakInside = 'avoid';
+        // Paragraphs
+        const paragraphs = contentWrapper.querySelectorAll('p');
+        paragraphs.forEach(p => {
+            p.style.cssText = `
+                margin: 0 0 12px 0;
+                line-height: 1.7;
+                color: ${theme.textColor} !important;
+                text-align: justify;
+                display: block;
+            `;
+        });
+        
+        // Code blocks (PRE)
+        const preBlocks = contentWrapper.querySelectorAll('pre');
+        preBlocks.forEach(pre => {
+            pre.style.cssText = `
+                background: ${theme.codeBackground} !important;
+                padding: 15px;
+                border: 2px solid ${theme.accentColor};
+                border-left: 4px solid ${theme.accentColor};
+                border-radius: 4px;
+                overflow-x: auto;
+                margin: 15px 0;
+                page-break-inside: avoid;
+                display: block;
+            `;
+            
+            const code = pre.querySelector('code');
+            if (code) {
+                code.style.cssText = `
+                    font-family: ${this.config.content.codeFont};
+                    font-size: 9pt;
+                    color: ${theme.codeTextColor} !important;
+                    line-height: 1.5;
+                    display: inline;
+                    background: transparent !important;
+                `;
+            }
+        });
+        
+        // Inline code
+        const inlineCodes = contentWrapper.querySelectorAll('code:not(pre code)');
+        inlineCodes.forEach(code => {
+            code.style.cssText = `
+                background: ${isDark ? 'rgba(204, 0, 0, 0.2)' : '#f0f0f0'} !important;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: ${this.config.content.codeFont};
+                font-size: 10pt;
+                color: ${isDark ? 'rgba(255, 200, 200, 0.95)' : '#c7254e'} !important;
+                border: 1px solid ${isDark ? 'rgba(204, 0, 0, 0.3)' : '#e1e1e1'};
+                display: inline;
+            `;
+        });
+        
+        // Lists
+        const lists = contentWrapper.querySelectorAll('ul, ol');
+        lists.forEach(list => {
+            list.style.cssText = `
+                margin: 10px 0 10px 20px;
+                padding-left: 20px;
+                display: block;
+                color: ${theme.textColor} !important;
+            `;
+        });
+        
+        const listItems = contentWrapper.querySelectorAll('li');
+        listItems.forEach(li => {
+            li.style.cssText = `
+                margin: 6px 0;
+                line-height: 1.6;
+                color: ${theme.textColor} !important;
+                display: list-item;
+            `;
         });
         
         // Tables
         const tables = contentWrapper.querySelectorAll('table');
         tables.forEach(table => {
-            table.style.pageBreakInside = 'avoid';
-            table.style.width = '100%';
-            table.style.borderCollapse = 'collapse';
+            table.style.cssText = `
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+                page-break-inside: avoid;
+                display: table;
+                border: 2px solid ${theme.tableBorder};
+                border-radius: 8px;
+                overflow: hidden;
+            `;
+        });
+        
+        const theads = contentWrapper.querySelectorAll('thead');
+        theads.forEach(thead => {
+            thead.style.cssText = `
+                display: table-header-group;
+                background: ${theme.tableHeaderBg} !important;
+            `;
+        });
+        
+        const tbodys = contentWrapper.querySelectorAll('tbody');
+        tbodys.forEach(tbody => {
+            tbody.style.cssText = 'display: table-row-group;';
+        });
+        
+        const trs = contentWrapper.querySelectorAll('tr');
+        trs.forEach(tr => {
+            tr.style.cssText = 'display: table-row;';
+        });
+        
+        const ths = contentWrapper.querySelectorAll('th');
+        ths.forEach(th => {
+            th.style.cssText = `
+                background: ${isDark ? 'rgba(204, 0, 0, 0.4)' : '#cc0000'} !important;
+                color: ${isDark ? 'rgba(255, 255, 255, 0.95)' : 'white'} !important;
+                padding: 10px;
+                border: 1px solid ${theme.tableBorder};
+                font-weight: 700;
+                text-align: left;
+                display: table-cell;
+            `;
+        });
+        
+        const tds = contentWrapper.querySelectorAll('td');
+        tds.forEach(td => {
+            td.style.cssText = `
+                padding: 8px 10px;
+                border: 1px solid ${theme.tableBorder};
+                background: ${theme.tableCellBg} !important;
+                color: ${theme.textColor} !important;
+                display: table-cell;
+            `;
+        });
+        
+        // Blockquotes
+        const blockquotes = contentWrapper.querySelectorAll('blockquote');
+        blockquotes.forEach(bq => {
+            bq.style.cssText = `
+                border-left: 4px solid ${theme.accentColor};
+                padding: 12px 20px;
+                margin: 15px 0;
+                background: ${isDark ? 'rgba(204, 0, 0, 0.1)' : '#f9f9f9'} !important;
+                color: ${isDark ? 'rgba(255, 255, 255, 0.8)' : '#555555'} !important;
+                font-style: italic;
+                display: block;
+                ${isDark ? 'border-radius: 0 8px 8px 0;' : ''}
+            `;
         });
         
         // Links
         const links = contentWrapper.querySelectorAll('a');
         links.forEach(link => {
-            link.style.color = this.config.content.linkColor;
-            link.style.textDecoration = 'underline';
+            link.style.cssText = `
+                color: ${theme.linkColor} !important;
+                text-decoration: underline;
+                font-weight: 600;
+            `;
+        });
+        
+        // Strong/Bold
+        const strongs = contentWrapper.querySelectorAll('strong, b');
+        strongs.forEach(s => {
+            s.style.cssText = `
+                font-weight: 700;
+                color: ${isDark ? 'rgba(255, 255, 255, 0.95)' : '#000000'} !important;
+            `;
+        });
+        
+        // Emphasis/Italic
+        const ems = contentWrapper.querySelectorAll('em, i');
+        ems.forEach(em => {
+            em.style.cssText = `
+                font-style: italic;
+                color: ${isDark ? 'rgba(255, 255, 255, 0.8)' : '#444444'} !important;
+            `;
+        });
+        
+        // Horizontal Rules
+        const hrs = contentWrapper.querySelectorAll('hr');
+        hrs.forEach(hr => {
+            hr.style.cssText = `
+                border: none;
+                border-top: 2px solid ${isDark ? 'rgba(204, 0, 0, 0.5)' : theme.accentColor};
+                margin: 20px 0;
+                display: block;
+            `;
         });
         
         // Images
         const images = contentWrapper.querySelectorAll('img');
         images.forEach(img => {
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            img.style.pageBreakInside = 'avoid';
+            img.style.cssText = `
+                max-width: 100%;
+                height: auto;
+                margin: 15px 0;
+                border: 2px solid ${theme.accentColor};
+                border-radius: 4px;
+                display: block;
+                page-break-inside: avoid;
+            `;
         });
     }
     

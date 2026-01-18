@@ -99,6 +99,35 @@ const PDFConfig = {
         linkColor: "#0066CC"
     },
     
+    // Theme Configuration (New)
+    theme: {
+        mode: "light", // 'light' or 'dark'
+        dark: {
+            background: "linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95))",
+            textColor: "rgba(255, 255, 255, 0.9)",
+            headingColor: "#FF3333",
+            codeBackground: "rgba(0, 0, 0, 0.6)",
+            codeTextColor: "#d4d4d4",
+            tableBorder: "rgba(204, 0, 0, 0.5)",
+            tableHeaderBg: "linear-gradient(135deg, rgba(204, 0, 0, 0.5), rgba(153, 0, 0, 0.6))",
+            tableCellBg: "rgba(20, 0, 0, 0.3)",
+            linkColor: "#FF3333",
+            accentColor: "#CC0000"
+        },
+        light: {
+            background: "white",
+            textColor: "#333333",
+            headingColor: "#CC0000",
+            codeBackground: "#f5f5f5",
+            codeTextColor: "#000000",
+            tableBorder: "#999999",
+            tableHeaderBg: "#cc0000",
+            tableCellBg: "#fafafa",
+            linkColor: "#cc0000",
+            accentColor: "#CC0000"
+        }
+    },
+    
     // Page Break Rules
     pageBreak: {
         avoidElements: ['table', 'pre', 'img', 'figure'],
