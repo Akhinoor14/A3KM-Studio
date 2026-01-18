@@ -1408,16 +1408,20 @@
         </div>
     </div>
 
-    <script src="../../Optimization /script.js"></script>
+    <script src="../../Optimization/script.js"></script>
     <script>
-        // Base path configuration for file loading
-        const ARDUINO_BASE_PATH = '../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/';
+        // Base path configuration for file loading (encode every segment safely)
+        const ARDUINO_BASE_PATH = ['..', '..', 'Projects Storage', 'Arduino UNO Projects with Tinkercad']
+            .map(part => encodeURIComponent(part))
+            .join('/') + '/';
         
         // Helper function to build file path
         function buildFilePath(folder, fileName) {
             const folderEncoded = encodeURIComponent(folder);
             const fileEncoded = encodeURIComponent(fileName);
-            return `${ARDUINO_BASE_PATH}${folderEncoded}/${fileEncoded}`;
+            const fullPath = `${ARDUINO_BASE_PATH}${folderEncoded}/${fileEncoded}`;
+            console.log(`📍 Path: ${folder}/${fileName} → ${fullPath}`);
+            return fullPath;
         }
         
         // Arduino projects data
@@ -2464,8 +2468,11 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
-        // Load project on page load
+        // Load project on page load (fallback if DOMContentLoaded already fired)
         document.addEventListener('DOMContentLoaded', loadProject);
+        if (document.readyState !== 'loading') {
+            loadProject();
+        }
     </script>
 </body>
 </html>
