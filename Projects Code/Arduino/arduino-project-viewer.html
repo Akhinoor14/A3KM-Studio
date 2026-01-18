@@ -1524,6 +1524,7 @@
                         style: 'diagonal'
                     },
                     debug: {
+                        enabled: true,
                         logConversionTime: true
                     }
                 };
@@ -1854,12 +1855,12 @@
                 return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
             });
             
-            // Tables (improved parsing)
-            const tableRegex = /^(\|.+\|\r?\n)(\|[-: ]+\|\r?\n)((\|.+\|\r?\n?)+)/gm;
+            // Tables (improved parsing with proper structure)
+            const tableRegex = /^(\|.+\|)\r?\n(\|[-: ]+\|)\r?\n((?:\|.+\|\r?\n?)+)/gm;
             html = html.replace(tableRegex, (match, header, separator, body) => {
                 // Parse header
                 const headerCells = header.trim().split('|').filter(c => c.trim()).map(c => c.trim());
-                const headerRow = '<thead><tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr></thead>';
+                const headerRow = '<tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr>';
                 
                 // Parse body rows
                 const rows = body.trim().split('\n').filter(r => r.trim());
@@ -1868,7 +1869,7 @@
                     return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
                 }).join('');
                 
-                return `<table><tbody>${headerRow}${bodyRows}</tbody></table>`;
+                return `<table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>`;
             });
             
             // Headers (must be before other inline formatting)
@@ -1945,7 +1946,10 @@
                     
                     // Show content
                     document.querySelectorAll('.doc-content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(tabName + 'Tab').classList.add('active');
+                    const targetTab = document.getElementById(tabName + 'Tab');
+                    if (targetTab) {
+                        targetTab.classList.add('active');
+                    }
                 });
             });
             

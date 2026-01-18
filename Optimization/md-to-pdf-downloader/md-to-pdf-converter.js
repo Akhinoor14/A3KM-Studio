@@ -12,16 +12,38 @@
 
 class MDtoPDFConverter {
     constructor(options = {}) {
-        // Merge with default config
-        this.config = { ...PDFConfig, ...options };
+        // Deep merge with default config
+        this.config = this.deepMerge(JSON.parse(JSON.stringify(PDFConfig)), options);
         this.watermarkHandler = new WatermarkHandler(this.config.watermark);
         this.currentPage = 1;
         this.totalPages = 1;
+        
+        // Debug: Log config to verify
+        if (options.debug?.enabled) {
+            console.log('🔧 PDF Config loaded:', this.config.theme);
+        }
         
         // Check if html2pdf is loaded
         if (typeof html2pdf === 'undefined') {
             console.error('html2pdf.js not loaded! Please include: https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
         }
+    }
+    
+    /**
+     * Deep merge objects
+     */
+    deepMerge(target, source) {
+        const result = { ...target };
+        for (const key in source) {
+            if (source.hasOwnProperty(key)) {
+                if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                    result[key] = this.deepMerge(target[key] || {}, source[key]);
+                } else {
+                    result[key] = source[key];
+                }
+            }
+        }
+        return result;
     }
     
     /**
