@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Video Blog Gallery - Browse all video tutorials and educational content">
+    <title>Video Blog Gallery - A3KM Studio</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/styles.css">
+    <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+    
+    <style>
+        :root {
+            --youtube-red: #FF0000;
+            --primary-red: #CC0000;
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(26, 0, 0, 0.95);
+            --border-primary: rgba(204, 0, 0, 0.3);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-top: 85px;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-primary);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(204, 0, 0, 0.3);
+            border-color: var(--primary-red);
+            transform: translateX(-5px);
+        }
+
+        /* Hero Header */
+        .gallery-hero {
+            padding: 60px 20px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255, 0, 0, 0.1) 0%, transparent 100%);
+            border-bottom: 3px solid var(--youtube-red);
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .gallery-hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+        }
+
+        .gallery-hero h1 i {
+            color: var(--youtube-red);
+        }
+
+        .gallery-hero .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .gallery-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .stat-badge {
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid rgba(255, 0, 0, 0.4);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-badge i {
+            color: var(--youtube-red);
+        }
+
+        /* Search & Filter */
+        .controls-section {
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .search-filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 45px 14px 45px;
+            background: rgba(255, 0, 0, 0.08);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--youtube-red);
+            font-size: 1.1rem;
+        }
+
+        .filter-select {
+            padding: 14px 40px 14px 15px;
+            background: rgba(255, 0, 0, 0.08);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+        }
+
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .category-tab:hover {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: var(--youtube-red);
+            color: #fff;
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, var(--youtube-red), #CC0000);
+            border-color: var(--youtube-red);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+        }
+
+        /* Videos Container */
+        .videos-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Category Section */
+        .category-section {
+            margin-bottom: 50px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--youtube-red);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            flex: 1;
+        }
+
+        .category-count {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid var(--youtube-red);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--youtube-red);
+        }
+
+        /* Videos Grid */
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        /* Video Card */
+        .video-card {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .video-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .video-card:hover::before {
+            left: 100%;
+        }
+
+        .video-card:hover {
+            border-color: var(--youtube-red);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(255, 0, 0, 0.3);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 aspect ratio */
+            background: #000;
+            overflow: hidden;
+        }
+
+        .video-thumbnail iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-card:hover .video-overlay {
+            opacity: 1;
+        }
+
+        .play-button {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 0, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .video-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .video-views {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .video-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .video-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            background: rgba(255, 0, 0, 0.15);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: var(--youtube-red);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--youtube-red);
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .gallery-hero h1 {
+                font-size: 2rem;
+            }
+
+            .back-btn {
+                top: 80px;
+                left: 10px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .videos-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .category-tabs {
+                gap: 8px;
+            }
+
+            .category-tab {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CENTRALIZED BACKGROUND SYSTEM -->
+    <div class="bg-system-container">
+        <div class="bg-hero-bg-elements">
+            <div class="bg-geometric-shapes">
+                <div class="bg-shape bg-shape-1"></div>
+                <div class="bg-shape bg-shape-2"></div>
+                <div class="bg-shape bg-shape-3"></div>
+                <div class="bg-shape bg-shape-4"></div>
+                <div class="bg-shape bg-shape-5"></div>
+            </div>
+            <div class="bg-gradient-orbs">
+                <div class="bg-orb bg-orb-1"></div>
+                <div class="bg-orb bg-orb-2"></div>
+                <div class="bg-orb bg-orb-3"></div>
+            </div>
+            <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
+        </div>
+        <div class="bg-system-overlay"></div>
+        
+        <div class="bg-system-content">
+            <!-- Desktop Navbar -->
+            <nav class="desktop-navbar" id="desktopNavbar">
+                <div class="desktop-nav-container">
+                    <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+                        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+                        <div class="desktop-nav-brand">
+                            <span class="desktop-nav-brand-name">A3KM Studio</span>
+                            <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+                        </div>
+                    </a>
+                    <ul class="desktop-nav-menu">
+                        <li class="desktop-nav-item">
+                            <a href="../../About me/about.html" class="desktop-nav-link">
+                                <i class="fas fa-user-circle"></i>
+                                <span>About</span>
+                            </a>
+                        </li>
+                        <li class="desktop-nav-item">
+                            <a href="../../Projects Code/projects.html" class="desktop-nav-link">
+                                <i class="fas fa-folder-open"></i>
+                                <span>Projects</span>
+                            </a>
+                        </li>
+                        <li class="desktop-nav-item">
+                            <a href="../hub.html" class="desktop-nav-link active">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Content Studio</span>
+                            </a>
+                        </li>
+                        <li class="desktop-nav-item">
+                            <a href="../../Contact/contact.html" class="desktop-nav-link">
+                                <i class="fas fa-envelope"></i>
+                                <span>Contact</span>
+                            </a>
+                        </li>
+                        <li class="desktop-nav-item">
+                            <a href="../../About%20me/CV/2313014%20CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV.pdf">
+                                <i class="fas fa-download"></i>
+                                <span>CV</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Back Button -->
+            <a href="../hub.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Content Studio
+            </a>
+
+            <!-- Hero Section -->
+            <header class="gallery-hero">
+                <h1><i class="fab fa-youtube"></i> Video Blog Gallery</h1>
+                <p class="subtitle">Browse all video tutorials, educational content, and technical guides</p>
+                
+                <div class="gallery-stats">
+                    <span class="stat-badge">
+                        <i class="fas fa-play-circle"></i> <span id="totalVideos">0</span> Videos
+                    </span>
+                    <span class="stat-badge">
+                        <i class="fas fa-layer-group"></i> <span id="totalCategories">0</span> Categories
+                    </span>
+                    <span class="stat-badge">
+                        <i class="fab fa-youtube"></i> YouTube Powered
+                    </span>
+                </div>
+            </header>
+
+            <!-- Search & Filter Controls -->
+            <section class="controls-section">
+                <div class="search-filter-row">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search videos by title, tags, or topics...">
+                    </div>
+                    
+                    <select class="filter-select" id="sortFilter">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                    </select>
+                </div>
+
+                <div class="category-tabs" id="categoryTabs">
+                    <button class="category-tab active" data-category="all">
+                        <i class="fas fa-th"></i> All Videos
+                    </button>
+                </div>
+            </section>
+
+            <!-- Videos Container -->
+            <main class="videos-container" id="videosContainer">
+                <!-- Videos will be loaded dynamically -->
+            </main>
+        </div>
+    </div>
+
+    <script src="../../Optimization/script.js"></script>
+    <script>
+        let allVideos = [];
+        let categories = {};
+        let currentCategory = 'all';
+        let currentSort = 'newest';
+
+        // Load videos from JSON
+        async function loadVideos() {
+            try {
+                const response = await fetch('videos.json');
+                const data = await response.json();
+                
+                // Process videos from nested categories
+                if (data.categories) {
+                    categories = data.categories;
+                    allVideos = [];
+                    
+                    Object.entries(data.categories).forEach(([categoryName, categoryData]) => {
+                        if (categoryData.videos && Array.isArray(categoryData.videos)) {
+                            categoryData.videos.forEach(video => {
+                                allVideos.push({
+                                    ...video,
+                                    category: categoryName,
+                                    categoryIcon: categoryData.icon || '📹',
+                                    categoryColor: categoryData.color || '#FF0000'
+                                });
+                            });
+                        }
+                    });
+                }
+                
+                // Update stats
+                document.getElementById('totalVideos').textContent = allVideos.length;
+                document.getElementById('totalCategories').textContent = Object.keys(categories).length;
+                
+                // Create category tabs
+                createCategoryTabs();
+                
+                // Render videos
+                renderVideos();
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                document.getElementById('videosContainer').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading videos</h3>
+                        <p>Please try refreshing the page</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Create category tabs
+        function createCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            const allButton = tabsContainer.querySelector('.category-tab[data-category="all"]');
+            
+            Object.entries(categories).forEach(([categoryName, categoryData]) => {
+                const tab = document.createElement('button');
+                tab.className = 'category-tab';
+                tab.dataset.category = categoryName;
+                tab.innerHTML = `${categoryData.icon || '📹'} ${categoryName}`;
+                tab.addEventListener('click', () => filterByCategory(categoryName, tab));
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        // Filter by category
+        function filterByCategory(category, clickedTab) {
+            currentCategory = category;
+            
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            clickedTab.classList.add('active');
+            
+            renderVideos();
+        }
+
+        // Render videos
+        function renderVideos() {
+            const container = document.getElementById('videosContainer');
+            
+            // Filter videos
+            let filteredVideos = allVideos.filter(video => {
+                const categoryMatch = currentCategory === 'all' || video.category === currentCategory;
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const searchMatch = searchTerm === '' || 
+                    video.title.toLowerCase().includes(searchTerm) ||
+                    video.description.toLowerCase().includes(searchTerm) ||
+                    (video.tags && video.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
+                
+                return categoryMatch && searchMatch;
+            });
+
+            // Sort videos
+            filteredVideos = sortVideos(filteredVideos);
+
+            // Group by category
+            const grouped = {};
+            filteredVideos.forEach(video => {
+                if (!grouped[video.category]) {
+                    grouped[video.category] = [];
+                }
+                grouped[video.category].push(video);
+            });
+
+            // Render
+            if (filteredVideos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-video-slash"></i>
+                        <h3>No videos found</h3>
+                        <p>Try adjusting your filters or search term</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const [category, videos] of Object.entries(grouped)) {
+                const categoryData = categories[category] || { icon: '📹', color: '#FF0000' };
+
+                html += `
+                    <section class="category-section">
+                        <div class="category-header">
+                            <div class="category-icon">${categoryData.icon}</div>
+                            <h2 class="category-title">${category}</h2>
+                            <span class="category-count">${videos.length} ${videos.length === 1 ? 'Video' : 'Videos'}</span>
+                        </div>
+                        <div class="videos-grid">
+                            ${videos.map((video, index) => `
+                                <div class="video-card" onclick="openVideo('${video.id}')">
+                                    <div class="video-thumbnail">
+                                        <iframe src="https://www.youtube.com/embed/${getYouTubeId(video.url)}?controls=0&showinfo=0&modestbranding=1" frameborder="0" allowfullscreen></iframe>
+                                        <div class="video-overlay">
+                                            <div class="play-button">
+                                                <i class="fas fa-play"></i>
+                                            </div>
+                                        </div>
+                                        ${video.duration ? `<div class="video-duration">${video.duration}</div>` : ''}
+                                    </div>
+                                    <div class="video-info">
+                                        <h3 class="video-title">${video.title}</h3>
+                                        <div class="video-meta">
+                                            <span class="video-date">
+                                                <i class="far fa-calendar"></i> ${video.date || 'Recent'}
+                                            </span>
+                                            <span class="video-views">
+                                                <i class="far fa-eye"></i> ${video.views || '0'} views
+                                            </span>
+                                        </div>
+                                        <p class="video-description">${video.description}</p>
+                                        ${video.tags ? `
+                                            <div class="video-tags">
+                                                ${video.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Sort videos
+        function sortVideos(videos) {
+            const sorted = [...videos];
+            
+            switch(currentSort) {
+                case 'newest':
+                    return sorted.reverse();
+                case 'oldest':
+                    return sorted;
+                case 'title-asc':
+                    return sorted.sort((a, b) => a.title.localeCompare(b.title));
+                case 'title-desc':
+                    return sorted.sort((a, b) => b.title.localeCompare(a.title));
+                default:
+                    return sorted;
+            }
+        }
+
+        // Get YouTube video ID
+        function getYouTubeId(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            return match ? match[1] : '';
+        }
+
+        // Open video in viewer
+        function openVideo(videoId) {
+            window.location.href = `video-viewer.html?id=${videoId}`;
+        }
+
+        // Sort filter
+        document.getElementById('sortFilter').addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            renderVideos();
+        });
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', () => {
+            renderVideos();
+        });
+
+        // Initialize
+        loadVideos();
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('desktopNavbar');
+            if (navbar) {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

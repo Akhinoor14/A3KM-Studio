@@ -11,21 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../Optimization/styles.css">
     <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     
     <style>
-        /* MATLAB Engineering Theme Variables */
+        /* MATLAB Engineering Theme Variables - Dark Red, Black, White */
         :root {
-            --matlab-blue: #0076A8;
-            --matlab-orange: #FF7F00;
             --primary-red: #CC0000;
-            --primary-red-dark: #990000;
+            --dark-red: #990000;
             --bg-dark: rgba(10, 10, 10, 0.98);
-            --bg-card: rgba(26, 0, 0, 0.95);
-            --border-primary: rgba(204, 0, 0, 0.3);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --glow-red: 0 0 20px rgba(204, 0, 0, 0.3);
+            --bg-card: rgba(26, 26, 26, 0.95);
+            --border-red: rgba(204, 0, 0, 0.3);
+            --border-red-hover: rgba(204, 0, 0, 0.6);
+            --grid-line: rgba(204, 0, 0, 0.08);
+            --text-white: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
         * {
@@ -36,29 +37,75 @@
 
         body {
             background: #000;
-            color: var(--text-primary);
+            color: var(--text-white);
             font-family: 'Inter', -apple-system, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
             padding-top: 85px;
+            position: relative;
         }
 
-        /* Hero Header */
+        /* Engineering Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+                repeating-linear-gradient(90deg, transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+                repeating-linear-gradient(45deg, transparent, transparent 39px, rgba(204, 0, 0, 0.04) 39px, rgba(204, 0, 0, 0.04) 40px);
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        /* Hero Header - Engineering Style */
         .matlab-hero {
             padding: 60px 20px 40px;
             text-align: center;
-            background: linear-gradient(180deg, rgba(0, 118, 168, 0.1) 0%, transparent 100%);
-            border-bottom: 3px solid var(--matlab-blue);
+            background: linear-gradient(180deg, rgba(204, 0, 0, 0.15) 0%, transparent 100%);
+            border-bottom: 3px solid var(--primary-red);
             position: relative;
             margin-bottom: 40px;
+            z-index: 1;
+        }
+
+        /* Technical corner brackets */
+        .matlab-hero::before,
+        .matlab-hero::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--primary-red);
+            opacity: 0.5;
+        }
+
+        .matlab-hero::before {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .matlab-hero::after {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
         }
 
         .matlab-hero h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            color: #fff;
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: var(--text-white);
             margin-bottom: 15px;
-            text-shadow: 0 0 40px rgba(0, 118, 168, 0.6);
+            text-shadow: 0 0 50px rgba(204, 0, 0, 0.7), 2px 2px 0 rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: -1px;
         }
 
         .matlab-hero .subtitle {
@@ -76,19 +123,26 @@
         }
 
         .stat-badge {
-            background: rgba(0, 118, 168, 0.15);
-            border: 2px solid rgba(0, 118, 168, 0.4);
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-red);
             padding: 12px 24px;
             border-radius: 12px;
             font-weight: 600;
-            color: #fff;
+            color: var(--text-white);
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-badge:hover {
+            border-color: var(--primary-red);
+            background: rgba(204, 0, 0, 0.25);
+            box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
         }
 
         .stat-badge i {
-            color: var(--matlab-blue);
+            color: var(--primary-red);
         }
 
         /* Back Button */
@@ -139,15 +193,22 @@
         .search-input {
             width: 100%;
             padding: 14px 45px 14px 45px;
-            background: rgba(0, 118, 168, 0.08);
-            border: 2px solid rgba(0, 118, 168, 0.3);
-            border-radius: 12px;
-            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--border-red);
+            border-radius: 8px;
+            color: var(--text-white);
             font-size: 1rem;
+            font-weight: 500;
             transition: all 0.3s ease;
+            letter-spacing: 0.3px;
         }
 
         .search-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            background: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 0 25px rgba(204, 0, 0, 0.4);
+        }
             outline: none;
             border-color: var(--matlab-blue);
             box-shadow: 0 0 20px rgba(0, 118, 168, 0.3);
@@ -158,17 +219,18 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--matlab-blue);
+            color: var(--primary-red);
             font-size: 1.1rem;
         }
 
         .filter-select {
             padding: 14px 40px 14px 15px;
-            background: rgba(0, 118, 168, 0.08);
-            border: 2px solid rgba(0, 118, 168, 0.3);
-            border-radius: 12px;
-            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--border-red);
+            border-radius: 8px;
+            color: var(--text-white);
             font-size: 0.95rem;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
             min-width: 180px;
@@ -176,7 +238,8 @@
 
         .filter-select:focus {
             outline: none;
-            border-color: var(--matlab-blue);
+            border-color: var(--primary-red);
+            box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
         }
 
         /* Category Tabs */
@@ -189,8 +252,8 @@
 
         .category-tab {
             padding: 10px 20px;
-            background: rgba(0, 118, 168, 0.1);
-            border: 2px solid rgba(0, 118, 168, 0.3);
+            background: rgba(204, 0, 0, 0.1);
+            border: 2px solid var(--border-red);
             border-radius: 25px;
             color: var(--text-secondary);
             cursor: pointer;
@@ -200,16 +263,16 @@
         }
 
         .category-tab:hover {
-            background: rgba(0, 118, 168, 0.2);
-            border-color: var(--matlab-blue);
-            color: #fff;
+            background: rgba(204, 0, 0, 0.2);
+            border-color: var(--primary-red);
+            color: var(--text-white);
         }
 
         .category-tab.active {
-            background: linear-gradient(135deg, var(--matlab-blue), #005580);
-            border-color: var(--matlab-blue);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(0, 118, 168, 0.4);
+            background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+            border-color: var(--primary-red);
+            color: var(--text-white);
+            box-shadow: 0 0 25px rgba(204, 0, 0, 0.5);
         }
 
         /* Projects Container */
@@ -230,28 +293,44 @@
             gap: 15px;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 3px solid var(--matlab-blue);
+            border-bottom: 3px solid var(--primary-red);
+            position: relative;
+        }
+
+        /* Engineering corner accent */
+        .category-header::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary-red);
+            box-shadow: 0 0 15px var(--primary-red);
         }
 
         .category-icon {
             font-size: 2rem;
+            color: var(--primary-red);
         }
 
         .category-title {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-white);
             flex: 1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .category-count {
-            background: rgba(0, 118, 168, 0.2);
-            border: 2px solid var(--matlab-blue);
+            background: rgba(204, 0, 0, 0.2);
+            border: 2px solid var(--primary-red);
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 600;
-            color: var(--matlab-blue);
+            color: var(--primary-red);
         }
 
         /* Projects Grid */
@@ -261,11 +340,11 @@
             gap: 25px;
         }
 
-        /* Project Card */
+        /* Project Card - Engineering Blueprint Style */
         .project-card {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-red);
+            border-radius: 12px;
             padding: 24px;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -273,25 +352,43 @@
             overflow: hidden;
         }
 
+        /* Engineering grid inside card */
         .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(204, 0, 0, 0.03) 30px, rgba(204, 0, 0, 0.03) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(204, 0, 0, 0.03) 30px, rgba(204, 0, 0, 0.03) 31px);
+            pointer-events: none;
+            opacity: 0.8;
+            z-index: 0;
+        }
+
+        /* Scanning light effect */
+        .project-card::after {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 118, 168, 0.1), transparent);
-            transition: left 0.5s ease;
+            background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.15), transparent);
+            transition: left 0.6s ease;
+            z-index: 1;
         }
 
-        .project-card:hover::before {
+        .project-card:hover::after {
             left: 100%;
         }
 
         .project-card:hover {
-            border-color: var(--matlab-blue);
+            border-color: var(--border-red-hover);
             transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0, 118, 168, 0.3);
+            box-shadow: 0 20px 60px rgba(204, 0, 0, 0.4);
         }
 
         .project-number {
@@ -470,7 +567,7 @@
                         <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
                         <div class="desktop-nav-brand">
                             <span class="desktop-nav-brand-name">A3KM Studio</span>
-                            <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
+                            <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
                         </div>
                     </a>
                     <ul class="desktop-nav-menu">
@@ -745,5 +842,6 @@
             }
         });
     </script>
+    <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
 </html>

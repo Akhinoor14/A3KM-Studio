@@ -11,18 +11,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="../../Optimization/styles.css">
     <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     
     <style>
         :root {
-            --matlab-blue: #0076A8;
-            --matlab-orange: #FF7F00;
             --primary-red: #CC0000;
+            --dark-red: #990000;
             --bg-dark: rgba(10, 10, 10, 0.98);
-            --bg-card: rgba(26, 0, 0, 0.95);
-            --border-primary: rgba(204, 0, 0, 0.3);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.7);
+            --bg-card: rgba(26, 26, 26, 0.95);
+            --border-red: rgba(204, 0, 0, 0.3);
+            --border-red-hover: rgba(204, 0, 0, 0.6);
+            --grid-line: rgba(204, 0, 0, 0.08);
+            --text-white: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
         * {
@@ -33,11 +36,29 @@
 
         body {
             background: #000;
-            color: var(--text-primary);
+            color: var(--text-white);
             font-family: 'Inter', -apple-system, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
             padding-top: 85px;
+            position: relative;
+        }
+
+        /* Engineering Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+                repeating-linear-gradient(90deg, transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+                repeating-linear-gradient(45deg, transparent, transparent 39px, rgba(204, 0, 0, 0.04) 39px, rgba(204, 0, 0, 0.04) 40px);
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 0;
         }
 
         /* Back Button */
@@ -65,33 +86,55 @@
             transform: translateX(-5px);
         }
 
-        /* Project Container */
+        /* Project Viewer Container */
         .project-viewer {
             max-width: 1400px;
             margin: 40px auto;
             padding: 0 20px 60px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Project Header */
+        /* Project Header - Engineering Blueprint */
         .project-header {
-            background: linear-gradient(135deg, rgba(0, 118, 168, 0.15), rgba(26, 0, 0, 0.95));
-            border: 2px solid rgba(0, 118, 168, 0.3);
-            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.1), var(--bg-card));
+            border: 3px solid var(--border-red);
+            border-radius: 12px;
             padding: 40px;
             margin-bottom: 30px;
             position: relative;
             overflow: hidden;
         }
 
+        /* Engineering grid overlay */
         .project-header::before {
             content: '';
             position: absolute;
             top: 0;
+            left: 0;
             right: 0;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(0, 118, 168, 0.15), transparent);
-            border-radius: 50%;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(204, 0, 0, 0.03) 30px, rgba(204, 0, 0, 0.03) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(204, 0, 0, 0.03) 30px, rgba(204, 0, 0, 0.03) 31px);
+            pointer-events: none;
+            opacity: 0.8;
+            z-index: 0;
+        }
+
+        /* Technical corner brackets */
+        .project-header::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 1px solid var(--border-red);
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0.4;
+            z-index: 0;
         }
 
         .project-meta {
@@ -99,11 +142,13 @@
             gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .meta-badge {
-            background: rgba(0, 118, 168, 0.2);
-            border: 1px solid rgba(0, 118, 168, 0.4);
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid var(--border-red);
             padding: 6px 14px;
             border-radius: 8px;
             font-size: 0.85rem;
@@ -111,15 +156,19 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--matlab-blue);
+            color: var(--primary-red);
         }
 
         .project-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--text-white);
             margin-bottom: 15px;
-            text-shadow: 0 0 30px rgba(0, 118, 168, 0.5);
+            text-shadow: 0 0 40px rgba(204, 0, 0, 0.6), 2px 2px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: -1px;
         }
 
         .project-description {
@@ -127,55 +176,87 @@
             color: var(--text-secondary);
             line-height: 1.7;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .project-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .tag {
-            background: rgba(0, 118, 168, 0.15);
-            border: 1px solid rgba(0, 118, 168, 0.3);
-            color: var(--matlab-blue);
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--border-red);
+            color: var(--primary-red);
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 0.85rem;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        /* Download Section */
+        .tag:hover {
+            background: rgba(204, 0, 0, 0.25);
+            border-color: var(--primary-red);
+            box-shadow: 0 0 15px rgba(204, 0, 0, 0.3);
+        }
+
+        /* Download Section - Engineering Style */
         .download-section {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 3px solid var(--border-red);
+            border-radius: 12px;
             padding: 30px;
             margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grid overlay */
+        .download-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(204, 0, 0, 0.03) 20px, rgba(204, 0, 0, 0.03) 21px);
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 0;
         }
 
         .download-title {
             font-size: 1.4rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-white);
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .download-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
+            position: relative;
+            z-index: 1;
         }
 
         .download-btn {
-            background: rgba(0, 118, 168, 0.15);
-            border: 2px solid rgba(0, 118, 168, 0.3);
-            color: #fff;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--border-red);
+            color: var(--text-white);
             padding: 15px 20px;
-            border-radius: 12px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             display: flex;
@@ -184,18 +265,35 @@
             gap: 10px;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
         }
 
         .download-btn:hover {
-            background: rgba(0, 118, 168, 0.3);
-            border-color: var(--matlab-blue);
+            background: rgba(204, 0, 0, 0.3);
+            border-color: var(--primary-red);
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 118, 168, 0.3);
+            box-shadow: 0 10px 30px rgba(204, 0, 0, 0.4);
         }
 
         .download-btn i {
             font-size: 1.2rem;
-            color: var(--matlab-blue);
+            color: var(--primary-red);
         }
 
         .download-btn.disabled {
@@ -204,13 +302,27 @@
             pointer-events: none;
         }
 
-        /* Tab Navigation */
+        /* Tab Navigation - Engineering Style */
         .tab-navigation {
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
-            border-bottom: 2px solid rgba(0, 118, 168, 0.2);
+            border-bottom: 3px solid var(--border-red);
             padding-bottom: 10px;
+            position: relative;
+        }
+
+        /* Active indicator line */
+        .tab-navigation::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: var(--primary-red);
+            box-shadow: 0 0 15px var(--primary-red);
+            transition: all 0.3s ease;
         }
 
         .tab-btn {
@@ -226,17 +338,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative;
         }
 
         .tab-btn:hover {
-            background: rgba(0, 118, 168, 0.1);
-            color: #fff;
+            background: rgba(204, 0, 0, 0.1);
+            color: var(--text-white);
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, var(--matlab-blue), #005580);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(0, 118, 168, 0.4);
+            background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+            color: var(--text-white);
+            box-shadow: 0 0 25px rgba(204, 0, 0, 0.5);
         }
 
         .tab-content {
@@ -247,44 +360,67 @@
             display: block;
         }
 
-        /* Code Section */
+        /* Code Section - Blueprint Terminal Style */
         .code-container {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 3px solid var(--border-red);
+            border-radius: 12px;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Grid pattern overlay */
+        .code-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(204, 0, 0, 0.02) 20px, rgba(204, 0, 0, 0.02) 21px);
+            pointer-events: none;
+            opacity: 0.5;
+            z-index: 0;
         }
 
         .code-header {
-            background: rgba(0, 118, 168, 0.1);
+            background: rgba(204, 0, 0, 0.1);
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid rgba(0, 118, 168, 0.3);
+            border-bottom: 2px solid var(--border-red);
+            position: relative;
+            z-index: 1;
         }
 
         .code-title {
             font-weight: 600;
-            color: var(--matlab-blue);
+            color: var(--primary-red);
             display: flex;
             align-items: center;
             gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .copy-btn {
-            background: rgba(0, 118, 168, 0.2);
-            border: 1px solid rgba(0, 118, 168, 0.4);
-            color: #fff;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid var(--border-red);
+            color: var(--text-white);
             padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.85rem;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
         .copy-btn:hover {
-            background: rgba(0, 118, 168, 0.4);
+            background: rgba(204, 0, 0, 0.4);
+            border-color: var(--primary-red);
+            box-shadow: 0 0 15px rgba(204, 0, 0, 0.3);
         }
 
         .code-content {
@@ -304,7 +440,7 @@
             line-height: 1.6;
         }
 
-        /* Results Gallery */
+        /* Results Gallery - Engineering Layout */
         .results-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -312,17 +448,50 @@
         }
 
         .result-item {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-red);
+            border-radius: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Technical corner brackets */
+        .result-item::before,
+        .result-item::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-red);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .result-item::before {
+            top: 10px;
+            left: 10px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .result-item::after {
+            bottom: 10px;
+            right: 10px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .result-item:hover::before,
+        .result-item:hover::after {
+            opacity: 0.8;
         }
 
         .result-item:hover {
-            border-color: var(--matlab-blue);
+            border-color: var(--border-red-hover);
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 118, 168, 0.3);
+            box-shadow: 0 15px 40px rgba(204, 0, 0, 0.4);
         }
 
         .result-image {
@@ -344,13 +513,30 @@
             text-align: center;
         }
 
-        /* Video Section */
+        /* Video Section - Engineering Frame */
         .video-container {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 3px solid var(--border-red);
+            border-radius: 12px;
             padding: 30px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grid overlay */
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(204, 0, 0, 0.02) 30px, rgba(204, 0, 0, 0.02) 31px);
+            pointer-events: none;
+            opacity: 0.5;
+            z-index: 0;
         }
 
         .youtube-player {
@@ -360,33 +546,61 @@
             margin: 20px auto 0;
             border-radius: 12px;
             overflow: hidden;
+            border: 2px solid var(--border-red);
+            position: relative;
+            z-index: 1;
         }
 
         .no-video-msg {
             color: var(--text-secondary);
             padding: 40px;
             font-size: 1.1rem;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Documentation */
+        /* Documentation - Engineering Manual Style */
         .doc-section {
-            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 3px solid var(--border-red);
+            border-radius: 12px;
             padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grid pattern */
+        .doc-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(204, 0, 0, 0.02) 20px, rgba(204, 0, 0, 0.02) 21px);
+            pointer-events: none;
+            opacity: 0.5;
+            z-index: 0;
         }
 
         .doc-content {
             color: var(--text-secondary);
             line-height: 1.8;
             font-size: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .doc-content h3 {
-            color: #fff;
+            color: var(--text-white);
             margin-top: 25px;
             margin-bottom: 15px;
             font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-left: 4px solid var(--primary-red);
+            padding-left: 15px;
         }
 
         .doc-content ul, .doc-content ol {
@@ -517,7 +731,7 @@
                         <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
                         <div class="desktop-nav-brand">
                             <span class="desktop-nav-brand-name">A3KM Studio</span>
-                            <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
+                            <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
                         </div>
                     </a>
                     <ul class="desktop-nav-menu">
@@ -873,5 +1087,6 @@
             }
         });
     </script>
+    <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
 </html>
