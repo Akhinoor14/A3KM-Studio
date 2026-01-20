@@ -50,8 +50,20 @@
       }
       
       const data = await response.json();
-      const items = data[typeConfig.dataKey] || [];
-      const count = items.length;
+      let count = 0;
+      
+      // Handle different data structures
+      if (type === 'video-blog') {
+        // Video blogs have nested categories
+        const categories = data.categories?.['video-blog'] || {};
+        count = Object.values(categories).reduce((total, category) => {
+          return total + (category.videos?.length || 0);
+        }, 0);
+      } else {
+        // Other types have flat arrays
+        const items = data[typeConfig.dataKey] || [];
+        count = items.length;
+      }
       
       updateCountBadge(type, count);
       console.log(`✅ ${type}: ${count} items`);

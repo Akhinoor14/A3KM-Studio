@@ -549,8 +549,186 @@
   };
 
   /* ============================================
+     READING MODE FEATURES - NEW
+     ============================================ */
+  
+  // Show toolbar when post loads
+  function showReadingToolbar() {
+    const toolbar = document.getElementById('readingToolbar');
+    if (toolbar) {
+      toolbar.style.display = 'flex';
+    }
+  }
+
+  // Night Mode Toggle
+  let isNightMode = localStorage.getItem('readingMode') === 'night';
+  function toggleNightMode() {
+    const body = document.body;
+    const btn = document.getElementById('nightModeBtn');
+    const sepiaBtn = document.getElementById('sepiaModeBtn');
+    
+    if (isNightMode) {
+      body.classList.remove('night-mode');
+      btn.classList.remove('active');
+      localStorage.removeItem('readingMode');
+      isNightMode = false;
+    } else {
+      body.classList.remove('sepia-mode');
+      body.classList.add('night-mode');
+      btn.classList.add('active');
+      sepiaBtn.classList.remove('active');
+      localStorage.setItem('readingMode', 'night');
+      isNightMode = true;
+      isSepiaMode = false;
+    }
+  }
+
+  // Sepia Mode Toggle
+  let isSepiaMode = localStorage.getItem('readingMode') === 'sepia';
+  function toggleSepiaMode() {
+    const body = document.body;
+    const btn = document.getElementById('sepiaModeBtn');
+    const nightBtn = document.getElementById('nightModeBtn');
+    
+    if (isSepiaMode) {
+      body.classList.remove('sepia-mode');
+      btn.classList.remove('active');
+      localStorage.removeItem('readingMode');
+      isSepiaMode = false;
+    } else {
+      body.classList.remove('night-mode');
+      body.classList.add('sepia-mode');
+      btn.classList.add('active');
+      nightBtn.classList.remove('active');
+      localStorage.setItem('readingMode', 'sepia');
+      isSepiaMode = true;
+      isNightMode = false;
+    }
+  }
+
+  // Font Size Adjustment
+  let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
+  function updateFontSize() {
+    const body = document.body;
+    const display = document.getElementById('fontSizeDisplay');
+    
+    body.classList.remove('font-size-small', 'font-size-large', 'font-size-xlarge');
+    
+    if (currentFontSize <= 90) {
+      body.classList.add('font-size-small');
+    } else if (currentFontSize >= 110 && currentFontSize < 130) {
+      body.classList.add('font-size-large');
+    } else if (currentFontSize >= 130) {
+      body.classList.add('font-size-xlarge');
+    }
+    
+    if (display) {
+      display.textContent = currentFontSize + '%';
+    }
+    localStorage.setItem('fontSize', currentFontSize);
+  }
+
+  function increaseFontSize() {
+    if (currentFontSize < 150) {
+      currentFontSize += 10;
+      updateFontSize();
+    }
+  }
+
+  function decreaseFontSize() {
+    if (currentFontSize > 80) {
+      currentFontSize -= 10;
+      updateFontSize();
+    }
+  }
+
+  // Print Function
+  function printPost() {
+    window.print();
+  }
+
+  // Fullscreen Toggle
+  function toggleFullscreen() {
+    const article = document.querySelector('.post-viewer');
+    const btn = document.getElementById('fullscreenBtn');
+    
+    if (!document.fullscreenElement) {
+      if (article.requestFullscreen) {
+        article.requestFullscreen();
+        btn.innerHTML = '<i class="fas fa-compress"></i><span>Exit</span>';
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        btn.innerHTML = '<i class="fas fa-expand"></i><span>Fullscreen</span>';
+      }
+    }
+  }
+
+  // Event Listeners for Reading Features
+  function setupReadingFeatures() {
+    // Apply saved reading mode
+    if (isNightMode) {
+      document.body.classList.add('night-mode');
+      document.getElementById('nightModeBtn')?.classList.add('active');
+    } else if (isSepiaMode) {
+      document.body.classList.add('sepia-mode');
+      document.getElementById('sepiaModeBtn')?.classList.add('active');
+    }
+    
+    updateFontSize();
+    showReadingToolbar();
+    
+    // Toolbar button events
+    document.getElementById('nightModeBtn')?.addEventListener('click', toggleNightMode);
+    document.getElementById('sepiaModeBtn')?.addEventListener('click', toggleSepiaMode);
+    document.getElementById('fontSizeIncrease')?.addEventListener('click', increaseFontSize);
+    document.getElementById('fontSizeDecrease')?.addEventListener('click', decreaseFontSize);
+    document.getElementById('printBtn')?.addEventListener('click', printPost);
+    document.getElementById('fullscreenBtn')?.addEventListener('click', toggleFullscreen);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      switch(e.key.toLowerCase()) {
+        case 'n':
+          toggleNightMode();
+          break;
+        case 's':
+          toggleSepiaMode();
+          break;
+        case 'p':
+          printPost();
+          break;
+        case 'f':
+          toggleFullscreen();
+          break;
+        case '+':
+        case '=':
+          increaseFontSize();
+          break;
+        case '-':
+          decreaseFontSize();
+          break;
+      }
+    });
+    
+    // Fullscreen change event
+    document.addEventListener('fullscreenchange', () => {
+      const btn = document.getElementById('fullscreenBtn');
+      if (!document.fullscreenElement) {
+        btn.innerHTML = '<i class="fas fa-expand"></i><span>Fullscreen</span>';
+      }
+    });
+  }
+
+  /* ============================================
      START APPLICATION
      ============================================ */
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    setupReadingFeatures();
+  });
 
 })();

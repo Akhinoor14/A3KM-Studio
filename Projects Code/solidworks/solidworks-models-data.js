@@ -305,10 +305,10 @@ const solidworksModelsData = {
             category: "Basic (Practice) Models",
             difficulty: "⭐⭐ Intermediate",
             description: "Assembly project with threaded components",
-            files: ["Assem1.SLDASM", "bolt.SLDPRT", "nut.SLDPRT"],
+            files: ["Model-22-Assembly.zip"],
             glbPath: "../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22/model-22.glb",
             thumbnailPath: "../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22/thumbnail.png",
-            zipPath: "../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22.zip",
+            zipPath: "../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22/Model-22-Assembly.zip",
             day: "Practice",
             tags: ["Assembly", "Bolt", "Nut", "3 Parts"]
         },

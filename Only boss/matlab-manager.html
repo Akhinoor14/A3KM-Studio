@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MATLAB Project Manager - Admin Panel for Managing MATLAB Projects">
+    <title>MATLAB Manager - Only Boss</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/styles.css">
+    <link rel="stylesheet" href="../only-boss-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+    
+    <style>
+        :root {
+            --matlab-blue: #0076A8;
+            --primary-red: #CC0000;
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(26, 0, 0, 0.95);
+            --border-primary: rgba(204, 0, 0, 0.3);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-top: 85px;
+        }
+
+        /* Manager Container */
+        .manager-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Header */
+        .manager-header {
+            background: linear-gradient(135deg, rgba(0, 118, 168, 0.15), rgba(26, 0, 0, 0.95));
+            border: 2px solid rgba(0, 118, 168, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .manager-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 118, 168, 0.5);
+        }
+
+        .manager-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .control-card {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-card:hover {
+            border-color: var(--matlab-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 118, 168, 0.3);
+        }
+
+        .control-card i {
+            font-size: 2.5rem;
+            color: var(--matlab-blue);
+            margin-bottom: 15px;
+        }
+
+        .control-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .control-card .count {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--matlab-blue);
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            background: rgba(0, 118, 168, 0.2);
+            border: 2px solid rgba(0, 118, 168, 0.4);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 118, 168, 0.4);
+            border-color: var(--matlab-blue);
+        }
+
+        /* Instructions Section */
+        .instructions-section {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .instructions-section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .instructions-section h2 i {
+            color: var(--matlab-blue);
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-item {
+            background: rgba(0, 118, 168, 0.05);
+            border-left: 4px solid var(--matlab-blue);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--matlab-blue);
+            color: #000;
+            font-weight: 800;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .step-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-left: 50px;
+        }
+
+        .code-example {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 118, 168, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--matlab-blue);
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        /* Folder Structure */
+        .folder-structure {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .folder-tree {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .folder-tree .folder {
+            color: var(--matlab-blue);
+            font-weight: 600;
+        }
+
+        .folder-tree .file {
+            color: #90EE90;
+        }
+
+        /* JSON Editor */
+        .json-editor-section {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
+            border: 2px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(0, 118, 168, 0.2);
+            border: 2px solid rgba(0, 118, 168, 0.4);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 118, 168, 0.4);
+            border-color: var(--matlab-blue);
+        }
+
+        .action-btn.save {
+            background: rgba(0, 200, 0, 0.2);
+            border-color: rgba(0, 255, 0, 0.4);
+        }
+
+        .action-btn.save:hover {
+            background: rgba(0, 200, 0, 0.4);
+            border-color: #00ff00;
+        }
+
+        .json-editor {
+            width: 100%;
+            min-height: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(0, 118, 168, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            color: #fff;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .json-editor:focus {
+            outline: none;
+            border-color: var(--matlab-blue);
+            box-shadow: 0 0 20px rgba(0, 118, 168, 0.3);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .alert.show {
+            display: flex;
+        }
+
+        .alert.success {
+            background: rgba(0, 200, 0, 0.2);
+            border: 2px solid rgba(0, 255, 0, 0.4);
+            color: #00ff00;
+        }
+
+        .alert.error {
+            background: rgba(200, 0, 0, 0.2);
+            border: 2px solid rgba(255, 0, 0, 0.4);
+            color: #ff4444;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .quick-link {
+            background: rgba(0, 118, 168, 0.1);
+            border: 2px solid rgba(0, 118, 168, 0.3);
+            color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .quick-link:hover {
+            background: rgba(0, 118, 168, 0.3);
+            border-color: var(--matlab-blue);
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .manager-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .editor-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CENTRALIZED BACKGROUND SYSTEM -->
+    <div class="bg-system-container">
+        <div class="bg-hero-bg-elements">
+            <div class="bg-geometric-shapes">
+                <div class="bg-shape bg-shape-1"></div>
+                <div class="bg-shape bg-shape-2"></div>
+                <div class="bg-shape bg-shape-3"></div>
+                <div class="bg-shape bg-shape-4"></div>
+                <div class="bg-shape bg-shape-5"></div>
+            </div>
+            <div class="bg-gradient-orbs">
+                <div class="bg-orb bg-orb-1"></div>
+                <div class="bg-orb bg-orb-2"></div>
+                <div class="bg-orb bg-orb-3"></div>
+            </div>
+            <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
+        </div>
+        <div class="bg-system-overlay"></div>
+        
+        <div class="bg-system-content">
+            <!-- Only Boss Navbar -->
+            <nav class="boss-navbar">
+                <div class="boss-nav-container">
+                    <a href="../only-boss-dashboard.html" class="boss-nav-brand">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Only Boss</span>
+                    </a>
+                    <ul class="boss-nav-menu">
+                        <li><a href="../only-boss-dashboard.html"><i class="fas fa-dashboard"></i> Dashboard</a></li>
+                        <li><a href="../content-editor.html"><i class="fas fa-edit"></i> Content</a></li>
+                        <li><a href="../project-manager.html"><i class="fas fa-folder"></i> Projects</a></li>
+                        <li><a href="../certificates-manager.html"><i class="fas fa-certificate"></i> Certificates</a></li>
+                        <li><a href="../../Home/index.html" class="boss-exit-btn"><i class="fas fa-sign-out-alt"></i> Exit</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Manager Container -->
+            <div class="manager-container">
+                <!-- Header -->
+                <header class="manager-header">
+                    <h1><i class="fas fa-chart-line"></i> MATLAB Project Manager</h1>
+                    <p>Manage MATLAB projects, code files, and metadata</p>
+                </header>
+
+                <!-- Alert Messages -->
+                <div class="alert success" id="successAlert">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="successMessage">Operation successful!</span>
+                </div>
+                <div class="alert error" id="errorAlert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorMessage">An error occurred!</span>
+                </div>
+
+                <!-- Control Panel -->
+                <section class="control-panel">
+                    <div class="control-card">
+                        <i class="fas fa-code"></i>
+                        <h3>Total Projects</h3>
+                        <div class="count" id="totalProjects">0</div>
+                        <button class="control-btn" onclick="window.location.href='matlab-projects.html'">
+                            <i class="fas fa-eye"></i> View Gallery
+                        </button>
+                    </div>
+                    <div class="control-card">
+                        <i class="fas fa-folder-open"></i>
+                        <h3>Categories</h3>
+                        <div class="count">5</div>
+                        <button class="control-btn" onclick="scrollToEditor()">
+                            <i class="fas fa-edit"></i> Edit Metadata
+                        </button>
+                    </div>
+                    <div class="control-card">
+                        <i class="fas fa-file-code"></i>
+                        <h3>Code Files</h3>
+                        <div class="count" id="totalFiles">0</div>
+                        <button class="control-btn" onclick="openFileManager()">
+                            <i class="fas fa-folder"></i> Manage Files
+                        </button>
+                    </div>
+                    <div class="control-card">
+                        <i class="fab fa-youtube"></i>
+                        <h3>Video Demos</h3>
+                        <div class="count" id="totalVideos">0</div>
+                        <button class="control-btn" onclick="scrollToEditor()">
+                            <i class="fas fa-link"></i> Add Links
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Instructions -->
+                <section class="instructions-section">
+                    <h2><i class="fas fa-book"></i> Upload Instructions</h2>
+                    
+                    <ol class="step-list">
+                        <li class="step-item">
+                            <span class="step-number">1</span>
+                            <div class="step-title">Prepare Your MATLAB Project</div>
+                            <div class="step-content">
+                                Export necessary files from MATLAB:
+                                <div class="code-example">
+                                    - script.m (Main MATLAB code)
+                                    - results/ (PNG plots exported using saveas() or exportgraphics())
+                                    - documentation.pdf (Optional detailed report)
+                                    - project.zip (Complete package with all files)
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="step-item">
+                            <span class="step-number">2</span>
+                            <div class="step-title">Create Project Folder</div>
+                            <div class="step-content">
+                                Navigate to: <strong>Projects Storage/MATLAB Projects/</strong><br>
+                                Create a new folder with a unique ID (e.g., "matlab-solar-pv-01")
+                            </div>
+                        </li>
+
+                        <li class="step-item">
+                            <span class="step-number">3</span>
+                            <div class="step-title">Upload Files via GitHub</div>
+                            <div class="step-content">
+                                Upload files to the project folder:
+                                <div class="code-example">
+                                    matlab-solar-pv-01/
+                                    ├── solar_pv_analysis.m
+                                    ├── results/
+                                    │   ├── iv_curve.png
+                                    │   ├── pv_curve.png
+                                    │   └── efficiency.png
+                                    ├── documentation.pdf
+                                    └── solar_pv_analysis.zip
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="step-item">
+                            <span class="step-number">4</span>
+                            <div class="step-title">Update JSON Metadata (Below)</div>
+                            <div class="step-content">
+                                Add project entry to the JSON editor below. Follow the template structure for consistency.
+                            </div>
+                        </li>
+
+                        <li class="step-item">
+                            <span class="step-number">5</span>
+                            <div class="step-title">Add YouTube Video (Optional)</div>
+                            <div class="step-content">
+                                Upload demo video to YouTube, copy the link, and add it to the "youtubeVideo" field in JSON metadata.
+                            </div>
+                        </li>
+                    </ol>
+                </section>
+
+                <!-- Folder Structure Reference -->
+                <section class="folder-structure">
+                    <h2 style="font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
+                        <i class="fas fa-sitemap" style="color: var(--matlab-blue);"></i> 
+                        Folder Structure Reference
+                    </h2>
+                    <pre class="folder-tree">
+<span class="folder">Projects Storage/MATLAB Projects/</span>
+├── <span class="folder">matlab-demo-01/</span> (Demo Solar PV project)
+│   ├── <span class="file">solar_pv_analysis.m</span>
+│   ├── <span class="folder">results/</span>
+│   │   ├── <span class="file">iv_curve.png</span>
+│   │   ├── <span class="file">pv_curve.png</span>
+│   │   └── <span class="file">efficiency.png</span>
+│   └── <span class="file">solar_pv_analysis.zip</span>
+│
+├── <span class="folder">matlab-wind-turbine-01/</span> (Your new project)
+│   ├── <span class="file">wind_analysis.m</span>
+│   ├── <span class="folder">results/</span>
+│   │   └── <span class="file">power_curve.png</span>
+│   ├── <span class="file">documentation.pdf</span>
+│   └── <span class="file">wind_analysis.zip</span>
+│
+└── <span class="folder">...</span> (More projects)
+                    </pre>
+                </section>
+
+                <!-- JSON Editor -->
+                <section class="json-editor-section" id="editorSection">
+                    <div class="editor-header">
+                        <h2 style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 0;">
+                            <i class="fas fa-code" style="color: var(--matlab-blue);"></i> 
+                            Edit matlab-data.json
+                        </h2>
+                        <div class="editor-actions">
+                            <button class="action-btn" onclick="loadJSON()">
+                                <i class="fas fa-sync"></i> Reload
+                            </button>
+                            <button class="action-btn" onclick="validateJSON()">
+                                <i class="fas fa-check"></i> Validate
+                            </button>
+                            <button class="action-btn save" onclick="saveJSON()">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="json-editor" id="jsonEditor" spellcheck="false">Loading...</textarea>
+                </section>
+
+                <!-- Quick Links -->
+                <section class="quick-links">
+                    <a href="matlab-projects.html" class="quick-link">
+                        <i class="fas fa-eye"></i> View Projects
+                    </a>
+                    <a href="../../Projects Storage/MATLAB Projects/" class="quick-link">
+                        <i class="fas fa-folder-open"></i> Open Storage Folder
+                    </a>
+                    <a href="https://www.mathworks.com/help/matlab/" target="_blank" class="quick-link">
+                        <i class="fab fa-github"></i> MATLAB Docs
+                    </a>
+                    <a href="../only-boss-dashboard.html" class="quick-link">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../Optimization/script.js"></script>
+    <script>
+        let jsonData = null;
+
+        // Load JSON on page load
+        window.addEventListener('DOMContentLoaded', loadJSON);
+
+        // Load JSON data
+        async function loadJSON() {
+            try {
+                const response = await fetch('matlab-data.json');
+                jsonData = await response.json();
+                
+                // Update stats
+                document.getElementById('totalProjects').textContent = jsonData.projects.length;
+                document.getElementById('totalFiles').textContent = jsonData.projects.filter(p => p.files.code).length;
+                document.getElementById('totalVideos').textContent = jsonData.projects.filter(p => p.files.youtubeVideo).length;
+                
+                // Display in editor
+                document.getElementById('jsonEditor').value = JSON.stringify(jsonData, null, 2);
+                
+                showAlert('success', 'JSON data loaded successfully!');
+            } catch (error) {
+                console.error('Error loading JSON:', error);
+                showAlert('error', 'Failed to load JSON data: ' + error.message);
+            }
+        }
+
+        // Validate JSON
+        function validateJSON() {
+            try {
+                const editorContent = document.getElementById('jsonEditor').value;
+                const parsed = JSON.parse(editorContent);
+                
+                // Basic validation
+                if (!parsed.projects || !Array.isArray(parsed.projects)) {
+                    throw new Error('Invalid structure: projects array missing');
+                }
+                
+                if (!parsed.categories || typeof parsed.categories !== 'object') {
+                    throw new Error('Invalid structure: categories object missing');
+                }
+                
+                if (!parsed.statistics || typeof parsed.statistics !== 'object') {
+                    throw new Error('Invalid structure: statistics object missing');
+                }
+                
+                // Validate each project
+                parsed.projects.forEach((project, index) => {
+                    if (!project.id || !project.title || !project.category) {
+                        throw new Error(`Project ${index + 1} is missing required fields (id, title, or category)`);
+                    }
+                });
+                
+                jsonData = parsed;
+                showAlert('success', '✓ JSON is valid! All checks passed.');
+            } catch (error) {
+                showAlert('error', 'JSON Validation Error: ' + error.message);
+            }
+        }
+
+        // Save JSON
+        function saveJSON() {
+            try {
+                validateJSON(); // Validate first
+                
+                if (!jsonData) {
+                    throw new Error('No valid data to save');
+                }
+                
+                // Create download link
+                const dataStr = JSON.stringify(jsonData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'matlab-data.json';
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                
+                showAlert('success', 'JSON downloaded! Upload to GitHub: Projects Code/MATLAB/matlab-data.json');
+                
+                // Update stats
+                document.getElementById('totalProjects').textContent = jsonData.projects.length;
+                document.getElementById('totalFiles').textContent = jsonData.projects.filter(p => p.files.code).length;
+                document.getElementById('totalVideos').textContent = jsonData.projects.filter(p => p.files.youtubeVideo).length;
+                
+            } catch (error) {
+                showAlert('error', 'Save failed: ' + error.message);
+            }
+        }
+
+        // Show alert
+        function showAlert(type, message) {
+            const alertBox = document.getElementById(type + 'Alert');
+            const messageEl = document.getElementById(type + 'Message');
+            
+            messageEl.textContent = message;
+            alertBox.classList.add('show');
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Scroll to editor
+        function scrollToEditor() {
+            document.getElementById('editorSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Open file manager (GitHub)
+        function openFileManager() {
+            const confirmed = confirm('This will open the GitHub repository folder in a new tab. Continue?');
+            if (confirmed) {
+                window.open('https://github.com/Akhinoor14/A3KM-Studio/tree/main/Projects%20Storage/MATLAB%20Projects', '_blank');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.getElementById('jsonEditor').addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveJSON();
+            }
+            
+            // Tab indentation
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                const value = e.target.value;
+                
+                e.target.value = value.substring(0, start) + '  ' + value.substring(end);
+                e.target.selectionStart = e.target.selectionEnd = start + 2;
+            }
+        });
+    </script>
+</body>
+</html>

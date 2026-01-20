@@ -3,36 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Video Blogs - Tours, Debates, Poems & Life | Md Akhinoor Islam</title>
+  <title>Video Blogs - Md Akhinoor Islam</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
-  <meta name="description" content="Watch video blogs by Md Akhinoor Islam - Travel vlogs, debate competitions, poem recitations, campus life, and food adventures. Featuring Sitakundo tour, KUET campus, Bengali debates, and Rabindranath Tagore poetry." />
-  <meta name="keywords" content="Md Akhinoor Islam videos, Bengali vlogs, debate competition, poem recitation, Sitakundo tour, KUET ESE, travel Bangladesh, food vlog" />
-  <meta name="author" content="Md Akhinoor Islam" />
-  <meta name="theme-color" content="#CC0000" />
-  
-  <!-- Open Graph / Social Media -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Video Blogs - Md Akhinoor Islam" />
-  <meta property="og:description" content="Watch travel vlogs, debates, poems, and campus life videos" />
-  <meta property="og:image" content="../../images/favicon.svg" />
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
   
   <style>
     :root {
       --primary-red: #CC0000;
       --dark-red: #990000;
       --light-red: #FF0000;
-      --bg-dark: rgba(10, 10, 10, 0.98);
-      --bg-card: rgba(26, 26, 26, 0.95);
+      --bg-dark: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #2a2a2a;
       --border-red: rgba(204, 0, 0, 0.3);
       --border-red-hover: rgba(204, 0, 0, 0.6);
       --text-white: #FFFFFF;
       --text-secondary: rgba(255, 255, 255, 0.8);
       --text-dim: rgba(255, 255, 255, 0.6);
+      --success-green: #00CC00;
     }
 
     * {
@@ -43,25 +35,34 @@
 
     body {
       font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
       color: var(--text-white);
       overflow-x: hidden;
     }
 
-    /* Back Button */
-    .back-to-hub {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 120px 40px 20px;
+    /* Header */
+    .viewer-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg-secondary);
+      border-bottom: 2px solid var(--primary-red);
+      padding: 15px 30px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
     }
 
     .back-btn {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      padding: 12px 24px;
+      padding: 10px 20px;
       background: rgba(204, 0, 0, 0.15);
       border: 2px solid var(--border-red);
-      border-radius: 12px;
+      border-radius: 8px;
       color: var(--primary-red);
       text-decoration: none;
       font-weight: 600;
@@ -74,939 +75,902 @@
       transform: translateX(-5px);
     }
 
+    .search-filter-section {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 40px 10px 15px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 15px rgba(204, 0, 0, 0.3);
+    }
+
+    .search-box i {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+    }
+
+    .filter-btn {
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
     /* Main Container */
-    .video-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 40px;
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+      padding: 20px;
+      min-height: calc(100vh - 100px);
     }
 
-    .page-header {
-      text-align: center;
-      margin-bottom: 60px;
-    }
-
-    .page-header h1 {
-      font-size: 3rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 15px;
-      letter-spacing: -1px;
-    }
-
-    .page-header p {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
-    }
-
-    /* Category Accordion */
-    .categories-list {
+    /* Video Player Section */
+    .player-section {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .category-item {
-      background: var(--bg-card);
-      border: 2px solid var(--border-red);
-      border-radius: 16px;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .category-item:hover {
-      border-color: var(--border-red-hover);
-      box-shadow: 0 8px 30px rgba(204, 0, 0, 0.3);
-    }
-
-    .category-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 25px 30px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.3s ease;
+    .player-wrapper {
       position: relative;
-      overflow: hidden;
-    }
-
-    .category-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 30px,
-        rgba(204, 0, 0, 0.02) 30px,
-        rgba(204, 0, 0, 0.02) 31px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 30px,
-        rgba(204, 0, 0, 0.02) 30px,
-        rgba(204, 0, 0, 0.02) 31px
-      );
-      pointer-events: none;
-      opacity: 0.5;
-    }
-
-    .category-header:hover {
-      background: rgba(204, 0, 0, 0.08);
-    }
-
-    .category-header:active {
-      background: rgba(204, 0, 0, 0.12);
-    }
-
-    .category-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex: 1;
-    }
-
-    .category-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, rgba(204, 0, 0, 0.3), rgba(153, 0, 0, 0.2));
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid var(--border-red);
-      position: relative;
-    }
-
-    /* Corner accents */
-    .category-icon::before,
-    .category-icon::after {
-      content: '';
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border: 2px solid var(--primary-red);
-    }
-
-    .category-icon::before {
-      top: -2px;
-      left: -2px;
-      border-right: none;
-      border-bottom: none;
-    }
-
-    .category-icon::after {
-      bottom: -2px;
-      right: -2px;
-      border-left: none;
-      border-top: none;
-    }
-
-    .category-icon i {
-      font-size: 28px;
-      color: var(--primary-red);
-    }
-
-    .category-info h3 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text-white);
-      margin-bottom: 5px;
-      letter-spacing: 0.3px;
-    }
-
-    .category-info p {
-      font-size: 0.95rem;
-      color: var(--text-dim);
-    }
-
-    .category-meta {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .video-count {
-      background: rgba(204, 0, 0, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-white);
-      border: 1px solid var(--border-red);
-    }
-
-    .expand-icon {
-      font-size: 20px;
-      color: var(--primary-red);
-      transition: transform 0.3s ease;
-    }
-
-    .category-item.expanded .expand-icon {
-      transform: rotate(180deg);
-    }
-
-    /* Video Grid (Collapsed by default) */
-    .videos-grid {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s ease;
-      padding: 0 30px;
-    }
-
-    .category-item.expanded .videos-grid {
-      max-height: 3000px;
-      padding: 0 30px 30px;
-    }
-
-    .videos-grid-inner {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 25px;
-      padding-top: 20px;
-    }
-
-    /* Video Card */
-    .video-card {
-      background: rgba(10, 10, 10, 0.9);
-      border: 2px solid var(--border-red);
-      border-radius: 14px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-
-    .video-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      border-color: var(--border-red-hover);
-      box-shadow: 0 12px 40px rgba(204, 0, 0, 0.4);
-    }
-
-    .video-thumbnail-wrapper {
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%; /* 16:9 */
+      padding-bottom: 56.25%;
       background: #000;
+      border-radius: 12px;
       overflow: hidden;
+      border: 2px solid var(--border-red);
     }
 
-    .video-thumbnail {
+    .player-wrapper iframe {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      transition: transform 0.4s ease;
     }
 
-    .video-card:hover .video-thumbnail {
-      transform: scale(1.1);
-    }
-
-    .video-play-overlay {
+    .video-placeholder {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
+      inset: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: background 0.3s ease;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
+      color: var(--text-dim);
     }
 
-    .video-card:hover .video-play-overlay {
-      background: rgba(204, 0, 0, 0.4);
+    .video-placeholder i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      color: var(--border-red);
     }
 
-    .play-icon {
-      width: 70px;
-      height: 70px;
-      background: rgba(204, 0, 0, 0.9);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid var(--text-white);
-      transition: all 0.3s ease;
+    .video-placeholder h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
     }
 
-    .video-card:hover .play-icon {
-      transform: scale(1.15);
-      background: var(--primary-red);
-      box-shadow: 0 0 30px rgba(204, 0, 0, 0.8);
-    }
-
-    .play-icon i {
-      font-size: 28px;
-      color: var(--text-white);
-      margin-left: 4px;
-    }
-
-    .video-duration {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.9);
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-white);
-      border: 1px solid rgba(204, 0, 0, 0.5);
-    }
-
-    .video-card-body {
+    /* Video Info */
+    .video-info {
+      background: var(--bg-card);
+      border: 2px solid var(--border-red);
+      border-radius: 12px;
       padding: 20px;
     }
 
     .video-title {
-      font-size: 1.05rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: var(--text-white);
+      margin-bottom: 15px;
+      line-height: 1.3;
+    }
+
+    .video-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 15px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-item i {
+      color: var(--primary-red);
+    }
+
+    .watched-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--success-green);
+      color: #000;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .video-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .video-tag {
+      padding: 5px 12px;
+      background: rgba(204, 0, 0, 0.15);
+      border: 1px solid var(--border-red);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .video-description {
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-red);
+    }
+
+    /* Navigation Buttons */
+    .video-navigation {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Playlist Section */
+    .playlist-section {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 2px solid var(--border-red);
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: calc(100vh - 140px);
+      position: sticky;
+      top: 100px;
+    }
+
+    .playlist-header {
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-red);
+    }
+
+    .playlist-title {
+      font-size: 1.3rem;
+      font-weight: 700;
       margin-bottom: 10px;
-      line-height: 1.4;
+      color: var(--text-white);
+    }
+
+    .playlist-stats {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      gap: 5px;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-red);
+      overflow-x: auto;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .category-tabs::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+
+    .category-tabs::-webkit-scrollbar-thumb {
+      background: var(--primary-red);
+      border-radius: 3px;
+    }
+
+    .category-tab {
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-red);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .category-tab:hover,
+    .category-tab.active {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+      color: var(--text-white);
+    }
+
+    /* Video List */
+    .video-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 10px;
+    }
+
+    .video-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .video-list::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    .video-list::-webkit-scrollbar-thumb {
+      background: var(--primary-red);
+      border-radius: 4px;
+    }
+
+    .video-card {
+      display: flex;
+      gap: 15px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: var(--bg-secondary);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .video-card:hover {
+      background: var(--bg-card);
+      border-color: var(--border-red);
+      transform: translateX(5px);
+    }
+
+    .video-card.active {
+      border-color: var(--primary-red);
+      background: rgba(204, 0, 0, 0.1);
+    }
+
+    .video-card.watched::before {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--success-green);
+      color: #000;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .video-thumbnail {
+      position: relative;
+      width: 140px;
+      height: 80px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .video-card:hover .video-thumbnail img {
+      transform: scale(1.05);
+    }
+
+    .video-duration {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .video-card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .video-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-white);
+      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
-      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .video-meta-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.85rem;
+    .video-card-meta {
+      font-size: 0.8rem;
       color: var(--text-dim);
-    }
-
-    .video-meta-info i {
-      color: var(--primary-red);
-      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     /* Empty State */
-    .empty-category {
+    .empty-state {
       text-align: center;
       padding: 60px 20px;
       color: var(--text-dim);
     }
 
-    .empty-category i {
-      font-size: 4rem;
-      color: var(--border-red);
-      margin-bottom: 20px;
-      opacity: 0.5;
-    }
-
-    .empty-category h4 {
-      font-size: 1.3rem;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-    }
-
-    /* Modal - Full Video View */
-    .video-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(15px);
-      z-index: 10000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      overflow-y: auto;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .video-modal.active {
-      display: flex;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .modal-content-wrapper {
-      max-width: 1400px;
-      width: 100%;
-      background: var(--bg-card);
-      border: 3px solid var(--border-red);
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes slideUp {
-      from { 
-        opacity: 0;
-        transform: translateY(50px);
-      }
-      to { 
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .modal-close-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: rgba(204, 0, 0, 0.9);
-      border: 2px solid var(--text-white);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-      transition: all 0.3s ease;
-    }
-
-    .modal-close-btn:hover {
-      transform: rotate(90deg) scale(1.1);
-      background: var(--light-red);
-      box-shadow: 0 0 25px rgba(204, 0, 0, 0.8);
-    }
-
-    .modal-close-btn i {
-      font-size: 24px;
-      color: var(--text-white);
-    }
-
-    .modal-video-player {
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%;
-      background: #000;
-    }
-
-    .modal-video-player iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    .modal-video-details {
-      padding: 40px;
-    }
-
-    .modal-video-header {
-      margin-bottom: 30px;
-    }
-
-    .modal-video-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(204, 0, 0, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--primary-red);
-      border: 1px solid var(--border-red);
-      margin-bottom: 20px;
-    }
-
-    .modal-video-title {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--text-white);
-      margin-bottom: 20px;
-      line-height: 1.3;
-    }
-
-    .modal-video-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-    }
-
-    .modal-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .modal-meta-item i {
-      color: var(--primary-red);
-      font-size: 1.1rem;
-    }
-
-    .modal-video-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    .modal-video-tag {
-      background: rgba(204, 0, 0, 0.15);
-      padding: 6px 14px;
-      border-radius: 15px;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      border: 1px solid var(--border-red);
-    }
-
-    .modal-video-description {
-      font-size: 1.05rem;
-      line-height: 1.8;
-      color: var(--text-secondary);
-      padding: 25px;
-      background: rgba(10, 10, 10, 0.5);
-      border-radius: 12px;
-      border: 1px solid var(--border-red);
-    }
-
-    .modal-video-actions {
-      display: flex;
-      gap: 15px;
-      margin-top: 30px;
-    }
-
-    .modal-action-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 24px;
-      background: rgba(204, 0, 0, 0.2);
-      border: 2px solid var(--border-red);
-      border-radius: 10px;
-      color: var(--text-white);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .modal-action-btn:hover {
-      background: rgba(204, 0, 0, 0.3);
-      border-color: var(--border-red-hover);
-      transform: translateY(-2px);
-    }
-
-    .modal-action-btn i {
-      font-size: 1.1rem;
-      color: var(--primary-red);
-    }
-
-    /* Loading State */
-    .loading-container {
-      text-align: center;
-      padding: 100px 20px;
-    }
-
-    .loading-spinner {
+    .empty-state i {
       font-size: 3rem;
-      color: var(--primary-red);
-      animation: spin 1s linear infinite;
+      color: var(--border-red);
+      margin-bottom: 15px;
     }
 
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+
+      .playlist-section {
+        max-height: 500px;
+        position: static;
+      }
     }
 
-    .loading-text {
-      font-size: 1.2rem;
-      color: var(--text-secondary);
-      margin-top: 20px;
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
-      .back-to-hub {
-        padding: 100px 20px 15px;
+      .viewer-header {
+        padding: 10px 15px;
       }
 
-      .video-container {
-        padding: 20px 15px;
+      .search-filter-section {
+        width: 100%;
+        max-width: 100%;
       }
 
-      .page-header h1 {
-        font-size: 2rem;
-      }
-
-      .category-header {
-        padding: 20px;
-      }
-
-      .category-left {
+      .main-container {
+        padding: 15px;
         gap: 15px;
       }
 
-      .category-icon {
-        width: 50px;
-        height: 50px;
+      .video-title {
+        font-size: 1.4rem;
       }
 
-      .category-icon i {
-        font-size: 22px;
+      .video-thumbnail {
+        width: 100px;
+        height: 60px;
       }
 
-      .category-info h3 {
-        font-size: 1.1rem;
-      }
-
-      .category-info p {
+      .video-card-title {
         font-size: 0.85rem;
       }
 
-      .videos-grid-inner {
-        grid-template-columns: 1fr;
-        gap: 20px;
+      .category-tabs {
+        padding: 10px;
       }
 
-      .video-modal {
-        padding: 20px;
+      .video-navigation {
+        flex-direction: column;
       }
+    }
 
-      .modal-video-details {
-        padding: 25px 20px;
-      }
+    /* Loading Animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
 
-      .modal-video-title {
-        font-size: 1.6rem;
-      }
-
-      .modal-action-btn {
-        padding: 10px 18px;
-        font-size: 0.9rem;
-      }
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
     }
   </style>
 </head>
 <body>
-  <!-- CENTRALIZED BACKGROUND SYSTEM -->
-  <div class="bg-system-container">
-    <div class="bg-hero-bg-elements">
-      <div class="bg-geometric-shapes">
-        <div class="bg-shape bg-shape-1"></div>
-        <div class="bg-shape bg-shape-2"></div>
-        <div class="bg-shape bg-shape-3"></div>
-        <div class="bg-shape bg-shape-4"></div>
-        <div class="bg-shape bg-shape-5"></div>
+  <!-- Header -->
+  <div class="viewer-header">
+    <a href="../hub.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i>
+      Back to Content Hub
+    </a>
+    
+    <div class="search-filter-section">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search videos..." />
+        <i class="fas fa-search"></i>
       </div>
-      <div class="bg-gradient-orbs">
-        <div class="bg-orb bg-orb-1"></div>
-        <div class="bg-orb bg-orb-2"></div>
-        <div class="bg-orb bg-orb-3"></div>
-      </div>
-      <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
-    </div>
-    <div class="bg-system-overlay"></div>
-
-    <div class="bg-system-content">
-      <!-- Back Button -->
-      <div class="back-to-hub">
-        <a href="../hub.html" class="back-btn">
-          <i class="fas fa-arrow-left"></i>
-          <span>Back to Content Studio</span>
-        </a>
-      </div>
-
-      <!-- Main Content -->
-      <div class="video-container">
-        <!-- Page Header -->
-        <div class="page-header">
-          <h1>Video Blogs</h1>
-          <p>Explore vlogs, debates, poems, and life moments</p>
-        </div>
-
-        <!-- Loading State -->
-        <div class="loading-container" id="loadingState">
-          <i class="fas fa-spinner fa-spin loading-spinner"></i>
-          <p class="loading-text">Loading videos...</p>
-        </div>
-
-        <!-- Categories List (Accordion) -->
-        <div class="categories-list" id="categoriesList" style="display: none;">
-          <!-- Dynamic categories will be inserted here -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Video Modal (Full View) -->
-  <div class="video-modal" id="videoModal">
-    <div class="modal-content-wrapper">
-      <button class="modal-close-btn" onclick="closeVideoModal()">
-        <i class="fas fa-times"></i>
+      <button class="filter-btn" id="filterBtn" title="Clear Filters">
+        <i class="fas fa-filter"></i>
+        <span>All</span>
       </button>
+    </div>
+  </div>
 
-      <div class="modal-video-player" id="modalVideoPlayer">
-        <!-- YouTube iframe will be inserted here -->
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Video Player Section -->
+    <div class="player-section">
+      <div class="player-wrapper">
+        <div class="video-placeholder" id="videoPlaceholder">
+          <i class="fas fa-play-circle"></i>
+          <h3>Select a video to watch</h3>
+          <p>Choose from the playlist on the right</p>
+        </div>
+        <div id="ytPlayer"></div>
       </div>
 
-      <div class="modal-video-details" id="modalVideoDetails">
-        <!-- Video details will be inserted here -->
+      <div class="video-info" id="videoInfo" style="display: none;">
+        <h1 class="video-title" id="videoTitle"></h1>
+        
+        <div class="video-meta" id="videoMeta"></div>
+        
+        <div class="video-tags" id="videoTags"></div>
+        
+        <div class="video-description" id="videoDescription"></div>
+        
+        <div class="video-navigation">
+          <button class="nav-btn" id="prevBtn" onclick="playPreviousVideo()">
+            <i class="fas fa-chevron-left"></i>
+            Previous
+          </button>
+          <button class="nav-btn" id="nextBtn" onclick="playNextVideo()">
+            Next
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist Section -->
+    <div class="playlist-section">
+      <div class="playlist-header">
+        <h2 class="playlist-title">Video Blogs</h2>
+        <p class="playlist-stats" id="playlistStats">Loading...</p>
+      </div>
+
+      <div class="category-tabs" id="categoryTabs"></div>
+
+      <div class="video-list" id="videoList">
+        <div class="empty-state">
+          <i class="fas fa-video loading"></i>
+          <p>Loading videos...</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="../../Optimization/Background/background-system.js"></script>
   <script>
-    let videosData = null;
+    // State Management
     let currentVideoId = null;
+    let currentCategoryFilter = 'all';
+    let allVideos = [];
+    let watchedVideos = JSON.parse(localStorage.getItem('watchedVideos') || '[]');
+    let ytPlayer = null;
+    let playerReady = false;
+    let videosData = null;
 
-    // Load videos data
-    async function loadVideos() {
+    // YouTube IFrame API Ready
+    function onYouTubeIframeAPIReady() {
+      playerReady = true;
+      console.log('✅ YouTube Player API Ready');
+    }
+
+    // Load Videos Data
+    async function loadVideosData() {
       try {
         const response = await fetch('videos.json');
         videosData = await response.json();
-        renderCategories();
+        loadVideos();
       } catch (error) {
-        console.error('Error loading videos:', error);
-        document.getElementById('loadingState').innerHTML = 
-          '<i class="fas fa-exclamation-triangle" style="color: var(--primary-red); font-size: 3rem;"></i>' +
-          '<p class="loading-text">Failed to load videos</p>';
-      }
-    }
-
-    // Render categories accordion
-    function renderCategories() {
-      const categoriesList = document.getElementById('categoriesList');
-      const videoCategories = videosData.categories['video-blog'];
-      
-      let html = '';
-      let totalVideos = 0;
-      
-      Object.keys(videoCategories).forEach(catKey => {
-        const category = videoCategories[catKey];
-        const videoCount = category.videos.length;
-        
-        // Skip empty categories for cleaner UI
-        if (videoCount === 0) return;
-        
-        totalVideos += videoCount;
-        
-        html += `
-          <div class="category-item" data-category="${catKey}">
-            <div class="category-header" onclick="toggleCategory('${catKey}')">
-              <div class="category-left">
-                <div class="category-icon">
-                  <i class="${category.icon}"></i>
-                </div>
-                <div class="category-info">
-                  <h3>${category.name}</h3>
-                  <p>${category.description}</p>
-                </div>
-              </div>
-              <div class="category-meta">
-                <span class="video-count">${videoCount} video${videoCount !== 1 ? 's' : ''}</span>
-                <i class="fas fa-chevron-down expand-icon"></i>
-              </div>
-            </div>
-            <div class="videos-grid">
-              ${renderVideosGrid(category.videos)}
-            </div>
-          </div>
-        `;
-      });
-      
-      if (totalVideos === 0) {
-        html = `
-          <div class="empty-category">
-            <i class="fas fa-video-slash"></i>
-            <h4>No videos available yet</h4>
-            <p>Check back soon for new video content</p>
+        console.error('❌ Failed to load videos:', error);
+        document.getElementById('videoList').innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load videos</p>
           </div>
         `;
       }
-      
-      categoriesList.innerHTML = html;
-      document.getElementById('loadingState').style.display = 'none';
-      categoriesList.style.display = 'flex';
-      
-      // Update page header with total count
-      const pageHeader = document.querySelector('.page-header p');
-      if (pageHeader && totalVideos > 0) {
-        pageHeader.textContent = `Explore ${totalVideos} video${totalVideos !== 1 ? 's' : ''} across different categories`;
+    }
+
+    // Initialize Player
+    function initializePlayer(videoId) {
+      if (ytPlayer) {
+        ytPlayer.loadVideoById(videoId);
+        return;
       }
-    }
 
-    // Render videos grid
-    function renderVideosGrid(videos) {
-      if (videos.length === 0) return '';
-      
-      let html = '<div class="videos-grid-inner">';
-      
-      videos.forEach(video => {
-        const thumbnail = `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`;
-        
-        html += `
-          <div class="video-card" onclick="openVideo('${video.id}')">
-            <div class="video-thumbnail-wrapper">
-              <img src="${thumbnail}" alt="${video.title}" class="video-thumbnail" 
-                   onerror="this.src='https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg'" />
-              <div class="video-play-overlay">
-                <div class="play-icon">
-                  <i class="fas fa-play"></i>
-                </div>
-              </div>
-              <span class="video-duration">${video.duration}</span>
-            </div>
-            <div class="video-card-body">
-              <h4 class="video-title">${video.title}</h4>
-              <div class="video-meta-info">
-                <span><i class="fas fa-calendar"></i> ${formatDate(video.date)}</span>
-                <span><i class="fas fa-eye"></i> ${video.views}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      
-      html += '</div>';
-      return html;
-    }
-
-    // Empty state
-    function renderEmptyState() {
-      return `
-        <div class="empty-category">
-          <i class="fas fa-video-slash"></i>
-          <h4>No videos yet</h4>
-          <p>Videos will be added soon</p>
-        </div>
-      `;
-    }
-
-    // Toggle category accordion
-    function toggleCategory(catKey) {
-      const categoryItem = document.querySelector(`[data-category="${catKey}"]`);
-      
-      // Close all other categories
-      document.querySelectorAll('.category-item').forEach(item => {
-        if (item !== categoryItem) {
-          item.classList.remove('expanded');
+      ytPlayer = new YT.Player('ytPlayer', {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          modestbranding: 1,
+          rel: 0,
+          fs: 1,
+          cc_load_policy: 1
+        },
+        events: {
+          onStateChange: onPlayerStateChange
         }
       });
-      
-      // Toggle current category
-      categoryItem.classList.toggle('expanded');
     }
 
-    // Open video in modal
-    function openVideo(videoId) {
-      currentVideoId = videoId;
-      const video = findVideoById(videoId);
-      
-      if (!video) return;
-      
-      // Render video player
-      const modalPlayer = document.getElementById('modalVideoPlayer');
-      modalPlayer.innerHTML = `
-        <iframe 
-          src="https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&modestbranding=1&fs=1&cc_load_policy=1&iv_load_policy=3&controls=1&showinfo=0" 
-          allowfullscreen 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          loading="lazy"
-          title="${video.title}">
-        </iframe>
-      `;
-      
-      // Render video details
-      const modalDetails = document.getElementById('modalVideoDetails');
-      modalDetails.innerHTML = `
-        <div class="modal-video-header">
-          <div class="modal-video-badge">
-            <i class="fas fa-video"></i>
-            <span>Video Blog</span>
-          </div>
-          <h2 class="modal-video-title">${video.title}</h2>
-          <div class="modal-video-meta">
-            <div class="modal-meta-item">
-              <i class="fas fa-calendar"></i>
-              <span>${formatDate(video.date)}</span>
-            </div>
-            <div class="modal-meta-item">
-              <i class="fas fa-clock"></i>
-              <span>${video.duration}</span>
-            </div>
-            <div class="modal-meta-item">
-              <i class="fas fa-eye"></i>
-              <span>${video.views} views</span>
-            </div>
-            <div class="modal-meta-item">
-              <i class="fas fa-globe"></i>
-              <span>${video.language.toUpperCase()}</span>
-            </div>
-          </div>
-          ${video.tags ? `
-            <div class="modal-video-tags">
-              ${video.tags.map(tag => `<span class="modal-video-tag">#${tag}</span>`).join('')}
-            </div>
-          ` : ''}
-        </div>
-        <div class="modal-video-description">
-          <p>${video.description}</p>
-        </div>
-        <div class="modal-video-actions">
-          <button class="modal-action-btn" onclick="shareVideo('facebook')">
-            <i class="fab fa-facebook"></i>
-            <span>Share</span>
-          </button>
-          <button class="modal-action-btn" onclick="shareVideo('twitter')">
-            <i class="fab fa-twitter"></i>
-            <span>Tweet</span>
-          </button>
-          <button class="modal-action-btn" onclick="openYouTube()">
-            <i class="fab fa-youtube"></i>
-            <span>Watch on YouTube</span>
-          </button>
-        </div>
-      `;
-      
-      // Show modal
-      document.getElementById('videoModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-
-    // Close video modal
-    function closeVideoModal() {
-      document.getElementById('videoModal').classList.remove('active');
-      document.getElementById('modalVideoPlayer').innerHTML = '';
-      document.body.style.overflow = 'auto';
-      currentVideoId = null;
-    }
-
-    // Find video by ID
-    function findVideoById(videoId) {
-      const categories = videosData.categories['video-blog'];
-      for (let catKey in categories) {
-        const video = categories[catKey].videos.find(v => v.id === videoId);
-        if (video) return video;
+    // Player State Change
+    function onPlayerStateChange(event) {
+      // Video ended
+      if (event.data === YT.PlayerState.ENDED) {
+        markAsWatched(currentVideoId);
+        // Auto-play next if available
+        const nextBtn = document.getElementById('nextBtn');
+        if (!nextBtn.disabled) {
+          setTimeout(() => playNextVideo(), 2000);
+        }
       }
-      return null;
     }
 
-    // Format date
+    // Load Videos
+    function loadVideos() {
+      const categories = videosData.categories['video-blog'];
+      allVideos = [];
+
+      // Flatten all videos
+      Object.keys(categories).forEach(catKey => {
+        const category = categories[catKey];
+        category.videos.forEach(video => {
+          allVideos.push({
+            ...video,
+            categoryKey: catKey,
+            categoryName: category.name,
+            categoryIcon: category.icon
+          });
+        });
+      });
+
+      // Render categories
+      renderCategoryTabs();
+      
+      // Render videos
+      renderVideos();
+      
+      // Update stats
+      updateStats();
+
+      console.log(`📺 Loaded ${allVideos.length} videos`);
+    }
+
+    // Render Category Tabs
+    function renderCategoryTabs() {
+      const categories = videosData.categories['video-blog'];
+      const tabsHtml = `
+        <div class="category-tab active" onclick="filterByCategory('all')">
+          <i class="fas fa-th"></i> All
+        </div>
+        ${Object.keys(categories).map(catKey => {
+          const cat = categories[catKey];
+          return `
+            <div class="category-tab" onclick="filterByCategory('${catKey}')">
+              <i class="${cat.icon}"></i> ${cat.name}
+            </div>
+          `;
+        }).join('')}
+      `;
+      document.getElementById('categoryTabs').innerHTML = tabsHtml;
+    }
+
+    // Filter by Category
+    function filterByCategory(categoryKey) {
+      currentCategoryFilter = categoryKey;
+      
+      // Update active tab
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.closest('.category-tab').classList.add('active');
+      
+      // Update filter button
+      const filterBtn = document.getElementById('filterBtn');
+      if (categoryKey === 'all') {
+        filterBtn.querySelector('span').textContent = 'All';
+      } else {
+        const cat = videosData.categories['video-blog'][categoryKey];
+        filterBtn.querySelector('span').textContent = cat.name;
+      }
+      
+      renderVideos();
+    }
+
+    // Render Videos
+    function renderVideos() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      let filtered = allVideos;
+      
+      // Filter by category
+      if (currentCategoryFilter !== 'all') {
+        filtered = filtered.filter(v => v.categoryKey === currentCategoryFilter);
+      }
+      
+      // Filter by search
+      if (searchTerm) {
+        filtered = filtered.filter(v => 
+          v.title.toLowerCase().includes(searchTerm) ||
+          v.description.toLowerCase().includes(searchTerm) ||
+          (v.tags && v.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+        );
+      }
+
+      const videoList = document.getElementById('videoList');
+      
+      if (filtered.length === 0) {
+        videoList.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>No videos found</p>
+          </div>
+        `;
+        return;
+      }
+
+      videoList.innerHTML = filtered.map(video => {
+        const isActive = currentVideoId === video.id;
+        const isWatched = watchedVideos.includes(video.id);
+        
+        return `
+          <div class="video-card ${isActive ? 'active' : ''} ${isWatched ? 'watched' : ''}" 
+               onclick="playVideo('${video.id}')">
+            <div class="video-thumbnail">
+              <img src="${getYouTubeThumbnail(video.videoId)}" 
+                   alt="${video.title}"
+                   loading="lazy" />
+              <span class="video-duration">${video.duration}</span>
+            </div>
+            <div class="video-card-info">
+              <div class="video-card-title">${video.title}</div>
+              <div class="video-card-meta">
+                <span><i class="fas fa-eye"></i> ${video.views}</span>
+                <span><i class="fas fa-calendar"></i> ${formatDate(video.date)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateStats();
+    }
+
+    // Get YouTube Thumbnail
+    function getYouTubeThumbnail(videoId) {
+      return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    }
+
+    // Play Video
+    function playVideo(videoId) {
+      const video = allVideos.find(v => v.id === videoId);
+      if (!video) return;
+
+      currentVideoId = videoId;
+      
+      // Hide placeholder
+      document.getElementById('videoPlaceholder').style.display = 'none';
+      document.getElementById('videoInfo').style.display = 'block';
+      
+      // Load video
+      if (playerReady) {
+        initializePlayer(video.videoId);
+      }
+      
+      // Update info
+      document.getElementById('videoTitle').textContent = video.title;
+      
+      const isWatched = watchedVideos.includes(videoId);
+      document.getElementById('videoMeta').innerHTML = `
+        <div class="meta-item">
+          <i class="${video.categoryIcon}"></i>
+          <span>${video.categoryName}</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-calendar"></i>
+          <span>${formatDate(video.date)}</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-clock"></i>
+          <span>${video.duration}</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-eye"></i>
+          <span>${video.views} views</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-globe"></i>
+          <span>${video.language.toUpperCase()}</span>
+        </div>
+        ${isWatched ? '<span class="watched-badge"><i class="fas fa-check"></i> Watched</span>' : ''}
+      `;
+      
+      if (video.tags) {
+        document.getElementById('videoTags').innerHTML = video.tags.map(tag => 
+          `<span class="video-tag">#${tag}</span>`
+        ).join('');
+      }
+      
+      document.getElementById('videoDescription').textContent = video.description;
+      
+      // Update navigation buttons
+      updateNavigationButtons();
+      
+      // Update active card
+      renderVideos();
+      
+      // Scroll to player (mobile)
+      if (window.innerWidth <= 1024) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Update Navigation Buttons
+    function updateNavigationButtons() {
+      const filtered = getFilteredVideos();
+      const currentIndex = filtered.findIndex(v => v.id === currentVideoId);
+      
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      
+      prevBtn.disabled = currentIndex <= 0;
+      nextBtn.disabled = currentIndex >= filtered.length - 1;
+    }
+
+    // Get Filtered Videos
+    function getFilteredVideos() {
+      let filtered = allVideos;
+      
+      if (currentCategoryFilter !== 'all') {
+        filtered = filtered.filter(v => v.categoryKey === currentCategoryFilter);
+      }
+      
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      if (searchTerm) {
+        filtered = filtered.filter(v => 
+          v.title.toLowerCase().includes(searchTerm) ||
+          v.description.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      return filtered;
+    }
+
+    // Play Previous Video
+    function playPreviousVideo() {
+      const filtered = getFilteredVideos();
+      const currentIndex = filtered.findIndex(v => v.id === currentVideoId);
+      
+      if (currentIndex > 0) {
+        playVideo(filtered[currentIndex - 1].id);
+      }
+    }
+
+    // Play Next Video
+    function playNextVideo() {
+      const filtered = getFilteredVideos();
+      const currentIndex = filtered.findIndex(v => v.id === currentVideoId);
+      
+      if (currentIndex < filtered.length - 1) {
+        playVideo(filtered[currentIndex + 1].id);
+      }
+    }
+
+    // Mark as Watched
+    function markAsWatched(videoId) {
+      if (!watchedVideos.includes(videoId)) {
+        watchedVideos.push(videoId);
+        localStorage.setItem('watchedVideos', JSON.stringify(watchedVideos));
+        renderVideos();
+        updateStats();
+      }
+    }
+
+    // Update Stats
+    function updateStats() {
+      const filtered = getFilteredVideos();
+      const watched = filtered.filter(v => watchedVideos.includes(v.id)).length;
+      
+      document.getElementById('playlistStats').innerHTML = `
+        ${filtered.length} video${filtered.length !== 1 ? 's' : ''} • 
+        ${watched} watched
+      `;
+    }
+
+    // Format Date
     function formatDate(dateStr) {
       const date = new Date(dateStr);
       return date.toLocaleDateString('en-GB', { 
@@ -1016,81 +980,42 @@
       });
     }
 
-    // Share video
-    function shareVideo(platform) {
-      const video = findVideoById(currentVideoId);
-      if (!video) return;
-      
-      const url = encodeURIComponent(video.youtubeUrl);
-      const title = encodeURIComponent(video.title);
-      
-      let shareUrl;
-      if (platform === 'facebook') {
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-      } else if (platform === 'twitter') {
-        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
-      }
-      
-      if (shareUrl) {
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-      }
-    }
+    // Search Handler
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        renderVideos();
+      }, 300);
+    });
 
-    // Open on YouTube
-    function openYouTube() {
-      const video = findVideoById(currentVideoId);
-      if (video) {
-        window.open(video.youtubeUrl, '_blank');
-      }
-    }
-
-    // Close modal with Escape key
+    // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.getElementById('videoModal').classList.contains('active')) {
-        closeVideoModal();
-      }
-    });
-
-    // Close modal on background click
-    document.getElementById('videoModal').addEventListener('click', (e) => {
-      if (e.target.id === 'videoModal') {
-        closeVideoModal();
-      }
-    });
-
-    // Prevent body scroll when modal is open
-    const modalObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          const modal = document.getElementById('videoModal');
-          if (modal.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-          } else {
-            document.body.style.overflow = 'auto';
-          }
-        }
-      });
-    });
-
-    // Observe modal class changes
-    const modal = document.getElementById('videoModal');
-    if (modal) {
-      modalObserver.observe(modal, { attributes: true });
-    }
-
-    // Add smooth scroll behavior
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
+      if (e.target.tagName === 'INPUT') return;
+      
+      // Space - Play/Pause
+      if (e.code === 'Space' && ytPlayer) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+          ytPlayer.pauseVideo();
+        } else {
+          ytPlayer.playVideo();
         }
-      });
+      }
+      
+      // Arrow Left - Previous
+      if (e.key === 'ArrowLeft' && !document.getElementById('prevBtn').disabled) {
+        playPreviousVideo();
+      }
+      
+      // Arrow Right - Next
+      if (e.key === 'ArrowRight' && !document.getElementById('nextBtn').disabled) {
+        playNextVideo();
+      }
     });
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', loadVideos);
+    document.addEventListener('DOMContentLoaded', loadVideosData);
   </script>
 </body>
 </html>
