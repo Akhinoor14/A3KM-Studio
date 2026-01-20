@@ -600,17 +600,19 @@
                 const response = await fetch('videos.json');
                 const data = await response.json();
                 
-                // Process videos from nested categories
-                if (data.categories) {
-                    categories = data.categories;
+                // Process ONLY video-blog videos (NOT educational)
+                if (data.categories && data.categories['video-blog']) {
+                    categories = data.categories['video-blog'];
                     allVideos = [];
                     
-                    Object.entries(data.categories).forEach(([categoryName, categoryData]) => {
+                    // Iterate through video-blog categories only
+                    Object.entries(data.categories['video-blog']).forEach(([categoryName, categoryData]) => {
                         if (categoryData.videos && Array.isArray(categoryData.videos)) {
                             categoryData.videos.forEach(video => {
                                 allVideos.push({
                                     ...video,
                                     category: categoryName,
+                                    categoryName: categoryData.name || categoryName,
                                     categoryIcon: categoryData.icon || '📹',
                                     categoryColor: categoryData.color || '#FF0000'
                                 });
@@ -618,6 +620,9 @@
                         }
                     });
                 }
+                
+                console.log('Loaded video-blog videos:', allVideos.length);
+                console.log('Categories:', Object.keys(categories).length);
                 
                 // Update stats
                 document.getElementById('totalVideos').textContent = allVideos.length;
@@ -645,13 +650,16 @@
             const tabsContainer = document.getElementById('categoryTabs');
             const allButton = tabsContainer.querySelector('.category-tab[data-category="all"]');
             
+            // Only add tabs for categories that have videos
             Object.entries(categories).forEach(([categoryName, categoryData]) => {
-                const tab = document.createElement('button');
-                tab.className = 'category-tab';
-                tab.dataset.category = categoryName;
-                tab.innerHTML = `${categoryData.icon || '📹'} ${categoryName}`;
-                tab.addEventListener('click', () => filterByCategory(categoryName, tab));
-                tabsContainer.appendChild(tab);
+                if (categoryData.videos && categoryData.videos.length > 0) {
+                    const tab = document.createElement('button');
+                    tab.className = 'category-tab';
+                    tab.dataset.category = categoryName;
+                    tab.innerHTML = `${categoryData.icon || '📹'} ${categoryData.name || categoryName}`;
+                    tab.addEventListener('click', () => filterByCategory(categoryName, tab));
+                    tabsContainer.appendChild(tab);
+                }
             });
         }
 
@@ -707,20 +715,20 @@
 
             let html = '';
             for (const [category, videos] of Object.entries(grouped)) {
-                const categoryData = categories[category] || { icon: '📹', color: '#FF0000' };
+                const categoryData = categories[category] || { name: category, icon: '📹', color: '#FF0000' };
 
                 html += `
                     <section class="category-section">
                         <div class="category-header">
                             <div class="category-icon">${categoryData.icon}</div>
-                            <h2 class="category-title">${category}</h2>
+                            <h2 class="category-title">${categoryData.name || category}</h2>
                             <span class="category-count">${videos.length} ${videos.length === 1 ? 'Video' : 'Videos'}</span>
                         </div>
                         <div class="videos-grid">
                             ${videos.map((video, index) => `
-                                <div class="video-card" onclick="openVideo('${video.id}')">
+                                <div class="video-card" onclick="openVideo('${video.videoId}')">
                                     <div class="video-thumbnail">
-                                        <iframe src="https://www.youtube.com/embed/${getYouTubeId(video.url)}?controls=0&showinfo=0&modestbranding=1" frameborder="0" allowfullscreen></iframe>
+                                        <img src="https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg" alt="${video.title}" onerror="this.src='https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg'">
                                         <div class="video-overlay">
                                             <div class="play-button">
                                                 <i class="fas fa-play"></i>
@@ -732,13 +740,13 @@
                                         <h3 class="video-title">${video.title}</h3>
                                         <div class="video-meta">
                                             <span class="video-date">
-                                                <i class="far fa-calendar"></i> ${video.date || 'Recent'}
+                                                <i class="far fa-calendar"></i> ${formatDate(video.date)}
                                             </span>
                                             <span class="video-views">
                                                 <i class="far fa-eye"></i> ${video.views || '0'} views
                                             </span>
                                         </div>
-                                        <p class="video-description">${video.description}</p>
+                                        <p class="video-description">${video.description.substring(0, 150)}${video.description.length > 150 ? '...' : ''}</p>
                                         ${video.tags ? `
                                             <div class="video-tags">
                                                 ${video.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
@@ -761,9 +769,9 @@
             
             switch(currentSort) {
                 case 'newest':
-                    return sorted.reverse();
+                    return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
                 case 'oldest':
-                    return sorted;
+                    return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
                 case 'title-asc':
                     return sorted.sort((a, b) => a.title.localeCompare(b.title));
                 case 'title-desc':
@@ -771,6 +779,14 @@
                 default:
                     return sorted;
             }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'Recent';
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
 
         // Get YouTube video ID

@@ -319,18 +319,18 @@
 
         .doc-tabs {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
             margin-bottom: 0;
             border-bottom: 3px solid var(--border-primary);
             padding-bottom: 0;
             background: rgba(10, 0, 0, 0.3);
-            padding: 15px 15px 0 15px;
+            padding: 12px 12px 0 12px;
             border-radius: 12px 12px 0 0;
         }
 
         .doc-tab {
-            padding: 14px 24px;
+            padding: 12px 18px;
             background: rgba(20, 0, 0, 0.5);
             border: 2px solid rgba(204, 0, 0, 0.3);
             border-bottom: none;
@@ -339,12 +339,13 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             position: relative;
             margin-bottom: -3px;
+            white-space: nowrap;
         }
 
         .doc-tab i {
@@ -619,9 +620,16 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
+        #documentationSection:fullscreen .reading-toolbar,
         .fullscreen-fallback .reading-toolbar,
         body:fullscreen .reading-toolbar {
-            top: 20px;
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            width: auto;
+            max-width: 90%;
         }
 
         .toolbar-group {
@@ -840,14 +848,16 @@
         /* Show TOC Sidebar in Fullscreen */
         #documentationSection:fullscreen .toc-sidebar {
             display: block !important;
-            position: fixed;
-            top: 0;
-            right: 0;
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
             width: 320px;
             height: 100vh;
             background: rgba(10, 10, 10, 0.98);
             backdrop-filter: blur(20px);
             border-left: 3px solid var(--primary-red);
+            z-index: 10002 !important;
+            transform: none !important;
             padding: 30px 20px;
             overflow-y: auto;
             z-index: 9998;
@@ -1448,12 +1458,12 @@
             padding: 30px;
             overflow-y: auto;
             transition: right 0.4s ease;
-            z-index: 1500;
+            z-index: 10002;
             box-shadow: -10px 0 50px rgba(0, 0, 0, 0.8);
         }
 
         .toc-sidebar.active {
-            right: 0;
+            right: 0 !important;
         }
 
         .toc-header {
@@ -1876,13 +1886,7 @@
                     </button>
                 </div>
 
-                <!-- Action Group -->
-                <div class="toolbar-group">
-                    <button class="toolbar-btn" onclick="printDocumentation()" title="Print (P)">
-                        <i class="fas fa-print"></i>
-                        <span>Print</span>
-                    </button>
-                </div>
+
             </div>
             
             <!-- Fullscreen Button & Zoom Controls -->
@@ -2318,26 +2322,6 @@
             updateFontSize(100);
         }
 
-        // Print Documentation
-        function printDocumentation() {
-            // Store current reading mode
-            const isNightMode = document.body.classList.contains('night-mode');
-            const isSepiaMode = document.body.classList.contains('sepia-mode');
-            
-            // Temporarily disable reading modes for clean print
-            if (isNightMode) document.body.classList.remove('night-mode');
-            if (isSepiaMode) document.body.classList.remove('sepia-mode');
-            
-            // Print
-            window.print();
-            
-            // Restore reading modes after print dialog
-            setTimeout(() => {
-                if (isNightMode) document.body.classList.add('night-mode');
-                if (isSepiaMode) document.body.classList.add('sepia-mode');
-            }, 100);
-        }
-
         // Load Reading Preferences from localStorage
         function loadReadingPreferences() {
             // Load reading mode
@@ -2382,12 +2366,6 @@
                 if (e.key === 's' || e.key === 'S') {
                     e.preventDefault();
                     toggleSepiaMode();
-                }
-                
-                // Print: P
-                if (e.key === 'p' || e.key === 'P') {
-                    e.preventDefault();
-                    printDocumentation();
                 }
             });
             
