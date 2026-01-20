@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research Paper Viewer - Md Akhinoor Islam</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../Optimization/styles.css" />
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <meta name="theme-color" content="#CC0000" />
+  
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #990000;
+      --bg-dark: rgba(10, 10, 10, 0.98);
+      --bg-card: rgba(26, 26, 26, 0.95);
+      --border-red: rgba(204, 0, 0, 0.3);
+      --text-white: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --text-dim: rgba(255, 255, 255, 0.6);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-white);
+      overflow-x: hidden;
+      background: #0a0a0a;
+    }
+
+    body.night-mode {
+      --bg-card: rgba(15, 15, 15, 0.98);
+      background: #000000;
+    }
+
+    /* Back Button */
+    .back-to-list {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .back-to-list:hover {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+      transform: translateX(-2px);
+    }
+
+    /* Main Container */
+    .viewer-container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 90px 20px 40px;
+    }
+
+    /* Two Column Layout */
+    .viewer-layout {
+      display: grid;
+      grid-template-columns: 70% 30%;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* PDF Column (Left) */
+    .pdf-column {
+      position: sticky;
+      top: 90px;
+    }
+
+    .toolbar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      padding: 10px 16px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-btn:hover {
+      background: rgba(204, 0, 0, 0.2);
+      border-color: var(--primary-red);
+      transform: translateY(-1px);
+    }
+
+    .tool-btn:active {
+      transform: scale(0.98);
+    }
+
+    .tool-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .tool-btn.active {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
+    .zoom-display {
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      font-weight: 700;
+      color: var(--primary-red);
+      min-width: 70px;
+      text-align: center;
+    }
+
+    .page-input {
+      width: 60px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-red);
+      border-radius: 6px;
+      color: var(--text-white);
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .page-info {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .pdf-viewer {
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 16px;
+      padding: 30px;
+      min-height: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .canvas-container {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    body.night-mode .canvas-container {
+      background: #1a1a1a;
+      filter: invert(0.9) hue-rotate(180deg);
+    }
+
+    #pdfCanvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(204, 0, 0, 0.2);
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-red);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Loading State */
+    .loading-state {
+      text-align: center;
+      padding: 100px 20px;
+    }
+
+    .loading-state i {
+      font-size: 48px;
+      color: var(--primary-red);
+      margin-bottom: 20px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+    }
+
+    /* Info Panel (Right) */
+    .info-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .info-section {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-red);
+    }
+
+    .info-section:last-child {
+      border-bottom: none;
+    }
+
+    /* Header Section */
+    .paper-title {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      line-height: 1.3;
+      background: linear-gradient(135deg, var(--text-white) 0%, var(--primary-red) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .authors-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .author-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .author-item i {
+      color: var(--primary-red);
+      font-size: 12px;
+    }
+
+    .institution {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .institution i {
+      color: var(--primary-red);
+    }
+
+    .publication-date {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .publication-date i {
+      color: var(--primary-red);
+    }
+
+    .language-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-red);
+    }
+
+    /* Abstract Section */
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i {
+      color: var(--primary-red);
+    }
+
+    .abstract-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      max-height: 150px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .abstract-text.expanded {
+      max-height: none;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--primary-red);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .expand-btn:hover {
+      opacity: 0.8;
+    }
+
+    /* Keywords Section */
+    .keywords-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .keyword-tag {
+      padding: 6px 12px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-white);
+      transition: all 0.3s ease;
+    }
+
+    .keyword-tag:hover {
+      background: rgba(204, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Citation Section */
+    .citation-format-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .format-btn {
+      padding: 8px 16px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .format-btn:hover {
+      background: rgba(204, 0, 0, 0.2);
+    }
+
+    .format-btn.active {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
+    .citation-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .citation-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .citation-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .citation-btn:hover {
+      background: rgba(204, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Metadata Section */
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metadata-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metadata-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .metadata-value {
+      font-size: 14px;
+      color: var(--text-white);
+      font-weight: 700;
+    }
+
+    .metadata-value a {
+      color: var(--primary-red);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metadata-value a:hover {
+      text-decoration: underline;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-red);
+    }
+
+    /* Actions Section */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 12px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      background: rgba(204, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .action-btn.bookmarked {
+      background: var(--primary-red);
+      border-color: var(--primary-red);
+    }
+
+    /* Related Papers Section */
+    .related-papers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .related-paper-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(204, 0, 0, 0.05);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .related-paper-item:hover {
+      background: rgba(204, 0, 0, 0.1);
+      transform: translateX(4px);
+    }
+
+    .related-thumb {
+      width: 60px;
+      height: 80px;
+      background: rgba(204, 0, 0, 0.1);
+      border: 1px solid var(--border-red);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .related-thumb i {
+      font-size: 24px;
+      color: var(--primary-red);
+    }
+
+    .related-info {
+      flex: 1;
+    }
+
+    .related-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .related-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .toast i {
+      color: var(--primary-red);
+      font-size: 18px;
+    }
+
+    /* Fullscreen Mode */
+    .fullscreen-active {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      background: #0a0a0a;
+      padding: 20px;
+    }
+
+    .fullscreen-active .pdf-viewer {
+      height: 100%;
+      min-height: 100%;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1200px) {
+      .viewer-layout {
+        grid-template-columns: 65% 35%;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .viewer-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .pdf-column {
+        position: static;
+      }
+
+      .info-panel {
+        margin-top: 20px;
+      }
+
+      .toolbar {
+        padding: 12px;
+      }
+
+      .toolbar-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .viewer-container {
+        padding: 70px 10px 20px;
+      }
+
+      .back-to-list {
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .paper-title {
+        font-size: 20px;
+      }
+
+      .toolbar {
+        padding: 10px;
+      }
+
+      .tool-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .pdf-viewer {
+        padding: 15px;
+        min-height: 500px;
+      }
+
+      .info-section {
+        padding: 16px;
+      }
+
+      .metadata-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background System -->
+  <div id="bg-container"></div>
+
+  <!-- Back Button -->
+  <a href="./papers-list.html" class="back-to-list">
+    <i class="fas fa-arrow-left"></i>
+    Back to Papers
+  </a>
+
+  <!-- Main Container -->
+  <div class="viewer-container">
+    <div class="viewer-layout">
+      
+      <!-- PDF Column (Left - 70%) -->
+      <div class="pdf-column">
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <button class="tool-btn" id="prevPage" title="Previous Page (Arrow Left)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <input type="number" class="page-input" id="pageInput" value="1" min="1">
+            <span class="page-info">of <span id="totalPages">0</span></span>
+            <button class="tool-btn" id="nextPage" title="Next Page (Arrow Right)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <button class="tool-btn" id="zoomOut" title="Zoom Out (-)">
+              <i class="fas fa-search-minus"></i>
+            </button>
+            <span class="zoom-display" id="zoomLevel">100%</span>
+            <button class="tool-btn" id="zoomIn" title="Zoom In (+)">
+              <i class="fas fa-search-plus"></i>
+            </button>
+            <button class="tool-btn" id="resetZoom" title="Reset Zoom (0)">
+              <i class="fas fa-expand"></i>
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <button class="tool-btn" id="nightMode" title="Night Mode (N)">
+              <i class="fas fa-moon"></i>
+            </button>
+            <button class="tool-btn" id="fullscreen" title="Fullscreen (F)">
+              <i class="fas fa-expand-arrows-alt"></i>
+            </button>
+            <button class="tool-btn" id="downloadBtn" title="Download PDF">
+              <i class="fas fa-download"></i>
+            </button>
+            <button class="tool-btn" id="printBtn" title="Print Paper">
+              <i class="fas fa-print"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- PDF Viewer -->
+        <div class="pdf-viewer" id="pdfViewer">
+          <div class="loading-state" id="loadingState">
+            <i class="fas fa-spinner"></i>
+            <div class="loading-text">Loading paper...</div>
+          </div>
+          <div class="canvas-container" id="canvasContainer" style="display: none;">
+            <canvas id="pdfCanvas"></canvas>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Panel (Right - 30%) -->
+      <div class="info-panel">
+        
+        <!-- Header Section -->
+        <div class="info-section">
+          <h1 class="paper-title" id="paperTitle">Loading paper...</h1>
+          
+          <div class="authors-list" id="authorsList"></div>
+          
+          <div class="institution" id="institutionDiv">
+            <i class="fas fa-university"></i>
+            <span id="institutionName">-</span>
+          </div>
+          
+          <div class="publication-date" id="publicationDiv">
+            <i class="fas fa-calendar"></i>
+            <span id="publicationDate">-</span>
+          </div>
+          
+          <span class="language-badge" id="languageBadge">
+            <i class="fas fa-language"></i>
+            <span id="languageText">EN</span>
+          </span>
+        </div>
+
+        <!-- Abstract Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-align-left"></i>
+            Abstract
+          </div>
+          <div class="abstract-text" id="abstractText">Loading abstract...</div>
+          <button class="expand-btn" id="expandAbstract">
+            <span id="expandText">Read more</span>
+            <i class="fas fa-chevron-down" id="expandIcon"></i>
+          </button>
+        </div>
+
+        <!-- Keywords Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-tags"></i>
+            Keywords
+          </div>
+          <div class="keywords-container" id="keywordsContainer"></div>
+        </div>
+
+        <!-- Citation Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-quote-right"></i>
+            Citation
+          </div>
+          
+          <div class="citation-format-selector">
+            <button class="format-btn active" data-format="apa">APA</button>
+            <button class="format-btn" data-format="mla">MLA</button>
+            <button class="format-btn" data-format="ieee">IEEE</button>
+            <button class="format-btn" data-format="bibtex">BibTeX</button>
+          </div>
+          
+          <div class="citation-box" id="citationBox">Generating citation...</div>
+          
+          <div class="citation-actions">
+            <button class="citation-btn" id="copyCitation">
+              <i class="fas fa-copy"></i>
+              Copy
+            </button>
+            <button class="citation-btn" id="downloadBibtex">
+              <i class="fas fa-download"></i>
+              .bib File
+            </button>
+          </div>
+        </div>
+
+        <!-- Metadata Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Paper Metadata
+          </div>
+          
+          <div class="metadata-grid">
+            <div class="metadata-item">
+              <span class="metadata-label">DOI</span>
+              <span class="metadata-value" id="doiValue">
+                <a href="#" target="_blank" id="doiLink">-</a>
+              </span>
+            </div>
+            
+            <div class="metadata-item">
+              <span class="metadata-label">Pages</span>
+              <span class="metadata-value" id="pagesValue">-</span>
+            </div>
+            
+            <div class="metadata-item">
+              <span class="metadata-label">Citations</span>
+              <span class="metadata-value">
+                <span class="badge" id="citationsCount">
+                  <i class="fas fa-quote-left"></i>
+                  <span>0</span>
+                </span>
+              </span>
+            </div>
+            
+            <div class="metadata-item">
+              <span class="metadata-label">Downloads</span>
+              <span class="metadata-value">
+                <span class="badge" id="downloadsCount">
+                  <i class="fas fa-download"></i>
+                  <span>0</span>
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-tools"></i>
+            Actions
+          </div>
+          
+          <div class="actions-grid">
+            <button class="action-btn" id="shareBtn">
+              <i class="fas fa-share-alt"></i>
+              Share
+            </button>
+            <button class="action-btn" id="bookmarkBtn">
+              <i class="far fa-bookmark"></i>
+              Bookmark
+            </button>
+            <button class="action-btn" id="printBtn2">
+              <i class="fas fa-print"></i>
+              Print
+            </button>
+            <button class="action-btn" id="downloadBtn2">
+              <i class="fas fa-download"></i>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <!-- Related Papers Section -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="fas fa-layer-group"></i>
+            Related Papers
+          </div>
+          <div class="related-papers-list" id="relatedPapersList">
+            <div class="loading-text">Loading related papers...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Action completed!</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../../Optimization/Background/background-system.js"></script>
+  <script src="../../Optimization/script.js"></script>
+
+  <script>
+    // Set PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // Global variables
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPagesNum = 0;
+    let currentScale = 1.0;
+    let currentPaper = null;
+    let currentCitationFormat = 'apa';
+    let isFullscreen = false;
+
+    // Get paper ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paperId = urlParams.get('id');
+
+    // Load paper data
+    async function loadPaper(paperId) {
+      try {
+        const response = await fetch('./papers.json');
+        const data = await response.json();
+        const paper = data.papers.find(p => p.id === paperId);
+        
+        if (!paper) {
+          throw new Error('Paper not found');
+        }
+
+        currentPaper = paper;
+        displayPaperInfo(paper);
+        loadPDF(paper.pdfUrl);
+        loadRelatedPapers(paper.category, paper.id);
+        checkBookmarkStatus();
+      } catch (error) {
+        console.error('Error loading paper:', error);
+        showToast('Error loading paper data');
+      }
+    }
+
+    // Display paper information
+    function displayPaperInfo(paper) {
+      document.getElementById('paperTitle').textContent = paper.title;
+      document.title = `${paper.title} - Research Paper`;
+
+      // Authors
+      const authorsList = document.getElementById('authorsList');
+      authorsList.innerHTML = paper.authors.map(author => `
+        <div class="author-item">
+          <i class="fas fa-user-circle"></i>
+          <span>${author}</span>
+        </div>
+      `).join('');
+
+      // Institution
+      document.getElementById('institutionName').textContent = paper.institution;
+
+      // Publication date
+      const date = new Date(paper.date);
+      document.getElementById('publicationDate').textContent = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      // Language badge
+      document.getElementById('languageText').textContent = paper.language.toUpperCase();
+
+      // Abstract
+      document.getElementById('abstractText').textContent = paper.abstract;
+
+      // Keywords
+      const keywordsContainer = document.getElementById('keywordsContainer');
+      keywordsContainer.innerHTML = paper.keywords.map(keyword => `
+        <span class="keyword-tag">${keyword}</span>
+      `).join('');
+
+      // Metadata
+      document.getElementById('pagesValue').textContent = `${paper.pages} pages`;
+      document.getElementById('citationsCount').querySelector('span:last-child').textContent = paper.citations;
+      document.getElementById('downloadsCount').querySelector('span:last-child').textContent = paper.downloads;
+
+      // DOI (generate fake DOI for demo)
+      const doi = `10.1234/${paper.id}`;
+      const doiLink = document.getElementById('doiLink');
+      doiLink.textContent = doi;
+      doiLink.href = `https://doi.org/${doi}`;
+
+      // Generate citation
+      generateCitation(currentCitationFormat);
+    }
+
+    // Load PDF using PDF.js
+    async function loadPDF(pdfUrl) {
+      try {
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        pdfDoc = await loadingTask.promise;
+        totalPagesNum = pdfDoc.numPages;
+        
+        document.getElementById('totalPages').textContent = totalPagesNum;
+        document.getElementById('pageInput').max = totalPagesNum;
+        
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('canvasContainer').style.display = 'block';
+        
+        renderPage(currentPage);
+      } catch (error) {
+        console.error('Error loading PDF:', error);
+        document.getElementById('loadingState').innerHTML = `
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="loading-text">Error loading PDF</div>
+        `;
+        showToast('Error loading PDF file');
+      }
+    }
+
+    // Render PDF page
+    async function renderPage(pageNum) {
+      const page = await pdfDoc.getPage(pageNum);
+      const canvas = document.getElementById('pdfCanvas');
+      const context = canvas.getContext('2d');
+      
+      const viewport = page.getViewport({ scale: currentScale });
+      
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      
+      await page.render(renderContext).promise;
+      
+      // Update UI
+      currentPage = pageNum;
+      document.getElementById('pageInput').value = pageNum;
+      updatePageButtons();
+      updateProgress();
+    }
+
+    // Update page navigation buttons
+    function updatePageButtons() {
+      document.getElementById('prevPage').disabled = currentPage <= 1;
+      document.getElementById('nextPage').disabled = currentPage >= totalPagesNum;
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const progress = (currentPage / totalPagesNum) * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+
+    // Navigation functions
+    function nextPage() {
+      if (currentPage < totalPagesNum) {
+        renderPage(currentPage + 1);
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        renderPage(currentPage - 1);
+      }
+    }
+
+    function jumpToPage(pageNum) {
+      if (pageNum >= 1 && pageNum <= totalPagesNum) {
+        renderPage(pageNum);
+      }
+    }
+
+    // Zoom functions
+    function zoomIn() {
+      if (currentScale < 3.0) {
+        currentScale += 0.25;
+        updateZoom();
+      }
+    }
+
+    function zoomOut() {
+      if (currentScale > 0.5) {
+        currentScale -= 0.25;
+        updateZoom();
+      }
+    }
+
+    function resetZoom() {
+      currentScale = 1.0;
+      updateZoom();
+    }
+
+    function updateZoom() {
+      document.getElementById('zoomLevel').textContent = `${Math.round(currentScale * 100)}%`;
+      renderPage(currentPage);
+    }
+
+    // Night mode toggle
+    function toggleNightMode() {
+      document.body.classList.toggle('night-mode');
+      const btn = document.getElementById('nightMode');
+      btn.classList.toggle('active');
+      showToast(document.body.classList.contains('night-mode') ? 'Night mode enabled' : 'Night mode disabled');
+    }
+
+    // Fullscreen toggle
+    function toggleFullscreen() {
+      const pdfColumn = document.querySelector('.pdf-column');
+      
+      if (!isFullscreen) {
+        pdfColumn.classList.add('fullscreen-active');
+        document.getElementById('fullscreen').innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
+        isFullscreen = true;
+      } else {
+        pdfColumn.classList.remove('fullscreen-active');
+        document.getElementById('fullscreen').innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+        isFullscreen = false;
+      }
+      
+      showToast(isFullscreen ? 'Fullscreen mode' : 'Normal view');
+    }
+
+    // Citation generation
+    function generateCitation(format) {
+      if (!currentPaper) return;
+
+      currentCitationFormat = format;
+      const { title, authors, institution, date, id } = currentPaper;
+      const year = new Date(date).getFullYear();
+      const doi = `10.1234/${id}`;
+      let citation = '';
+
+      switch (format) {
+        case 'apa':
+          const apaAuthors = authors.join(', ');
+          citation = `${apaAuthors} (${year}). ${title}. ${institution}. https://doi.org/${doi}`;
+          break;
+          
+        case 'mla':
+          const mlaAuthors = authors.join(', ');
+          citation = `${mlaAuthors}. "${title}." ${institution}, ${year}. doi:${doi}.`;
+          break;
+          
+        case 'ieee':
+          const ieeeAuthors = authors.join(', ');
+          citation = `[1] ${ieeeAuthors}, "${title}," ${institution}, ${year}. doi: ${doi}.`;
+          break;
+          
+        case 'bibtex':
+          const firstAuthor = authors[0].split(' ').pop();
+          citation = `@article{${firstAuthor}${year},
+  author = {${authors.join(' and ')}},
+  title = {${title}},
+  journal = {${institution}},
+  year = {${year}},
+  doi = {${doi}}
+}`;
+          break;
+      }
+
+      document.getElementById('citationBox').textContent = citation;
+    }
+
+    // Copy citation to clipboard
+    async function copyCitation() {
+      const citation = document.getElementById('citationBox').textContent;
+      try {
+        await navigator.clipboard.writeText(citation);
+        showToast('Citation copied to clipboard!');
+      } catch (error) {
+        console.error('Error copying citation:', error);
+        showToast('Failed to copy citation');
+      }
+    }
+
+    // Download BibTeX file
+    function downloadBibtex() {
+      generateCitation('bibtex');
+      const citation = document.getElementById('citationBox').textContent;
+      const blob = new Blob([citation], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentPaper.id}.bib`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('BibTeX file downloaded!');
+    }
+
+    // Share paper
+    async function sharePaper() {
+      const url = window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Paper link copied to clipboard!');
+      } catch (error) {
+        console.error('Error sharing paper:', error);
+        showToast('Failed to copy link');
+      }
+    }
+
+    // Bookmark paper
+    function bookmarkPaper() {
+      const bookmarks = JSON.parse(localStorage.getItem('paperBookmarks') || '[]');
+      const index = bookmarks.findIndex(b => b.id === paperId);
+      
+      if (index === -1) {
+        bookmarks.push({
+          id: paperId,
+          title: currentPaper.title,
+          date: new Date().toISOString()
+        });
+        showToast('Paper bookmarked!');
+      } else {
+        bookmarks.splice(index, 1);
+        showToast('Bookmark removed');
+      }
+      
+      localStorage.setItem('paperBookmarks', JSON.stringify(bookmarks));
+      checkBookmarkStatus();
+    }
+
+    // Check bookmark status
+    function checkBookmarkStatus() {
+      const bookmarks = JSON.parse(localStorage.getItem('paperBookmarks') || '[]');
+      const isBookmarked = bookmarks.some(b => b.id === paperId);
+      const btn = document.getElementById('bookmarkBtn');
+      
+      if (isBookmarked) {
+        btn.classList.add('bookmarked');
+        btn.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarked';
+      } else {
+        btn.classList.remove('bookmarked');
+        btn.innerHTML = '<i class="far fa-bookmark"></i> Bookmark';
+      }
+    }
+
+    // Download PDF
+    function downloadPDF() {
+      if (currentPaper) {
+        const link = document.createElement('a');
+        link.href = currentPaper.pdfUrl;
+        link.download = `${currentPaper.id}.pdf`;
+        link.click();
+        showToast('Downloading PDF...');
+        
+        // Update download count
+        currentPaper.downloads++;
+        document.getElementById('downloadsCount').querySelector('span:last-child').textContent = currentPaper.downloads;
+      }
+    }
+
+    // Print paper
+    function printPaper() {
+      window.print();
+      showToast('Opening print dialog...');
+    }
+
+    // Load related papers
+    async function loadRelatedPapers(category, excludeId) {
+      try {
+        const response = await fetch('./papers.json');
+        const data = await response.json();
+        const related = data.papers
+          .filter(p => p.category === category && p.id !== excludeId)
+          .slice(0, 5);
+        
+        const container = document.getElementById('relatedPapersList');
+        
+        if (related.length === 0) {
+          container.innerHTML = '<div class="loading-text">No related papers found</div>';
+          return;
+        }
+        
+        container.innerHTML = related.map(paper => `
+          <a href="./paper-viewer-new.html?id=${paper.id}" class="related-paper-item">
+            <div class="related-thumb">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="related-info">
+              <div class="related-title">${paper.title}</div>
+              <div class="related-meta">${paper.authors[0]} • ${new Date(paper.date).getFullYear()}</div>
+            </div>
+          </a>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading related papers:', error);
+      }
+    }
+
+    // Show toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const messageEl = document.getElementById('toastMessage');
+      messageEl.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Event Listeners
+    document.getElementById('prevPage').addEventListener('click', prevPage);
+    document.getElementById('nextPage').addEventListener('click', nextPage);
+    document.getElementById('pageInput').addEventListener('change', (e) => {
+      jumpToPage(parseInt(e.target.value));
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', zoomIn);
+    document.getElementById('zoomOut').addEventListener('click', zoomOut);
+    document.getElementById('resetZoom').addEventListener('click', resetZoom);
+
+    document.getElementById('nightMode').addEventListener('click', toggleNightMode);
+    document.getElementById('fullscreen').addEventListener('click', toggleFullscreen);
+    document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+    document.getElementById('downloadBtn2').addEventListener('click', downloadPDF);
+    document.getElementById('printBtn').addEventListener('click', printPaper);
+    document.getElementById('printBtn2').addEventListener('click', printPaper);
+
+    // Abstract expand/collapse
+    document.getElementById('expandAbstract').addEventListener('click', () => {
+      const abstractText = document.getElementById('abstractText');
+      const expandText = document.getElementById('expandText');
+      const expandIcon = document.getElementById('expandIcon');
+      
+      abstractText.classList.toggle('expanded');
+      
+      if (abstractText.classList.contains('expanded')) {
+        expandText.textContent = 'Read less';
+        expandIcon.classList.remove('fa-chevron-down');
+        expandIcon.classList.add('fa-chevron-up');
+      } else {
+        expandText.textContent = 'Read more';
+        expandIcon.classList.remove('fa-chevron-up');
+        expandIcon.classList.add('fa-chevron-down');
+      }
+    });
+
+    // Citation format buttons
+    document.querySelectorAll('.format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        generateCitation(btn.dataset.format);
+      });
+    });
+
+    document.getElementById('copyCitation').addEventListener('click', copyCitation);
+    document.getElementById('downloadBibtex').addEventListener('click', downloadBibtex);
+    document.getElementById('shareBtn').addEventListener('click', sharePaper);
+    document.getElementById('bookmarkBtn').addEventListener('click', bookmarkPaper);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      
+      switch(e.key) {
+        case 'ArrowRight':
+          nextPage();
+          break;
+        case 'ArrowLeft':
+          prevPage();
+          break;
+        case '+':
+        case '=':
+          zoomIn();
+          break;
+        case '-':
+          zoomOut();
+          break;
+        case '0':
+          resetZoom();
+          break;
+        case 'f':
+        case 'F':
+          toggleFullscreen();
+          break;
+        case 'n':
+        case 'N':
+          toggleNightMode();
+          break;
+      }
+    });
+
+    // Initialize
+    if (paperId) {
+      loadPaper(paperId);
+    } else {
+      document.getElementById('loadingState').innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="loading-text">No paper ID provided</div>
+      `;
+    }
+  </script>
+</body>
+</html>

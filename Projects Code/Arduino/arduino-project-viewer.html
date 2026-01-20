@@ -417,11 +417,84 @@
             opacity: 0.6;
         }
 
+        /* Documentation Controls Container */
+        .doc-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 100;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(153, 0, 0, 0.1));
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .zoom-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary-red);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(204, 0, 0, 0.2);
+            transform: scale(1.1);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .zoom-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .zoom-level {
+            font-weight: 700;
+            color: var(--primary-red);
+            min-width: 50px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .zoom-reset-btn {
+            background: transparent;
+            border: none;
+            color: rgba(204, 0, 0, 0.6);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(204, 0, 0, 0.3);
+        }
+
+        .zoom-reset-btn:hover {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+            background: rgba(204, 0, 0, 0.1);
+        }
+
         /* Fullscreen Button */
         .fullscreen-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             background: linear-gradient(135deg, rgba(204, 0, 0, 0.3), rgba(153, 0, 0, 0.4));
             border: 2px solid rgba(204, 0, 0, 0.5);
             border-radius: 10px;
@@ -447,8 +520,8 @@
             color: var(--primary-red);
         }
 
-        /* Fullscreen Mode */
-        .documentation-section.fullscreen {
+        /* Fullscreen Mode - True Browser Fullscreen (fallback CSS) */
+        .documentation-section.fullscreen-fallback {
             position: fixed;
             top: 0;
             left: 0;
@@ -459,13 +532,16 @@
             padding: 80px 40px 40px 40px;
             overflow-y: auto;
             animation: fadeIn 0.3s ease;
+            scroll-behavior: smooth;
         }
 
-        .documentation-section.fullscreen .section-title {
+        /* Hide section title in fullscreen fallback */
+        .documentation-section.fullscreen-fallback .section-title {
             display: none;
         }
 
-        .documentation-section.fullscreen .doc-tabs {
+        /* Fixed tabs at top in fullscreen fallback */
+        .documentation-section.fullscreen-fallback .doc-tabs {
             position: fixed;
             top: 20px;
             left: 50%;
@@ -475,15 +551,116 @@
             padding: 10px;
             border-radius: 12px;
             border: 2px solid rgba(204, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
         }
 
-        .documentation-section.fullscreen .markdown-content {
+        /* Controls positioning in fallback fullscreen mode */
+        .documentation-section.fullscreen-fallback .doc-controls {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            z-index: 10001;
+            margin-bottom: 0;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .documentation-section.fullscreen-fallback .zoom-controls {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(204, 0, 0, 0.5);
+        }
+
+        /* Fullscreen button positioning in fallback fullscreen mode */
+        .documentation-section.fullscreen-fallback .fullscreen-btn {
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.5), rgba(153, 0, 0, 0.6));
+            box-shadow: 0 4px 20px rgba(204, 0, 0, 0.5);
+        }
+
+        /* Better markdown content display in fullscreen fallback */
+        .documentation-section.fullscreen-fallback .markdown-content {
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px;
             background: rgba(20, 20, 20, 0.7);
             border-radius: 15px;
             border: 2px solid rgba(204, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Code container in fullscreen fallback */
+        .documentation-section.fullscreen-fallback .code-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Smooth scroll for fullscreen fallback section */
+        .documentation-section.fullscreen-fallback::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .documentation-section.fullscreen-fallback::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .documentation-section.fullscreen-fallback::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-red), #990000);
+            border-radius: 6px;
+        }
+
+        .documentation-section.fullscreen-fallback::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #ff0000, var(--primary-red));
+        }
+
+        /* Browser Fullscreen API styles */
+        :fullscreen {
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+        }
+
+        #documentationSection:fullscreen {
+            padding: 80px 40px 40px 40px;
+            overflow-y: auto;
+        }
+
+        #documentationSection:fullscreen .section-title {
+            display: none;
+        }
+
+        #documentationSection:fullscreen .doc-tabs {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        #documentationSection:fullscreen .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            z-index: 10001;
+        }
+
+        #documentationSection:fullscreen .markdown-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.7);
+            border-radius: 15px;
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #documentationSection:fullscreen .code-container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .doc-content {
@@ -1450,11 +1627,28 @@
         <div class="content-section documentation-section" id="documentationSection">
             <h2 class="section-title"><i class="fas fa-book-open"></i> Documentation</h2>
             
-            <!-- Fullscreen Button -->
-            <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">
-                <i class="fas fa-expand"></i>
-                <span>Fullscreen</span>
-            </button>
+            <!-- Fullscreen Button & Zoom Controls -->
+            <div class="doc-controls">
+                <!-- Zoom Controls -->
+                <div class="zoom-controls" id="zoomControls">
+                    <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out (Ctrl+-)">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="zoom-btn" id="zoomInBtn" title="Zoom In (Ctrl++)">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="zoom-reset-btn" id="zoomResetBtn" title="Reset Zoom to 100%">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+                
+                <!-- Fullscreen Button -->
+                <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">
+                    <i class="fas fa-expand"></i>
+                    <span>Fullscreen</span>
+                </button>
+            </div>
             
             <div class="doc-tabs" id="docTabs">
                 <button class="doc-tab active" data-tab="readme">
@@ -1519,35 +1713,68 @@
 
         // Projects data - All 23 projects
         const projects = [
-            { id: 1, folder: "01 LED Pattern", title: "LED Pattern Control", subtitle: "Control LED blinking patterns using potentiometer", description: "Control the blinking pattern of 5 LEDs using a potentiometer based on analog voltage levels.", components: ["Arduino UNO", "5× LED", "5× 220Ω Resistor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/c3b3O8IGfQV-01-led-pattern", codeFile: "Led-pattern.ino" },
-            { id: 2, folder: "02 LED Flowing Blinking", title: "LED Flowing Blinking", subtitle: "Sequential LED animation pattern", description: "Create a flowing water effect with 6 LEDs blinking in sequence from left to right.", components: ["Arduino UNO", "6× LED", "6× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3IvnAvNfJN5-02-led-flowing-blinking", codeFile: "LED.blinking.ino" },
-            { id: 3, folder: "03 Breathing a LED", title: "Breathing LED Effect", subtitle: "PWM-based smooth brightness control", description: "Simulate breathing effect with LED using PWM to smoothly fade in and out.", components: ["Arduino UNO", "1× LED", "1× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/aZYQ0wdjqaU-03-breathing-led", codeFile: "LED Breathing.ino" },
-            { id: 4, folder: "04 Controlling LED brightness with AT-TINY85", title: "ATtiny85 LED Brightness", subtitle: "Compact microcontroller LED control", description: "Control LED brightness using ATtiny85 microcontroller with potentiometer input.", components: ["ATtiny85", "1× LED", "1× 220Ω Resistor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/4Q3ZPluGxLN-04-attiny85-led-brightness-control", codeFile: "ATTINY85 Brightness.ino" },
-            { id: 5, folder: "05 RGB LED Control with PWM", title: "RGB LED Control", subtitle: "Multi-color mixing with PWM", description: "Control RGB LED colors by mixing Red, Green, and Blue using PWM signals.", components: ["Arduino UNO", "1× RGB LED", "3× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/0gkWZ1Qp8fK-05-rgb-led", codeFile: "rgb-pwm.ino" },
-            { id: 6, folder: "06. Interfacing servo motor with arduino", title: "Servo Motor Interface", subtitle: "Control servo position and angle", description: "Interface a servo motor with Arduino to control angular position using potentiometer.", components: ["Arduino UNO", "Servo Motor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/fYUNmXNwfKn-06-servo-motor", codeFile: "servo-control.ino" },
-            { id: 7, folder: "07 Interfacing an ultrasonic sensor with arduino", title: "Ultrasonic Distance Sensor", subtitle: "Distance measurement system", description: "Measure distance using HC-SR04 ultrasonic sensor and display on serial monitor.", components: ["Arduino UNO", "HC-SR04 Sensor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/7vYiNJW0afn-07-ultrasonic-distance-sensor", codeFile: "ultrasonic-distance.ino" },
-            { id: 8, folder: "08 Interfacing Neopixel strip 4", title: "Neopixel LED Strip", subtitle: "Addressable RGB animations", description: "Control WS2812B Neopixel LED strip with colorful animations and patterns.", components: ["Arduino UNO", "Neopixel Strip", "External Power", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/c5hDIZ5QHJG-08-neopixel-led-strip", codeFile: "neopixel-strip.ino" },
-            { id: 9, folder: "09 Interfacing Neopixel jewel", title: "Neopixel Jewel", subtitle: "Circular LED array patterns", description: "Create stunning patterns with 7-LED Neopixel Jewel in circular arrangement.", components: ["Arduino UNO", "Neopixel Jewel", "External Power", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/l4rFT88kcqR-09-neopixel-jewel", codeFile: "neopixel-jewel.ino" },
-            { id: 10, folder: "10 Interfacing Photodiode", title: "Photodiode Light Sensor", subtitle: "Light intensity detection", description: "Detect ambient light intensity using photodiode and display readings.", components: ["Arduino UNO", "Photodiode", "10kΩ Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3GkxM6zvSBz-10-photodiode", codeFile: "photo-diode.ino" },
-            { id: 11, folder: "11 Temperature sensor", title: "Temperature Sensor TMP36", subtitle: "Temperature measurement", description: "Read temperature using TMP36 analog sensor and display in Celsius.", components: ["Arduino UNO", "TMP36 Sensor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/4gHwXw3OxL8-11-temperature-sensor-tmp36", codeFile: "temperature_sensor.ino" },
-            { id: 12, folder: "12 Interfacing PIR sensor", title: "PIR Motion Sensor", subtitle: "Motion detection & security", description: "Detect motion using PIR sensor for security and automation projects.", components: ["Arduino UNO", "PIR Sensor", "LED", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/1eGkYvPW0Qy-12-pir-sensor", codeFile: "Arduino C++ code.ino" },
-            { id: 13, folder: "13 Interfacing a 4×4 Matrix Keypad", title: "4×4 Matrix Keypad", subtitle: "Numeric input interface", description: "Read button presses from 4×4 matrix keypad for user input.", components: ["Arduino UNO", "4×4 Keypad", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/58yBmZZhzFa-13-4x4-matrix-keypad", codeFile: "keypad-4x4.ino" },
-            { id: 14, folder: "14 Attiny tmp36 rgb", title: "ATtiny RGB Temperature", subtitle: "Color-based temperature display", description: "Display temperature using RGB LED colors with ATtiny85 microcontroller.", components: ["ATtiny85", "TMP36", "RGB LED", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3vN4SuqB7EZ-14-attiny-rgb-temperature", codeFile: "attiny85-tmp36-5color.ino" },
-            { id: 15, folder: "15 Interfacing 16-2 Lcd display", title: "16×2 LCD Display", subtitle: "Text display interface", description: "Display text and data on 16×2 character LCD using I2C or parallel interface.", components: ["Arduino UNO", "16×2 LCD", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/kNAj5Qf0TGZ-15-16x2-lcd-display", codeFile: "attiny85-lcd-clock.ino" },
-            { id: 16, folder: "16 Dice with 7 segment display", title: "Digital Dice 7-Segment", subtitle: "Random number display", description: "Simulate dice roll with random numbers displayed on 7-segment display.", components: ["Arduino UNO", "7-Segment Display", "Button", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/bXMhbDT3nKI-16-digital-dice-7-segment", codeFile: "0 to 6 then 6-1.ino" },
-            { id: 17, folder: "17 Solar system Tracker", title: "Solar System Tracker", subtitle: "Planetary position display", description: "Track and display planetary positions using servo motors and LEDs.", components: ["Arduino UNO", "2× Servo", "LEDs", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/dxEPkwYQp3s-17-solar-system-tracker", codeFile: "Arduino C++ code.ino" },
-            { id: 18, folder: "18 Piano with Uno", title: "Arduino Piano", subtitle: "Musical instrument interface", description: "Create a playable piano using buttons and piezo buzzer for musical notes.", components: ["Arduino UNO", "8× Buttons", "Piezo Buzzer", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/7UoDkZ9JlXH-18-arduino-piano", codeFile: "Push serially.ino" },
-            { id: 19, folder: "19 tmp36 with 16-2 LCD display temperature", title: "LCD Temperature Display", subtitle: "Real-time temp monitoring", description: "Display real-time temperature readings from TMP36 on 16×2 LCD.", components: ["Arduino UNO", "16×2 LCD", "TMP36", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/lR0aFxnWqBe-19-lcd-temperature", codeFile: "19 tmp36 with 16-2 LCD display temperature.ino" },
-            { id: 20, folder: "20 Light intensity Measurement using LDR sensor", title: "Light Intensity Meter", subtitle: "LDR-based measurement", description: "Measure light intensity using LDR sensor and display on serial monitor.", components: ["Arduino UNO", "LDR", "10kΩ Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/gW9xPZnU8Yf-20-light-intensity-meter", codeFile: "Arduino C++ code.ino" },
-            { id: 21, folder: "21 Smart Parking", title: "Smart Parking System", subtitle: "Automated space detection", description: "Detect available parking spaces using ultrasonic sensors and servo gate.", components: ["Arduino UNO", "Ultrasonic Sensor", "Servo Motor", "LEDs", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/cC7VqAKJWKB-21-smart-parking-system", codeFile: "Arduino C++ code.ino" },
-            { id: 22, folder: "22 Digital Potentiometer", title: "Digital Potentiometer", subtitle: "Electronic resistance control", description: "Control digital potentiometer IC using Arduino for programmable resistance.", components: ["Arduino UNO", "Digital Pot IC", "LED", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/fEw8CwxqHnY-22-digital-potentiometer", codeFile: "Arduino C++ code.ino" },
-            { id: 23, folder: "23 Digital Voltmeter with ATtiny85 & 3-Digit 7-Segment Display", title: "Digital Voltmeter (ATtiny85)", subtitle: "3-digit 7-segment display", description: "Measure and display voltage on 3-digit 7-segment display using ATtiny85.", components: ["ATtiny85", "3× 7-Segment", "Voltage Divider", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/lmE6yvlRuXX-23-digital-voltmeter-attiny85", codeFile: "Arduino C++ code.ino" }
+            { id: 1, category: "led", folder: "01 LED Pattern", title: "LED Pattern Control", subtitle: "Control LED blinking patterns using potentiometer", description: "Control the blinking pattern of 5 LEDs using a potentiometer based on analog voltage levels.", components: ["Arduino UNO", "5× LED", "5× 220Ω Resistor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/c3b3O8IGfQV-01-led-pattern", codeFile: "Led-pattern.ino" },
+            { id: 2, category: "led", folder: "02 LED Flowing Blinking", title: "LED Flowing Blinking", subtitle: "Sequential LED animation pattern", description: "Create a flowing water effect with 6 LEDs blinking in sequence from left to right.", components: ["Arduino UNO", "6× LED", "6× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3IvnAvNfJN5-02-led-flowing-blinking", codeFile: "LED.blinking.ino" },
+            { id: 3, category: "led", folder: "03 Breathing a LED", title: "Breathing LED Effect", subtitle: "PWM-based smooth brightness control", description: "Simulate breathing effect with LED using PWM to smoothly fade in and out.", components: ["Arduino UNO", "1× LED", "1× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/aZYQ0wdjqaU-03-breathing-led", codeFile: "LED Breathing.ino" },
+            { id: 4, category: "led", folder: "04 Controlling LED brightness with AT-TINY85", title: "ATtiny85 LED Brightness", subtitle: "Compact microcontroller LED control", description: "Control LED brightness using ATtiny85 microcontroller with potentiometer input.", components: ["ATtiny85", "1× LED", "1× 220Ω Resistor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/4Q3ZPluGxLN-04-attiny85-led-brightness-control", codeFile: "ATTINY85 Brightness.ino" },
+            { id: 5, category: "led", folder: "05 RGB LED Control with PWM", title: "RGB LED Control", subtitle: "Multi-color mixing with PWM", description: "Control RGB LED colors by mixing Red, Green, and Blue using PWM signals.", components: ["Arduino UNO", "1× RGB LED", "3× 220Ω Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/0gkWZ1Qp8fK-05-rgb-led", codeFile: "rgb-pwm.ino" },
+            { id: 6, category: "sensors", folder: "06. Interfacing servo motor with arduino", title: "Servo Motor Interface", subtitle: "Control servo position and angle", description: "Interface a servo motor with Arduino to control angular position using potentiometer.", components: ["Arduino UNO", "Servo Motor", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/fYUNmXNwfKn-06-servo-motor", codeFile: "servo-control.ino" },
+            { id: 7, category: "sensors", folder: "07 Interfacing an ultrasonic sensor with arduino", title: "Ultrasonic Distance Sensor", subtitle: "Distance measurement system", description: "Measure distance using HC-SR04 ultrasonic sensor and display on serial monitor.", components: ["Arduino UNO", "HC-SR04 Sensor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/7vYiNJW0afn-07-ultrasonic-distance-sensor", codeFile: "ultrasonic-distance.ino" },
+            { id: 8, category: "sensors", folder: "08 Interfacing Neopixel strip 4", title: "Neopixel LED Strip", subtitle: "Addressable RGB animations", description: "Control WS2812B Neopixel LED strip with colorful animations and patterns.", components: ["Arduino UNO", "Neopixel Strip", "External Power", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/c5hDIZ5QHJG-08-neopixel-led-strip", codeFile: "neopixel-strip.ino" },
+            { id: 9, category: "sensors", folder: "09 Interfacing Neopixel jewel", title: "Neopixel Jewel", subtitle: "Circular LED array patterns", description: "Create stunning patterns with 7-LED Neopixel Jewel in circular arrangement.", components: ["Arduino UNO", "Neopixel Jewel", "External Power", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/l4rFT88kcqR-09-neopixel-jewel", codeFile: "neopixel-jewel.ino" },
+            { id: 10, category: "sensors", folder: "10 Interfacing Photodiode", title: "Photodiode Light Sensor", subtitle: "Light intensity detection", description: "Detect ambient light intensity using photodiode and display readings.", components: ["Arduino UNO", "Photodiode", "10kΩ Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3GkxM6zvSBz-10-photodiode", codeFile: "photo-diode.ino" },
+            { id: 11, category: "sensors", folder: "11 Temperature sensor", title: "Temperature Sensor TMP36", subtitle: "Temperature measurement", description: "Read temperature using TMP36 analog sensor and display in Celsius.", components: ["Arduino UNO", "TMP36 Sensor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/4gHwXw3OxL8-11-temperature-sensor-tmp36", codeFile: "temperature_sensor.ino" },
+            { id: 12, category: "sensors", folder: "12 Interfacing PIR sensor", title: "PIR Motion Sensor", subtitle: "Motion detection & security", description: "Detect motion using PIR sensor for security and automation projects.", components: ["Arduino UNO", "PIR Sensor", "LED", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/1eGkYvPW0Qy-12-pir-sensor", codeFile: "Arduino C++ code.ino" },
+            { id: 13, category: "display", folder: "13 Interfacing a 4×4 Matrix Keypad", title: "4×4 Matrix Keypad", subtitle: "Numeric input interface", description: "Read button presses from 4×4 matrix keypad for user input.", components: ["Arduino UNO", "4×4 Keypad", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/58yBmZZhzFa-13-4x4-matrix-keypad", codeFile: "keypad-4x4.ino" },
+            { id: 14, category: "advanced", folder: "14 Attiny tmp36 rgb", title: "ATtiny RGB Temperature", subtitle: "Color-based temperature display", description: "Display temperature using RGB LED colors with ATtiny85 microcontroller.", components: ["ATtiny85", "TMP36", "RGB LED", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/3vN4SuqB7EZ-14-attiny-rgb-temperature", codeFile: "attiny85-tmp36-5color.ino" },
+            { id: 15, category: "display", folder: "15 Interfacing 16-2 Lcd display", title: "16×2 LCD Display", subtitle: "Text display interface", description: "Display text and data on 16×2 character LCD using I2C or parallel interface.", components: ["Arduino UNO", "16×2 LCD", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/kNAj5Qf0TGZ-15-16x2-lcd-display", codeFile: "attiny85-lcd-clock.ino" },
+            { id: 16, category: "display", folder: "16 Dice with 7 segment display", title: "Digital Dice 7-Segment", subtitle: "Random number display", description: "Simulate dice roll with random numbers displayed on 7-segment display.", components: ["Arduino UNO", "7-Segment Display", "Button", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/bXMhbDT3nKI-16-digital-dice-7-segment", codeFile: "0 to 6 then 6-1.ino" },
+            { id: 17, category: "advanced", folder: "17 Solar system Tracker", title: "Solar System Tracker", subtitle: "Planetary position display", description: "Track and display planetary positions using servo motors and LEDs.", components: ["Arduino UNO", "2× Servo", "LEDs", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/dxEPkwYQp3s-17-solar-system-tracker", codeFile: "Arduino C++ code.ino" },
+            { id: 18, category: "display", folder: "18 Piano with Uno", title: "Arduino Piano", subtitle: "Musical instrument interface", description: "Create a playable piano using buttons and piezo buzzer for musical notes.", components: ["Arduino UNO", "8× Buttons", "Piezo Buzzer", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/7UoDkZ9JlXH-18-arduino-piano", codeFile: "Push serially.ino" },
+            { id: 19, category: "advanced", folder: "19 tmp36 with 16-2 LCD display temperature", title: "LCD Temperature Display", subtitle: "Real-time temp monitoring", description: "Display real-time temperature readings from TMP36 on 16×2 LCD.", components: ["Arduino UNO", "16×2 LCD", "TMP36", "Potentiometer", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/lR0aFxnWqBe-19-lcd-temperature", codeFile: "19 tmp36 with 16-2 LCD display temperature.ino" },
+            { id: 20, category: "advanced", folder: "20 Light intensity Measurement using LDR sensor", title: "Light Intensity Meter", subtitle: "LDR-based measurement", description: "Measure light intensity using LDR sensor and display on serial monitor.", components: ["Arduino UNO", "LDR", "10kΩ Resistor", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/gW9xPZnU8Yf-20-light-intensity-meter", codeFile: "Arduino C++ code.ino" },
+            { id: 21, category: "advanced", folder: "21 Smart Parking", title: "Smart Parking System", subtitle: "Automated space detection", description: "Detect available parking spaces using ultrasonic sensors and servo gate.", components: ["Arduino UNO", "Ultrasonic Sensor", "Servo Motor", "LEDs", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/cC7VqAKJWKB-21-smart-parking-system", codeFile: "Arduino C++ code.ino" },
+            { id: 22, category: "advanced", folder: "22 Digital Potentiometer", title: "Digital Potentiometer", subtitle: "Electronic resistance control", description: "Control digital potentiometer IC using Arduino for programmable resistance.", components: ["Arduino UNO", "Digital Pot IC", "LED", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/fEw8CwxqHnY-22-digital-potentiometer", codeFile: "Arduino C++ code.ino" },
+            { id: 23, category: "advanced", folder: "23 Digital Voltmeter with ATtiny85 & 3-Digit 7-Segment Display", title: "Digital Voltmeter (ATtiny85)", subtitle: "3-digit 7-segment display", description: "Measure and display voltage on 3-digit 7-segment display using ATtiny85.", components: ["ATtiny85", "3× 7-Segment", "Voltage Divider", "Resistors", "Breadboard"], tinkercad: "https://www.tinkercad.com/things/lmE6yvlRuXX-23-digital-voltmeter-attiny85", codeFile: "Arduino C++ code.ino" }
         ];
 
-        // Get current project
+        // Get current project from URL (support ?id=, ?project=, and ?category=)
         const urlParams = new URLSearchParams(window.location.search);
-        const projectId = parseInt(urlParams.get('id')) || 1;
-        const currentProject = projects.find(p => p.id === projectId) || projects[0];
+        let currentProject;
+        
+        // Try category-based parameter (from category cards)
+        const categoryFilter = urlParams.get('category');
+        if (categoryFilter) {
+            const categoryProjects = projects.filter(p => p.category === categoryFilter);
+            if (categoryProjects.length > 0) {
+                currentProject = categoryProjects[0]; // Select first project in category
+                console.log('🎯 Category filter:', categoryFilter, '→ Found', categoryProjects.length, 'projects');
+            }
+        }
+        
+        // Try folder-based parameter (newer method)
+        if (!currentProject) {
+            const projectFolder = urlParams.get('project');
+            if (projectFolder) {
+                currentProject = projects.find(p => p.folder === decodeURIComponent(projectFolder));
+                console.log('🔍 Finding by folder:', projectFolder);
+            }
+        }
+        
+        // Fallback to ID-based parameter (legacy support)
+        if (!currentProject) {
+            const projectId = parseInt(urlParams.get('id')) || 1;
+            currentProject = projects.find(p => p.id === projectId);
+            console.log('🔍 Finding by ID:', projectId);
+        }
+        
+        // Final fallback to first project
+        if (!currentProject) {
+            currentProject = projects[0];
+            console.warn('⚠️ No valid project found, defaulting to first');
+        }
+        
+        console.log('✅ Loaded project:', currentProject.title, '(ID:', currentProject.id + ')');
 
         // Load project data
         function loadProject() {
@@ -1704,11 +1931,12 @@
             tryNextImage();
         }
 
-        // Update navigation arrows
+        // Update navigation arrows (bottom prev/next)
         function updateNavigation() {
             const navArrows = document.getElementById('navArrows');
-            const prevProject = projects.find(p => p.id === projectId - 1);
-            const nextProject = projects.find(p => p.id === projectId + 1);
+            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
+            const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
+            const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
             
             let html = '';
             
@@ -1743,9 +1971,10 @@
             }
             
             navArrows.innerHTML = html;
+            console.log('🧭 Navigation updated: Prev =', prevProject?.title, '| Next =', nextProject?.title);
         }
 
-        // Keyboard Navigation
+        // Keyboard Navigation Setup
         function setupKeyboardNavigation() {
             document.addEventListener('keydown', (e) => {
                 // Ignore if user is typing in input/textarea
@@ -1753,31 +1982,42 @@
                     return;
                 }
                 
-                const prevProject = projects.find(p => p.id === projectId - 1);
-                const nextProject = projects.find(p => p.id === projectId + 1);
+                // Don't trigger in fullscreen mode
+                const docSection = document.getElementById('documentationSection');
+                if (docSection && docSection.classList.contains('fullscreen')) {
+                    return;
+                }
+                
+                const currentIndex = projects.findIndex(p => p.id === currentProject.id);
+                const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
+                const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
                 
                 // Left Arrow or 'P' key - Previous project
                 if ((e.key === 'ArrowLeft' || e.key === 'p' || e.key === 'P') && prevProject) {
                     e.preventDefault();
+                    console.log('⬅️ Navigating to previous:', prevProject.title);
                     window.location.href = `?id=${prevProject.id}`;
                 }
                 
                 // Right Arrow or 'N' key - Next project
                 if ((e.key === 'ArrowRight' || e.key === 'n' || e.key === 'N') && nextProject) {
                     e.preventDefault();
+                    console.log('➡️ Navigating to next:', nextProject.title);
                     window.location.href = `?id=${nextProject.id}`;
                 }
                 
                 // Home key - First project
                 if (e.key === 'Home') {
                     e.preventDefault();
+                    console.log('🏠 Navigating to first project');
                     window.location.href = `?id=1`;
                 }
                 
                 // End key - Last project
                 if (e.key === 'End') {
                     e.preventDefault();
-                    window.location.href = `?id=23`;
+                    console.log('🏁 Navigating to last project');
+                    window.location.href = `?id=${projects.length}`;
                 }
                 
                 // Show keyboard shortcuts hint (? key)
@@ -1791,6 +2031,10 @@
                 showKeyboardHint();
             }, 2000);
         }
+            setTimeout(() => {
+                showKeyboardHint();
+            }, 2000);
+        
 
         // Show keyboard shortcuts modal
         function showKeyboardShortcuts() {
@@ -2604,10 +2848,13 @@
 
         // Event Listeners
         function setupEventListeners() {
-            // Tab switching
+            // Tab switching with TOC regeneration
             document.querySelectorAll('.doc-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabName = tab.dataset.tab;
+                    
+                    // Skip if it's a PDF download button
+                    if (!tabName) return;
                     
                     // Update active tab
                     document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
@@ -2618,6 +2865,12 @@
                     const targetTab = document.getElementById(tabName + 'Tab');
                     if (targetTab) {
                         targetTab.classList.add('active');
+                        
+                        // Regenerate TOC after tab switch
+                        setTimeout(() => {
+                            generateTOC();
+                            console.log('📋 TOC regenerated for', tabName, 'tab');
+                        }, 100);
                     }
                 });
             });
@@ -2691,39 +2944,94 @@
                 });
             });
 
-            // Fullscreen toggle
+            // Fullscreen toggle for README and Explanation tabs only
             const fullscreenBtn = document.getElementById('fullscreenBtn');
             const docSection = document.getElementById('documentationSection');
             
             if (fullscreenBtn && docSection) {
-                fullscreenBtn.addEventListener('click', () => {
-                    docSection.classList.toggle('fullscreen');
+                fullscreenBtn.addEventListener('click', async () => {
+                    // Only allow fullscreen for README and Explanation tabs
+                    const activeTab = document.querySelector('.doc-tab.active');
+                    const activeTabName = activeTab?.dataset.tab;
                     
-                    const isFullscreen = docSection.classList.contains('fullscreen');
-                    const icon = fullscreenBtn.querySelector('i');
-                    const text = fullscreenBtn.querySelector('span');
+                    if (activeTabName !== 'readme' && activeTabName !== 'explanation') {
+                        alert('Fullscreen is only available for README and Explanation tabs');
+                        console.log('⚠️ Fullscreen not allowed for', activeTabName, 'tab');
+                        return;
+                    }
                     
-                    if (isFullscreen) {
-                        icon.className = 'fas fa-compress';
-                        text.textContent = 'Exit Fullscreen';
-                        fullscreenBtn.title = 'Exit Fullscreen';
-                    } else {
-                        icon.className = 'fas fa-expand';
-                        text.textContent = 'Fullscreen';
-                        fullscreenBtn.title = 'Toggle Fullscreen';
+                    try {
+                        // Request true fullscreen using Fullscreen API
+                        if (!document.fullscreenElement) {
+                            // Enter fullscreen
+                            await docSection.requestFullscreen();
+                            
+                            const icon = fullscreenBtn.querySelector('i');
+                            const text = fullscreenBtn.querySelector('span');
+                            icon.className = 'fas fa-compress';
+                            text.textContent = 'Exit Fullscreen';
+                            fullscreenBtn.title = 'Exit Fullscreen (Esc)';
+                            
+                            console.log('📺 True fullscreen activated');
+                        } else {
+                            // Exit fullscreen
+                            await document.exitFullscreen();
+                            
+                            const icon = fullscreenBtn.querySelector('i');
+                            const text = fullscreenBtn.querySelector('span');
+                            icon.className = 'fas fa-expand';
+                            text.textContent = 'Fullscreen';
+                            fullscreenBtn.title = 'Toggle Fullscreen';
+                            
+                            console.log('📺 Fullscreen exited');
+                        }
+                    } catch (error) {
+                        console.error('❌ Fullscreen request failed:', error);
+                        // Fallback to CSS fullscreen if API not supported
+                        docSection.classList.toggle('fullscreen-fallback');
                     }
                 });
                 
-                // ESC key to exit fullscreen
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && docSection.classList.contains('fullscreen')) {
-                        docSection.classList.remove('fullscreen');
+                // ESC key to exit fullscreen (browser handles this automatically)
+                document.addEventListener('fullscreenchange', () => {
+                    if (!document.fullscreenElement) {
+                        // User pressed ESC or fullscreen was exited
                         const icon = fullscreenBtn.querySelector('i');
                         const text = fullscreenBtn.querySelector('span');
-                        icon.className = 'fas fa-expand';
-                        text.textContent = 'Fullscreen';
-                        fullscreenBtn.title = 'Toggle Fullscreen';
+                        if (icon) {
+                            icon.className = 'fas fa-expand';
+                            text.textContent = 'Fullscreen';
+                            fullscreenBtn.title = 'Toggle Fullscreen';
+                        }
+                        console.log('📺 Fullscreen exited via ESC');
                     }
+                });
+                
+                // Also check if fullscreen is possible when tab changes
+                document.querySelectorAll('.doc-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.dataset.tab;
+                        
+                        if (tabName === 'code') {
+                            // Disable fullscreen button for Code tab
+                            fullscreenBtn.disabled = true;
+                            fullscreenBtn.style.opacity = '0.5';
+                            fullscreenBtn.style.cursor = 'not-allowed';
+                            fullscreenBtn.title = 'Fullscreen only available for README & Explanation';
+                        } else if (tabName === 'readme' || tabName === 'explanation') {
+                            // Enable fullscreen button for README/Explanation
+                            fullscreenBtn.disabled = false;
+                            fullscreenBtn.style.opacity = '1';
+                            fullscreenBtn.style.cursor = 'pointer';
+                            fullscreenBtn.title = 'Toggle Fullscreen';
+                            
+                            // Exit fullscreen if currently in fullscreen and switching to code
+                        } else {
+                            fullscreenBtn.disabled = true;
+                            fullscreenBtn.style.opacity = '0.5';
+                            fullscreenBtn.style.cursor = 'not-allowed';
+                        }
+                    });
                 });
             }
         }
@@ -2732,49 +3040,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadProject();
             setupEventListeners();
-            setupKeyboardNavigation();
+            updateNavigationButtons(); // Update navbar buttons
         });
-
-        // Keyboard Navigation Setup
-        function setupKeyboardNavigation() {
-            const prevBtn = document.getElementById('prevProjectBtn');
-            const nextBtn = document.getElementById('nextProjectBtn');
-            
-            // Update button states
-            updateNavigationButtons();
-            
-            // Previous button click
-            if (prevBtn) {
-                prevBtn.addEventListener('click', () => navigateToProject('prev'));
-            }
-            
-            // Next button click
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => navigateToProject('next'));
-            }
-            
-            // Keyboard controls
-            document.addEventListener('keydown', (e) => {
-                // Don't trigger if typing in input fields
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
-                
-                // Don't trigger in fullscreen mode
-                const docSection = document.getElementById('documentationSection');
-                if (docSection && docSection.classList.contains('fullscreen')) {
-                    return;
-                }
-                
-                if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    navigateToProject('prev');
-                } else if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    navigateToProject('next');
-                }
-            });
-        }
 
         function updateNavigationButtons() {
             const prevBtn = document.getElementById('prevProjectBtn');
@@ -2784,7 +3051,7 @@
             
             if (!currentProject) return;
             
-            const currentIndex = projects.findIndex(p => p.folder === currentProject.folder);
+            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
             
             // Update counter
             if (currentNumSpan) currentNumSpan.textContent = currentIndex + 1;
@@ -2793,15 +3060,29 @@
             // Update button states
             if (prevBtn) {
                 prevBtn.disabled = currentIndex === 0;
+                prevBtn.onclick = () => {
+                    if (currentIndex > 0) {
+                        const prevProject = projects[currentIndex - 1];
+                        console.log('⬅️ Button: Navigating to', prevProject.title);
+                        window.location.href = `?id=${prevProject.id}`;
+                    }
+                };
             }
             
             if (nextBtn) {
                 nextBtn.disabled = currentIndex === projects.length - 1;
+                nextBtn.onclick = () => {
+                    if (currentIndex < projects.length - 1) {
+                        const nextProject = projects[currentIndex + 1];
+                        console.log('➡️ Button: Navigating to', nextProject.title);
+                        window.location.href = `?id=${nextProject.id}`;
+                    }
+                };
             }
         }
 
         function navigateToProject(direction) {
-            const currentIndex = projects.findIndex(p => p.folder === currentProject.folder);
+            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
             let newIndex;
             
             if (direction === 'prev') {
@@ -2814,9 +3095,9 @@
             
             const newProject = projects[newIndex];
             
-            // Update URL and reload
-            const newUrl = `arduino-project-viewer.html?project=${encodeURIComponent(newProject.folder)}`;
-            window.location.href = newUrl;
+            // Use ID-based URL for consistency
+            console.log('🔄 Navigating to:', newProject.title);
+            window.location.href = `?id=${newProject.id}`;
         }
 
         /* ============================================
@@ -2826,18 +3107,19 @@
             const tocNav = document.getElementById('tocNav');
             if (!tocNav) return;
 
-            // Get markdown content containers
-            const readmeContent = document.getElementById('readmeContent');
-            const explanationContent = document.getElementById('explanationContent');
+            // Find which tab is currently active
+            const activeTabContent = document.querySelector('.doc-content.active');
             
-            // Determine which tab is active
-            const readmeTab = document.getElementById('readmeTab');
-            const activeContent = readmeTab?.classList.contains('active') 
-                ? readmeContent 
-                : explanationContent;
+            if (!activeTabContent) {
+                console.warn('⚠️ No active tab content found for TOC');
+                return;
+            }
+
+            // Get markdown content from active tab
+            const activeContent = activeTabContent.querySelector('.markdown-content');
             
             if (!activeContent) {
-                console.warn('⚠️ No active markdown content found for TOC');
+                console.warn('⚠️ No markdown content found in active tab');
                 return;
             }
 
@@ -2845,7 +3127,8 @@
             const headings = activeContent.querySelectorAll('h1, h2, h3, h4');
             
             if (headings.length === 0) {
-                tocNav.innerHTML = '<p style="color: var(--text-secondary); padding: 10px; text-align: center;">No headings found</p>';
+                tocNav.innerHTML = '<p style="color: var(--text-secondary); padding: 10px; text-align: center; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> No headings found</p>';
+                console.log('ℹ️ No headings found in current tab');
                 return;
             }
 
@@ -2861,14 +3144,10 @@
                     heading.id = id;
                 }
                 
-                // Calculate indent based on heading level
-                const indent = (parseInt(level.charAt(1)) - 1) * 15;
-                
                 tocHTML += `
                     <a href="#${id}" 
                        class="toc-link toc-${level}" 
-                       data-target="${id}"
-                       style="padding-left: ${20 + indent}px;">
+                       data-target="${id}">
                         ${text}
                     </a>
                 `;
@@ -2884,15 +3163,19 @@
                     const targetElement = document.getElementById(targetId);
                     
                     if (targetElement) {
+                        // Scroll to element
                         targetElement.scrollIntoView({ 
                             behavior: 'smooth', 
-                            block: 'start' 
+                            block: 'start',
+                            inline: 'nearest'
                         });
                         
                         // Close sidebar on mobile after clicking
                         if (window.innerWidth <= 768) {
                             document.getElementById('tocSidebar')?.classList.remove('active');
                         }
+                        
+                        console.log('📍 Scrolled to:', text);
                     }
                 });
             });
@@ -2978,22 +3261,110 @@
             progressBar.style.width = Math.min(scrollPercentage, 100) + '%';
         }
 
+        /* ============================================
+           ZOOM CONTROLS FOR DOCUMENTATION
+           ============================================ */
+        let zoomLevel = 100;
+        const zoomMin = 60;
+        const zoomMax = 150;
+        const zoomStep = 10;
+
+        // Load saved zoom level from localStorage
+        const savedZoom = localStorage.getItem('docZoomLevel');
+        if (savedZoom) {
+            zoomLevel = parseInt(savedZoom);
+        }
+
+        function updateZoom(newLevel) {
+            zoomLevel = Math.max(zoomMin, Math.min(zoomMax, newLevel));
+            
+            // Apply zoom to all markdown content
+            document.querySelectorAll('.markdown-content').forEach(content => {
+                content.style.fontSize = `${zoomLevel}%`;
+            });
+
+            // Update display
+            const zoomLevelDisplay = document.getElementById('zoomLevel');
+            if (zoomLevelDisplay) {
+                zoomLevelDisplay.textContent = `${zoomLevel}%`;
+            }
+
+            // Update button states
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            
+            if (zoomInBtn) {
+                zoomInBtn.disabled = (zoomLevel >= zoomMax);
+                zoomInBtn.style.opacity = (zoomLevel >= zoomMax) ? '0.5' : '1';
+                zoomInBtn.style.cursor = (zoomLevel >= zoomMax) ? 'not-allowed' : 'pointer';
+            }
+            
+            if (zoomOutBtn) {
+                zoomOutBtn.disabled = (zoomLevel <= zoomMin);
+                zoomOutBtn.style.opacity = (zoomLevel <= zoomMin) ? '0.5' : '1';
+                zoomOutBtn.style.cursor = (zoomLevel <= zoomMin) ? 'not-allowed' : 'pointer';
+            }
+
+            // Save to localStorage
+            localStorage.setItem('docZoomLevel', zoomLevel.toString());
+
+            console.log(`🔍 Zoom level: ${zoomLevel}%`);
+        }
+
+        // Initialize zoom level on page load
+        updateZoom(zoomLevel);
+
+        // Zoom In Button
+        document.getElementById('zoomInBtn')?.addEventListener('click', () => {
+            updateZoom(zoomLevel + zoomStep);
+        });
+
+        // Zoom Out Button
+        document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
+            updateZoom(zoomLevel - zoomStep);
+        });
+
+        // Reset Zoom Button
+        document.getElementById('zoomResetBtn')?.addEventListener('click', () => {
+            updateZoom(100);
+        });
+
+        // Keyboard shortcuts for zoom
+        document.addEventListener('keydown', (e) => {
+            // Check if Ctrl (or Cmd on Mac) is pressed
+            if (e.ctrlKey || e.metaKey) {
+                // Don't trigger when typing in input/textarea
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                // Zoom In: Ctrl + Plus or Ctrl + =
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    updateZoom(zoomLevel + zoomStep);
+                }
+                
+                // Zoom Out: Ctrl + Minus or Ctrl + -
+                if (e.key === '-' || e.key === '_') {
+                    e.preventDefault();
+                    updateZoom(zoomLevel - zoomStep);
+                }
+                
+                // Reset Zoom: Ctrl + 0
+                if (e.key === '0') {
+                    e.preventDefault();
+                    updateZoom(100);
+                }
+            }
+        });
+
         // Scroll event listener for TOC and Progress Bar
         window.addEventListener('scroll', () => {
             updateProgressBar();
             updateActiveTOC();
         });
 
-        // Re-generate TOC when switching tabs
-        document.getElementById('readmeTab')?.addEventListener('click', () => {
-            setTimeout(generateTOC, 300); // Wait for content to load
-        });
-
-        document.getElementById('explanationTab')?.addEventListener('click', () => {
-            setTimeout(generateTOC, 300);
-        });
-
-        // Initialize Progress Bar
+        // Initialize Progress Bar on page load
         updateProgressBar();
     </script>
 </body>
