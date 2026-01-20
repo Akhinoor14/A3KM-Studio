@@ -607,6 +607,11 @@
             <i class="fas fa-chevron-left"></i>
             Previous
           </button>
+          <div class="keyboard-hint-badge" style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); display: inline-flex; align-items: center; gap: 6px; margin: 0 12px;">
+            <i class="fas fa-keyboard"></i>
+            <kbd style="background: rgba(204, 0, 0, 0.3); border: 1px solid rgba(204, 0, 0, 0.5); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.7rem; color: #CC0000;">←</kbd>
+            <kbd style="background: rgba(204, 0, 0, 0.3); border: 1px solid rgba(204, 0, 0, 0.5); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.7rem; color: #CC0000;">→</kbd>
+          </div>
           <button class="nav-btn" id="nextBtn" onclick="playNextVideo()">
             Next
             <i class="fas fa-chevron-right"></i>
@@ -727,6 +732,16 @@
       
       // Update stats
       updateStats();
+
+      // Check if video ID is in URL and auto-play it
+      const urlParams = new URLSearchParams(window.location.search);
+      const videoIdFromUrl = urlParams.get('id');
+      if (videoIdFromUrl) {
+        const videoIndex = allVideos.findIndex(v => v.videoId === videoIdFromUrl);
+        if (videoIndex !== -1) {
+          playVideo(videoIndex);
+        }
+      }
 
       console.log(`📺 Loaded ${allVideos.length} videos`);
     }
@@ -1005,15 +1020,7 @@
         }
       }
       
-      // Arrow Left - Previous
-      if (e.key === 'ArrowLeft' && !document.getElementById('prevBtn').disabled) {
-        playPreviousVideo();
-      }
-      
-      // Arrow Right - Next
-      if (e.key === 'ArrowRight' && !document.getElementById('nextBtn').disabled) {
-        playNextVideo();
-      }
+      // Arrow keys for timeline seeking (YouTube default - no custom handlers)
     });
 
     // Initialize

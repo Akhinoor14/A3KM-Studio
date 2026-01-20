@@ -366,7 +366,7 @@
     }
 
     elements.relatedGrid.innerHTML = related.map(post => `
-      <a href="post-viewer.html?id=${post.id}" class="related-card">
+      <a href="post-reader.html?id=${post.id}" class="related-card">
         <div class="related-cover" style="background-image: url('${post.coverImage}')"></div>
         <h4>${escapeHTML(post.title)}</h4>
         <p>${escapeHTML(post.summary)}</p>
@@ -432,7 +432,7 @@
 
     // Setup previous post
     if (prevPost && prevLink && prevTitle && prevExcerpt) {
-      prevLink.href = `post-viewer.html?id=${prevPost.id}`;
+      prevLink.href = `post-reader.html?id=${prevPost.id}`;
       prevTitle.textContent = prevPost.title;
       prevExcerpt.textContent = prevPost.description || extractExcerpt(prevPost);
       prevLink.style.display = 'flex';
@@ -442,7 +442,7 @@
 
     // Setup next post
     if (nextPost && nextLink && nextTitle && nextExcerpt) {
-      nextLink.href = `post-viewer.html?id=${nextPost.id}`;
+      nextLink.href = `post-reader.html?id=${nextPost.id}`;
       nextTitle.textContent = nextPost.title;
       nextExcerpt.textContent = nextPost.description || extractExcerpt(nextPost);
       nextLink.style.display = 'flex';

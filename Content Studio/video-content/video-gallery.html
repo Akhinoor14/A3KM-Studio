@@ -215,21 +215,21 @@
         .videos-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px 60px;
+            padding: 0 15px 40px;
         }
 
         /* Category Section */
         .category-section {
-            margin-bottom: 50px;
+            margin-bottom: 25px;
         }
 
         .category-header {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid var(--youtube-red);
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--youtube-red);
         }
 
         .category-icon {
@@ -257,7 +257,7 @@
         .videos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
+            gap: 15px;
         }
 
         /* Video Card */
@@ -350,15 +350,15 @@
         }
 
         .video-info {
-            padding: 20px;
+            padding: 12px;
         }
 
         .video-title {
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: #fff;
-            margin-bottom: 10px;
-            line-height: 1.4;
+            margin-bottom: 8px;
+            line-height: 1.3;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             line-clamp: 2;
@@ -371,48 +371,32 @@
             justify-content: space-between;
             align-items: center;
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 0;
         }
 
         .video-date {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .video-views {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .video-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 12px;
+            display: none;
         }
 
         .video-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            display: none;
         }
 
         .tag {
-            background: rgba(255, 0, 0, 0.15);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            color: var(--youtube-red);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            display: none;
         }
 
         /* Empty State */
@@ -656,7 +640,11 @@
                     const tab = document.createElement('button');
                     tab.className = 'category-tab';
                     tab.dataset.category = categoryName;
-                    tab.innerHTML = `${categoryData.icon || '📹'} ${categoryData.name || categoryName}`;
+                    const icon = categoryData.icon || '📹';
+                    const iconHtml = icon.startsWith('fas ') || icon.startsWith('far ') || icon.startsWith('fab ') 
+                        ? `<i class="${icon}"></i>` 
+                        : icon;
+                    tab.innerHTML = `${iconHtml} ${categoryData.name || categoryName}`;
                     tab.addEventListener('click', () => filterByCategory(categoryName, tab));
                     tabsContainer.appendChild(tab);
                 }
@@ -716,12 +704,19 @@
             let html = '';
             for (const [category, videos] of Object.entries(grouped)) {
                 const categoryData = categories[category] || { name: category, icon: '📹', color: '#FF0000' };
+                // Ensure proper category name display
+                const displayName = categoryData.name ? categoryData.name : category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                const categoryIcon = categoryData.icon || '📹';
+                const categoryIconHtml = categoryIcon.startsWith('fas ') || categoryIcon.startsWith('far ') || categoryIcon.startsWith('fab ') 
+                    ? `<i class="${categoryIcon}"></i>` 
+                    : categoryIcon;
 
                 html += `
                     <section class="category-section">
                         <div class="category-header">
-                            <div class="category-icon">${categoryData.icon}</div>
-                            <h2 class="category-title">${categoryData.name || category}</h2>
+                            <div class="category-icon">${categoryIconHtml}</div>
+                            <h2 class="category-title">${displayName}</h2>
                             <span class="category-count">${videos.length} ${videos.length === 1 ? 'Video' : 'Videos'}</span>
                         </div>
                         <div class="videos-grid">
