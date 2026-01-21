@@ -13,8 +13,6 @@ const PRECACHE_URLS = [
     // Hub pages
     '/Content Studio/hub.html',
     '/Content Studio/hub-desktop.css',
-    '/Content Studio/hub-mobile.html',
-    '/Content Studio/hub-mobile.css',
     '/Content Studio/hub.js',
     '/Content Studio/hub-config.json',
     
