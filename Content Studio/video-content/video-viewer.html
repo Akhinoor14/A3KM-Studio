@@ -165,14 +165,14 @@
       pointer-events: auto;
     }
 
-    /* Custom Suggestions Overlay */
+    /* Suggestions Overlay */
     .suggestions-overlay {
       position: absolute;
       inset: 0;
       background: rgba(0, 0, 0, 0.95);
       display: none;
       flex-direction: column;
-      padding: 30px;
+      padding: 20px;
       z-index: 10;
       overflow-y: auto;
     }
@@ -185,11 +185,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     .suggestions-title {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--text-white);
     }
@@ -198,8 +198,8 @@
       background: rgba(204, 0, 0, 0.2);
       border: 1px solid var(--border-red);
       border-radius: 50%;
-      width: 35px;
-      height: 35px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -215,8 +215,8 @@
 
     .suggestions-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
     }
 
     .suggestion-card {
@@ -230,7 +230,7 @@
 
     .suggestion-card:hover {
       border-color: var(--primary-red);
-      transform: translateY(-5px);
+      transform: translateY(-3px);
       box-shadow: 0 5px 20px rgba(204, 0, 0, 0.3);
     }
 
@@ -257,21 +257,21 @@
       right: 5px;
       background: rgba(0, 0, 0, 0.9);
       color: #fff;
-      padding: 3px 6px;
-      border-radius: 4px;
+      padding: 2px 5px;
+      border-radius: 3px;
       font-size: 0.7rem;
       font-weight: 600;
     }
 
     .suggestion-info {
-      padding: 10px;
+      padding: 8px;
     }
 
     .suggestion-title {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-white);
-      line-height: 1.3;
+      line-height: 1.2;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
@@ -280,11 +280,10 @@
     }
 
     .suggestion-views {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-dim);
-      margin-top: 5px;
+      margin-top: 4px;
     }
-
     .video-placeholder {
       position: absolute;
       inset: 0;
@@ -712,10 +711,10 @@
         </div>
         <div id="ytPlayer"></div>
         
-        <!-- Custom Suggestions Overlay -->
+        <!-- Suggestions Overlay -->
         <div class="suggestions-overlay" id="suggestionsOverlay">
           <div class="suggestions-header">
-            <h3 class="suggestions-title">More Videos</h3>
+            <h3 class="suggestions-title">More from this category</h3>
             <button class="close-suggestions" onclick="closeSuggestions()">
               <i class="fas fa-times"></i>
             </button>
@@ -849,21 +848,35 @@
       }
     }
 
-    // Show Custom Suggestions
+    // Show Suggestions (same category only)
     function showSuggestions() {
       const overlay = document.getElementById('suggestionsOverlay');
       const grid = document.getElementById('suggestionsGrid');
       
-      // Get random suggestions (excluding current video)
-      const suggestions = allVideos
-        .filter(v => v.id !== currentVideoId)
+      if (!currentVideoId) return;
+      
+      // Find current video
+      const currentVideo = allVideos.find(v => v.id === currentVideoId);
+      if (!currentVideo) return;
+      
+      // Get suggestions from same category only
+      const sameCategoryVideos = allVideos.filter(v => 
+        v.categoryKey === currentVideo.categoryKey && v.id !== currentVideoId
+      );
+      
+      // Get random 3-4 videos
+      const suggestions = sameCategoryVideos
         .sort(() => Math.random() - 0.5)
-        .slice(0, 6);
+        .slice(0, 4);
+      
+      if (suggestions.length === 0) return;
       
       grid.innerHTML = suggestions.map(video => `
         <div class="suggestion-card" onclick="playSuggestedVideo('${video.id}')">
           <div class="suggestion-thumbnail">
-            <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" alt="${video.title}">
+            <img src="https://img.youtube.com/vi/${video.id}/maxresdefault.jpg" 
+                 alt="${video.title}"
+                 onerror="this.src='https://img.youtube.com/vi/${video.id}/hqdefault.jpg'">
             <div class="suggestion-duration">${video.duration}</div>
           </div>
           <div class="suggestion-info">
@@ -887,7 +900,6 @@
       closeSuggestions();
       playVideo(videoId);
     }
-
     // Load Videos
     function loadVideos() {
       const categories = videosData.categories['video-blog'];
