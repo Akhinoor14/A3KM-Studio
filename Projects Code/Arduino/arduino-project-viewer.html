@@ -705,7 +705,7 @@
             opacity: 0.9;
         }
 
-        /* Sepia Mode */
+        /* Sepia Mode - Warm Reading Experience */
         body.sepia-mode,
         body.sepia-mode #documentationSection:fullscreen {
             background: linear-gradient(180deg, #f4ecd8, #e8dcc0) !important;
@@ -716,12 +716,51 @@
         body.sepia-mode #documentationSection:fullscreen .markdown-content,
         body.sepia-mode #documentationSection:fullscreen .code-container {
             background: rgba(244, 236, 216, 0.95) !important;
-            color: #5b4636 !important;
+            color: #3a2f1f !important;
+        }
+
+        /* Sepia Mode - Text Colors */
+        body.sepia-mode .markdown-content h1,
+        body.sepia-mode .markdown-content h2,
+        body.sepia-mode .markdown-content h3,
+        body.sepia-mode .markdown-content h4,
+        body.sepia-mode .markdown-content h5,
+        body.sepia-mode .markdown-content h6 {
+            color: #2a1f0f !important;
+        }
+
+        body.sepia-mode .markdown-content p,
+        body.sepia-mode .markdown-content li,
+        body.sepia-mode .markdown-content td,
+        body.sepia-mode .markdown-content th {
+            color: #3a2f1f !important;
+        }
+
+        /* Sepia Mode - Table Backgrounds */
+        body.sepia-mode table,
+        body.sepia-mode thead,
+        body.sepia-mode tbody,
+        body.sepia-mode tr {
+            background: rgba(232, 220, 192, 0.6) !important;
+        }
+
+        body.sepia-mode th {
+            background: rgba(204, 0, 0, 0.15) !important;
+            color: #2a1f0f !important;
+        }
+
+        body.sepia-mode td {
+            background: rgba(244, 236, 216, 0.5) !important;
+            color: #3a2f1f !important;
         }
 
         body.sepia-mode .code-block,
         body.sepia-mode pre {
             background: #e8dcc0 !important;
+            color: #3a2f1f !important;
+        }
+
+        body.sepia-mode code {
             color: #5b4636 !important;
         }
 
@@ -1728,19 +1767,6 @@
         <i class="fas fa-list"></i>
     </button>
 
-    <!-- Table of Contents Sidebar -->
-    <aside class="toc-sidebar" id="tocSidebar">
-        <div class="toc-header">
-            <h3><i class="fas fa-list-ul"></i> Table of Contents</h3>
-            <button class="toc-close" id="tocClose">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <nav class="toc-nav" id="tocNav">
-            <!-- TOC links will be generated dynamically -->
-        </nav>
-    </aside>
-
     <!-- Mobile Top Navigation -->
     <nav class="mobile-top-nav">
         <a href="../../Home/home-mobile.html" class="nav-icon" title="Home">
@@ -1876,10 +1902,14 @@
             
             <h2 class="section-title"><i class="fas fa-book-open"></i> Documentation</h2>
             
-            <!-- Reading Toolbar -->
+            <!-- Unified Reading Toolbar (Autohide) -->
             <div class="reading-toolbar" id="readingToolbar">
                 <!-- Reading Mode Group -->
                 <div class="toolbar-group">
+                    <button class="toolbar-btn" id="defaultModeBtn" onclick="setDefaultMode()" title="Default Mode (D)">
+                        <i class="fas fa-sun"></i>
+                        <span>Default</span>
+                    </button>
                     <button class="toolbar-btn" id="nightModeBtn" onclick="toggleNightMode()" title="Night Mode (N)">
                         <i class="fas fa-moon"></i>
                         <span>Night</span>
@@ -1890,44 +1920,31 @@
                     </button>
                 </div>
 
-                <!-- Font Size Group -->
+                <!-- Zoom Controls Group -->
                 <div class="toolbar-group">
-                    <button class="toolbar-btn" onclick="decreaseFontSize()" title="Decrease Font (-)">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <div class="font-size-display" id="fontSizeDisplay">100%</div>
-                    <button class="toolbar-btn" onclick="increaseFontSize()" title="Increase Font (+)">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <button class="toolbar-btn" onclick="resetFontSize()" title="Reset Font (0)">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                </div>
-
-
-            </div>
-            
-            <!-- Fullscreen Button & Zoom Controls -->
-            <div class="doc-controls">
-                <!-- Zoom Controls -->
-                <div class="zoom-controls" id="zoomControls">
-                    <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out (Ctrl+-)">
+                    <button class="toolbar-btn" id="zoomOutBtn" onclick="zoomOut()" title="Zoom Out (Ctrl+-)">
                         <i class="fas fa-search-minus"></i>
                     </button>
-                    <span class="zoom-level" id="zoomLevel">100%</span>
-                    <button class="zoom-btn" id="zoomInBtn" title="Zoom In (Ctrl++)">
+                    <div class="zoom-level" id="zoomLevel">100%</div>
+                    <button class="toolbar-btn" id="zoomInBtn" onclick="zoomIn()" title="Zoom In (Ctrl++)">
                         <i class="fas fa-search-plus"></i>
                     </button>
-                    <button class="zoom-reset-btn" id="zoomResetBtn" title="Reset Zoom to 100%">
+                    <button class="toolbar-btn" id="zoomResetBtn" onclick="resetZoom()" title="Reset Zoom">
                         <i class="fas fa-undo"></i>
                     </button>
                 </div>
-                
-                <!-- Fullscreen Button -->
-                <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">
-                    <i class="fas fa-expand"></i>
-                    <span>Fullscreen</span>
-                </button>
+
+                <!-- Navigation Group -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" id="tocToggleBtn" onclick="toggleTOC()" title="Table of Contents (T)">
+                        <i class="fas fa-list-ul"></i>
+                        <span>TOC</span>
+                    </button>
+                    <button class="toolbar-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+                        <i class="fas fa-expand"></i>
+                        <span>Fullscreen</span>
+                    </button>
+                </div>
             </div>
             
             <div class="doc-tabs" id="docTabs">
@@ -1971,6 +1988,19 @@
                     <pre class="code-content" id="codeContent">// Loading code...</pre>
                 </div>
             </div>
+            
+            <!-- Table of Contents Sidebar (Inside Documentation Section for Fullscreen) -->
+            <aside class="toc-sidebar" id="tocSidebar">
+                <div class="toc-header">
+                    <h3><i class="fas fa-list-ul"></i> Table of Contents</h3>
+                    <button class="toc-close" id="tocClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <nav class="toc-nav" id="tocNav">
+                    <!-- TOC links will be generated dynamically -->
+                </nav>
+            </aside>
         </div>
 
         <!-- Navigation Arrows -->
@@ -2256,108 +2286,191 @@
 
         // ===== READING FEATURES =====
 
-        // Night Mode Toggle
-        function toggleNightMode() {
-            document.body.classList.toggle('night-mode');
+        // Default Mode (Clear all modes)
+        function setDefaultMode() {
+            document.body.classList.remove('night-mode');
             document.body.classList.remove('sepia-mode');
             
+            const defaultBtn = document.getElementById('defaultModeBtn');
             const nightBtn = document.getElementById('nightModeBtn');
             const sepiaBtn = document.getElementById('sepiaModeBtn');
             
-            if (document.body.classList.contains('night-mode')) {
-                nightBtn.classList.add('active');
-                sepiaBtn.classList.remove('active');
-                localStorage.setItem('arduinoReadingMode', 'night');
-            } else {
-                nightBtn.classList.remove('active');
-                localStorage.removeItem('arduinoReadingMode');
-            }
+            defaultBtn.classList.add('active');
+            nightBtn.classList.remove('active');
+            sepiaBtn.classList.remove('active');
+            
+            localStorage.setItem('arduinoReadingMode', 'default');
+            console.log('☀️ Default mode activated');
+        }
+
+        // Night Mode Toggle
+        function toggleNightMode() {
+            document.body.classList.add('night-mode');
+            document.body.classList.remove('sepia-mode');
+            
+            const defaultBtn = document.getElementById('defaultModeBtn');
+            const nightBtn = document.getElementById('nightModeBtn');
+            const sepiaBtn = document.getElementById('sepiaModeBtn');
+            
+            defaultBtn.classList.remove('active');
+            nightBtn.classList.add('active');
+            sepiaBtn.classList.remove('active');
+            
+            localStorage.setItem('arduinoReadingMode', 'night');
+            console.log('🌙 Night mode activated');
         }
 
         // Sepia Mode Toggle
         function toggleSepiaMode() {
-            document.body.classList.toggle('sepia-mode');
+            document.body.classList.add('sepia-mode');
             document.body.classList.remove('night-mode');
             
+            const defaultBtn = document.getElementById('defaultModeBtn');
             const nightBtn = document.getElementById('nightModeBtn');
             const sepiaBtn = document.getElementById('sepiaModeBtn');
             
-            if (document.body.classList.contains('sepia-mode')) {
-                sepiaBtn.classList.add('active');
-                nightBtn.classList.remove('active');
-                localStorage.setItem('arduinoReadingMode', 'sepia');
-            } else {
-                sepiaBtn.classList.remove('active');
-                localStorage.removeItem('arduinoReadingMode');
+            defaultBtn.classList.remove('active');
+            nightBtn.classList.remove('active');
+            sepiaBtn.classList.add('active');
+            
+            localStorage.setItem('arduinoReadingMode', 'sepia');
+            console.log('📜 Sepia mode activated');
+        }
+
+        // Table of Contents Toggle
+        function toggleTOC() {
+            const sidebar = document.getElementById('tocSidebar');
+            sidebar.classList.toggle('active');
+            console.log('📑 TOC toggled:', sidebar.classList.contains('active'));
+        }
+
+        // Fullscreen Toggle
+        async function toggleFullscreen() {
+            const docSection = document.getElementById('documentationSection');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            
+            // Only allow fullscreen for README and Explanation tabs
+            const activeTab = document.querySelector('.doc-tab.active');
+            const activeTabName = activeTab?.dataset.tab;
+            
+            if (activeTabName !== 'readme' && activeTabName !== 'explanation') {
+                alert('Fullscreen is only available for README and Explanation tabs');
+                console.log('⚠️ Fullscreen not allowed for', activeTabName, 'tab');
+                return;
+            }
+            
+            try {
+                // Request true fullscreen using Fullscreen API
+                if (!document.fullscreenElement) {
+                    // Enter fullscreen
+                    await docSection.requestFullscreen();
+                    
+                    const icon = fullscreenBtn.querySelector('i');
+                    const text = fullscreenBtn.querySelector('span');
+                    icon.className = 'fas fa-compress';
+                    text.textContent = 'Exit';
+                    fullscreenBtn.title = 'Exit Fullscreen (Esc or F)';
+                    
+                    // Regenerate TOC for fullscreen mode
+                    setTimeout(() => {
+                        generateTOC();
+                        console.log('📋 TOC regenerated for fullscreen');
+                    }, 100);
+                    
+                    console.log('📺 Fullscreen activated');
+                } else {
+                    // Exit fullscreen
+                    await document.exitFullscreen();
+                    
+                    const icon = fullscreenBtn.querySelector('i');
+                    const text = fullscreenBtn.querySelector('span');
+                    icon.className = 'fas fa-expand';
+                    text.textContent = 'Fullscreen';
+                    fullscreenBtn.title = 'Fullscreen (F)';
+                    
+                    console.log('📺 Fullscreen exited');
+                }
+            } catch (error) {
+                console.error('❌ Fullscreen request failed:', error);
+                // Fallback to CSS fullscreen if API not supported
+                docSection.classList.toggle('fullscreen-fallback');
             }
         }
 
-        // Font Size Management
-        let currentFontSize = 100; // Default 100%
-        const fontSizes = [80, 90, 100, 110, 120, 130, 150];
-        const fontClasses = {
-            80: 'font-small',
-            90: 'font-small',
-            100: 'font-medium',
-            110: 'font-large',
-            120: 'font-large',
-            130: 'font-xlarge',
-            150: 'font-xlarge'
-        };
+        // Zoom Management
+        let currentZoom = 100; // Default 100%
+        const zoomLevels = [75, 85, 90, 100, 110, 125, 150, 175, 200];
 
-        function updateFontSize(size) {
-            currentFontSize = size;
-            
-            // Remove all font classes
-            document.body.classList.remove('font-small', 'font-medium', 'font-large', 'font-xlarge');
-            
-            // Add appropriate class
-            const fontClass = fontClasses[size] || 'font-medium';
-            document.body.classList.add(fontClass);
-            
-            // Update display
-            document.getElementById('fontSizeDisplay').textContent = size + '%';
-            
-            // Save to localStorage
-            localStorage.setItem('arduinoFontSize', size);
+        function updateZoomDisplay() {
+            document.getElementById('zoomLevel').textContent = currentZoom + '%';
+            document.body.style.fontSize = currentZoom + '%';
+            localStorage.setItem('arduinoZoomLevel', currentZoom);
         }
 
-        function increaseFontSize() {
-            const currentIndex = fontSizes.indexOf(currentFontSize);
-            if (currentIndex < fontSizes.length - 1) {
-                updateFontSize(fontSizes[currentIndex + 1]);
+        function zoomIn() {
+            const currentIndex = zoomLevels.indexOf(currentZoom);
+            if (currentIndex < zoomLevels.length - 1) {
+                currentZoom = zoomLevels[currentIndex + 1];
+                updateZoomDisplay();
             }
+        }
+
+        function zoomOut() {
+            const currentIndex = zoomLevels.indexOf(currentZoom);
+            if (currentIndex > 0) {
+                currentZoom = zoomLevels[currentIndex - 1];
+                updateZoomDisplay();
+            }
+        }
+
+        function resetZoom() {
+            currentZoom = 100;
+            updateZoomDisplay();
+        }
+
+        function resetZoom() {
+            currentZoom = 100;
+            updateZoomDisplay();
         }
 
         function decreaseFontSize() {
-            const currentIndex = fontSizes.indexOf(currentFontSize);
+            const currentIndex = zoomLevels.indexOf(currentZoom);
             if (currentIndex > 0) {
-                updateFontSize(fontSizes[currentIndex - 1]);
+                currentZoom = zoomLevels[currentIndex - 1];
+                updateZoomDisplay();
             }
         }
 
         function resetFontSize() {
-            updateFontSize(100);
+            currentZoom = 100;
+            updateZoomDisplay();
         }
 
         // Load Reading Preferences from localStorage
         function loadReadingPreferences() {
             // Load reading mode
             const savedMode = localStorage.getItem('arduinoReadingMode');
+            const defaultBtn = document.getElementById('defaultModeBtn');
+            const nightBtn = document.getElementById('nightModeBtn');
+            const sepiaBtn = document.getElementById('sepiaModeBtn');
+            
             if (savedMode === 'night') {
                 document.body.classList.add('night-mode');
-                document.getElementById('nightModeBtn')?.classList.add('active');
+                nightBtn?.classList.add('active');
             } else if (savedMode === 'sepia') {
                 document.body.classList.add('sepia-mode');
-                document.getElementById('sepiaModeBtn')?.classList.add('active');
+                sepiaBtn?.classList.add('active');
+            } else {
+                defaultBtn?.classList.add('active');
             }
             
-            // Load font size
-            const savedFontSize = parseInt(localStorage.getItem('arduinoFontSize'));
-            if (savedFontSize && fontSizes.includes(savedFontSize)) {
-                updateFontSize(savedFontSize);
+            // Load zoom level
+            const savedZoom = parseInt(localStorage.getItem('arduinoZoomLevel'));
+            if (savedZoom && zoomLevels.includes(savedZoom)) {
+                currentZoom = savedZoom;
+                updateZoomDisplay();
             } else {
-                updateFontSize(100);
+                updateZoomDisplay();
             }
         }
 
@@ -2374,6 +2487,12 @@
                     return;
                 }
                 
+                // Default Mode: D
+                if (e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
+                    setDefaultMode();
+                }
+                
                 // Night Mode: N
                 if (e.key === 'n' || e.key === 'N') {
                     e.preventDefault();
@@ -2385,29 +2504,17 @@
                     e.preventDefault();
                     toggleSepiaMode();
                 }
-            });
-            
-            // Font size shortcuts (with Shift, different from zoom)
-            document.addEventListener('keydown', (e) => {
-                // Skip if user is typing or Ctrl is pressed
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.ctrlKey || e.metaKey) {
-                    return;
+                
+                // Table of Contents: T
+                if (e.key === 't' || e.key === 'T') {
+                    e.preventDefault();
+                    toggleTOC();
                 }
                 
-                // Font Size: Shift + Plus/Minus/0
-                if (e.shiftKey) {
-                    if (e.key === '+' || e.key === '=') {
-                        e.preventDefault();
-                        increaseFontSize();
-                    }
-                    if (e.key === '_' || e.key === '-') {
-                        e.preventDefault();
-                        decreaseFontSize();
-                    }
-                    if (e.key === ')' || e.key === '0') {
-                        e.preventDefault();
-                        resetFontSize();
-                    }
+                // Fullscreen: F
+                if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    toggleFullscreen();
                 }
             });
         }

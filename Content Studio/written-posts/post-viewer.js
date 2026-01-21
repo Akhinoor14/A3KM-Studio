@@ -552,99 +552,59 @@
      READING MODE FEATURES - NEW
      ============================================ */
   
-  // Show toolbar when post loads
-  function showReadingToolbar() {
-    const toolbar = document.getElementById('readingToolbar');
-    if (toolbar) {
-      toolbar.style.display = 'flex';
-    }
+  // Default Mode (Clear all modes)
+  function setDefaultMode() {
+    const body = document.body;
+    const defaultBtn = document.getElementById('defaultModeBtn');
+    const nightBtn = document.getElementById('nightModeBtn');
+    const sepiaBtn = document.getElementById('sepiaModeBtn');
+    
+    body.classList.remove('night-mode', 'sepia-mode');
+    defaultBtn.classList.add('active');
+    nightBtn.classList.remove('active');
+    sepiaBtn.classList.remove('active');
+    
+    localStorage.removeItem('readingMode');
+    isNightMode = false;
+    isSepiaMode = false;
   }
 
   // Night Mode Toggle
   let isNightMode = localStorage.getItem('readingMode') === 'night';
   function toggleNightMode() {
     const body = document.body;
-    const btn = document.getElementById('nightModeBtn');
+    const defaultBtn = document.getElementById('defaultModeBtn');
+    const nightBtn = document.getElementById('nightModeBtn');
     const sepiaBtn = document.getElementById('sepiaModeBtn');
     
-    if (isNightMode) {
-      body.classList.remove('night-mode');
-      btn.classList.remove('active');
-      localStorage.removeItem('readingMode');
-      isNightMode = false;
-    } else {
-      body.classList.remove('sepia-mode');
-      body.classList.add('night-mode');
-      btn.classList.add('active');
-      sepiaBtn.classList.remove('active');
-      localStorage.setItem('readingMode', 'night');
-      isNightMode = true;
-      isSepiaMode = false;
-    }
+    body.classList.remove('sepia-mode');
+    body.classList.add('night-mode');
+    defaultBtn.classList.remove('active');
+    nightBtn.classList.add('active');
+    sepiaBtn.classList.remove('active');
+    
+    localStorage.setItem('readingMode', 'night');
+    isNightMode = true;
+    isSepiaMode = false;
   }
 
   // Sepia Mode Toggle
   let isSepiaMode = localStorage.getItem('readingMode') === 'sepia';
   function toggleSepiaMode() {
     const body = document.body;
-    const btn = document.getElementById('sepiaModeBtn');
+    const defaultBtn = document.getElementById('defaultModeBtn');
     const nightBtn = document.getElementById('nightModeBtn');
+    const sepiaBtn = document.getElementById('sepiaModeBtn');
     
-    if (isSepiaMode) {
-      body.classList.remove('sepia-mode');
-      btn.classList.remove('active');
-      localStorage.removeItem('readingMode');
-      isSepiaMode = false;
-    } else {
-      body.classList.remove('night-mode');
-      body.classList.add('sepia-mode');
-      btn.classList.add('active');
-      nightBtn.classList.remove('active');
-      localStorage.setItem('readingMode', 'sepia');
-      isSepiaMode = true;
-      isNightMode = false;
-    }
-  }
-
-  // Font Size Adjustment
-  let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
-  function updateFontSize() {
-    const body = document.body;
-    const display = document.getElementById('fontSizeDisplay');
+    body.classList.remove('night-mode');
+    body.classList.add('sepia-mode');
+    defaultBtn.classList.remove('active');
+    nightBtn.classList.remove('active');
+    sepiaBtn.classList.add('active');
     
-    body.classList.remove('font-size-small', 'font-size-large', 'font-size-xlarge');
-    
-    if (currentFontSize <= 90) {
-      body.classList.add('font-size-small');
-    } else if (currentFontSize >= 110 && currentFontSize < 130) {
-      body.classList.add('font-size-large');
-    } else if (currentFontSize >= 130) {
-      body.classList.add('font-size-xlarge');
-    }
-    
-    if (display) {
-      display.textContent = currentFontSize + '%';
-    }
-    localStorage.setItem('fontSize', currentFontSize);
-  }
-
-  function increaseFontSize() {
-    if (currentFontSize < 150) {
-      currentFontSize += 10;
-      updateFontSize();
-    }
-  }
-
-  function decreaseFontSize() {
-    if (currentFontSize > 80) {
-      currentFontSize -= 10;
-      updateFontSize();
-    }
-  }
-
-  // Print Function
-  function printPost() {
-    window.print();
+    localStorage.setItem('readingMode', 'sepia');
+    isSepiaMode = true;
+    isNightMode = false;
   }
 
   // Fullscreen Toggle
@@ -668,23 +628,30 @@
   // Event Listeners for Reading Features
   function setupReadingFeatures() {
     // Apply saved reading mode
+    const defaultBtn = document.getElementById('defaultModeBtn');
+    const nightBtn = document.getElementById('nightModeBtn');
+    const sepiaBtn = document.getElementById('sepiaModeBtn');
+    
     if (isNightMode) {
       document.body.classList.add('night-mode');
-      document.getElementById('nightModeBtn')?.classList.add('active');
+      nightBtn?.classList.add('active');
     } else if (isSepiaMode) {
       document.body.classList.add('sepia-mode');
-      document.getElementById('sepiaModeBtn')?.classList.add('active');
+      sepiaBtn?.classList.add('active');
+    } else {
+      defaultBtn?.classList.add('active');
     }
     
-    updateFontSize();
-    showReadingToolbar();
+    // Show toolbar
+    const toolbar = document.getElementById('readingToolbar');
+    if (toolbar) {
+      toolbar.style.display = 'flex';
+    }
     
     // Toolbar button events
+    document.getElementById('defaultModeBtn')?.addEventListener('click', setDefaultMode);
     document.getElementById('nightModeBtn')?.addEventListener('click', toggleNightMode);
     document.getElementById('sepiaModeBtn')?.addEventListener('click', toggleSepiaMode);
-    document.getElementById('fontSizeIncrease')?.addEventListener('click', increaseFontSize);
-    document.getElementById('fontSizeDecrease')?.addEventListener('click', decreaseFontSize);
-    document.getElementById('printBtn')?.addEventListener('click', printPost);
     document.getElementById('fullscreenBtn')?.addEventListener('click', toggleFullscreen);
     
     // Keyboard shortcuts
@@ -692,24 +659,17 @@
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       
       switch(e.key.toLowerCase()) {
+        case 'd':
+          setDefaultMode();
+          break;
         case 'n':
           toggleNightMode();
           break;
         case 's':
           toggleSepiaMode();
           break;
-        case 'p':
-          printPost();
-          break;
         case 'f':
           toggleFullscreen();
-          break;
-        case '+':
-        case '=':
-          increaseFontSize();
-          break;
-        case '-':
-          decreaseFontSize();
           break;
       }
     });
