@@ -660,15 +660,15 @@
         .toolbar-btn {
             background: rgba(204, 0, 0, 0.2);
             border: 1px solid rgba(204, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 8px 14px;
+            border-radius: 6px;
+            padding: 6px 10px;
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
+            gap: 5px;
+            font-size: 0.85rem;
             font-weight: 500;
         }
 
@@ -895,9 +895,13 @@
         }
 
         #documentationSection:fullscreen {
-            padding: 80px 340px 40px 40px;
+            padding: 70px 340px 20px 20px;
             overflow-y: auto;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         #documentationSection:fullscreen .section-title {
@@ -956,7 +960,8 @@
             border-radius: 15px;
             border: 2px solid rgba(204, 0, 0, 0.3);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            min-height: calc(100vh - 160px);
+            min-height: calc(100vh - 100px);
+            flex: 1;
         }
 
         #documentationSection:fullscreen .code-container {
@@ -1193,6 +1198,101 @@
             margin: 2em 0;
             border: 3px solid var(--border-primary);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ============================================
+           READING MODES - NIGHT & SEPIA
+           ============================================ */
+        
+        /* Night Mode */
+        body.night-mode {
+            background: linear-gradient(180deg, #0a0a0a, #121212);
+        }
+
+        body.night-mode .markdown-content {
+            background: rgba(15, 15, 15, 0.95);
+            color: rgba(200, 200, 200, 0.95);
+        }
+
+        body.night-mode .markdown-content h1,
+        body.night-mode .markdown-content h2,
+        body.night-mode .markdown-content h3,
+        body.night-mode .markdown-content h4,
+        body.night-mode .markdown-content h5,
+        body.night-mode .markdown-content h6 {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        body.night-mode .markdown-content strong {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        body.night-mode .markdown-content p,
+        body.night-mode .markdown-content li {
+            color: rgba(200, 200, 200, 0.9);
+        }
+
+        /* Sepia Mode */
+        body.sepia-mode {
+            background: linear-gradient(180deg, #f4ecd8, #e8dcc0);
+        }
+
+        body.sepia-mode .markdown-content {
+            background: rgba(251, 243, 219, 0.98);
+            color: rgba(60, 50, 40, 0.95);
+        }
+
+        body.sepia-mode .markdown-content h1,
+        body.sepia-mode .markdown-content h2,
+        body.sepia-mode .markdown-content h3,
+        body.sepia-mode .markdown-content h4,
+        body.sepia-mode .markdown-content h5,
+        body.sepia-mode .markdown-content h6 {
+            color: #3d2817;
+        }
+
+        body.sepia-mode .markdown-content strong {
+            color: #2a1810;
+            font-weight: 700;
+        }
+
+        body.sepia-mode .markdown-content p,
+        body.sepia-mode .markdown-content li {
+            color: rgba(60, 50, 40, 0.9);
+        }
+
+        body.sepia-mode .markdown-content a {
+            color: #8b4513;
+        }
+
+        body.sepia-mode .markdown-content code {
+            background: rgba(139, 69, 19, 0.15);
+            color: #8b4513;
+            border-color: rgba(139, 69, 19, 0.3);
+        }
+
+        body.sepia-mode .markdown-content blockquote {
+            background: rgba(139, 69, 19, 0.1);
+            border-left-color: #8b4513;
+            color: rgba(60, 50, 40, 0.95);
+        }
+
+        body.sepia-mode .reading-toolbar {
+            background: rgba(251, 243, 219, 0.98);
+            border-bottom-color: rgba(139, 69, 19, 0.3);
+        }
+
+        body.sepia-mode .toc-sidebar {
+            background: rgba(251, 243, 219, 0.98);
+            color: rgba(60, 50, 40, 0.95);
+        }
+
+        body.sepia-mode .toc-link {
+            color: rgba(60, 50, 40, 0.8);
+        }
+
+        body.sepia-mode .toc-link:hover {
+            color: #8b4513;
         }
 
         /* Table styling matching blog */
@@ -1970,20 +2070,6 @@
                     </button>
                 </div>
 
-                <!-- Zoom Controls Group -->
-                <div class="toolbar-group">
-                    <button class="toolbar-btn" id="zoomOutBtn" onclick="zoomOut()" title="Zoom Out (Ctrl+-)">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                    <div class="zoom-level" id="zoomLevel">100%</div>
-                    <button class="toolbar-btn" id="zoomInBtn" onclick="zoomIn()" title="Zoom In (Ctrl++)">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
-                    <button class="toolbar-btn" id="zoomResetBtn" onclick="resetZoom()" title="Reset Zoom">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                </div>
-
                 <!-- Navigation Group -->
                 <div class="toolbar-group">
                     <button class="toolbar-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen (F)">
@@ -2429,9 +2515,10 @@
         document.addEventListener('fullscreenchange', () => {
             const fullscreenBtn = document.getElementById('fullscreenBtn');
             const tocSidebar = document.getElementById('tocSidebar');
+            const docSection = document.getElementById('documentationSection');
             
             if (!document.fullscreenElement) {
-                // Exited fullscreen - restore button state
+                // Exited fullscreen - restore to SAME PROJECT PAGE (not project list)
                 const icon = fullscreenBtn?.querySelector('i');
                 const text = fullscreenBtn?.querySelector('span');
                 if (icon) icon.className = 'fas fa-expand';
@@ -2441,13 +2528,57 @@
                 // Hide TOC sidebar in normal mode
                 if (tocSidebar) tocSidebar.classList.remove('active');
                 
+                // Restore scroll position to where user was before fullscreen
+                const savedScrollPos = sessionStorage.getItem('preFullscreenScrollPos');
+                if (savedScrollPos) {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: parseInt(savedScrollPos),
+                            behavior: 'smooth'
+                        });
+                        sessionStorage.removeItem('preFullscreenScrollPos');
+                        console.log('↩️ Scroll position restored to:', savedScrollPos);
+                    }, 100);
+                }
+                
+                // Preserve active tab (README/Explanation stays active)
+                const activeTab = document.querySelector('.doc-tab.active');
+                const activeTabName = activeTab?.dataset.tab;
+                
+                // Show notification that we're back on same project page
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: linear-gradient(135deg, rgba(204, 0, 0, 0.95), rgba(153, 0, 0, 0.9));
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+                    border: 1px solid rgba(204, 0, 0, 0.5);
+                `;
+                notification.innerHTML = `<i class="fas fa-check-circle"></i> Back to Project #${projectId} - ${activeTabName.toUpperCase()} View`;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.transition = 'opacity 0.3s ease';
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+                
                 // Regenerate TOC for normal mode
                 setTimeout(() => {
                     generateTOC();
-                    console.log('📋 TOC regenerated after exiting fullscreen');
+                    console.log(`📋 TOC regenerated after exiting fullscreen - Still on Project #${projectId}`);
                 }, 200);
                 
-                console.log('📺 Fullscreen exited via browser/ESC');
+                console.log(`📺 Fullscreen exited - Returned to Project #${projectId} page (${activeTabName} tab)`);
             } else {
                 // Entered fullscreen - update button to show Exit
                 const icon = fullscreenBtn?.querySelector('i');
@@ -2456,7 +2587,15 @@
                 if (text) text.textContent = 'Exit';
                 if (fullscreenBtn) fullscreenBtn.title = 'Exit Fullscreen (Esc or F)';
                 
-                console.log('📺 Fullscreen entered');
+                // Save current scroll position AND active tab before entering fullscreen
+                sessionStorage.setItem('preFullscreenScrollPos', window.scrollY.toString());
+                const activeTab = document.querySelector('.doc-tab.active');
+                if (activeTab) {
+                    sessionStorage.setItem('preFullscreenActiveTab', activeTab.dataset.tab);
+                }
+                
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                console.log(`📺 Fullscreen entered for Project #${projectId}`);
             }
         });
 

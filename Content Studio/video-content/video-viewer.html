@@ -164,21 +164,37 @@
       height: 100%;
       pointer-events: auto;
     }
+    
+    /* Hide YouTube's end screen elements completely */
+    .player-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Ensure our overlay is above YouTube player */
+    .suggestions-overlay {
+      z-index: 10 !important;
+    }
 
     /* Suggestions Overlay */
     .suggestions-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.98);
       display: none;
       flex-direction: column;
       padding: 20px;
-      z-index: 10;
+      z-index: 100 !important; /* Higher z-index to be above everything */
       overflow-y: auto;
+      pointer-events: none; /* Allow clicks to pass through when inactive */
     }
 
     .suggestions-overlay.active {
       display: flex;
+      pointer-events: auto; /* Block clicks when active */
     }
 
     .suggestions-header {
@@ -772,6 +788,34 @@
     let ytPlayer = null;
     let playerReady = false;
     let videosData = null;
+    
+    // Intercept YouTube link clicks and open in our viewer
+    document.addEventListener('click', function(e) {
+      const target = e.target.closest('a');
+      if (!target) return;
+      
+      const href = target.href;
+      if (!href) return;
+      
+      // Check if it's a YouTube link
+      const ytRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = href.match(ytRegex);
+      
+      if (match) {
+        e.preventDefault();
+        const videoId = match[1];
+        
+        // Find video in our database and play it
+        const video = allVideos.find(v => v.videoId === videoId);
+        if (video) {
+          playSuggestedVideo(video.id);
+          console.log('🔗 Intercepted YouTube link, playing in viewer:', video.title);
+        } else {
+          console.warn('⚠️ Video not in database:', videoId);
+          // Optionally show a message to user
+        }
+      }
+    }, true); // Use capture phase to catch before YouTube handles it
 
     // YouTube IFrame API Ready
     function onYouTubeIframeAPIReady() {
@@ -817,7 +861,9 @@
           showinfo: 0, // Hide video title and uploader info
           playsinline: 1, // Play inline on mobile
           widget_referrer: window.location.href, // Track referrer
-          origin: window.location.origin // Set origin for security
+          origin: window.location.origin, // Set origin for security
+          enablejsapi: 1, // Enable JavaScript API
+          listType: 'user_uploads' // Only show videos from same channel
         },
         events: {
           onStateChange: onPlayerStateChange,
@@ -835,7 +881,10 @@
     function onPlayerStateChange(event) {
       // Video paused
       if (event.data === YT.PlayerState.PAUSED) {
-        showSuggestions();
+        // Small delay to override YouTube's suggestions
+        setTimeout(() => {
+          showSuggestions();
+        }, 100);
       }
       // Video playing
       else if (event.data === YT.PlayerState.PLAYING) {
@@ -843,7 +892,20 @@
       }
       // Video ended
       else if (event.data === YT.PlayerState.ENDED) {
+        // Immediately pause the video to prevent YouTube endscreen
+        try {
+          ytPlayer.pauseVideo();
+          // Seek to last second to prevent endscreen cards
+          const duration = ytPlayer.getDuration();
+          if (duration) {
+            ytPlayer.seekTo(duration - 1, true);
+          }
+        } catch (e) {
+          console.warn('Failed to prevent endscreen:', e);
+        }
+        
         markAsWatched(currentVideoId);
+        // Immediately show our suggestions to prevent YouTube's endscreen
         showSuggestions();
         // Auto-play next if available
         const nextBtn = document.getElementById('nextBtn');

@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="../../Optimization/styles.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     
+    <!-- YouTube API Configuration -->
+    <script src="youtube-api-config.js"></script>
+    
     <style>
         :root {
             --youtube-red: #FF0000;
@@ -271,7 +274,7 @@
         .video-thumbnail {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 aspect ratio */
+            padding-top: 50%; /* Balanced ratio - professional and clean */
             background: #0f0f0f;
             overflow: hidden;
             border-radius: 12px;
@@ -510,6 +513,13 @@
         let categories = {};
         let currentCategory = 'all';
         let currentSort = 'newest';
+        
+        // Video stats cache with timestamp
+        const videoStatsCache = new Map();
+        const CACHE_DURATION = YOUTUBE_CONFIG.CACHE_DURATION; // 1 hour
+        
+        // Check if API is configured
+        const useYouTubeAPI = validateYouTubeConfig();
 
         // Load videos from JSON
         async function loadVideos() {
@@ -548,6 +558,12 @@
                 // Create category tabs
                 createCategoryTabs();
                 
+                // Load cached stats from localStorage
+                loadCacheFromStorage();
+                
+                // Fetch real YouTube stats for all videos
+                await fetchYouTubeStats();
+                
                 // Render videos
                 renderVideos();
             } catch (error) {
@@ -560,6 +576,143 @@
                     </div>
                 `;
             }
+        }
+        
+        // Fetch real YouTube stats (duration and views)
+        async function fetchYouTubeStats() {
+            // Skip if API not configured
+            if (!useYouTubeAPI) {
+                console.info('📊 Using static data from videos.json (API not configured)');
+                return;
+            }
+            
+            try {
+                // Get all unique video IDs
+                const videoIds = [...new Set(allVideos.map(v => v.videoId))];
+                
+                // Check cache first
+                const now = Date.now();
+                const uncachedIds = videoIds.filter(id => {
+                    const cached = videoStatsCache.get(id);
+                    return !cached || (now - cached.timestamp) > CACHE_DURATION;
+                });
+                
+                if (uncachedIds.length === 0) {
+                    console.log('✅ All video stats loaded from cache');
+                    return;
+                }
+                
+                console.log(`📡 Fetching stats for ${uncachedIds.length} videos...`);
+                
+                // YouTube API allows up to 50 IDs per request
+                const batchSize = YOUTUBE_CONFIG.MAX_IDS_PER_REQUEST;
+                const batches = [];
+                
+                for (let i = 0; i < uncachedIds.length; i += batchSize) {
+                    batches.push(uncachedIds.slice(i, i + batchSize));
+                }
+                
+                // Fetch stats for each batch
+                let successCount = 0;
+                for (const batch of batches) {
+                    const ids = batch.join(',');
+                    const parts = YOUTUBE_CONFIG.PARTS.join(',');
+                    const url = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?part=${parts}&id=${ids}&key=${YOUTUBE_CONFIG.API_KEY}`;
+                    
+                    try {
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data.error) {
+                            console.error('YouTube API error:', data.error.message);
+                            if (data.error.code === 403) {
+                                console.error('❌ API key invalid or quota exceeded');
+                                console.info('💡 Check: https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas');
+                            }
+                            break;
+                        }
+                        
+                        if (data.items) {
+                            data.items.forEach(item => {
+                                videoStatsCache.set(item.id, {
+                                    duration: parseYouTubeDuration(item.contentDetails.duration),
+                                    views: formatViews(item.statistics.viewCount),
+                                    timestamp: now
+                                });
+                                successCount++;
+                            });
+                        }
+                    } catch (err) {
+                        console.warn('Failed to fetch stats for batch:', err);
+                    }
+                }
+                
+                console.log(`✅ Fetched stats for ${successCount} videos`);
+                
+                // Save cache to localStorage for persistence
+                try {
+                    const cacheData = Array.from(videoStatsCache.entries());
+                    localStorage.setItem('youtubeStatsCache', JSON.stringify(cacheData));
+                } catch (e) {
+                    console.warn('Failed to save cache:', e);
+                }
+            } catch (error) {
+                console.warn('YouTube API error:', error);
+                console.info('📊 Falling back to static data from videos.json');
+            }
+        }
+        
+        // Load cache from localStorage on startup
+        function loadCacheFromStorage() {
+            try {
+                const cached = localStorage.getItem('youtubeStatsCache');
+                if (cached) {
+                    const entries = JSON.parse(cached);
+                    const now = Date.now();
+                    let validCount = 0;
+                    
+                    entries.forEach(([id, data]) => {
+                        // Only restore cache entries that are still valid
+                        if (now - data.timestamp < CACHE_DURATION) {
+                            videoStatsCache.set(id, data);
+                            validCount++;
+                        }
+                    });
+                    
+                    if (validCount > 0) {
+                        console.log(`📦 Loaded ${validCount} cached stats from storage`);
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load cache:', e);
+            }
+        }
+        
+        // Parse YouTube duration format (PT1H2M10S -> 1:02:10)
+        function parseYouTubeDuration(duration) {
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return '0:00';
+            
+            const hours = parseInt(match[1] || 0);
+            const minutes = parseInt(match[2] || 0);
+            const seconds = parseInt(match[3] || 0);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // Format view count (1234567 -> 1.2M)
+        function formatViews(views) {
+            const num = parseInt(views);
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
         }
 
         // Create category tabs
@@ -628,7 +781,13 @@
             // Render all videos in one universal grid
             const html = `
                 <div class="videos-grid">
-                    ${filteredVideos.map((video, index) => `
+                    ${filteredVideos.map((video, index) => {
+                        // Get real stats from cache or fallback to JSON data
+                        const stats = videoStatsCache.get(video.videoId);
+                        const duration = stats?.duration || video.duration || '0:00';
+                        const views = stats?.views || video.views || '0';
+                        
+                        return `
                         <div class="video-card" onclick="openVideo('${video.videoId}')">
                             <div class="video-thumbnail">
                                 <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg" alt="${video.title}" onerror="this.src='https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg'">
@@ -637,7 +796,7 @@
                                         <i class="fas fa-play"></i>
                                     </div>
                                 </div>
-                                ${video.duration ? `<div class="video-duration">${video.duration}</div>` : ''}
+                                <div class="video-duration">${duration}</div>
                             </div>
                             <div class="video-info">
                                 <h3 class="video-title">${video.title}</h3>
@@ -646,12 +805,13 @@
                                         <i class="far fa-calendar"></i> ${formatDate(video.date)}
                                     </span>
                                     <span class="video-views">
-                                        <i class="far fa-eye"></i> ${video.views || '0'}
+                                        <i class="far fa-eye"></i> ${views}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
 
