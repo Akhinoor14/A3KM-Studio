@@ -15,8 +15,9 @@
  */
 
 const YOUTUBE_CONFIG = {
-    // Replace this with your actual YouTube Data API v3 key
-    API_KEY: 'YOUR_YOUTUBE_API_KEY_HERE',
+    // YouTube Data API v3 Key - Get from: https://console.cloud.google.com/
+    // IMPORTANT: Replace with your actual API key to enable real-time stats
+    API_KEY: 'AIzaSyCBMJNDxIvJ5YfYMNupIL8t2l0JC315c2A',
     
     // API endpoints
     VIDEOS_ENDPOINT: 'https://www.googleapis.com/youtube/v3/videos',
@@ -37,14 +38,18 @@ const YOUTUBE_CONFIG = {
 
 // Validate API key before use
 function validateYouTubeConfig() {
-    if (YOUTUBE_CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE' || !YOUTUBE_CONFIG.API_KEY) {
+    if (!YOUTUBE_CONFIG.API_KEY || 
+        YOUTUBE_CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE' || 
+        YOUTUBE_CONFIG.API_KEY.includes('XXXXXXX')) {
         console.warn('⚠️ YouTube API key not configured!');
         console.info('📝 To enable real-time stats:');
         console.info('1. Get API key from: https://console.cloud.google.com/');
         console.info('2. Edit: Content Studio/video-content/youtube-api-config.js');
-        console.info('3. Replace API_KEY with your key');
+        console.info('3. Replace the XXXXXXX in API_KEY with your actual key');
+        console.info('4. 💡 Without API: System uses duration from videos.json');
         return false;
     }
+    console.log('✅ YouTube API configured - Real-time stats enabled');
     return true;
 }
 
