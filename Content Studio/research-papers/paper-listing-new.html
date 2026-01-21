@@ -822,12 +822,14 @@
 
     let allPapers = [];
     let filteredPapers = [];
+    let categoryGroups = [];
 
     async function loadPapers() {
       try {
         const response = await fetch('papers.json');
         const data = await response.json();
         allPapers = data.papers || [];
+        categoryGroups = data.categoryGroups || [];
         filteredPapers = [...allPapers];
         renderPapers();
       } catch (error) {
@@ -865,43 +867,62 @@
       }
 
       let html = '';
-      let displayedCategories = 0;
+      let totalDisplayed = 0;
+      let totalCategories = 0;
 
-      categories.forEach(category => {
-        const categoryPapers = filteredPapers.filter(paper => 
-          paper.category === category.name
+      // Render by domain groups
+      categoryGroups.forEach(group => {
+        const groupPapers = filteredPapers.filter(paper => 
+          group.categories.includes(paper.category)
         );
 
-        if (categoryPapers.length === 0) return;
-        displayedCategories++;
-
-        const categorySlug = getCategorySlug(category.name);
+        if (groupPapers.length === 0) return;
 
         html += `
-          <div class="category-section" data-category="${categorySlug}">
-            <div class="category-header" onclick="toggleCategory('${categorySlug}')">
-              <div class="category-title-wrapper">
-                <div class="category-icon">
-                  <i class="${category.icon}"></i>
-                </div>
-                <h2 class="category-title">${category.name}</h2>
-              </div>
-              <div class="category-meta">
-                <span class="paper-count-badge">${categoryPapers.length} ${categoryPapers.length === 1 ? 'paper' : 'papers'}</span>
-                <div class="expand-icon">
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
+          <div style="margin-bottom: 60px;">
+            <div style="margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid var(--border-red);">
+              <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-white); display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 2.5rem;">${group.icon}</span>
+                ${group.name}
+                <span style="font-size: 1rem; color: var(--text-dim); font-weight: 500;">(${groupPapers.length} ${groupPapers.length === 1 ? 'paper' : 'papers'})</span>
+              </h2>
             </div>
-            <div class="papers-grid" id="grid-${categorySlug}">
-              ${categoryPapers.map(paper => createPaperCard(paper)).join('')}
-            </div>
-          </div>
         `;
+
+        // Render categories within this domain
+        group.categories.forEach(categoryName => {
+          const categoryPapers = filteredPapers.filter(paper => paper.category === categoryName);
+          if (categoryPapers.length === 0) return;
+
+          totalCategories++;
+          totalDisplayed += categoryPapers.length;
+          const categorySlug = getCategorySlug(categoryName);
+
+          html += `
+            <div class="category-section" data-category="${categorySlug}">
+              <div class="category-header" onclick="toggleCategory('${categorySlug}')">
+                <div class="category-title-wrapper">
+                  <h3 class="category-title" style="font-size: 1.3rem; font-weight: 600;">${categoryName}</h3>
+                </div>
+                <div class="category-meta">
+                  <span class="paper-count-badge">${categoryPapers.length} ${categoryPapers.length === 1 ? 'paper' : 'papers'}</span>
+                  <div class="expand-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="papers-grid" id="grid-${categorySlug}">
+                ${categoryPapers.map(paper => createPaperCard(paper)).join('')}
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
       });
 
       container.innerHTML = html;
-      document.getElementById('totalCount').textContent = `${filteredPapers.length} ${filteredPapers.length === 1 ? 'Paper' : 'Papers'} in ${displayedCategories} ${displayedCategories === 1 ? 'Category' : 'Categories'}`;
+      document.getElementById('totalCount').textContent = `${filteredPapers.length} ${filteredPapers.length === 1 ? 'Paper' : 'Papers'} in ${totalCategories} ${totalCategories === 1 ? 'Category' : 'Categories'}`;
     }
 
     function createPaperCard(paper) {

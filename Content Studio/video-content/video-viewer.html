@@ -815,12 +815,20 @@
           disablekb: 0, // Enable keyboard controls
           controls: 1,
           showinfo: 0, // Hide video title and uploader info
-          playsinline: 1 // Play inline on mobile
+          playsinline: 1, // Play inline on mobile
+          widget_referrer: window.location.href, // Track referrer
+          origin: window.location.origin // Set origin for security
         },
         events: {
-          onStateChange: onPlayerStateChange
+          onStateChange: onPlayerStateChange,
+          onReady: onPlayerReady
         }
       });
+    }
+
+    // Player Ready Event
+    function onPlayerReady(event) {
+      console.log('✅ YouTube Player Ready');
     }
 
     // Player State Change
@@ -874,9 +882,9 @@
       grid.innerHTML = suggestions.map(video => `
         <div class="suggestion-card" onclick="playSuggestedVideo('${video.id}')">
           <div class="suggestion-thumbnail">
-            <img src="https://img.youtube.com/vi/${video.id}/maxresdefault.jpg" 
+            <img src="https://img.youtube.com/vi/${video.videoId || video.id}/maxresdefault.jpg" 
                  alt="${video.title}"
-                 onerror="this.src='https://img.youtube.com/vi/${video.id}/hqdefault.jpg'">
+                 onerror="this.src='https://img.youtube.com/vi/${video.videoId || video.id}/hqdefault.jpg'">
             <div class="suggestion-duration">${video.duration}</div>
           </div>
           <div class="suggestion-info">
