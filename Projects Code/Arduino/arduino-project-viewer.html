@@ -908,10 +908,13 @@
             display: none;
         }
 
-        /* Fullscreen Top Bar - Always Visible */
+        /* Fullscreen Top Bar - Always Visible, Positioned Left of TOC */
         #documentationSection:fullscreen .reading-toolbar {
             top: 0;
             opacity: 1;
+            right: 340px; /* Move left to avoid TOC overlap */
+            left: 20px;
+            width: auto;
         }
 
         /* Invisible trigger area - no longer needed but keep for compatibility */
@@ -930,7 +933,7 @@
             background: rgba(10, 10, 10, 0.98);
             backdrop-filter: blur(20px);
             border-left: 3px solid var(--primary-red);
-            z-index: 10002 !important;
+            z-index: 10005 !important; /* Higher than toolbar */
             transform: translateX(0) !important;
             padding: 30px 20px;
             overflow-y: auto;
@@ -1965,7 +1968,7 @@
     <!-- Top Navigation -->
     <div class="viewer-nav">
         <a href="arduino-projects.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Projects
+            <i class="fas fa-arrow-left"></i> Back to Arduino Projects
         </a>
         
         <div class="nav-controls">
@@ -2518,65 +2521,13 @@
             const docSection = document.getElementById('documentationSection');
             
             if (!document.fullscreenElement) {
-                // Exited fullscreen - restore to SAME PROJECT PAGE (not project list)
-                const icon = fullscreenBtn?.querySelector('i');
-                const text = fullscreenBtn?.querySelector('span');
-                if (icon) icon.className = 'fas fa-expand';
-                if (text) text.textContent = 'Fullscreen';
-                if (fullscreenBtn) fullscreenBtn.title = 'Fullscreen (F)';
-                
-                // Hide TOC sidebar in normal mode
-                if (tocSidebar) tocSidebar.classList.remove('active');
-                
-                // Restore scroll position to where user was before fullscreen
-                const savedScrollPos = sessionStorage.getItem('preFullscreenScrollPos');
-                if (savedScrollPos) {
-                    setTimeout(() => {
-                        window.scrollTo({
-                            top: parseInt(savedScrollPos),
-                            behavior: 'smooth'
-                        });
-                        sessionStorage.removeItem('preFullscreenScrollPos');
-                        console.log('↩️ Scroll position restored to:', savedScrollPos);
-                    }, 100);
-                }
-                
-                // Preserve active tab (README/Explanation stays active)
-                const activeTab = document.querySelector('.doc-tab.active');
-                const activeTabName = activeTab?.dataset.tab;
-                
-                // Show notification that we're back on same project page
+                // Exited fullscreen - refresh the page to reset all states
                 const projectId = new URLSearchParams(window.location.search).get('id');
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                    position: fixed;
-                    bottom: 30px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: linear-gradient(135deg, rgba(204, 0, 0, 0.95), rgba(153, 0, 0, 0.9));
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    z-index: 10000;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-                    border: 1px solid rgba(204, 0, 0, 0.5);
-                `;
-                notification.innerHTML = `<i class="fas fa-check-circle"></i> Back to Project #${projectId} - ${activeTabName.toUpperCase()} View`;
-                document.body.appendChild(notification);
+                console.log(`🔄 Exiting fullscreen - Refreshing to Project #${projectId}`);
                 
-                setTimeout(() => {
-                    notification.style.transition = 'opacity 0.3s ease';
-                    notification.style.opacity = '0';
-                    setTimeout(() => notification.remove(), 300);
-                }, 2000);
-                
-                // Regenerate TOC for normal mode
-                setTimeout(() => {
-                    generateTOC();
-                    console.log(`📋 TOC regenerated after exiting fullscreen - Still on Project #${projectId}`);
-                }, 200);
+                // Reload the same project page
+                window.location.reload();
+                return; // Stop execution as page will reload
                 
                 console.log(`📺 Fullscreen exited - Returned to Project #${projectId} page (${activeTabName} tab)`);
             } else {
@@ -4004,8 +3955,11 @@
             sidebar?.classList.toggle('active');
         });
 
-        document.getElementById('tocClose')?.addEventListener('click', () => {
-            document.getElementById('tocSidebar')?.classList.remove('active');
+        document.getElementById('tocClose')?.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent click from bubbling
+            const sidebar = document.getElementById('tocSidebar');
+            sidebar?.classList.remove('active');
+            console.log('✖️ TOC closed via close button');
         });
 
         // Close TOC on Escape key

@@ -258,7 +258,7 @@
         .videos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px;
+            gap: 8px;
         }
 
         /* Video Card */
@@ -274,7 +274,7 @@
         .video-thumbnail {
             position: relative;
             width: 100%;
-            padding-top: 50%; /* Balanced ratio - professional and clean */
+            padding-top: 45%; /* Tighter ratio - minimal black space */
             background: #0f0f0f;
             overflow: hidden;
             border-radius: 12px;
@@ -330,7 +330,7 @@
         }
 
         .video-info {
-            padding: 6px 0 0 0;
+            padding: 4px 0 0 0;
         }
 
         .video-title {
@@ -513,6 +513,8 @@
         let categories = {};
         let currentCategory = 'all';
         let currentSort = 'newest';
+        let videosPerBatch = 12; // Load 12 videos at a time
+        let currentBatch = 1; // Current batch number
         
         // Video stats cache with timestamp
         const videoStatsCache = new Map();
@@ -720,6 +722,11 @@
             const tabsContainer = document.getElementById('categoryTabs');
             const allButton = tabsContainer.querySelector('.category-tab[data-category="all"]');
             
+            // Add event listener to "All Videos" button
+            if (allButton) {
+                allButton.addEventListener('click', () => filterByCategory('all', allButton));
+            }
+            
             // Only add tabs for categories that have videos
             Object.entries(categories).forEach(([categoryName, categoryData]) => {
                 if (categoryData.videos && categoryData.videos.length > 0) {
@@ -747,8 +754,8 @@
             renderVideos();
         }
 
-        // Render videos
-        function renderVideos() {
+        // Render videos with lazy loading
+        function renderVideos(append = false) {
             const container = document.getElementById('videosContainer');
             
             // Filter videos
@@ -766,6 +773,11 @@
             // Sort videos
             filteredVideos = sortVideos(filteredVideos);
 
+            // Reset batch when not appending
+            if (!append) {
+                currentBatch = 1;
+            }
+
             // Render
             if (filteredVideos.length === 0) {
                 container.innerHTML = `
@@ -778,10 +790,15 @@
                 return;
             }
 
-            // Render all videos in one universal grid
-            const html = `
+            // Calculate videos to show
+            const totalToShow = videosPerBatch * currentBatch;
+            const videosToShow = filteredVideos.slice(0, totalToShow);
+            const hasMore = filteredVideos.length > totalToShow;
+
+            // Render videos in batches
+            const videosHtml = `
                 <div class="videos-grid">
-                    ${filteredVideos.map((video, index) => {
+                    ${videosToShow.map((video, index) => {
                         // Get real stats from cache or fallback to JSON data
                         const stats = videoStatsCache.get(video.videoId);
                         const duration = stats?.duration || video.duration || '0:00';
@@ -810,12 +827,38 @@
                                 </div>
                             </div>
                         </div>
-                        `;
+`;
                     }).join('')}
                 </div>
+                ${hasMore ? `
+                    <div style="text-align: center; margin: 40px 0;">
+                        <button id="loadMoreBtn" style="
+                            padding: 15px 40px;
+                            background: linear-gradient(135deg, #CC0000, #990000);
+                            border: 2px solid rgba(204, 0, 0, 0.5);
+                            border-radius: 12px;
+                            color: white;
+                            font-size: 1rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(204,0,0,0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                            <i class="fas fa-arrow-down"></i> Load More (${filteredVideos.length - totalToShow} remaining)
+                        </button>
+                    </div>
+                ` : ''}
             `;
 
-            container.innerHTML = html;
+            container.innerHTML = videosHtml;
+            
+            // Add event listener to Load More button
+            if (hasMore) {
+                document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+                    currentBatch++;
+                    renderVideos(true);
+                    window.scrollTo({ top: document.querySelector('.videos-grid').offsetTop + 200, behavior: 'smooth' });
+                });
+            }
         }
 
         // Sort videos
