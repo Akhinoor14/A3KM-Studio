@@ -13,62 +13,62 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Only Boss Navbar Styles -->
-    <link rel="stylesheet" href="../shared/only-boss-navbar.css">
-    
     <!-- Dashboard Specific Styles -->
     <link rel="stylesheet" href="only-boss-dashboard-new.css">
 </head>
 <body>
-    <!-- Only Boss Navbar -->
-    <div id="onlyBossNavbar"></div>
-
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <div class="dashboard-header-content">
-            <div class="dashboard-title-section">
-                <div class="crown-icon-wrapper">
-                    <i class="fas fa-crown crown-icon"></i>
+    <!-- Combined Only Boss Header -->
+    <div class="only-boss-unified-header">
+        <!-- Top Navigation Bar -->
+        <nav class="only-boss-top-nav">
+            <div class="only-boss-nav-container">
+                <div class="only-boss-nav-logo">
+                    <i class="fas fa-crown"></i>
+                    <span>Only Boss Portal</span>
                 </div>
-                <div>
-                    <h1 class="dashboard-main-title">Administrator Control Panel</h1>
-                    <p class="dashboard-subtitle">Session Active • Last Login: <span id="lastLogin">--</span></p>
+                <div class="only-boss-nav-items">
+                    <a href="../auth/only-boss.html" class="only-boss-nav-item">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login</span>
+                    </a>
+                    <a href="../dashboard/only-boss-dashboard-redesigned.html" class="only-boss-nav-item active">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="../managers/Content-studio/upload-interface.html" class="only-boss-nav-item">
+                        <i class="fas fa-upload"></i>
+                        <span>Uploads</span>
+                    </a>
+                    <a href="../../Home/index.html" class="only-boss-nav-item only-boss-nav-home" id="homeLink">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
                 </div>
             </div>
-            <button class="dashboard-logout-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </button>
+        </nav>
+        
+        <!-- Dashboard Info Bar -->
+        <div class="dashboard-info-bar">
+            <div class="dashboard-info-container">
+                <div class="dashboard-identity">
+                    <div class="crown-badge">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="dashboard-text">
+                        <h1 class="dashboard-title">Administrator Control Panel</h1>
+                        <p class="dashboard-session">Session Active • Last Login: <span id="lastLogin">--</span></p>
+                    </div>
+                </div>
+                <button class="dashboard-logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Dashboard Container -->
     <div class="dashboard-container">
-        <!-- Quick Stats -->
-        <div class="quick-stats">
-            <div class="stat-card">
-                <i class="fas fa-tasks"></i>
-                <div>
-                    <div class="stat-value">7</div>
-                    <div class="stat-label">Management Tools</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-shield-alt"></i>
-                <div>
-                    <div class="stat-value">Active</div>
-                    <div class="stat-label">Security Status</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-check-circle"></i>
-                <div>
-                    <div class="stat-value">Online</div>
-                    <div class="stat-label">System Status</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Section Header -->
         <div class="section-header">
             <h2><i class="fas fa-tools"></i> Management Tools</h2>
@@ -123,20 +123,16 @@
 
     <!-- Dashboard JavaScript -->
     <script>
-        // Load Only Boss Navbar
-        fetch('../shared/only-boss-navbar.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('onlyBossNavbar').innerHTML = data;
-                // Set active page
-                const navLinks = document.querySelectorAll('.only-boss-navbar a');
-                navLinks.forEach(link => {
-                    if (link.getAttribute('href') === 'only-boss-dashboard.html') {
-                        link.classList.add('active');
-                    }
+        // Clear session when clicking Home link
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeLink = document.getElementById('homeLink');
+            if (homeLink) {
+                homeLink.addEventListener('click', function(e) {
+                    sessionStorage.removeItem('onlyBossAuthenticated');
+                    sessionStorage.removeItem('authTime');
                 });
-            })
-            .catch(error => console.error('Error loading navbar:', error));
+            }
+        });
 
         // Authentication Check
         function checkAuthentication() {
