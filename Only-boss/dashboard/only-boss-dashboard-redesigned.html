@@ -170,8 +170,8 @@
         // Logout Function
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('onlyBossAuthenticated');
-                localStorage.removeItem('authTime');
+                sessionStorage.removeItem('onlyBossAuthenticated');
+                sessionStorage.removeItem('authTime');
                 window.location.href = '../auth/only-boss.html';
             }
         }
@@ -190,10 +190,20 @@
         // Prevent going back after logout
         window.history.pushState(null, "", window.location.href);
         window.onpopstate = function() {
-            if (!localStorage.getItem('onlyBossAuthenticated')) {
+            if (!sessionStorage.getItem('onlyBossAuthenticated')) {
                 window.location.href = '../auth/only-boss.html';
             }
         };
+        
+        // Clear session when navigating away from Only Boss
+        window.addEventListener('beforeunload', function(e) {
+            // Check if navigating to non-Only Boss page
+            const nextUrl = e.target.activeElement?.href || '';
+            if (nextUrl && !nextUrl.includes('/Only-boss/') && !nextUrl.includes('/Only boss/')) {
+                sessionStorage.removeItem('onlyBossAuthenticated');
+                sessionStorage.removeItem('authTime');
+            }
+        });
     </script>
 </body>
 </html>
