@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolidWorks Commercial Projects - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="solidworks-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="solidworks-gallery.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Gallery
+            </a>
+            <h1>
+                <i class="fas fa-briefcase"></i>
+                Commercial SolidWorks Projects
+            </h1>
+            <p>💼 Client work and professional deliverables with full documentation</p>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-briefcase"></i>
+                <div class="stat-value" id="totalProjects">0</div>
+                <div class="stat-label">Commercial Projects</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-user-tie"></i>
+                <div class="stat-value" id="clientCount">0</div>
+                <div class="stat-label">Clients</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-file-invoice"></i>
+                <div class="stat-value" id="deliverableCount">0</div>
+                <div class="stat-label">Deliverables</div>
+            </div>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="models-grid" id="modelsGrid">
+            <!-- Projects will be loaded dynamically -->
+        </div>
+    </div>
+
+    <script src="solidworks-paid-data.js"></script>
+    <script>
+        // Load and display paid projects
+        function loadModels() {
+            const grid = document.getElementById('modelsGrid');
+            
+            if (!paidProjects || paidProjects.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-briefcase"></i>
+                        <h3>No Commercial Projects Yet</h3>
+                        <p>Upload your first commercial project from the manager.</p>
+                        <a href="../../Only-boss/managers/projects/solidworks/solidworks-manager.html" class="btn-primary">
+                            <i class="fas fa-upload"></i> Upload Project
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = paidProjects.map(project => `
+                <div class="model-card" onclick="openModel('${project.id}')">
+                    <div class="model-image">
+                        <img src="../../Projects Storage/Solidwork Projects/${project.folder}/${project.files?.images?.[0] || 'preview.png'}" 
+                             alt="${project.title}"
+                             onerror="this.src='../../images/placeholder-solidworks.png'">
+                        <div class="model-badge paid">💼 Commercial</div>
+                    </div>
+                    <div class="model-content">
+                        <div class="model-number">Project ${project.id}</div>
+                        <h3>${project.title}</h3>
+                        <p>${project.subtitle}</p>
+                        <div class="model-features">
+                            ${project.features.slice(0, 3).map(f => `<span><i class="fas fa-check"></i> ${f}</span>`).join('')}
+                        </div>
+                        <div class="model-footer">
+                            <span><i class="fas fa-eye"></i> ${project.views || 0}</span>
+                            <span><i class="fas fa-dollar-sign"></i> Commercial</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalProjects').textContent = paidProjects.length;
+            document.getElementById('clientCount').textContent = 
+                new Set(paidProjects.filter(p => p.client).map(p => p.client)).size;
+            document.getElementById('deliverableCount').textContent = 
+                paidProjects.reduce((sum, p) => sum + (p.deliverables?.length || 0), 0);
+        }
+
+        function openModel(id) {
+            window.location.href = `solidworks-model-viewer.html?id=${id}&level=paid`;
+        }
+
+        // Load on page load
+        loadModels();
+    </script>
+</body>
+</html>

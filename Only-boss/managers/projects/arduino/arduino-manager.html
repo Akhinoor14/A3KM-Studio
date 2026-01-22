@@ -812,7 +812,19 @@
                                 <i class="fas fa-heading"></i>
                                 Project Title
                             </label>
-                            <input type="text" id="projectTitle" placeholder="LED Pattern Control" required>
+                            <input type="text" id="projectTitle" list="titleSuggestions" placeholder="LED Pattern Control" required>
+                            <datalist id="titleSuggestions">
+                                <option value="LED Blinking Pattern">
+                                <option value="Traffic Light System">
+                                <option value="Temperature Sensor Monitor">
+                                <option value="Ultrasonic Distance Meter">
+                                <option value="Servo Motor Controller">
+                                <option value="LCD Display Project">
+                                <option value="IR Remote Control">
+                                <option value="Motion Detector Alarm">
+                                <option value="RGB LED Controller">
+                                <option value="Line Following Robot">
+                            </datalist>
                             <small>Will auto-generate folder: "24 Project Title"</small>
                         </div>
 
@@ -821,13 +833,14 @@
                                 <i class="fas fa-tag"></i>
                                 Category
                             </label>
-                            <select id="projectCategory" required>
+                            <select id="projectCategory" required onchange="updateCategoryHelper()">
                                 <option value="">-- Select Category --</option>
                                 <option value="led-basics">LED Projects</option>
                                 <option value="sensors-actuators">Sensors & Actuators</option>
                                 <option value="display-input">Displays & Input</option>
                                 <option value="advanced-projects">Advanced Projects</option>
                             </select>
+                            <small id="categoryHelper" style="color: #00d4ff; display: block; margin-top: 5px; font-style: italic;"></small>
                         </div>
                     </div>
 
@@ -844,6 +857,17 @@
                             <i class="fas fa-file-alt"></i>
                             Full Description
                         </label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                            <button type="button" onclick="insertTemplate('basic')" style="padding: 5px 12px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 0.85rem; transition: all 0.3s;">
+                                <i class="fas fa-lightbulb"></i> Basic Template
+                            </button>
+                            <button type="button" onclick="insertTemplate('sensor')" style="padding: 5px 12px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 0.85rem; transition: all 0.3s;">
+                                <i class="fas fa-microchip"></i> Sensor Project
+                            </button>
+                            <button type="button" onclick="insertTemplate('advanced')" style="padding: 5px 12px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 6px; color: #00d4ff; cursor: pointer; font-size: 0.85rem; transition: all 0.3s;">
+                                <i class="fas fa-code"></i> Advanced System
+                            </button>
+                        </div>
                         <textarea id="projectDescription" placeholder="Detailed project description..."></textarea>
                     </div>
 
@@ -954,10 +978,16 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-save" style="width: 100%; padding: 15px; font-size: 1.1rem;">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Create Project Entry</span>
-                    </button>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button type="submit" class="btn btn-save" style="flex: 1; padding: 15px; font-size: 1.1rem;">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Create Project Entry</span>
+                        </button>
+                        <button type="button" class="btn" onclick="pushToGitHub()" style="background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); color: white; padding: 15px 30px;">
+                            <i class="fab fa-github"></i>
+                            Push to GitHub
+                        </button>
+                    </div>
                 </form>
             </div>
 
@@ -1341,6 +1371,205 @@
             });
         }
 
+        // ===== FORM SUBMISSION HANDLER =====
+        document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = sanitizeInput(document.getElementById('projectTitle').value.trim());
+            const subtitle = sanitizeInput(document.getElementById('projectSubtitle')?.value.trim() || '');
+            const description = sanitizeInput(document.getElementById('projectDescription')?.value.trim() || '');
+            const category = document.getElementById('projectCategory').value;
+            const tinkercadUrl = document.getElementById('tinkercadUrl')?.value.trim() || '';
+            
+            if (!title || !category) {
+                alert('⚠️ Please fill in all required fields!');
+                return;
+            }
+            
+            // Check duplicate
+            if (!checkDuplicate(title)) return;
+            
+            // Get next ID
+            const nextId = arduinoData.projects.length > 0 
+                ? Math.max(...arduinoData.projects.map(p => p.id)) + 1 
+                : 1;
+            
+            // Get selected components
+            const components = [];
+            document.querySelectorAll('.component-checkbox input:checked').forEach(cb => {
+                components.push(cb.value);
+            });
+            
+            // Create folder name (auto-numbered)
+            const folderNumber = String(nextId).padStart(2, '0');
+            const folderName = `${folderNumber} ${title}`;
+            
+            // Get uploaded files info
+            const codeFilesList = document.getElementById('codeFilesList')?.textContent || '';
+            const hasCode = codeFilesList.length > 0;
+            
+            // Create project object
+            const newProject = {
+                id: nextId,
+                folder: folderName,
+                title: title,
+                subtitle: subtitle,
+                description: description,
+                category: category,
+                components: components,
+                files: {
+                    code: hasCode ? `${title.replace(/\\s+/g, '-')}.ino` : '',
+                    circuit: 'circuit-diagram.png',
+                    readme: 'README.md',
+                    explanation: 'Code Explaination (for beginner).md'
+                },
+                tinkercadUrl: tinkercadUrl,
+                dateAdded: new Date().toISOString(),
+                views: 0,
+                downloads: 0
+            };
+            
+            // Add to data
+            arduinoData.projects.push(newProject);
+            arduinoData.statistics.totalProjects = arduinoData.projects.length;
+            arduinoData.statistics.lastUpdated = new Date().toISOString();
+            
+            // Update category counts
+            Object.keys(arduinoData.categories).forEach(cat => {
+                arduinoData.categories[cat].count = arduinoData.projects.filter(p => p.category === cat).length;
+            });
+            
+            // Save and update UI
+            saveToCache(arduinoData);
+            updateStats();
+            renderProjectsList();
+            document.getElementById('jsonEditor').value = JSON.stringify(arduinoData, null, 2);
+            generateFolderStructure();
+            
+            // Show success with auto-generated card preview
+            const cardHTML = generateProjectCard(newProject);
+            
+            alert(`✅ Project Created Successfully!\\n\\n` +
+                  `ID: ${nextId}\\n` +
+                  `Folder: "${folderName}"\\n` +
+                  `Category: ${arduinoData.categories[category].name}\\n\\n` +
+                  `Next Steps:\\n` +
+                  `1. Download updated JSON from JSON Editor tab\\n` +
+                  `2. Create folder: "Projects Storage/Arduino UNO Projects with Tinkercad/${folderName}/"\\n` +
+                  `3. Upload your files to that folder\\n` +
+                  `4. Update arduino-data.json in repository\\n` +
+                  `5. Project card will auto-appear on arduino-projects.html`);
+            
+            // Reset form
+            document.getElementById('uploadForm').reset();
+            document.getElementById('codeFilesList').innerHTML = '';
+            document.getElementById('imagePreviews').innerHTML = '';
+            
+            // Switch to manage tab to see the new project
+            switchTab('manage');
+        });
+
+        // Generate project card HTML for preview
+        function generateProjectCard(project) {
+            return `<div class="project-card" data-category="${project.category}">
+    <div class="project-number">${project.id}</div>
+    <h3 class="project-title">${project.title}</h3>
+    <p class="project-subtitle">${project.subtitle}</p>
+    <div class="project-meta">
+        <span><i class="fas fa-microchip"></i> ${project.components.length} Components</span>
+        <span><i class="fas fa-eye"></i> ${project.views} Views</span>
+    </div>
+    <a href="arduino-project-viewer.html?id=${project.id}" class="view-btn">
+        <i class="fas fa-arrow-right"></i> View Project
+    </a>
+</div>`;
+        }
+
+        // ===== SMART SUGGESTIONS & TEMPLATES =====
+        
+        // Category Helper - Shows examples when category selected
+        function updateCategoryHelper() {
+            const category = document.getElementById('projectCategory').value;
+            const helper = document.getElementById('categoryHelper');
+            
+            const helpers = {
+                'led-basics': '💡 Examples: LED patterns, traffic lights, RGB color mixing',
+                'sensors-actuators': '🔌 Examples: Temperature monitoring, ultrasonic distance, servo control',
+                'display-input': '📺 Examples: LCD displays, keypad input, OLED screens',
+                'advanced-projects': '🚀 Examples: Robots, IoT systems, complex automation'
+            };
+            
+            helper.textContent = helpers[category] || '';
+        }
+        
+        // Description Templates
+        function insertTemplate(type) {
+            const descField = document.getElementById('projectDescription');
+            const templates = {
+                basic: `This project demonstrates [main functionality] using Arduino UNO.
+
+**Components Used:**
+- Arduino UNO
+- [Component 1]
+- [Component 2]
+- Jumper wires
+
+**Features:**
+- [Feature 1]
+- [Feature 2]
+- Easy to understand code for beginners
+
+**How it Works:**
+The Arduino reads input from [sensor/input] and controls [output device] based on the programmed logic.`,
+
+                sensor: `This sensor-based project uses Arduino to monitor and respond to environmental changes.
+
+**Sensors & Components:**
+- Arduino UNO
+- [Sensor Type] - for measuring [parameter]
+- LCD/LED for display
+- [Additional components]
+
+**Functionality:**
+- Real-time [parameter] monitoring
+- Visual/Audio feedback
+- Serial monitor data logging
+- Threshold-based alerts
+
+**Applications:**
+Perfect for learning sensor interfacing and data processing with Arduino.`,
+
+                advanced: `Advanced Arduino project featuring [system name] with multiple integrated components.
+
+**System Overview:**
+This project combines [technology 1] with [technology 2] to create a fully functional [device/system].
+
+**Key Components:**
+- Arduino UNO (main controller)
+- [Module 1] - for [purpose]
+- [Module 2] - for [purpose]  
+- Additional circuitry for [function]
+
+**Advanced Features:**
+- Multi-tasking using millis()
+- Interrupt-based input handling
+- Serial communication protocol
+- Energy-efficient design
+
+**Technical Highlights:**
+- [Technical aspect 1]
+- [Technical aspect 2]
+- Modular code structure for easy customization
+
+**Skill Level:** Intermediate to Advanced`
+            };
+            
+            if (templates[type]) {
+                descField.value = templates[type];
+                descField.focus();
+            }
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Arduino Manager initialized');
@@ -1663,25 +1892,6 @@
             });
         }
 
-        container.innerHTML = arduinoData.projects.map(project => `
-                <div class="project-item">
-                    <div class="project-number">${project.id}</div>
-                    <div class="project-info">
-                        <h4>${project.title}</h4>
-                        <p>${project.subtitle || 'No description'}</p>
-                    </div>
-                    <div class="project-actions">
-                        <button class="btn-icon" onclick="editProject(${project.id})" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon delete" onclick="deleteProject(${project.id})" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
         // Upload form submission
         document.getElementById('uploadForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1889,6 +2099,67 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
                 </div>
             `).join('');
         });
+    </script>
+
+    <!-- Advanced Feature Modules -->
+    <script src="../shared-utilities.js"></script>
+    <script src="../github-api-handler.js"></script>
+    <script src="../version-history.js"></script>
+    <script src="../tags-system.js"></script>
+    <script src="../advanced-search.js"></script>
+    <script src="../analytics-dashboard.js"></script>
+    <script src="../readme-generator.js"></script>
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Initialize Advanced Features
+        let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            githubHandler = new GitHubAPIHandler();
+            versionHistory = new VersionHistoryManager('arduino_projects');
+            tagsManager = new TagsManager();
+            advancedSearch = new AdvancedSearchManager();
+            analyticsInstance = new AnalyticsDashboard([]);
+            readmeGenerator = new READMEGenerator();
+
+            githubHandler.loadToken();
+            console.log('✅ All advanced features loaded for Arduino Manager');
+        });
+
+        window.pushToGitHub = async function() {
+            if (!await githubHandler.verifyToken()) {
+                showGitHubAuthModal(githubHandler);
+                return;
+            }
+
+            try {
+                await showUploadProgressModal(async (updateProgress) => {
+                    await githubHandler.uploadTextFile(
+                        'Projects Code/Arduino/arduino-data.json',
+                        JSON.stringify(arduinoData, null, 2),
+                        'Update Arduino projects data'
+                    );
+                    updateProgress(100, 'Complete!');
+                });
+                
+                alert('✅ Pushed to GitHub successfully!');
+            } catch (error) {
+                alert('❌ GitHub push failed: ' + error.message);
+            }
+        };
+
+        window.generateREADME = async function(projectId) {
+            const project = arduinoData.projects.find(p => p.id === projectId);
+            if (!project) return;
+            await showREADMEPreview(project, readmeGenerator);
+        };
+
+        window.showVersionHistory = function(projectId) {
+            showVersionHistoryModal(projectId, versionHistory, arduinoData.projects);
+        };
     </script>
 </body>
 </html>

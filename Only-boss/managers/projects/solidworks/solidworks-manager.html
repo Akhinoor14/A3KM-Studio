@@ -726,12 +726,22 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label><i class="fas fa-tag"></i> Project Title *</label>
-                                <input type="text" id="projectTitle" required placeholder="e.g., Mechanical Gripper">
+                                <input type="text" id="projectTitle" list="titleSuggestions" required placeholder="e.g., Mechanical Gripper">
+                                <datalist id="titleSuggestions">
+                                    <option value="Robotic Arm Assembly">
+                                    <option value="Gear Box Design">
+                                    <option value="Pneumatic Cylinder">
+                                    <option value="Bearing Housing">
+                                    <option value="Chassis Frame">
+                                    <option value="3D Printer Part">
+                                    <option value="Motor Mount">
+                                    <option value="Industrial Valve">
+                                </datalist>
                             </div>
 
                             <div class="form-group">
                                 <label><i class="fas fa-folder"></i> Category *</label>
-                                <select id="projectCategory" required>
+                                <select id="projectCategory" onchange="updateCategoryHelper()" required>
                                     <option value="">Select category...</option>
                                     <option value="parts">Parts</option>
                                     <option value="assemblies">Assemblies</option>
@@ -739,6 +749,21 @@
                                     <option value="mechanical">Mechanical Design</option>
                                     <option value="industrial">Industrial Design</option>
                                 </select>
+                                <small id="categoryHelper" style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;"></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-star"></i> Difficulty Level *</label>
+                                <select id="projectDifficulty" required>
+                                    <option value="">Select level...</option>
+                                    <option value="beginner">⭐ Beginner - Basic Models</option>
+                                    <option value="intermediate">⭐⭐ Intermediate - Complex Assemblies</option>
+                                    <option value="pro">⭐⭐⭐ Professional - Advanced Designs</option>
+                                    <option value="paid">💼 Commercial - Client Projects</option>
+                                </select>
+                                <small style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;">
+                                    Each level has independent numbering (Model 1, 2, 3...)
+                                </small>
                             </div>
 
                             <div class="form-group full-width">
@@ -748,6 +773,17 @@
 
                             <div class="form-group full-width">
                                 <label><i class="fas fa-align-justify"></i> Description *</label>
+                                <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                                    <button type="button" onclick="insertTemplate('mechanical')" style="padding: 5px 12px; background: rgba(255, 69, 0, 0.1); border: 1px solid rgba(255, 69, 0, 0.3); border-radius: 4px; color: #ff4500; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-cog"></i> Mechanical
+                                    </button>
+                                    <button type="button" onclick="insertTemplate('assembly')" style="padding: 5px 12px; background: rgba(255, 69, 0, 0.1); border: 1px solid rgba(255, 69, 0, 0.3); border-radius: 4px; color: #ff4500; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-cubes"></i> Assembly
+                                    </button>
+                                    <button type="button" onclick="insertTemplate('part')" style="padding: 5px 12px; background: rgba(255, 69, 0, 0.1); border: 1px solid rgba(255, 69, 0, 0.3); border-radius: 4px; color: #ff4500; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-cube"></i> Single Part
+                                    </button>
+                                </div>
                                 <textarea id="projectDescription" required placeholder="Detailed project description..."></textarea>
                             </div>
 
@@ -821,10 +857,14 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-upload"></i>
                                 Upload Project
+                            </button>
+                            <button type="button" class="btn" onclick="pushToGitHub()" style="background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); color: white;">
+                                <i class="fab fa-github"></i>
+                                Push to GitHub
                             </button>
                             <button type="reset" class="btn btn-secondary">
                                 <i class="fas fa-redo"></i>
@@ -1293,6 +1333,141 @@
             };
         }
 
+        // ===== FORM SUBMISSION HANDLER =====
+        document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const title = sanitizeInput(document.getElementById('projectTitle').value.trim());
+            const category = document.getElementById('projectCategory').value;
+            const description = sanitizeInput(document.getElementById('projectDescription').value.trim());
+            const difficulty = document.getElementById('projectDifficulty').value;
+            const subtitle = sanitizeInput(document.getElementById('projectSubtitle').value.trim());
+            
+            // Validation
+            if (!title || !category || !description || !difficulty) {
+                alert('⚠️ Please fill in all required fields (Title, Category, Description, Difficulty)!');
+                return;
+            }
+            
+            // Check for duplicates
+            const duplicate = projectsData.projects.find(p => 
+                p.title.toLowerCase() === title.toLowerCase()
+            );
+            if (duplicate) {
+                alert('⚠️ A project with this title already exists!\n\nPlease use a different title.');
+                return;
+            }
+            
+            // Collect features from checkboxes
+            const features = [];
+            document.querySelectorAll('.checkbox-grid input[type="checkbox"]:checked').forEach(cb => {
+                features.push(cb.value);
+            });
+            
+            // Generate next ID (independent per difficulty level)
+            const projectsInLevel = projectsData.projects.filter(p => p.difficulty === difficulty);
+            const nextId = projectsInLevel.length > 0 
+                ? Math.max(...projectsInLevel.map(p => p.id)) + 1 
+                : 1;
+            
+            // Generate folder name with difficulty prefix (matching storage structure)
+            const folderNumber = String(nextId).padStart(2, '0');
+            const folderMappings = {
+                'beginner': 'Basic (Practice) Models',
+                'intermediate': 'Intermediate (Practice) Models',
+                'pro': 'Pro (Practice) Models',
+                'paid': 'Paid (Selled) Models'
+            };
+            const folderPrefix = folderMappings[difficulty];
+            const folderName = `${folderPrefix}/Model ${folderNumber} ${title}`;
+            
+            // Collect uploaded files
+            const modelFiles = Array.from(document.getElementById('modelFiles')?.files || []);
+            const imageFiles = Array.from(document.getElementById('imageFiles')?.files || []);
+            const docFiles = Array.from(document.getElementById('docFiles')?.files || []);
+            
+            // Create file structure
+            const fileStructure = {
+                cad: modelFiles.map(f => f.name),
+                images: imageFiles.map(f => f.name),
+                documentation: docFiles.map(f => f.name)
+            };
+            
+            // Create new project object
+            const newProject = {
+                id: nextId,
+                folder: folderName,
+                title: title,
+                subtitle: subtitle || `${projectsData.categories[category].name} Project`,
+                description: description,
+                category: category,
+                difficulty: difficulty,
+                features: features,
+                files: fileStructure,
+                dateAdded: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                views: 0,
+                downloads: 0
+            };
+            
+            // Add to projects array
+            projectsData.projects.push(newProject);
+            
+            // Update category count
+            projectsData.categories[category].count = projectsData.projects.filter(p => p.category === category).length;
+            
+            // Save to cache
+            saveToCache(projectsData);
+            
+            // Update UI
+            updateStats();
+            renderProjectsList();
+            updateJSONEditor();
+            updateFolderStructure();
+            
+            // Difficulty-specific instructions
+            const levelNames = {
+                'beginner': '⭐ Beginner',
+                'intermediate': '⭐⭐ Intermediate',
+                'pro': '⭐⭐⭐ Professional',
+                'paid': '💼 Commercial'
+            };
+            
+            const dataFiles = {
+                'beginner': 'solidworks-models-data.js',
+                'intermediate': 'solidworks-intermediate-data.js',
+                'pro': 'solidworks-pro-data.js',
+                'paid': 'solidworks-paid-data.js'
+            };
+            
+            // Success message with clear instructions
+            alert(
+                `✅ SolidWorks Project Created Successfully!\n\n` +
+                `🏆 Level: ${levelNames[difficulty]}\n` +
+                `📁 Folder: "${folderName}"\n` +
+                `📂 Category: ${projectsData.categories[category].name}\n` +
+                `🔢 ID: Model ${nextId}\n\n` +
+                `📋 Next Steps:\n` +
+                `1. Download JSON from JSON Editor tab\n` +
+                `2. Create folder in GitHub:\n` +
+                `   Projects Storage/Solidwork Projects/${folderName}/\n` +
+                `   (Example: Model 01 Gear Assembly/)\n` +
+                `3. Upload CAD files, images, and docs\n` +
+                `4. Update ${dataFiles[difficulty]} in:\n` +
+                `   Projects Code/solidworks/\n` +
+                `5. Your model will appear in ${levelNames[difficulty]} gallery!`
+            );
+            
+            // Reset form
+            document.getElementById('uploadForm').reset();
+            document.getElementById('modelPreviews').innerHTML = '';
+            document.getElementById('imagePreviews').innerHTML = '';
+            
+            // Switch to Manage tab
+            showTab('manage');
+        });
+
         // Tab switching
         function switchTab(tabName) {
             // Hide all tabs
@@ -1577,6 +1752,88 @@
             `).join('');
         }
 
+        // Category Helper
+        function updateCategoryHelper() {
+            const category = document.getElementById('projectCategory').value;
+            const helper = document.getElementById('categoryHelper');
+            
+            const helpers = {
+                'parts': '🔩 Examples: Shafts, gears, bearings, custom brackets',
+                'assemblies': '🏗️ Examples: Robotic arms, gearboxes, mechanisms',
+                'mechanical': '⚙️ Examples: Transmissions, fixtures, jigs',
+                'industrial': '🏭 Examples: Product design, enclosures, housings'
+            };
+            
+            helper.textContent = helpers[category] || '';
+        }
+
+        // Templates
+        function insertTemplate(type) {
+            const descField = document.getElementById('projectDescription');
+            const templates = {
+                mechanical: `Professional mechanical design project using SolidWorks.
+
+**Design Specifications:**
+- Material: [Steel/Aluminum/Plastic]
+- Dimensions: [Key measurements]
+- Tolerances: [±0.1mm / Custom]
+- Surface Finish: [As specified]
+
+**Key Features:**
+- [Feature 1]
+- [Feature 2]
+- Designed for [application/purpose]
+
+**Manufacturing Considerations:**
+- CNC machining ready
+- Standard tooling compatibility
+- Cost-effective design`,
+
+                assembly: `Multi-component assembly project designed in SolidWorks.
+
+**Assembly Overview:**
+- Total Parts: [Number]
+- Main Components: [List key parts]
+- Fasteners: [Bolts, screws, etc.]
+- Motion Type: [Static/Kinematic/Dynamic]
+
+**Design Features:**
+- Mate relationships properly defined
+- Interference detection completed
+- Bill of Materials (BOM) included
+- Exploded view for assembly instructions
+
+**Applications:**
+Perfect for [industry/application] requiring [key functionality].`,
+
+                part: `Individual SolidWorks part with detailed specifications.
+
+**Part Information:**
+- Part Name: [Name]
+- Part Number: [PN-XXX]
+- Material: [Specify]
+- Weight: [kg/lbs]
+
+**Design Features:**
+- [Primary feature 1]
+- [Primary feature 2]
+- [Surface treatments/finishing]
+
+**Technical Details:**
+- Created using: [Extrude/Revolve/Loft/etc.]
+- Critical dimensions: [Specify]
+- Tolerance requirements: [GD&T if applicable]
+
+**Usage:**
+This part is designed for [specific application] in [industry/system].`
+            };
+            
+            if (templates[type]) {
+                descField.value = templates[type];
+                descField.focus();
+            }
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadExistingData();
@@ -1591,6 +1848,67 @@
                 importInput.addEventListener('change', importJSON);
             }
         });
+    </script>
+
+    <!-- Advanced Feature Modules -->
+    <script src="../shared-utilities.js"></script>
+    <script src="../github-api-handler.js"></script>
+    <script src="../version-history.js"></script>
+    <script src="../tags-system.js"></script>
+    <script src="../advanced-search.js"></script>
+    <script src="../analytics-dashboard.js"></script>
+    <script src="../readme-generator.js"></script>
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Initialize Advanced Features
+        let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            githubHandler = new GitHubAPIHandler();
+            versionHistory = new VersionHistoryManager('solidworks_projects');
+            tagsManager = new TagsManager();
+            advancedSearch = new AdvancedSearchManager();
+            analyticsInstance = new AnalyticsDashboard([]);
+            readmeGenerator = new READMEGenerator();
+
+            githubHandler.loadToken();
+            console.log('✅ All advanced features loaded for SolidWorks Manager');
+        });
+
+        window.pushToGitHub = async function() {
+            if (!await githubHandler.verifyToken()) {
+                showGitHubAuthModal(githubHandler);
+                return;
+            }
+
+            try {
+                await showUploadProgressModal(async (updateProgress) => {
+                    await githubHandler.uploadTextFile(
+                        'Projects Code/solidworks/solidworks-models-data.js',
+                        'const solidworksData = ' + JSON.stringify(solidworksData, null, 2) + ';',
+                        'Update SolidWorks models data'
+                    );
+                    updateProgress(100, 'Complete!');
+                });
+                
+                alert('✅ Pushed to GitHub successfully!');
+            } catch (error) {
+                alert('❌ GitHub push failed: ' + error.message);
+            }
+        };
+
+        window.generateREADME = async function(projectId) {
+            const project = solidworksData.models?.find(m => m.id === projectId);
+            if (!project) return;
+            await showREADMEPreview(project, readmeGenerator);
+        };
+
+        window.showVersionHistory = function(projectId) {
+            showVersionHistoryModal(projectId, versionHistory, solidworksData.models || []);
+        };
     </script>
 </body>
 </html>

@@ -29,8 +29,11 @@
             crossorigin="anonymous" 
             referrerpolicy="no-referrer"></script>
     
-    <!-- Model Data - Load Before Main Script -->
+    <!-- Model Data - Load Before Main Script (All Levels) -->
     <script src="solidworks-models-data.js"></script>
+    <script src="solidworks-intermediate-data.js"></script>
+    <script src="solidworks-pro-data.js"></script>
+    <script src="solidworks-paid-data.js"></script>
     
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -1027,14 +1030,37 @@
                 }
             };
 
-            // Get model ID from URL
+            // Get model ID and level from URL
             const urlParams = new URLSearchParams(window.location.search);
             const modelId = urlParams.get('id') || 'model-01';
+            const level = urlParams.get('level') || 'beginner';
 
-            // Get model data
-            let currentModel = getModelById(modelId);
-            const allModels = getAllModels();
-            const currentIndex = allModels.findIndex(m => m.id === modelId);
+            // Get models array based on level
+            let allModels;
+            switch(level) {
+                case 'intermediate':
+                    allModels = intermediateModels || [];
+                    break;
+                case 'pro':
+                    allModels = proModels || [];
+                    break;
+                case 'paid':
+                    allModels = paidProjects || [];
+                    break;
+                case 'beginner':
+                default:
+                    allModels = getAllModels();
+                    break;
+            }
+
+            // Get current model from appropriate array
+            let currentModel;
+            if (level === 'beginner') {
+                currentModel = getModelById(modelId);
+            } else {
+                currentModel = allModels.find(m => m.id == modelId);
+            }
+            const currentIndex = allModels.findIndex(m => m.id == (level === 'beginner' ? modelId : modelId));
 
             // Elements - Use let for modelViewer so it can be reassigned
             let modelViewer = document.getElementById('modelViewer');
@@ -1050,33 +1076,49 @@
                 return;
             }
 
+            // Handle different data structures (beginner vs new levels)
+            const isBeginner = level === 'beginner';
+            const modelName = isBeginner ? model.name : model.title;
+            const modelDifficulty = isBeginner ? model.difficulty : 
+                (level === 'intermediate' ? '⭐⭐ Intermediate' : 
+                 level === 'pro' ? '⭐⭐⭐ Professional' : 
+                 '💼 Commercial');
+            const modelCategory = isBeginner ? model.category : model.category;
+            const modelDescription = isBeginner ? model.description : model.description;
+            const modelFilesList = isBeginner ? model.files : 
+                [...(model.files.cad || []), ...(model.files.images || []), ...(model.files.documentation || [])];
+            const modelTags = isBeginner ? model.tags : model.features;
+
             // Update title and metadata
-            document.getElementById('modelName').textContent = model.name;
-            document.getElementById('modelDifficulty').textContent = model.difficulty;
-            document.getElementById('modelDay').textContent = model.day;
-            document.getElementById('modelCategory').textContent = model.category.split('(')[0].trim();
+            document.getElementById('modelName').textContent = modelName;
+            document.getElementById('modelDifficulty').textContent = modelDifficulty;
+            document.getElementById('modelDay').textContent = isBeginner ? model.day : model.dateAdded?.split('T')[0] || 'N/A';
+            document.getElementById('modelCategory').textContent = modelCategory.split('(')[0].trim();
             document.getElementById('modelPosition').textContent = `${currentIndex + 1} / ${allModels.length}`;
 
             // Update info panel
             document.getElementById('infoId').textContent = model.id;
-            document.getElementById('infoCategory').textContent = model.category;
-            document.getElementById('infoDifficulty').textContent = model.difficulty;
-            document.getElementById('infoDay').textContent = model.day;
-            document.getElementById('infoFileCount').textContent = model.files.length || 0;
-            document.getElementById('infoDescription').textContent = model.description;
+            document.getElementById('infoCategory').textContent = modelCategory;
+            document.getElementById('infoDifficulty').textContent = modelDifficulty;
+            document.getElementById('infoDay').textContent = isBeginner ? model.day : model.dateAdded?.split('T')[0] || 'N/A';
+            document.getElementById('infoFileCount').textContent = modelFilesList.length || 0;
+            document.getElementById('infoDescription').textContent = modelDescription;
 
             // Update tags
             const tagsContainer = document.getElementById('infoTags');
-            tagsContainer.innerHTML = model.tags.map(tag => 
+            tagsContainer.innerHTML = modelTags.map(tag => 
                 `<span class="tag-item">${tag}</span>`
             ).join('');
 
             // Update files list
             const filesContainer = document.getElementById('infoFiles');
-            if (model.files.length > 0) {
-                filesContainer.innerHTML = model.files.map(file => {
-                    const icon = file.includes('.SLDASM') ? 'fa-cubes' : 
-                                file.includes('.SLDPRT') ? 'fa-cube' : 'fa-file';
+            if (modelFilesList.length > 0) {
+                filesContainer.innerHTML = modelFilesList.map(file => {
+                    const icon = file.includes('.SLDASM') || file.includes('.sldasm') ? 'fa-cubes' : 
+                                file.includes('.SLDPRT') || file.includes('.sldprt') ? 'fa-cube' : 
+                                file.includes('.pdf') ? 'fa-file-pdf' :
+                                file.includes('.png') || file.includes('.jpg') ? 'fa-image' :
+                                'fa-file';
                     return `<li class="file-item"><i class="fas ${icon}"></i>${file}</li>`;
                 }).join('');
             } else {
@@ -1084,9 +1126,12 @@
             }
 
             // Load 3D model with better error handling
-            if (model.glbPath) {
-                modelViewer.src = model.glbPath;
-                modelViewer.alt = model.name;
+            const glbPath = isBeginner ? model.glbPath : 
+                `../../Projects Storage/Solidwork Projects/${model.folder}/${model.files?.cad?.[0]?.replace(/\.(sldprt|sldasm)$/i, '.glb') || 'model.glb'}`;
+            
+            if (glbPath && glbPath !== '../../Projects Storage/Solidwork Projects/undefined/model.glb') {
+                modelViewer.src = glbPath;
+                modelViewer.alt = modelName;
                 
                 modelViewer.addEventListener('load', () => {
                     if (loadingOverlay) loadingOverlay.classList.add('hidden');
@@ -1223,7 +1268,7 @@
                     
                     // Small delay to allow UI update
                     setTimeout(() => {
-                        window.location.href = `solidworks-model-viewer.html?id=${prevModel.id}`;
+                        window.location.href = `solidworks-model-viewer.html?id=${prevModel.id}&level=${level}`;
                     }, 100);
                 });
             }
@@ -1242,7 +1287,7 @@
                     
                     // Small delay to allow UI update
                     setTimeout(() => {
-                        window.location.href = `solidworks-model-viewer.html?id=${nextModel.id}`;
+                        window.location.href = `solidworks-model-viewer.html?id=${nextModel.id}&level=${level}`;
                     }, 100);
                 });
             }

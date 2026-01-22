@@ -763,19 +763,30 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label><i class="fas fa-tag"></i> Project Title *</label>
-                                <input type="text" id="projectTitle" required placeholder="e.g., Solar PV Analysis">
+                                <input type="text" id="projectTitle" list="titleSuggestions" required placeholder="e.g., Solar PV Analysis">
+                                <datalist id="titleSuggestions">
+                                    <option value="Solar Panel Optimization">
+                                    <option value="Wind Turbine Simulation">
+                                    <option value="Power System Analysis">
+                                    <option value="Heat Transfer Study">
+                                    <option value="PID Controller Design">
+                                    <option value="Signal Processing">
+                                    <option value="Data Visualization">
+                                    <option value="Simulink Model">
+                                </datalist>
                             </div>
 
                             <div class="form-group">
                                 <label><i class="fas fa-folder"></i> Category *</label>
-                                <select id="projectCategory" required>
+                                <select id="projectCategory" onchange="updateCategoryHelper()" required>
                                     <option value="">Select category...</option>
-                                    <option value="simulations">Simulations</option>
-                                    <option value="analysis">Data Analysis</option>
-                                    <option value="signal-processing">Signal Processing</option>
-                                    <option value="control-systems">Control Systems</option>
-                                    <option value="machine-learning">Machine Learning</option>
+                                    <option value="renewable">☀️ Renewable Energy</option>
+                                    <option value="power">⚡ Power Systems</option>
+                                    <option value="heat">🔥 Heat Transfer</option>
+                                    <option value="control">🎛️ Control Systems</option>
+                                    <option value="simulink">📊 Simulink Models</option>
                                 </select>
+                                <small id="categoryHelper" style="color: #0076A8; display: block; margin-top: 5px; font-style: italic;"></small>
                             </div>
 
                             <div class="form-group full-width">
@@ -785,6 +796,17 @@
 
                             <div class="form-group full-width">
                                 <label><i class="fas fa-align-justify"></i> Description *</label>
+                                <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                                    <button type="button" onclick="insertTemplate('simulation')" style="padding: 5px 12px; background: rgba(0, 118, 168, 0.1); border: 1px solid rgba(0, 118, 168, 0.3); border-radius: 4px; color: #0076A8; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-play-circle"></i> Simulation
+                                    </button>
+                                    <button type="button" onclick="insertTemplate('analysis')" style="padding: 5px 12px; background: rgba(0, 118, 168, 0.1); border: 1px solid rgba(0, 118, 168, 0.3); border-radius: 4px; color: #0076A8; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-chart-line"></i> Analysis
+                                    </button>
+                                    <button type="button" onclick="insertTemplate('visualization')" style="padding: 5px 12px; background: rgba(0, 118, 168, 0.1); border: 1px solid rgba(0, 118, 168, 0.3); border-radius: 4px; color: #0076A8; cursor: pointer; font-size: 0.85rem;">
+                                        <i class="fas fa-chart-bar"></i> Visualization
+                                    </button>
+                                </div>
                                 <textarea id="projectDescription" required placeholder="Detailed project description..."></textarea>
                             </div>
 
@@ -826,10 +848,14 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; margin-top: 25px;">
+                        <div style="display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-upload"></i>
                                 Upload Project
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="pushToGitHub()" style="background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); color: white;">
+                                <i class="fab fa-github"></i>
+                                Push to GitHub
                             </button>
                             <button type="reset" class="btn btn-secondary">
                                 <i class="fas fa-redo"></i>
@@ -855,11 +881,11 @@
                             </span>
                             <select id="bulkCategory" style="padding: 8px 12px; background: rgba(0, 118, 168, 0.1); border: 2px solid rgba(0, 118, 168, 0.3); border-radius: 6px; color: white;">
                                 <option value="">Move to category...</option>
-                                <option value="simulations">Simulations</option>
-                                <option value="analysis">Data Analysis</option>
-                                <option value="signal-processing">Signal Processing</option>
-                                <option value="control-systems">Control Systems</option>
-                                <option value="machine-learning">Machine Learning</option>
+                                <option value="renewable">☀️ Renewable Energy</option>
+                                <option value="power">⚡ Power Systems</option>
+                                <option value="heat">🔥 Heat Transfer</option>
+                                <option value="control">🎛️ Control Systems</option>
+                                <option value="simulink">📊 Simulink Models</option>
                             </select>
                             <button class="btn btn-secondary" onclick="bulkMoveCategory()">
                                 <i class="fas fa-folder-open"></i> Move
@@ -963,11 +989,11 @@
         let projectsData = {
             projects: [],
             categories: {
-                simulations: { name: "Simulations", icon: "chart-line", count: 0 },
-                analysis: { name: "Data Analysis", icon: "chart-pie", count: 0 },
-                "signal-processing": { name: "Signal Processing", icon: "wave-square", count: 0 },
-                "control-systems": { name: "Control Systems", icon: "sliders-h", count: 0 },
-                "machine-learning": { name: "Machine Learning", icon: "brain", count: 0 }
+                renewable: { name: "Renewable Energy Analysis", icon: "☀️", count: 0 },
+                power: { name: "Power Systems & Electrical", icon: "⚡", count: 0 },
+                heat: { name: "Heat Transfer & Thermodynamics", icon: "🔥", count: 0 },
+                control: { name: "Control Systems", icon: "🎛️", count: 0 },
+                simulink: { name: "Simulink Models", icon: "📊", count: 0 }
             },
             statistics: {
                 totalProjects: 0,
@@ -1177,7 +1203,7 @@
             updateJSONEditor();
             updateFolderStructure();
 
-            alert(`✅ Project "${title}" uploaded successfully!\n\n📁 Folder: ${folderName}\n🆔 ID: ${newProject.id}\n\n⚠️ Don't forget to:\n1. Create folder in Projects Storage/MATLAB Projects/\n2. Upload files via GitHub\n3. Download updated JSON and push to repository`);
+            alert(`✅ Project "${title}" uploaded successfully!\n\n📁 Folder: ${folderName}\n🆔 ID: ${newProject.id}\n\n⚠️ Don't forget to:\n1. Create folder "MATLAB Projects/" in Projects Storage/ (if not exists)\n2. Create project folder: Projects Storage/MATLAB Projects/${folderName}/\n3. Upload files via GitHub\n4. Download updated JSON and push to repository\n\n⚠️ NOTE: MATLAB Projects folder needs to be created in storage first!`);
 
             this.reset();
             document.getElementById('imagePreviews').innerHTML = '';
@@ -1555,6 +1581,88 @@
             }
         }
 
+        // Category Helper
+        function updateCategoryHelper() {
+            const category = document.getElementById('projectCategory').value;
+            const helper = document.getElementById('categoryHelper');
+            
+            const helpers = {
+                'renewable': '☀️ Examples: Solar optimization, wind turbine analysis',
+                'power': '⚡ Examples: Grid analysis, transformer modeling',
+                'heat': '🔥 Examples: Thermal analysis, cooling systems',
+                'control': '🎛️ Examples: PID controllers, stability analysis',
+                'simulink': '📊 Examples: Block diagrams, system dynamics'
+            };
+            
+            helper.textContent = helpers[category] || '';
+        }
+
+        // Templates
+        function insertTemplate(type) {
+            const descField = document.getElementById('projectDescription');
+            const templates = {
+                simulation: `MATLAB simulation project for [system/phenomenon].
+
+**Simulation Overview:**
+- System Modeled: [Name]
+- Input Parameters: [List parameters]
+- Output Variables: [Results]
+- Time Span: [Duration]
+
+**Methodology:**
+- Numerical method: [ODE45/Euler/etc.]
+- Step size: [dt value]
+- Initial conditions: [Specify]
+
+**Results:**
+- Plots generated: [Types]
+- Performance metrics: [Key results]
+- Validation: [Against theory/data]`,
+
+                analysis: `MATLAB data analysis project.
+
+**Analysis Type:**
+- Data Source: [Experimental/Simulated]
+- Variables Analyzed: [List]
+- Statistical Methods: [Used methods]
+
+**Procedure:**
+1. Data import and preprocessing
+2. [Analysis step 1]
+3. [Analysis step 2]
+4. Results visualization
+
+**Key Findings:**
+- [Finding 1]
+- [Finding 2]
+- Conclusions and recommendations`,
+
+                visualization: `MATLAB visualization project for data representation.
+
+**Visualization Goal:**
+Create comprehensive plots to illustrate [concept/data].
+
+**Plot Types:**
+- 2D plots: [line/scatter/bar]
+- 3D surface: [if applicable]
+- Animated: [yes/no]
+
+**Features:**
+- Multiple subplots for comparison
+- Custom colors and legends
+- Publication-quality formatting
+- Interactive elements (if applicable)
+
+**Applications:**
+Useful for understanding [concept] in [field/application].`
+            };
+            
+            if (templates[type]) {
+                descField.value = templates[type];
+                descField.focus();
+            }
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadExistingData();
@@ -1571,6 +1679,104 @@
                 handleCodeFiles(e.target.files);
             });
         });
+    </script>
+
+    <!-- Advanced Feature Modules -->
+    <script src="../shared-utilities.js"></script>
+    <script src="../github-api-handler.js"></script>
+    <script src="../version-history.js"></script>
+    <script src="../tags-system.js"></script>
+    <script src="../advanced-search.js"></script>
+    <script src="../analytics-dashboard.js"></script>
+    <script src="../readme-generator.js"></script>
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Initialize Advanced Features
+        let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize modules
+            githubHandler = new GitHubAPIHandler();
+            versionHistory = new VersionHistoryManager('matlab_projects');
+            tagsManager = new TagsManager();
+            advancedSearch = new AdvancedSearchManager();
+            analyticsInstance = new AnalyticsDashboard([]);
+            readmeGenerator = new READMEGenerator();
+
+            githubHandler.loadToken();
+            console.log('✅ All advanced features loaded for MATLAB Manager');
+        });
+
+        // GitHub Push Function
+        window.pushToGitHub = async function() {
+            if (!await githubHandler.verifyToken()) {
+                showGitHubAuthModal(githubHandler);
+                return;
+            }
+
+            const project = getCurrentProjectData();
+            if (!project) {
+                alert('Please fill in project details first');
+                return;
+            }
+
+            try {
+                await showUploadProgressModal(async (updateProgress) => {
+                    await githubHandler.uploadTextFile(
+                        'Projects Code/MATLAB/matlab-data.json',
+                        JSON.stringify(projectsData, null, 2),
+                        'Update MATLAB projects data'
+                    );
+                    updateProgress(100, 'Complete!');
+                });
+                
+                alert('✅ Pushed to GitHub successfully!');
+            } catch (error) {
+                alert('❌ GitHub push failed: ' + error.message);
+            }
+        };
+
+        // Generate README Function
+        window.generateREADME = async function(projectId) {
+            const project = projectsData.projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            await showREADMEPreview(project, readmeGenerator);
+        };
+
+        // Show Version History
+        window.showVersionHistory = function(projectId) {
+            showVersionHistoryModal(projectId, versionHistory, projectsData.projects);
+        };
+
+        // Track changes when saving
+        const originalSaveData = window.saveProject || function() {};
+        window.saveProject = function(projectId, newData) {
+            const oldData = projectsData.projects.find(p => p.id === projectId);
+            
+            originalSaveData(projectId, newData);
+            
+            versionHistory.addVersion(
+                projectId,
+                oldData,
+                newData,
+                oldData ? 'update' : 'create',
+                'admin'
+            );
+        };
+
+        function getCurrentProjectData() {
+            return {
+                id: document.getElementById('projectId')?.value || 'matlab-demo-' + Date.now(),
+                title: document.getElementById('projectTitle')?.value,
+                category: document.getElementById('projectCategory')?.value,
+                description: document.getElementById('projectDescription')?.value,
+                difficulty: document.getElementById('projectDifficulty')?.value || 'Intermediate'
+            };
+        }
     </script>
 </body>
 </html>
