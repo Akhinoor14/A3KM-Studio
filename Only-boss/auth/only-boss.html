@@ -63,14 +63,34 @@
 
     <script src="only-boss-auth.js"></script>
     <script>
-    // Logout button logic: clears session and redirects to login
+    // Check if already logged in - redirect to dashboard
     document.addEventListener('DOMContentLoaded', function() {
+        // Check authentication on page load
+        const isAuthenticated = localStorage.getItem('onlyBossAuthenticated');
+        const authTime = localStorage.getItem('authTime');
+        
+        if (isAuthenticated && authTime) {
+            const currentTime = new Date().getTime();
+            const loginTime = parseInt(authTime);
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            
+            // If session is still valid, redirect to dashboard
+            if (currentTime - loginTime <= sessionDuration) {
+                window.location.href = '../dashboard/only-boss-dashboard-redesigned.html';
+                return;
+            } else {
+                // Session expired, clear it
+                localStorage.removeItem('onlyBossAuthenticated');
+                localStorage.removeItem('authTime');
+            }
+        }
+        
+        // Logout button logic
         var logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function() {
-                // Clear sessionStorage/localStorage if used for auth
-                sessionStorage.removeItem('bossAuth');
-                localStorage.removeItem('bossAuth');
+                localStorage.removeItem('onlyBossAuthenticated');
+                localStorage.removeItem('authTime');
                 window.location.href = 'only-boss.html';
             });
         }
