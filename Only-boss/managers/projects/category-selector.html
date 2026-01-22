@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Manager - Category Selection</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-red: #CC0000;
+            --primary-red-dark: #990000;
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(26, 0, 0, 0.95);
+            --border-primary: rgba(204, 0, 0, 0.3);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Engineering Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(204,0,0,0.03) 0 1px, transparent 1px 30px),
+                repeating-linear-gradient(90deg, rgba(204,0,0,0.03) 0 1px, transparent 1px 30px),
+                repeating-linear-gradient(45deg, rgba(204,0,0,0.05) 0 2px, transparent 2px 40px);
+            background-size: 30px 30px, 30px 30px, 80px 80px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.8;
+        }
+
+        /* Animated Circuit Lines */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(90deg, transparent 0%, rgba(204, 0, 0, 0.1) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        @keyframes scanline {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(135deg, rgba(15, 0, 0, 0.98), rgba(5, 0, 0, 0.99));
+            border-bottom: 3px solid var(--primary-red);
+            box-shadow: 0 6px 25px rgba(255, 51, 51, 0.4);
+            padding: 20px 40px;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .crown-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            box-shadow: 0 0 40px rgba(204, 0, 0, 0.7);
+            animation: crownGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes crownGlow {
+            0%, 100% { box-shadow: 0 0 40px rgba(204, 0, 0, 0.7); }
+            50% { box-shadow: 0 0 60px rgba(204, 0, 0, 0.9); }
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            color: var(--primary-red);
+            margin-bottom: 5px;
+            font-weight: 800;
+            text-shadow: 0 0 20px rgba(204, 0, 0, 0.5);
+        }
+
+        .header-title p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 60px auto;
+            padding: 0 40px;
+        }
+
+        /* Section Header */
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-weight: 800;
+            text-shadow: 0 0 30px rgba(204, 0, 0, 0.3);
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Category Cards Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 35px;
+            margin-bottom: 60px;
+        }
+
+        /* Category Card */
+        .category-card {
+            background: linear-gradient(135deg, var(--bg-card), rgba(30, 0, 0, 0.92));
+            border: 2px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Card Glow Effect */
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(204, 0, 0, 0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+        }
+
+        .category-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(204, 0, 0, 0.4);
+        }
+
+        /* Card Icon */
+        .card-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(204, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover .card-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 15px 40px rgba(204, 0, 0, 0.7);
+        }
+
+        .card-icon-wrapper i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        /* Card Content */
+        .card-content h3 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .card-content p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* Card Stats */
+        .card-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-item i {
+            color: var(--primary-red);
+            font-size: 1.1rem;
+        }
+
+        /* Card Button */
+        .card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .card-btn:hover {
+            background: linear-gradient(135deg, var(--primary-red-dark), var(--primary-red));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(204, 0, 0, 0.5);
+        }
+
+        .card-btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card-btn:hover i {
+            transform: translateX(5px);
+        }
+
+        /* Coming Soon Badge */
+        .coming-soon-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #FFC107;
+            border-radius: 8px;
+            color: #FFD54F;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Specialty Badges */
+        .arduino-card {
+            border-color: rgba(0, 150, 136, 0.3);
+        }
+
+        .arduino-card:hover {
+            border-color: #00897B;
+        }
+
+        .arduino-card .card-icon-wrapper {
+            background: linear-gradient(135deg, #00897B, #00695C);
+        }
+
+        .matlab-card {
+            border-color: rgba(0, 118, 168, 0.3);
+        }
+
+        .matlab-card:hover {
+            border-color: #0076A8;
+        }
+
+        .matlab-card .card-icon-wrapper {
+            background: linear-gradient(135deg, #0076A8, #005580);
+        }
+
+        .solidworks-card {
+            border-color: rgba(255, 69, 0, 0.3);
+        }
+
+        .solidworks-card:hover {
+            border-color: #FF4500;
+        }
+
+        .solidworks-card .card-icon-wrapper {
+            background: linear-gradient(135deg, #FF4500, #CC3700);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .category-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .card-content h3 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .category-card:nth-child(1) { animation-delay: 0.1s; }
+        .category-card:nth-child(2) { animation-delay: 0.2s; }
+        .category-card:nth-child(3) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="crown-icon">
+                    <i class="fas fa-folder-tree"></i>
+                </div>
+                <div class="header-title">
+                    <h1>Projects Manager</h1>
+                    <p>Select a project category to manage</p>
+                </div>
+            </div>
+            <a href="../../dashboard/only-boss-dashboard-redesigned.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Section Header -->
+        <div class="section-header">
+            <h2>Choose Project Category</h2>
+            <p>Manage your engineering projects with powerful CRUD operations, auto-organization, and intelligent file handling</p>
+        </div>
+
+        <!-- Category Cards Grid -->
+        <div class="category-grid">
+            <!-- Arduino Card -->
+            <div class="category-card arduino-card" onclick="window.location.href='arduino/arduino-manager.html'">
+                <div class="card-icon-wrapper">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Arduino Projects</h3>
+                    <p>Manage Arduino UNO circuits, code, and documentation with Tinkercad integration</p>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>23 Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>4 Categories</span>
+                        </div>
+                    </div>
+                    <a href="arduino/arduino-manager.html" class="card-btn">
+                        <span>Manage Arduino</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- MATLAB Card -->
+            <div class="category-card matlab-card" onclick="window.location.href='matlab/matlab-manager.html'">
+                <div class="card-icon-wrapper">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="card-content">
+                    <h3>MATLAB Projects</h3>
+                    <p>Manage MATLAB code, simulation results, plots, and engineering analysis projects</p>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-file-code"></i>
+                            <span>1 Project</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-folder"></i>
+                            <span>4 Categories</span>
+                        </div>
+                    </div>
+                    <a href="matlab/matlab-manager.html" class="card-btn">
+                        <span>Manage MATLAB</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SolidWorks Card -->
+            <div class="category-card solidworks-card" onclick="window.location.href='solidworks/solidworks-manager.html'">
+                <div class="card-icon-wrapper">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <div class="card-content">
+                    <h3>SolidWorks Models</h3>
+                    <p>Manage 3D CAD models, assemblies, technical drawings, and GLB viewers</p>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-cubes"></i>
+                            <span>35 Models</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>5 Categories</span>
+                        </div>
+                    </div>
+                    <a href="solidworks/solidworks-manager.html" class="card-btn">
+                        <span>Open Manager</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Prevent card click when clicking button
+        document.querySelectorAll('.card-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // Log navigation
+        console.log('📂 Projects Manager Category Selector loaded');
+        console.log('✅ Arduino Manager: Available (23 projects)');
+        console.log('✅ MATLAB Manager: Available (1 project)');
+        console.log('✅ SolidWorks Manager: Available (35 models)');
+    </script>
+</body>
+</html>
