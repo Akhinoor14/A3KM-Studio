@@ -13,16 +13,17 @@ const PASSWORD_HASH = 'd7a5f8187ceede6c093445dad128e1b4ea2a21d91348a219b947ce2b7
 
 function createSession() {
     const sessionId = 'boss_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    sessionStorage.setItem('admin_session', sessionId);  // CHANGED: admin_session to match dashboard
-    localStorage.setItem('admin_last_login', new Date().toISOString());  // ADDED: for dashboard display
+    localStorage.setItem('onlyBossAuthenticated', sessionId);
+    localStorage.setItem('authTime', new Date().getTime().toString());
 }
 
 function isAuthenticated() { 
-    return sessionStorage.getItem('admin_session') !== null;  // CHANGED: admin_session
+    return localStorage.getItem('onlyBossAuthenticated') !== null;
 }
 
 function clearSession() { 
-    sessionStorage.removeItem('admin_session');  // CHANGED: specific removal
+    localStorage.removeItem('onlyBossAuthenticated');
+    localStorage.removeItem('authTime');
 }
 
 // ===========================
