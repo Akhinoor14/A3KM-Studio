@@ -17,49 +17,37 @@
     <link rel="stylesheet" href="only-boss-dashboard-new.css">
 </head>
 <body>
-    <!-- Combined Only Boss Header -->
+    <!-- Single Line Only Boss Header -->
     <div class="only-boss-unified-header">
-        <!-- Top Navigation Bar -->
-        <nav class="only-boss-top-nav">
-            <div class="only-boss-nav-container">
-                <div class="only-boss-nav-logo">
+        <div class="header-container">
+            <!-- Left: Portal Logo -->
+            <div class="portal-logo">
+                <i class="fas fa-crown"></i>
+                <span>Only Boss Portal</span>
+            </div>
+            
+            <!-- Center: Dashboard Title + Session Info -->
+            <div class="dashboard-info">
+                <div class="crown-badge">
                     <i class="fas fa-crown"></i>
-                    <span>Only Boss Portal</span>
                 </div>
-                <div class="only-boss-nav-items">
-                    <a href="../auth/only-boss.html" class="only-boss-nav-item">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Login</span>
-                    </a>
-                    <a href="../dashboard/only-boss-dashboard-redesigned.html" class="only-boss-nav-item active">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="../managers/Content-studio/upload-interface.html" class="only-boss-nav-item">
-                        <i class="fas fa-upload"></i>
-                        <span>Uploads</span>
-                    </a>
-                    <a href="../../Home/index.html" class="only-boss-nav-item only-boss-nav-home" id="homeLink">
-                        <i class="fas fa-home"></i>
-                        <span>Home</span>
-                    </a>
+                <div class="dashboard-text">
+                    <h1 class="dashboard-title">Administrator Control Panel</h1>
+                    <p class="dashboard-session">Session Active • Last Login: <span id="lastLogin">--</span></p>
                 </div>
             </div>
-        </nav>
-        
-        <!-- Dashboard Info Bar -->
-        <div class="dashboard-info-bar">
-            <div class="dashboard-info-container">
-                <div class="dashboard-identity">
-                    <div class="crown-badge">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <div class="dashboard-text">
-                        <h1 class="dashboard-title">Administrator Control Panel</h1>
-                        <p class="dashboard-session">Session Active • Last Login: <span id="lastLogin">--</span></p>
-                    </div>
-                </div>
-                <button class="dashboard-logout-btn" id="logoutBtn">
+            
+            <!-- Right: Navigation + Logout -->
+            <div class="header-actions">
+                <a href="../dashboard/only-boss-dashboard-redesigned.html" class="nav-btn active">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="../../Home/index.html" class="nav-btn home-btn" id="homeLink">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <button class="logout-btn" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>
@@ -134,53 +122,176 @@
             }
         });
 
-        // Authentication Check
-        function checkAuthentication() {
-            const isAuthenticated = localStorage.getItem('onlyBossAuthenticated');
-            const authTime = localStorage.getItem('authTime');
-            
-            if (!isAuthenticated || !authTime) {
-                window.location.href = '../auth/only-boss.html';
+        // Authentication Check with Enhanced Security
+        async function checkAuthentication() {
+            try {
+                const sessionData = sessionStorage.getItem('onlyBossAuthenticated');
+                const authTime = sessionStorage.getItem('authTime');
+                const verificationKey = sessionStorage.getItem('_vk');
+                const sessionIdHash = sessionStorage.getItem('_sid');
+                
+                // Basic existence check
+                if (!sessionData || !authTime || !verificationKey || !sessionIdHash) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Decode and validate session structure
+                let session;
+                try {
+                    session = JSON.parse(atob(sessionData));
+                } catch (e) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Verify required fields including new security fields
+                if (!session.id || !session.timestamp || !session.sig || 
+                    !session.validated || !session.fp || !session._k) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Verify timestamp consistency
+                if (session.timestamp.toString() !== authTime) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Critical: Verify browser fingerprint matches login fingerprint
+                const currentFingerprint = await getBrowserFingerprint();
+                if (session.fp !== currentFingerprint) {
+                    console.error('🚨 Session hijacking detected - browser mismatch');
+                    alert('Security Alert: Session validation failed. This incident will be logged.');
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Verify verification key with fingerprint
+                const expectedVK = await hashPassword('verify:' + authTime + ':' + currentFingerprint);
+                if (verificationKey !== expectedVK) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Verify session ID hash
+                const expectedSidHash = await hashPassword(session.id + currentFingerprint);
+                if (sessionIdHash !== expectedSidHash) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Verify internal key
+                const _verify_key = 'a3km_studio_2026';
+                const expectedK = await hashPassword(_verify_key + authTime);
+                if (session._k !== expectedK) {
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Check session expiry (30 minutes)
+                const currentTime = Date.now();
+                const sessionAge = currentTime - parseInt(authTime);
+                if (sessionAge > 30 * 60 * 1000) {
+                    alert('Session expired. Please login again.');
+                    redirectToLogin();
+                    return false;
+                }
+                
+                // Display last login time
+                const loginDate = new Date(parseInt(authTime));
+                document.getElementById('lastLogin').textContent = loginDate.toLocaleString();
+                
+                return true;
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                redirectToLogin();
                 return false;
             }
+        }
+        
+        function redirectToLogin() {
+            sessionStorage.clear();
+            window.location.href = '../auth/only-boss.html';
+        }
+        
+        // Hash function for verification
+        async function hashPassword(text) {
+            const msgBuffer = new TextEncoder().encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Browser fingerprint (must match login fingerprint)
+        async function getBrowserFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('A3KM', 2, 2);
+            const canvasData = canvas.toDataURL();
             
-            const currentTime = new Date().getTime();
-            const loginTime = parseInt(authTime);
-            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            const fingerprint = {
+                canvas: canvasData,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screen: `${screen.width}x${screen.height}x${screen.colorDepth}`
+            };
             
-            if (currentTime - loginTime > sessionDuration) {
-                localStorage.removeItem('onlyBossAuthenticated');
-                localStorage.removeItem('authTime');
-                alert('Session expired. Please login again.');
-                window.location.href = '../auth/only-boss.html';
-                return false;
-            }
-            
-            // Display last login time
-            const loginDate = new Date(loginTime);
-            document.getElementById('lastLogin').textContent = loginDate.toLocaleString();
-            
-            return true;
+            const fpString = JSON.stringify(fingerprint);
+            const msgBuffer = new TextEncoder().encode(fpString);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         // Logout Function
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('onlyBossAuthenticated');
-                sessionStorage.removeItem('authTime');
+                sessionStorage.clear();
                 window.location.href = '../auth/only-boss.html';
             }
         }
 
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuthentication();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuthentication();
             
             // Logout button
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', logout);
             }
+            
+            // Periodic session validation (every 2 minutes)
+            setInterval(async () => {
+                const isValid = await checkAuthentication();
+                if (!isValid) {
+                    alert('Session validation failed. Redirecting to login.');
+                    redirectToLogin();
+                }
+            }, 2 * 60 * 1000);
+            
+            // Continuous fingerprint validation (every 30 seconds)
+            setInterval(async () => {
+                const sessionData = sessionStorage.getItem('onlyBossAuthenticated');
+                if (sessionData) {
+                    try {
+                        const session = JSON.parse(atob(sessionData));
+                        const currentFP = await getBrowserFingerprint();
+                        if (session.fp !== currentFP) {
+                            console.error('🚨 Browser fingerprint changed - possible tampering');
+                            alert('Security Alert: Browser environment changed. Re-authentication required.');
+                            redirectToLogin();
+                        }
+                    } catch (e) {
+                        redirectToLogin();
+                    }
+                }
+            }, 30 * 1000);
         });
 
         // Prevent going back after logout
@@ -193,11 +304,71 @@
         
         // Clear session when navigating away from Only Boss
         window.addEventListener('beforeunload', function(e) {
-            // Check if navigating to non-Only Boss page
             const nextUrl = e.target.activeElement?.href || '';
             if (nextUrl && !nextUrl.includes('/Only-boss/') && !nextUrl.includes('/Only boss/')) {
-                sessionStorage.removeItem('onlyBossAuthenticated');
-                sessionStorage.removeItem('authTime');
+                sessionStorage.clear();
+            }
+        });
+        
+        // Anti-tampering: Detect DevTools and sessionStorage manipulation
+        let devtoolsOpen = false;
+        const devtoolsCheck = () => {
+            const threshold = 160;
+            if (window.outerWidth - window.innerWidth > threshold || 
+                window.outerHeight - window.innerHeight > threshold) {
+                if (!devtoolsOpen) {
+                    devtoolsOpen = true;
+                    console.warn('⚠️ Security Notice: Developer tools detected');
+                }
+            } else {
+                devtoolsOpen = false;
+            }
+        };
+        
+        // Monitor sessionStorage changes
+        const originalSetItem = sessionStorage.setItem;
+        sessionStorage.setItem = function(key, value) {
+            if (key.startsWith('onlyBoss') || key === '_vk' || key === 'authTime' || key === '_sid') {
+                // Check if this is being called from our authorized code
+                const stack = new Error().stack;
+                if (!stack.includes('checkAuthentication') && 
+                    !stack.includes('createSession') &&
+                    !stack.includes('only-boss-auth.js') &&
+                    !stack.includes('only-boss-dashboard')) {
+                    console.error('🚨 Unauthorized sessionStorage modification detected');
+                    sessionStorage.clear();
+                    window.location.href = '../auth/only-boss.html';
+                    return;
+                }
+            }
+            originalSetItem.apply(this, arguments);
+        };
+        
+        // Prevent console tampering
+        const _log = console.log;
+        const _warn = console.warn;
+        const _error = console.error;
+        
+        // Check for tampering every 5 seconds
+        setInterval(() => {
+            if (console.log !== _log || console.warn !== _warn || console.error !== _error) {
+                sessionStorage.clear();
+                window.location.href = '../auth/only-boss.html';
+            }
+            devtoolsCheck();
+        }, 5000);
+        
+        // Detect if running in iframe (clickjacking protection)
+        if (window.self !== window.top) {
+            window.top.location = window.self.location;
+        }
+        
+        // Prevent copying session data
+        document.addEventListener('copy', (e) => {
+            const selection = window.getSelection().toString();
+            if (selection.includes('onlyBoss') || selection.includes('session')) {
+                e.preventDefault();
+                console.warn('⚠️ Security: Sensitive data cannot be copied');
             }
         });
     </script>
