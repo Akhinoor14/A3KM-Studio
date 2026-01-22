@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Editor - Only Boss</title>
+    <title>Smart CMS Panel - Only Boss</title>
     <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -95,6 +95,28 @@
             background: rgba(255, 255, 255, 0.08);
             color: #fff;
             border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .page-badge {
+            display: inline-block;
+            margin-left: auto;
+            padding: 2px 8px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .page-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .btn-back:hover {
@@ -488,14 +510,14 @@
                     <i class="fas fa-pen-to-square"></i>
                 </div>
                 <div class="header-title">
-                    <h1>Content Editor</h1>
-                    <p>Edit website text and descriptions</p>
+                    <h1>Smart CMS Panel</h1>
+                    <p>Professional content management system</p>
                 </div>
             </div>
             <div class="header-actions">
                 <div class="auto-save-indicator" id="autoSaveIndicator">
                     <i class="fas fa-cloud-arrow-up"></i>
-                    <span>Saved</span>
+                    <span>Auto-saved</span>
                 </div>
                 <button class="btn btn-tool" onclick="undo()" title="Undo (Ctrl+Z)">
                     <i class="fas fa-rotate-left"></i>
@@ -512,20 +534,20 @@
                 <button class="btn btn-tool" onclick="validateAll()" title="Validate All">
                     <i class="fas fa-circle-check"></i>
                 </button>
-                <a href="only-boss-dashboard.html" class="btn btn-back">
+                <a href="../../dashboard/only-boss-dashboard-redesigned.html" class="btn btn-back">
                     <i class="fas fa-arrow-left"></i>
-                    <span>Back</span>
+                    <span>Dashboard</span>
                 </a>
-                <button class="btn btn-save" onclick="saveAllChanges()">
-                    <i class="fas fa-file-export"></i>
-                    <span>Export</span>
+                <button class="btn btn-save" onclick="saveToGitHub()">
+                    <i class="fab fa-github"></i>
+                    <span>Save to GitHub</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Main Container -->
-    <div class="container">
+    <div id="editorSection" class="container">
         <!-- Sidebar - Page Selector -->
         <div class="sidebar">
             <h2>
@@ -536,15 +558,40 @@
                 <div class="page-item active" onclick="loadPage('home')" data-page="home">
                     <i class="fas fa-home"></i>
                     <span>Home Page</span>
+                    <span class="page-badge">Hero</span>
                 </div>
                 <div class="page-item" onclick="loadPage('about')" data-page="about">
                     <i class="fas fa-user"></i>
                     <span>About Page</span>
+                    <span class="page-badge">Bio</span>
+                </div>
+                <div class="page-item" onclick="loadPage('projects')" data-page="projects">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Projects Gallery</span>
+                    <span class="page-badge">All</span>
                 </div>
                 <div class="page-item" onclick="loadPage('contact')" data-page="contact">
                     <i class="fas fa-envelope"></i>
                     <span>Contact Page</span>
+                    <span class="page-badge">Info</span>
                 </div>
+                <div class="page-item" onclick="loadPage('contentStudio')" data-page="contentStudio">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Content Studio</span>
+                    <span class="page-badge">Hub</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid rgba(204, 0, 0, 0.2);">
+                <h3 style="color: #cc0000; font-size: 1.1rem; margin-bottom: 15px;">
+                    <i class="fas fa-cloud-arrow-up"></i> Save Changes
+                </h3>
+                <button onclick="saveToGitHub()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #4CAF50, #2E7D32); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); margin-bottom: 10px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fab fa-github"></i> Save to GitHub
+                </button>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.8rem; text-align: center; margin: 0;">
+                    Updates live website
+                </p>
             </div>
             
             <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid rgba(204, 0, 0, 0.2);">
@@ -552,17 +599,21 @@
                     <i class="fas fa-toolbox"></i> Tools
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button class="page-item" onclick="importJSON()" style="cursor: pointer; border: none;">
-                        <i class="fas fa-file-import"></i>
-                        <span>Import JSON</span>
-                    </button>
-                    <button class="page-item" onclick="downloadJSON()" style="cursor: pointer; border: none;">
+                    <button class="page-item" onclick="exportJSON()" style="cursor: pointer; border: none;">
                         <i class="fas fa-download"></i>
                         <span>Download Backup</span>
                     </button>
-                    <button class="page-item" onclick="resetToDefaults()" style="cursor: pointer; border: none;">
-                        <i class="fas fa-arrow-rotate-left"></i>
-                        <span>Reset to Defaults</span>
+                    <button class="page-item" onclick="validateAll()" style="cursor: pointer; border: none;">
+                        <i class="fas fa-circle-check"></i>
+                        <span>Validate All</span>
+                    </button>
+                    <button class="page-item" onclick="showStatistics()" style="cursor: pointer; border: none;">
+                        <i class="fas fa-chart-simple"></i>
+                        <span>Statistics</span>
+                    </button>
+                    <button class="page-item" onclick="logout()" style="cursor: pointer; border: none; color: #F44336;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </button>
                 </div>
             </div>
@@ -570,6 +621,11 @@
 
         <!-- Editor Area -->
         <div class="editor-area">
+            <!-- Page Preview Panel -->
+            <div id="pagePreviewPanel" class="page-preview-panel" style="display: none;">
+                <!-- Preview content loaded dynamically -->
+            </div>
+            
             <div id="editorContent">
                 <!-- Content will be loaded here dynamically -->
             </div>
@@ -624,7 +680,261 @@
         </div>
     </div>
 
-    <script src="content-editor.js"></script>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+        <div class="spinner" style="width: 60px; height: 60px; border: 4px solid rgba(204,0,0,0.2); border-top-color: #cc0000; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <p id="loadingText" style="color: #fff; margin-top: 20px; font-size: 1.1rem;">Loading...</p>
+    </div>
+
+    <!-- GitHub Authentication Section -->
+    <div id="authSection" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); z-index: 9998; justify-content: center; align-items: center; padding: 20px;">
+        <div style="max-width: 600px; width: 100%; background: rgba(26, 0, 0, 0.95); border: 2px solid #cc0000; border-radius: 20px; padding: 40px; box-shadow: 0 10px 50px rgba(204, 0, 0, 0.3);">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #cc0000, #ff0000); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(204, 0, 0, 0.5);">
+                    <i class="fab fa-github" style="font-size: 2.5rem; color: #fff;"></i>
+                </div>
+                <h2 style="color: #cc0000; margin-bottom: 10px;">GitHub Authentication Required</h2>
+                <p style="color: rgba(255,255,255,0.7);">Enter your GitHub Personal Access Token to enable live editing and saving</p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: rgba(255,255,255,0.9); margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-key"></i> Personal Access Token
+                </label>
+                <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.5); border: 2px solid rgba(204,0,0,0.3); border-radius: 8px; color: #fff; font-size: 1rem; transition: all 0.3s;" onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='rgba(204,0,0,0.3)'">
+            </div>
+            
+            <button onclick="authenticateGitHub()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #cc0000, #990000); color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(204,0,0,0.4); margin-bottom: 20px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(204,0,0,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(204,0,0,0.4)'">
+                <i class="fas fa-sign-in-alt"></i> Authenticate
+            </button>
+            
+            <div style="background: rgba(255, 193, 7, 0.1); border: 2px solid #FFC107; border-radius: 10px; padding: 15px;">
+                <p style="color: #FFD54F; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-info-circle"></i> How to get a token:
+                </p>
+                <ol style="color: rgba(255,255,255,0.7); font-size: 0.85rem; padding-left: 20px; margin: 0;">
+                    <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
+                    <li>Generate new token (classic)</li>
+                    <li>Select scopes: <code style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 3px;">repo</code> (full control)</li>
+                    <li>Copy and paste the token here</li>
+                </ol>
+                <p style="color: rgba(255,152,0,0.9); font-size: 0.85rem; margin-top: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i> Token is stored locally in your browser only
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://github.com/settings/tokens/new" target="_blank" style="color: #cc0000; text-decoration: none; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.color='#ff0000'" onmouseout="this.style.color='#cc0000'">
+                    <i class="fas fa-external-link-alt"></i> Open GitHub Token Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="github-sync.js"></script>
+    <script src="comprehensive-content-data.js"></script>
+    <script src="content-editor-v2.js"></script>
     <script src="../Optimization/navbar-autohide.js"></script>
+    
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Page Preview Panel */
+        .page-preview-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            border-radius: 15px;
+            padding: 0;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(76, 175, 80, 0.1);
+            border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .preview-header h3 {
+            color: #4CAF50;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .btn-close-preview {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #F44336;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-close-preview:hover {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: #F44336;
+        }
+        
+        .preview-iframe-wrapper {
+            width: 100%;
+            height: 600px;
+            background: #fff;
+        }
+        
+        .page-preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            justify-content: center;
+        }
+        
+        .preview-actions .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(26, 0, 0, 0.98);
+            border: 2px solid #cc0000;
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: #fff;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification-success {
+            border-color: #4CAF50;
+        }
+        
+        .notification-success i {
+            color: #4CAF50;
+            font-size: 1.3rem;
+        }
+        
+        .notification-error {
+            border-color: #F44336;
+        }
+        
+        .notification-error i {
+            color: #F44336;
+            font-size: 1.3rem;
+        }
+        
+        .selector-hint {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .field-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .btn-preview-field {
+            padding: 6px 12px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 6px;
+            color: #4CAF50;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-preview-field:hover {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+        }
+        
+        .auto-save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            color: #4CAF50;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .auto-save-indicator.active {
+            opacity: 1;
+        }
+        
+        .file-path {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.2);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .editor-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(204, 0, 0, 0.2);
+        }
+        
+        .editor-header-left h2 {
+            color: #cc0000;
+            margin-bottom: 8px;
+        }
+        
+        .editor-header-left p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
 </body>
 </html>
