@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Mobile Detection & Block System -->
+    <link rel="stylesheet" href="../../../Optimization/mobile-block.css">
+    <script src="../../../Optimization/mobile-block.js"></script>
+    
+    <title>Backup & Restore - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .header h1 { color: #333; font-size: 28px; display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .header p { color: #666; }
+        .section { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
+        .section-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-bottom: 15px; border-bottom: 2px solid #f5576c; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4); }
+        .btn-success { background: #4caf50; color: white; }
+        .btn-success:hover { background: #45a049; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-danger:hover { background: #da190b; }
+        .btn-secondary { background: #9e9e9e; color: white; }
+        .btn-secondary:hover { background: #757575; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; font-weight: 500; color: #333; margin-bottom: 8px; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { outline: none; border-color: #f5576c; background: #fff5f7; }
+        .progress-bar { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; margin: 15px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #f093fb, #f5576c); width: 0%; transition: width 0.3s; }
+        .status-message { padding: 12px 15px; border-radius: 8px; margin-top: 15px; font-weight: 500; }
+        .status-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .status-error { background: #f8d7da; color: #721c24; border-left: 4px solid #f5576c; }
+        .status-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        .backup-list { max-height: 400px; overflow-y: auto; }
+        .backup-item { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #f5576c; }
+        .backup-info h4 { color: #333; margin-bottom: 5px; }
+        .backup-info small { color: #999; }
+        .backup-actions { display: flex; gap: 10px; }
+        .backup-actions button { padding: 6px 12px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f5f5f5; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { font-weight: 600; color: #333; }
+        tr:hover { background: #fafafa; }
+        .warning-box { background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .warning-box strong { color: #856404; }
+        @media (max-width: 768px) {
+            .btn-group { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .backup-item { flex-direction: column; align-items: flex-start; }
+            .backup-actions { width: 100%; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> Backup & Restore System</h1>
+            <p>Secure your data with automatic backups and restore functionality</p>
+        </div>
+
+        <!-- Create Backup Section -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-cloud-upload-alt"></i> Create New Backup
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">Create a complete backup of all your website data including content, settings, media, and configuration files.</p>
+            
+            <div class="input-group">
+                <label for="backupName">Backup Name (optional)</label>
+                <input type="text" id="backupName" placeholder="e.g., Website Backup - 2024-01-15" value="">
+            </div>
+
+            <div class="input-group">
+                <label>Select Data to Backup</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupContent" checked> Content (Books, Videos, Papers)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupSettings" checked> Site Settings
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupMedia" checked> Media Library
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupCerts" checked> Certificates
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupProjects" checked> Projects
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" id="backupAnalytics" checked> Analytics Data
+                    </label>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong><i class="fas fa-exclamation-triangle"></i> Note:</strong> Backup includes all localStorage data. File size depends on content volume.
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="createBackup()">
+                    <i class="fas fa-download"></i> Create & Download Backup
+                </button>
+            </div>
+            <div id="backupStatus"></div>
+        </div>
+
+        <!-- Restore Backup Section -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-cloud-download-alt"></i> Restore from Backup
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">Upload a previously saved backup file to restore your website data.</p>
+
+            <div class="input-group">
+                <label for="restoreFile">Select Backup File (.json)</label>
+                <input type="file" id="restoreFile" accept=".json" style="padding: 15px; cursor: pointer;">
+            </div>
+
+            <div class="warning-box">
+                <strong><i class="fas fa-exclamation-triangle"></i> Warning:</strong> Restoring will overwrite current data. Create a backup before restoring.
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="restoreBackup()">
+                    <i class="fas fa-redo"></i> Restore Backup
+                </button>
+                <button class="btn btn-secondary" onclick="document.getElementById('restoreFile').click()">
+                    <i class="fas fa-folder-open"></i> Choose File
+                </button>
+            </div>
+            <div id="restoreStatus"></div>
+        </div>
+
+        <!-- Backup History Section -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-history"></i> Backup History
+            </div>
+            <p style="color: #666; margin-bottom: 20px;" id="historyInfo">No backups found. Create your first backup to get started.</p>
+
+            <div class="backup-list" id="backupHistory"></div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-danger" onclick="clearAllBackups()" style="width: 100%;">
+                    <i class="fas fa-trash"></i> Clear All Backup History
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Export Section -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-file-export"></i> Export Data
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">Export individual data categories as JSON files.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                <button class="btn btn-secondary" onclick="exportData('books-pdfs')" style="flex: 1;">
+                    <i class="fas fa-book"></i> Export Books
+                </button>
+                <button class="btn btn-secondary" onclick="exportData('educational-videos')" style="flex: 1;">
+                    <i class="fas fa-video"></i> Export Videos
+                </button>
+                <button class="btn btn-secondary" onclick="exportData('research-papers')" style="flex: 1;">
+                    <i class="fas fa-file-pdf"></i> Export Papers
+                </button>
+                <button class="btn btn-secondary" onclick="exportData('written-posts')" style="flex: 1;">
+                    <i class="fas fa-pen"></i> Export Posts
+                </button>
+                <button class="btn btn-secondary" onclick="exportData('a3km_site_settings')" style="flex: 1;">
+                    <i class="fas fa-cog"></i> Export Settings
+                </button>
+                <button class="btn btn-secondary" onclick="exportData('a3km_media_library')" style="flex: 1;">
+                    <i class="fas fa-image"></i> Export Media
+                </button>
+            </div>
+        </div>
+
+        <!-- Backup Comparison Section -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-code-branch"></i> Backup Comparison
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">Compare two backups to see what data changed.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div class="input-group">
+                    <label for="compareBackup1">First Backup</label>
+                    <select id="compareBackup1"></select>
+                </div>
+                <div class="input-group">
+                    <label for="compareBackup2">Second Backup</label>
+                    <select id="compareBackup2"></select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="compareBackups()" style="width: 100%;">
+                <i class="fas fa-project-diagram"></i> Compare Backups
+            </button>
+
+            <div id="comparisonResult" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script src="../../shared/github-token-manager.js"></script>
+    <script>
+        let tokenManager = null;
+        const BACKUPS_KEY = 'a3km_backups_history';
+        const STORAGE_KEYS = {
+            'books-pdfs': 'content_books-pdfs',
+            'educational-videos': 'content_educational-videos',
+            'research-papers': 'content_research-papers',
+            'written-posts': 'content_written-posts',
+            'video-content': 'content_video-content',
+            'a3km_site_settings': 'a3km_site_settings',
+            'a3km_media_library': 'a3km_media_library',
+            'a3km_certificates': 'a3km_certificates',
+            'projects': 'projects',
+            'analytics': 'analyticsData'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            tokenManager = typeof GitHubTokenManager !== 'undefined' ? new GitHubTokenManager() : null;
+            loadBackupHistory();
+            document.getElementById('restoreFile').addEventListener('change', e => {
+                if (e.target.files[0]) {
+                    document.getElementById('restoreFile').style.borderColor = '#4caf50';
+                }
+            });
+            
+            // Live update every 4 seconds
+            setInterval(() => {
+                loadBackupHistory();
+            }, 4000);
+        });
+
+        function createBackup() {
+            const backupName = document.getElementById('backupName').value || `Backup - ${new Date().toLocaleString()}`;
+            const statusEl = document.getElementById('backupStatus');
+            
+            try {
+                const backupData = {
+                    name: backupName,
+                    timestamp: new Date().toISOString(),
+                    data: {}
+                };
+
+                // Collect selected data
+                if (document.getElementById('backupContent').checked) {
+                    backupData.data.books = localStorage.getItem(STORAGE_KEYS['books-pdfs']);
+                    backupData.data.videos = localStorage.getItem(STORAGE_KEYS['educational-videos']);
+                    backupData.data.papers = localStorage.getItem(STORAGE_KEYS['research-papers']);
+                    backupData.data.posts = localStorage.getItem(STORAGE_KEYS['written-posts']);
+                }
+                if (document.getElementById('backupSettings').checked) {
+                    backupData.data.settings = localStorage.getItem(STORAGE_KEYS['a3km_site_settings']);
+                }
+                if (document.getElementById('backupMedia').checked) {
+                    backupData.data.media = localStorage.getItem(STORAGE_KEYS['a3km_media_library']);
+                }
+                if (document.getElementById('backupCerts').checked) {
+                    backupData.data.certificates = localStorage.getItem(STORAGE_KEYS['a3km_certificates']);
+                }
+                if (document.getElementById('backupProjects').checked) {
+                    backupData.data.projects = localStorage.getItem(STORAGE_KEYS['projects']);
+                }
+
+                // Save to history
+                const backups = JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]');
+                backups.push({
+                    name: backupName,
+                    timestamp: new Date().toISOString(),
+                    size: JSON.stringify(backupData).length,
+                    id: Date.now()
+                });
+                localStorage.setItem(BACKUPS_KEY, JSON.stringify(backups));
+
+                // Download
+                const dataStr = JSON.stringify(backupData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `backup-${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                statusEl.innerHTML = '<div class="status-message status-success"><i class="fas fa-check-circle"></i> Backup created and downloaded successfully!</div>';
+                loadBackupHistory();
+                document.getElementById('backupName').value = '';
+            } catch (error) {
+                statusEl.innerHTML = `<div class="status-message status-error"><i class="fas fa-times-circle"></i> Error: ${error.message}</div>`;
+            }
+        }
+
+        function restoreBackup() {
+            const file = document.getElementById('restoreFile').files[0];
+            const statusEl = document.getElementById('restoreStatus');
+
+            if (!file) {
+                statusEl.innerHTML = '<div class="status-message status-error"><i class="fas fa-times-circle"></i> Please select a backup file</div>';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    if (!confirm(`Restore backup "${backup.name}"? This will overwrite current data.`)) return;
+
+                    // Restore data
+                    Object.entries(backup.data).forEach(([key, value]) => {
+                        if (value) {
+                            const storageKey = Object.values(STORAGE_KEYS).find(k => k.includes(key)) || key;
+                            localStorage.setItem(storageKey, value);
+                        }
+                    });
+
+                    statusEl.innerHTML = '<div class="status-message status-success"><i class="fas fa-check-circle"></i> Backup restored successfully! Page will reload...</div>';
+                    setTimeout(() => location.reload(), 2000);
+                } catch (error) {
+                    statusEl.innerHTML = `<div class="status-message status-error"><i class="fas fa-times-circle"></i> Invalid backup file: ${error.message}</div>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadBackupHistory() {
+            const backups = JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]');
+            const container = document.getElementById('backupHistory');
+            const selectEls = [document.getElementById('compareBackup1'), document.getElementById('compareBackup2')];
+
+            container.innerHTML = '';
+            selectEls.forEach(el => el.innerHTML = '');
+
+            if (backups.length === 0) {
+                document.getElementById('historyInfo').textContent = 'No backups found. Create your first backup to get started.';
+                return;
+            }
+
+            document.getElementById('historyInfo').textContent = `${backups.length} backup(s) found`;
+            
+            backups.reverse().forEach((backup, idx) => {
+                const date = new Date(backup.timestamp);
+                const sizeKB = (backup.size / 1024).toFixed(2);
+
+                container.innerHTML += `
+                    <div class="backup-item">
+                        <div class="backup-info">
+                            <h4>${backup.name}</h4>
+                            <small>${date.toLocaleString()} • ${sizeKB} KB</small>
+                        </div>
+                        <div class="backup-actions">
+                            <button class="btn btn-secondary" onclick="downloadBackup(${backup.id})">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteBackup(${backup.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                selectEls.forEach(el => {
+                    el.innerHTML += `<option value="${backup.id}">${backup.name}</option>`;
+                });
+            });
+        }
+
+        function deleteBackup(id) {
+            if (!confirm('Delete this backup?')) return;
+            const backups = JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]');
+            const filtered = backups.filter(b => b.id !== id);
+            localStorage.setItem(BACKUPS_KEY, JSON.stringify(filtered));
+            loadBackupHistory();
+        }
+
+        function clearAllBackups() {
+            if (!confirm('Delete all backups? This cannot be undone.')) return;
+            localStorage.removeItem(BACKUPS_KEY);
+            loadBackupHistory();
+            document.getElementById('historyInfo').textContent = 'No backups found. Create your first backup to get started.';
+        }
+
+        function exportData(category) {
+            const key = STORAGE_KEYS[category] || category;
+            const data = localStorage.getItem(key);
+            
+            if (!data) {
+                alert(`No data found for ${category}`);
+                return;
+            }
+
+            const dataBlob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${category}-export-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function compareBackups() {
+            const id1 = document.getElementById('compareBackup1').value;
+            const id2 = document.getElementById('compareBackup2').value;
+            const resultEl = document.getElementById('comparisonResult');
+
+            if (!id1 || !id2) {
+                resultEl.innerHTML = '<div class="status-message status-error">Please select two backups to compare</div>';
+                return;
+            }
+
+            // Placeholder comparison logic
+            resultEl.innerHTML = '<div class="status-message status-info"><i class="fas fa-info-circle"></i> Comparison feature coming soon. Backup timestamps available in history.</div>';
+        }
+
+        function downloadBackup(id) {
+            const backups = JSON.parse(localStorage.getItem(BACKUPS_KEY) || '[]');
+            const backup = backups.find(b => b.id === id);
+            
+            if (!backup) {
+                alert('Backup not found');
+                return;
+            }
+
+            // In real implementation, would need to store full backup data
+            alert(`Download feature for archived backups coming soon. Current timestamp: ${backup.timestamp}`);
+        }
+    </script>
+</body>
+</html>

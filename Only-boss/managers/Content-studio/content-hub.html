@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Hub - A3KM Studio</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a1a;
+      background-image: 
+        linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba(200, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 0, 0, 0.03) 1px, transparent 1px);
+      background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 50%, rgba(200, 0, 0, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      position: relative;
+      z-index: 1;
+      border-top: 4px solid #8B0000;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(139, 0, 0, 0.1);
+      border: 2px solid #8B0000;
+      padding: 10px 20px;
+      border-radius: 10px;
+      color: #8B0000;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: #8B0000;
+      color: white;
+    }
+
+    h1 {
+      color: #8B0000;
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 40px;
+    }
+
+    /* Statistics Overview */
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #8B0000, #C80000);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-card h2 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Manager Cards */
+    .managers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .manager-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      padding: 30px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .manager-card:hover {
+      border-color: #8B0000;
+      box-shadow: 0 8px 24px rgba(139, 0, 0, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .manager-icon {
+      font-size: 64px;
+      margin-bottom: 15px;
+    }
+
+    .manager-card h3 {
+      color: #8B0000;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .manager-card p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .manager-count {
+      background: rgba(139, 0, 0, 0.1);
+      color: #8B0000;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-block;
+    }
+
+    /* Recent Activity */
+    .recent-section {
+      margin-top: 40px;
+    }
+
+    .recent-section h2 {
+      color: #8B0000;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .recent-list {
+      display: grid;
+      gap: 15px;
+    }
+
+    .recent-item {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 4px solid #8B0000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .recent-item-info {
+      flex: 1;
+    }
+
+    .recent-item-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .recent-item-meta {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .recent-item-time {
+      color: #8B0000;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+    }
+
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .quick-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #8B0000, #C80000);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .quick-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../only-boss-dashboard.html" class="back-btn">
+      ← Back to Dashboard
+    </a>
+
+    <h1>🎯 Content Hub</h1>
+    <p class="subtitle">Centralized content management system for all media types</p>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a href="upload-interface.html" class="quick-btn">📤 Universal Upload</a>
+      <button onclick="refreshAllStats()" class="quick-btn">🔄 Refresh Stats</button>
+      <button onclick="viewAllHistory()" class="quick-btn">🕐 View All History</button>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-overview" id="statsOverview">
+      <div class="stat-card">
+        <h2 id="totalContent">-</h2>
+        <p>Total Content</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="totalCategories">-</h2>
+        <p>Categories</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="totalSize">-</h2>
+        <p>Total Storage</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="recentUploads">-</h2>
+        <p>Last 7 Days</p>
+      </div>
+    </div>
+
+    <!-- Content Managers -->
+    <h2 style="color: #8B0000; margin-bottom: 20px; font-size: 24px;">📁 Content Managers</h2>
+    <div class="managers-grid">
+      <a href="books-manager.html" class="manager-card">
+        <div class="manager-icon">📚</div>
+        <h3>Books & PDFs</h3>
+        <p>Manage your book collection and PDF resources</p>
+        <span class="manager-count" id="booksCount">Loading...</span>
+      </a>
+
+      <a href="videos-manager.html" class="manager-card">
+        <div class="manager-icon">🎓</div>
+        <h3>Educational Videos</h3>
+        <p>Manage course videos and tutorials</p>
+        <span class="manager-count" id="videosCount">Loading...</span>
+      </a>
+
+      <a href="papers-manager.html" class="manager-card">
+        <div class="manager-icon">📄</div>
+        <h3>Research Papers</h3>
+        <p>Manage academic papers and publications</p>
+        <span class="manager-count" id="papersCount">Loading...</span>
+      </a>
+
+      <a href="vlogs-manager.html" class="manager-card">
+        <div class="manager-icon">🎬</div>
+        <h3>Video Blogs</h3>
+        <p>Manage vlog content and video series</p>
+        <span class="manager-count" id="vlogsCount">Loading...</span>
+      </a>
+
+      <a href="posts-manager.html" class="manager-card">
+        <div class="manager-icon">✍️</div>
+        <h3>Written Posts</h3>
+        <p>Manage blog posts and articles</p>
+        <span class="manager-count" id="postsCount">Loading...</span>
+      </a>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-section">
+      <h2>🕐 Recent Activity</h2>
+      <div class="recent-list" id="recentActivity">
+        <div class="loading">Loading recent activity</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="github-content-uploader.js"></script>
+  <script src="content-manager.js"></script>
+  <script>
+    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    
+    const githubUploader = new GitHubContentUploader({
+      token: GITHUB_TOKEN,
+      owner: 'Akhinoor14',
+      repo: 'A3KM-Studio'
+    });
+    
+    const contentManager = new ContentManager(githubUploader);
+
+    // Load all statistics
+    async function loadHubStats() {
+      try {
+        const stats = await contentManager.getStatistics();
+        
+        // Update overview cards
+        document.getElementById('totalContent').textContent = stats.totalContent;
+        document.getElementById('totalCategories').textContent = Object.keys(stats.byCategory).length;
+        document.getElementById('totalSize').textContent = contentManager.formatFileSize(stats.totalSize);
+        
+        // Calculate recent uploads (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const recent = stats.recentUploads.filter(item => 
+          new Date(item.dateAdded) >= sevenDaysAgo
+        );
+        document.getElementById('recentUploads').textContent = recent.length;
+        
+        // Update individual counts
+        document.getElementById('booksCount').textContent = `${stats.byType['books-pdfs'] || 0} items`;
+        document.getElementById('videosCount').textContent = `${stats.byType['educational-videos'] || 0} items`;
+        document.getElementById('papersCount').textContent = `${stats.byType['research-papers'] || 0} items`;
+        document.getElementById('vlogsCount').textContent = `${stats.byType['video-content'] || 0} items`;
+        document.getElementById('postsCount').textContent = `${stats.byType['written-posts'] || 0} items`;
+        
+        // Load recent activity
+        loadRecentActivity(stats.recentUploads);
+        
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    // Load recent activity
+    function loadRecentActivity(recentUploads) {
+      const container = document.getElementById('recentActivity');
+      
+      if (recentUploads.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No recent activity</div>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      recentUploads.slice(0, 10).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'recent-item';
+        
+        const typeIcons = {
+          'books-pdfs': '📚',
+          'educational-videos': '🎓',
+          'research-papers': '📄',
+          'video-content': '🎬',
+          'written-posts': '✍️'
+        };
+        
+        div.innerHTML = `
+          <div class="recent-item-info">
+            <div class="recent-item-title">
+              ${typeIcons[item.contentType] || '📄'} ${item.title}
+            </div>
+            <div class="recent-item-meta">
+              ${item.category} · ${item.author || 'Unknown'}
+            </div>
+          </div>
+          <div class="recent-item-time">
+            ${contentManager.formatDate(item.dateAdded)}
+          </div>
+        `;
+        
+        container.appendChild(div);
+      });
+    }
+
+    // Refresh all stats
+    async function refreshAllStats() {
+      document.getElementById('totalContent').textContent = '...';
+      document.getElementById('recentActivity').innerHTML = '<div class="loading">Refreshing</div>';
+      await loadHubStats();
+    }
+
+    // View all history
+    function viewAllHistory() {
+      const history = contentManager.getHistory(100);
+      
+      if (history.length === 0) {
+        alert('📝 No history available');
+        return;
+      }
+      
+      let historyHTML = '📜 Upload History (Last 100):\n\n';
+      history.forEach((entry, i) => {
+        historyHTML += `${i + 1}. ${entry.action.toUpperCase()}: ${entry.title}\n   ${contentManager.formatDate(entry.timestamp)}\n\n`;
+      });
+      
+      alert(historyHTML);
+    }
+
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadHubStats);
+  </script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+</body>
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Manager Test - A3KM Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-card h3 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .test-result pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .main-controls {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .log-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .log-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .log-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+            color: #7dff7d;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+            color: #ff7d7d;
+        }
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+            color: #7dd3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔬 GitHub Token Manager - Test Suite</h1>
+            <p>Token Manager কাজ করছে কিনা verify করো</p>
+        </div>
+
+        <!-- Main Controls -->
+        <div class="main-controls">
+            <h3>🎮 Main Controls</h3>
+            <div class="input-group">
+                <label for="testToken">Test Token (for testing only)</label>
+                <input 
+                    type="text" 
+                    id="testToken" 
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    value="ghp_SAMPLE_TOKEN_FOR_TESTING_1234567890"
+                >
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="runAllTests()">
+                    🧪 Run All Tests
+                </button>
+                <button class="btn btn-success" onclick="testSaveToken()">
+                    💾 Test Save
+                </button>
+                <button class="btn btn-success" onclick="testGetToken()">
+                    📥 Test Get
+                </button>
+                <button class="btn btn-danger" onclick="testClearToken()">
+                    🗑️ Test Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="test-grid">
+            <!-- Test 1: Token Save -->
+            <div class="test-card">
+                <h3>
+                    <span>💾</span>
+                    Test 1: Save Token
+                    <span class="status-badge pending" id="test1Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test1_SaveToken()">
+                    Run Test 1
+                </button>
+                <div class="test-result" id="test1Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+
+            <!-- Test 2: Get Token -->
+            <div class="test-card">
+                <h3>
+                    <span>📥</span>
+                    Test 2: Get Token
+                    <span class="status-badge pending" id="test2Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test2_GetToken()">
+                    Run Test 2
+                </button>
+                <div class="test-result" id="test2Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+
+            <!-- Test 3: Token Status -->
+            <div class="test-card">
+                <h3>
+                    <span>📊</span>
+                    Test 3: Token Status
+                    <span class="status-badge pending" id="test3Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test3_TokenStatus()">
+                    Run Test 3
+                </button>
+                <div class="test-result" id="test3Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+
+            <!-- Test 4: Token Info -->
+            <div class="test-card">
+                <h3>
+                    <span>ℹ️</span>
+                    Test 4: Token Info
+                    <span class="status-badge pending" id="test4Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test4_TokenInfo()">
+                    Run Test 4
+                </button>
+                <div class="test-result" id="test4Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+
+            <!-- Test 5: Clear Token -->
+            <div class="test-card">
+                <h3>
+                    <span>🗑️</span>
+                    Test 5: Clear Token
+                    <span class="status-badge pending" id="test5Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test5_ClearToken()">
+                    Run Test 5
+                </button>
+                <div class="test-result" id="test5Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+
+            <!-- Test 6: Multi-Manager Simulation -->
+            <div class="test-card">
+                <h3>
+                    <span>🔄</span>
+                    Test 6: Multi-Manager
+                    <span class="status-badge pending" id="test6Status">Pending</span>
+                </h3>
+                <button class="btn btn-primary" onclick="test6_MultiManager()">
+                    Run Test 6
+                </button>
+                <div class="test-result" id="test6Result">
+                    <pre>Waiting to run...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Log -->
+        <div class="log-section">
+            <h3>📝 Live Test Log</h3>
+            <div class="log-content" id="liveLog">
+                <div class="log-entry info">System ready. Click "Run All Tests" to start.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Token Manager -->
+    <script src="github-token-manager.js"></script>
+
+    <script>
+        // ==================== LOGGING ====================
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('liveLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateTestStatus(testNumber, status, result) {
+            const statusBadge = document.getElementById(`test${testNumber}Status`);
+            const resultDiv = document.getElementById(`test${testNumber}Result`);
+            
+            statusBadge.className = `status-badge ${status}`;
+            statusBadge.textContent = status === 'success' ? '✅ Passed' : status === 'error' ? '❌ Failed' : 'Pending';
+            
+            resultDiv.innerHTML = `<pre>${result}</pre>`;
+        }
+
+        // ==================== TEST FUNCTIONS ====================
+
+        function test1_SaveToken() {
+            log('Starting Test 1: Save Token', 'info');
+            const token = document.getElementById('testToken').value;
+            
+            try {
+                const result = githubTokenManager.saveToken(token);
+                
+                if (result) {
+                    const output = `✅ SUCCESS\n\n` +
+                        `Token saved successfully!\n` +
+                        `Storage Key: ${githubTokenManager.STORAGE_KEY}\n` +
+                        `Timestamp: ${new Date().toLocaleString()}\n\n` +
+                        `localStorage Check:\n` +
+                        `- Token exists: ${localStorage.getItem(githubTokenManager.STORAGE_KEY) !== null}\n` +
+                        `- Timestamp exists: ${localStorage.getItem(githubTokenManager.TIMESTAMP_KEY) !== null}`;
+                    
+                    updateTestStatus(1, 'success', output);
+                    log('Test 1: PASSED - Token saved', 'success');
+                } else {
+                    throw new Error('Save returned false');
+                }
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(1, 'error', output);
+                log(`Test 1: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function test2_GetToken() {
+            log('Starting Test 2: Get Token', 'info');
+            
+            try {
+                const token = githubTokenManager.getToken();
+                
+                if (token) {
+                    const output = `✅ SUCCESS\n\n` +
+                        `Token retrieved successfully!\n` +
+                        `Token Length: ${token.length} characters\n` +
+                        `Token Starts With: ${token.substring(0, 4)}\n` +
+                        `Token Ends With: ${token.substring(token.length - 4)}\n\n` +
+                        `Masked Token:\n${token.substring(0, 8)}...${token.substring(token.length - 4)}`;
+                    
+                    updateTestStatus(2, 'success', output);
+                    log('Test 2: PASSED - Token retrieved', 'success');
+                } else {
+                    throw new Error('No token found (run Test 1 first)');
+                }
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(2, 'error', output);
+                log(`Test 2: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function test3_TokenStatus() {
+            log('Starting Test 3: Token Status', 'info');
+            
+            try {
+                const status = githubTokenManager.getTokenStatus();
+                
+                const output = `✅ SUCCESS\n\n` +
+                    `Token Status:\n` +
+                    `- Exists: ${status.exists}\n` +
+                    `- Valid: ${status.valid}\n` +
+                    `- Expired: ${status.expired}\n` +
+                    `- Message: ${status.message}\n\n` +
+                    `JSON Output:\n${JSON.stringify(status, null, 2)}`;
+                
+                updateTestStatus(3, 'success', output);
+                log('Test 3: PASSED - Status retrieved', 'success');
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(3, 'error', output);
+                log(`Test 3: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function test4_TokenInfo() {
+            log('Starting Test 4: Token Info', 'info');
+            
+            try {
+                const info = githubTokenManager.getTokenInfo();
+                
+                if (info) {
+                    const output = `✅ SUCCESS\n\n` +
+                        `Token Info:\n` +
+                        `- Masked Token: ${info.maskedToken}\n` +
+                        `- Added Date: ${info.addedDate}\n` +
+                        `- Days Since Added: ${info.daysSinceAdded}\n` +
+                        `- Days Until Expiry: ${info.daysUntilExpiry}\n` +
+                        `- Status: ${info.status.message}\n\n` +
+                        `JSON Output:\n${JSON.stringify(info, null, 2)}`;
+                    
+                    updateTestStatus(4, 'success', output);
+                    log('Test 4: PASSED - Info retrieved', 'success');
+                } else {
+                    throw new Error('No token info (token not saved)');
+                }
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(4, 'error', output);
+                log(`Test 4: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function test5_ClearToken() {
+            log('Starting Test 5: Clear Token', 'info');
+            
+            try {
+                // Save current token for verification
+                const tokenBefore = githubTokenManager.hasToken();
+                
+                // Clear token
+                const result = githubTokenManager.clearToken();
+                
+                // Check if cleared
+                const tokenAfter = githubTokenManager.hasToken();
+                
+                const output = `✅ SUCCESS\n\n` +
+                    `Token cleared successfully!\n` +
+                    `- Had token before: ${tokenBefore}\n` +
+                    `- Has token after: ${tokenAfter}\n` +
+                    `- Clear result: ${result}\n\n` +
+                    `localStorage Check:\n` +
+                    `- Token exists: ${localStorage.getItem(githubTokenManager.STORAGE_KEY) !== null}\n` +
+                    `- Timestamp exists: ${localStorage.getItem(githubTokenManager.TIMESTAMP_KEY) !== null}\n` +
+                    `- Validation exists: ${localStorage.getItem(githubTokenManager.VALIDATION_KEY) !== null}`;
+                
+                updateTestStatus(5, 'success', output);
+                log('Test 5: PASSED - Token cleared', 'success');
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(5, 'error', output);
+                log(`Test 5: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function test6_MultiManager() {
+            log('Starting Test 6: Multi-Manager Simulation', 'info');
+            
+            try {
+                // Simulate multiple managers accessing the same token
+                const managers = [
+                    'Books Manager',
+                    'Videos Manager',
+                    'Papers Manager',
+                    'Posts Manager',
+                    'Vlogs Manager',
+                    'Certificates Manager'
+                ];
+                
+                // Save a test token first
+                const testToken = document.getElementById('testToken').value;
+                githubTokenManager.saveToken(testToken);
+                
+                // Simulate each manager getting the token
+                let results = [];
+                managers.forEach(manager => {
+                    const token = githubTokenManager.getToken();
+                    results.push({
+                        manager: manager,
+                        hasToken: token !== null,
+                        tokenLength: token ? token.length : 0,
+                        tokenMatch: token === testToken
+                    });
+                });
+                
+                // Check if all managers got the same token
+                const allMatch = results.every(r => r.tokenMatch);
+                
+                const output = `✅ SUCCESS\n\n` +
+                    `Multi-Manager Test Results:\n` +
+                    `All managers got same token: ${allMatch ? '✅ YES' : '❌ NO'}\n\n` +
+                    results.map(r => 
+                        `${r.manager}:\n` +
+                        `  - Has Token: ${r.hasToken}\n` +
+                        `  - Token Length: ${r.tokenLength}\n` +
+                        `  - Match: ${r.tokenMatch ? '✅' : '❌'}`
+                    ).join('\n\n') +
+                    `\n\n🎉 All ${managers.length} managers can access the token!`;
+                
+                updateTestStatus(6, allMatch ? 'success' : 'error', output);
+                log(`Test 6: ${allMatch ? 'PASSED' : 'FAILED'} - Multi-manager test`, allMatch ? 'success' : 'error');
+            } catch (error) {
+                const output = `❌ FAILED\n\nError: ${error.message}`;
+                updateTestStatus(6, 'error', output);
+                log(`Test 6: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== MAIN TEST RUNNER ====================
+
+        async function runAllTests() {
+            log('🚀 Starting Full Test Suite', 'info');
+            log('═══════════════════════════════', 'info');
+            
+            // Run tests sequentially
+            await new Promise(resolve => {
+                test1_SaveToken();
+                setTimeout(resolve, 500);
+            });
+            
+            await new Promise(resolve => {
+                test2_GetToken();
+                setTimeout(resolve, 500);
+            });
+            
+            await new Promise(resolve => {
+                test3_TokenStatus();
+                setTimeout(resolve, 500);
+            });
+            
+            await new Promise(resolve => {
+                test4_TokenInfo();
+                setTimeout(resolve, 500);
+            });
+            
+            await new Promise(resolve => {
+                test6_MultiManager();
+                setTimeout(resolve, 500);
+            });
+            
+            // Test 5 (clear) is optional, don't run automatically
+            
+            log('═══════════════════════════════', 'info');
+            log('✅ All tests completed!', 'success');
+            log('Note: Test 5 (Clear) is available separately', 'info');
+        }
+
+        // ==================== QUICK CONTROLS ====================
+
+        function testSaveToken() {
+            test1_SaveToken();
+        }
+
+        function testGetToken() {
+            test2_GetToken();
+        }
+
+        function testClearToken() {
+            if (confirm('This will clear the token. Continue?')) {
+                test5_ClearToken();
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🎯 Token Manager Test Suite Loaded', 'success');
+            log('GitHubTokenManager instance found: ' + (typeof githubTokenManager !== 'undefined'), 'info');
+            
+            // Check if token already exists
+            if (githubTokenManager.hasToken()) {
+                log('⚠️ Existing token found in localStorage', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

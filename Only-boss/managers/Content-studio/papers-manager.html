@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Papers Manager - A3KM Studio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border-top: 4px solid #8B0000; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .back-btn { background: rgba(139, 0, 0, 0.1); border: 2px solid #8B0000; padding: 10px 20px; border-radius: 10px; color: #8B0000; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .back-btn:hover { background: #8B0000; color: white; }
+    h1 { color: #8B0000; font-size: 32px; margin-bottom: 10px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0; }
+    .tab { padding: 12px 24px; background: transparent; border: none; color: #666; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab.active { color: #8B0000; border-bottom-color: #8B0000; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #8B0000; }
+    textarea { resize: vertical; min-height: 100px; }
+    .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B0000, #C80000); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+    .file-upload-label { display: flex; align-items: center; justify-content: center; padding: 40px; border: 2px dashed #8B0000; border-radius: 10px; cursor: pointer; background: #fff5f5; }
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .content-card { border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; transition: all 0.3s; }
+    .content-card:hover { border-color: #8B0000; box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2); }
+    .card-thumbnail { width: 100%; height: 150px; object-fit: cover; background: linear-gradient(135deg, #8B0000, #C80000); }
+    .card-body { padding: 15px; }
+    .card-title { font-weight: 600; color: #333; margin-bottom: 8px; }
+    .card-meta { font-size: 11px; color: #999; margin-bottom: 10px; }
+    .card-actions { display: flex; gap: 8px; }
+    .card-actions button { flex: 1; padding: 8px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .card-actions button:hover { background: #8B0000; color: white; border-color: #8B0000; }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar input { flex: 1; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: linear-gradient(135deg, #8B0000, #C80000); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
+    .progress { margin-top: 20px; display: none; }
+    .progress.active { display: block; }
+    .progress-bar { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #8B0000, #C80000); width: 0%; transition: width 0.3s; }
+    .progress-text { text-align: center; color: #8B0000; font-size: 14px; font-weight: 600; }
+    .success-message { background: #4caf50; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; text-align: center; }
+    .success-message.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>📄 Research Papers Manager</h1>
+        <p style="color: #666;">Manage academic papers and publications</p>
+      </div>
+      <a href="content-hub.html" class="back-btn">← Back to Hub</a>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('upload')">📤 Upload</button>
+      <button class="tab" onclick="switchTab('manage')">📋 Manage</button>
+      <button class="tab" onclick="switchTab('stats')">📊 Statistics</button>
+    </div>
+
+    <div id="uploadTab" class="tab-content active">
+      <form id="uploadForm">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Loading categories...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Paper Title</label>
+          <input type="text" id="title" placeholder="Enter paper title..." required>
+        </div>
+        <div class="form-group">
+          <label>Authors (one per line, or comma-separated)</label>
+          <textarea id="authors" placeholder="Md Akhinoor Islam&#10;Co-author Name" rows="3" required></textarea>
+          <small style="color: #666; font-size: 12px;">Enter each author on a new line, or separate with commas</small>
+        </div>
+        <div class="form-group">
+          <label>Institution/University</label>
+          <input type="text" id="institution" placeholder="Khulna University of Engineering & Technology (KUET)" required>
+        </div>
+        <div class="form-group">
+          <label>Abstract</label>
+          <textarea id="abstract" placeholder="Brief summary of the research paper..." rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Keywords (comma-separated)</label>
+          <input type="text" id="keywords" placeholder="Machine Learning, AI, Neural Networks" required>
+        </div>
+        <div class="form-group">
+          <label>Pages</label>
+          <input type="number" id="pages" placeholder="25" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>DOI (Digital Object Identifier)</label>
+          <input type="text" id="doi" placeholder="10.1000/xyz123">
+        </div>
+        <div class="form-group">
+          <label>Journal Name</label>
+          <input type="text" id="journal" placeholder="Nature, IEEE, etc.">
+        </div>
+        <div class="form-group">
+          <label>Publication Year</label>
+          <input type="number" id="year" placeholder="2024" min="1900" max="2100">
+        </div>
+        <div class="form-group">
+          <label>Citations Count (Optional)</label>
+          <input type="number" id="citations" placeholder="0" value="0">
+        </div>
+        <div class="form-group">
+          <label>Description/Summary</label>
+          <textarea id="description" placeholder="Short description for display..." rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" id="tags" placeholder="machine learning, AI, research">
+        </div>
+        <div class="form-group">
+          <label>PDF File</label>
+          <input type="file" id="pdfFile" accept=".pdf" style="display: none;" required>
+          <label for="pdfFile" class="file-upload-label">📁 Choose PDF file</label>
+          <div id="fileInfo" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+        </div>
+        <button type="submit" class="btn-primary">📤 Upload Paper</button>
+        <div class="progress" id="progress">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-text" id="progressText">Processing...</div>
+        </div>
+        <div class="success-message" id="successMessage">✅ Paper uploaded successfully!</div>
+      </form>
+    </div>
+
+    <div id="manageTab" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search papers..." onkeyup="filterContent()">
+        <select id="sortBy" onchange="filterContent()">
+          <option value="date">Newest First</option>
+          <option value="title">Title A-Z</option>
+          <option value="year">By Year</option>
+        </select>
+      </div>
+      <div class="content-grid" id="contentGrid">
+        <p style="text-align: center; padding: 40px; color: #999;">Loading papers...</p>
+      </div>
+    </div>
+
+    <div id="statsTab" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card"><h3 id="totalPapers">0</h3><p>Total Papers</p></div>
+        <div class="stat-card"><h3 id="totalCategories">0</h3><p>Categories</p></div>
+        <div class="stat-card"><h3 id="totalSize">0 MB</h3><p>Total Size</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="svg-generator.js"></script>
+  <script src="github-content-uploader.js"></script>
+  <script src="content-manager.js"></script>
+  <script>
+    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    const CONTENT_TYPE = 'research-papers';
+    const svgGenerator = new SVGCoverGenerator();
+    const githubUploader = new GitHubContentUploader({ token: GITHUB_TOKEN, owner: 'Akhinoor14', repo: 'A3KM-Studio' });
+    const contentManager = new ContentManager(githubUploader);
+    let currentContent = [];
+
+    async function loadCategories() {
+      const data = await contentManager.loadContent(CONTENT_TYPE);
+      const categorySelect = document.getElementById('category');
+      categorySelect.innerHTML = '<option value="">Select category...</option>';
+      if (data.categoryGroups) {
+        data.categoryGroups.forEach(group => {
+          if (group.categories) {
+            group.categories.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat;
+              option.textContent = cat;
+              categorySelect.appendChild(option);
+            });
+          }
+        });
+      }
+    }
+
+    document.getElementById('pdfFile').addEventListener('change', function() {
+      if (this.files[0]) document.getElementById('fileInfo').textContent = `📄 ${this.files[0].name} (${contentManager.formatFileSize(this.files[0].size)})`;
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Validate GitHub token
+      if (GITHUB_TOKEN === 'YOUR_GITHUB_TOKEN_HERE' || !GITHUB_TOKEN) {
+        alert('❌ Please set your GitHub token first!');
+        return;
+      }
+      
+      const progress = document.getElementById('progress');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const successMessage = document.getElementById('successMessage');
+      progress.classList.add('active');
+      successMessage.classList.remove('active');
+      try {
+        const title = document.getElementById('title').value;
+        const category = document.getElementById('category').value;
+        
+        // Duplicate check
+        progressText.textContent = 'Checking for duplicates...';
+        progressFill.style.width = '20%';
+        const duplicateCheck = await contentManager.checkDuplicates(CONTENT_TYPE, title, category);
+        if (duplicateCheck.isDuplicate) {
+          const confirm = window.confirm(`⚠️ A paper with title "${title}" already exists in ${category}. Upload anyway?`);
+          if (!confirm) {
+            progress.classList.remove('active');
+            return;
+          }
+        }
+        
+        progressText.textContent = 'Generating cover...';
+        progressFill.style.width = '40%';
+        const coverSVG = await svgGenerator.generateCover(category, 0);
+        
+        progressText.textContent = 'Uploading to GitHub...';
+        progressFill.style.width = '60%';
+        const authorsText = document.getElementById('authors').value;
+        const authorsArray = authorsText.includes('\n') 
+          ? authorsText.split('\n').map(a => a.trim()).filter(a => a)
+          : authorsText.split(',').map(a => a.trim()).filter(a => a);
+        
+        const contentId = `paper-${Date.now()}`;
+        await githubUploader.uploadCompleteContent({
+          contentType: CONTENT_TYPE,
+          category: category,
+          contentId: contentId,
+          title: title,
+          description: document.getElementById('description').value || document.getElementById('abstract').value,
+          tags: document.getElementById('tags').value.split(',').map(t => t.trim()),
+          author: authorsArray[0] || 'Md Akhinoor Islam',
+          contentFile: document.getElementById('pdfFile').files[0],
+          coverSVG: coverSVG,
+          metadata: {
+            authors: authorsArray,
+            institution: document.getElementById('institution').value,
+            abstract: document.getElementById('abstract').value,
+            keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()),
+            pages: parseInt(document.getElementById('pages').value),
+            doi: document.getElementById('doi').value || null,
+            journal: document.getElementById('journal').value || null,
+            year: parseInt(document.getElementById('year').value) || new Date().getFullYear(),
+            citations: parseInt(document.getElementById('citations').value) || 0
+          }
+        });
+        
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Complete!';
+        progress.classList.remove('active');
+        successMessage.classList.add('active');
+        
+        // Reset form
+        setTimeout(() => { 
+          this.reset(); 
+          document.getElementById('fileInfo').textContent = '';
+          successMessage.classList.remove('active'); 
+        }, 3000);
+      } catch (error) {
+        progress.classList.remove('active');
+        alert(`❌ Upload failed: ${error.message}`);
+      }
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName + 'Tab').classList.add('active');
+      event.target.classList.add('active');
+      if (tabName === 'manage') loadManageContent();
+      if (tabName === 'stats') loadStatistics();
+    }
+
+    async function loadManageContent() {
+      const grid = document.getElementById('contentGrid');
+      grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">Loading...</p>';
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        currentContent = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        renderContent(currentContent);
+      } catch (error) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load papers</p>';
+        console.error('Load error:', error);
+      }
+    }
+
+    function renderContent(items) {
+      const grid = document.getElementById('contentGrid');
+      if (items.length === 0) { grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No papers yet</p>'; return; }
+      grid.innerHTML = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'content-card';
+        card.innerHTML = `
+          <img src="${item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <div class="card-body">
+            <div class="card-title">${item.title}</div>
+            <div class="card-meta">📁 ${item.category}<br>👤 ${item.author || 'Unknown'}<br>🕐 ${contentManager.formatDate(item.date)}</div>
+            <div class="card-actions">
+              <button onclick="deletePaper('${item.id}')">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterContent() {
+      const query = document.getElementById('searchInput').value;
+      const sortBy = document.getElementById('sortBy').value;
+      let filtered = contentManager.searchContent(currentContent, query);
+      filtered = contentManager.sortItems(filtered, sortBy, 'desc');
+      renderContent(filtered);
+    }
+
+    async function loadStatistics() {
+      const data = await contentManager.loadContent(CONTENT_TYPE);
+      const items = contentManager.getItemsFromData(data, CONTENT_TYPE);
+      document.getElementById('totalPapers').textContent = items.length;
+      document.getElementById('totalCategories').textContent = new Set(items.map(item => item.category)).size;
+      document.getElementById('totalSize').textContent = contentManager.formatFileSize(items.reduce((sum, item) => sum + (item.fileSize || 0), 0));
+    }
+
+    function deletePaper(id) {
+      if (confirm('Delete this paper?')) {
+        contentManager.deleteContent(CONTENT_TYPE, id).then(() => { alert('✅ Deleted!'); loadManageContent(); }).catch(err => alert('❌ Failed: ' + err.message));
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCategories);
+  </script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+</body>
+</html>

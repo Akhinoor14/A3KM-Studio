@@ -406,6 +406,636 @@ const comprehensiveContentData = {
         ]
     },
     
+    certificates: {
+        title: "Certificates Management - Complete",
+        description: "Manage all certificate metadata, categories, descriptions, and details",
+        filePath: "About me/certificates-data.json",
+        sections: [
+            {
+                id: "cert_meta",
+                name: "Certificates Page Metadata",
+                icon: "fa-info-circle",
+                fields: [
+                    {
+                        id: "cert_page_title",
+                        label: "Page Title",
+                        type: "text",
+                        value: "My Certificates",
+                        selector: ".certificates-page-title",
+                        maxLength: 100
+                    },
+                    {
+                        id: "cert_page_subtitle",
+                        label: "Page Subtitle",
+                        type: "text",
+                        value: "Professional Achievements & Certifications",
+                        selector: ".certificates-page-subtitle",
+                        maxLength: 150
+                    },
+                    {
+                        id: "cert_page_description",
+                        label: "Page Description",
+                        type: "textarea",
+                        value: "A comprehensive collection of my professional certifications, skill badges, and academic achievements. Each certificate represents dedication to continuous learning and professional development.",
+                        selector: ".certificates-page-description",
+                        maxLength: 500
+                    }
+                ]
+            },
+            {
+                id: "cert_categories",
+                name: "Certificate Categories",
+                icon: "fa-folder-open",
+                fields: [
+                    {
+                        id: "cat_academic_name",
+                        label: "Academic Category Name",
+                        type: "text",
+                        value: "Academic Certificates",
+                        selector: ".category-academic .category-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cat_academic_desc",
+                        label: "Academic Category Description",
+                        type: "textarea",
+                        value: "Certificates related to academic achievements, scholarships, and university honors. These represent my dedication to academic excellence and continuous learning.",
+                        selector: ".category-academic .category-description",
+                        maxLength: 300
+                    },
+                    {
+                        id: "cat_academic_icon",
+                        label: "Academic Icon Class",
+                        type: "text",
+                        value: "fa-graduation-cap",
+                        selector: ".category-academic .category-icon",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cat_skill_name",
+                        label: "Skill Category Name",
+                        type: "text",
+                        value: "Skill Certificates",
+                        selector: ".category-skill .category-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cat_skill_desc",
+                        label: "Skill Category Description",
+                        type: "textarea",
+                        value: "Professional skill certifications from online courses, workshops, and training programs. Covering CAD, engineering software, programming, and technical skills.",
+                        selector: ".category-skill .category-description",
+                        maxLength: 300
+                    },
+                    {
+                        id: "cat_skill_icon",
+                        label: "Skill Icon Class",
+                        type: "text",
+                        value: "fa-tools",
+                        selector: ".category-skill .category-icon",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cat_medical_name",
+                        label: "Medical Category Name",
+                        type: "text",
+                        value: "Medical Certificates",
+                        selector: ".category-medical .category-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cat_medical_desc",
+                        label: "Medical Category Description",
+                        type: "textarea",
+                        value: "Health and medical certificates, fitness records, and wellness documentation. Important for maintaining health records and official documentation.",
+                        selector: ".category-medical .category-description",
+                        maxLength: 300
+                    },
+                    {
+                        id: "cat_medical_icon",
+                        label: "Medical Icon Class",
+                        type: "text",
+                        value: "fa-heartbeat",
+                        selector: ".category-medical .category-icon",
+                        maxLength: 50
+                    }
+                ]
+            },
+            {
+                id: "cert_academic_sub",
+                name: "Academic Subcategories",
+                icon: "fa-sitemap",
+                fields: [
+                    {
+                        id: "sub_academic_scholarship_name",
+                        label: "Scholarship Subcategory",
+                        type: "text",
+                        value: "Scholarships",
+                        selector: ".subcategory-scholarship .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_academic_scholarship_desc",
+                        label: "Scholarship Description",
+                        type: "textarea",
+                        value: "Merit-based scholarships and financial aid certificates recognizing academic excellence.",
+                        selector: ".subcategory-scholarship .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_academic_award_name",
+                        label: "Academic Awards Subcategory",
+                        type: "text",
+                        value: "Academic Awards",
+                        selector: ".subcategory-award .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_academic_award_desc",
+                        label: "Academic Awards Description",
+                        type: "textarea",
+                        value: "Awards and recognitions received for academic achievements and competition wins.",
+                        selector: ".subcategory-award .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_academic_degree_name",
+                        label: "Degree Certificates Subcategory",
+                        type: "text",
+                        value: "Degree Certificates",
+                        selector: ".subcategory-degree .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_academic_degree_desc",
+                        label: "Degree Certificates Description",
+                        type: "textarea",
+                        value: "Official degree certificates, transcripts, and academic credentials from institutions.",
+                        selector: ".subcategory-degree .subcat-description",
+                        maxLength: 200
+                    }
+                ]
+            },
+            {
+                id: "cert_skill_sub",
+                name: "Skill Subcategories",
+                icon: "fa-puzzle-piece",
+                fields: [
+                    {
+                        id: "sub_skill_cad_name",
+                        label: "CAD Software Subcategory",
+                        type: "text",
+                        value: "CAD & Design Software",
+                        selector: ".subcategory-cad .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_skill_cad_desc",
+                        label: "CAD Software Description",
+                        type: "textarea",
+                        value: "Certifications in SOLIDWORKS, AutoCAD, Fusion 360, and other CAD design tools.",
+                        selector: ".subcategory-cad .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_skill_programming_name",
+                        label: "Programming Subcategory",
+                        type: "text",
+                        value: "Programming & Development",
+                        selector: ".subcategory-programming .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_skill_programming_desc",
+                        label: "Programming Description",
+                        type: "textarea",
+                        value: "Programming languages, web development, and software engineering certifications.",
+                        selector: ".subcategory-programming .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_skill_embedded_name",
+                        label: "Embedded Systems Subcategory",
+                        type: "text",
+                        value: "Arduino & Embedded Systems",
+                        selector: ".subcategory-embedded .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_skill_embedded_desc",
+                        label: "Embedded Systems Description",
+                        type: "textarea",
+                        value: "IoT, Arduino, Raspberry Pi, and embedded systems programming certificates.",
+                        selector: ".subcategory-embedded .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_skill_office_name",
+                        label: "Office Suite Subcategory",
+                        type: "text",
+                        value: "Microsoft Office Suite",
+                        selector: ".subcategory-office .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_skill_office_desc",
+                        label: "Office Suite Description",
+                        type: "textarea",
+                        value: "Microsoft Word, Excel, PowerPoint, and other productivity software certifications.",
+                        selector: ".subcategory-office .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_skill_graphics_name",
+                        label: "Graphics Design Subcategory",
+                        type: "text",
+                        value: "Graphics & Visual Design",
+                        selector: ".subcategory-graphics .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_skill_graphics_desc",
+                        label: "Graphics Design Description",
+                        type: "textarea",
+                        value: "Adobe Illustrator, Photoshop, and graphic design tool certifications.",
+                        selector: ".subcategory-graphics .subcat-description",
+                        maxLength: 200
+                    }
+                ]
+            },
+            {
+                id: "cert_medical_sub",
+                name: "Medical Subcategories",
+                icon: "fa-notes-medical",
+                fields: [
+                    {
+                        id: "sub_medical_health_name",
+                        label: "Health Reports Subcategory",
+                        type: "text",
+                        value: "Health Reports",
+                        selector: ".subcategory-health .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_medical_health_desc",
+                        label: "Health Reports Description",
+                        type: "textarea",
+                        value: "Medical checkup reports, blood tests, and routine health examination certificates.",
+                        selector: ".subcategory-health .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_medical_fitness_name",
+                        label: "Fitness Certificates Subcategory",
+                        type: "text",
+                        value: "Fitness Certificates",
+                        selector: ".subcategory-fitness .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_medical_fitness_desc",
+                        label: "Fitness Certificates Description",
+                        type: "textarea",
+                        value: "Physical fitness certificates required for admissions, jobs, or competitions.",
+                        selector: ".subcategory-fitness .subcat-description",
+                        maxLength: 200
+                    },
+                    {
+                        id: "sub_medical_vaccination_name",
+                        label: "Vaccination Records Subcategory",
+                        type: "text",
+                        value: "Vaccination Records",
+                        selector: ".subcategory-vaccination .subcat-name",
+                        maxLength: 50
+                    },
+                    {
+                        id: "sub_medical_vaccination_desc",
+                        label: "Vaccination Records Description",
+                        type: "textarea",
+                        value: "COVID-19, flu, and other vaccination certificates and immunization records.",
+                        selector: ".subcategory-vaccination .subcat-description",
+                        maxLength: 200
+                    }
+                ]
+            },
+            {
+                id: "cert_display",
+                name: "Certificate Display Settings",
+                icon: "fa-display",
+                fields: [
+                    {
+                        id: "cert_grid_heading",
+                        label: "Certificates Grid Heading",
+                        type: "text",
+                        value: "All Certificates",
+                        selector: ".certificates-grid-heading",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cert_filter_all",
+                        label: "Filter All Text",
+                        type: "text",
+                        value: "All",
+                        selector: ".filter-btn[data-filter='all']",
+                        maxLength: 20
+                    },
+                    {
+                        id: "cert_filter_academic",
+                        label: "Filter Academic Text",
+                        type: "text",
+                        value: "Academic",
+                        selector: ".filter-btn[data-filter='academic']",
+                        maxLength: 20
+                    },
+                    {
+                        id: "cert_filter_skill",
+                        label: "Filter Skill Text",
+                        type: "text",
+                        value: "Skills",
+                        selector: ".filter-btn[data-filter='skill']",
+                        maxLength: 20
+                    },
+                    {
+                        id: "cert_filter_medical",
+                        label: "Filter Medical Text",
+                        type: "text",
+                        value: "Medical",
+                        selector: ".filter-btn[data-filter='medical']",
+                        maxLength: 20
+                    },
+                    {
+                        id: "cert_search_placeholder",
+                        label: "Search Box Placeholder",
+                        type: "text",
+                        value: "Search certificates...",
+                        selector: ".cert-search-input",
+                        maxLength: 50
+                    },
+                    {
+                        id: "cert_sort_label",
+                        label: "Sort Label Text",
+                        type: "text",
+                        value: "Sort by:",
+                        selector: ".sort-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_sort_date",
+                        label: "Sort by Date Option",
+                        type: "text",
+                        value: "Date Added",
+                        selector: ".sort-option[value='date']",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_sort_name",
+                        label: "Sort by Name Option",
+                        type: "text",
+                        value: "Name (A-Z)",
+                        selector: ".sort-option[value='name']",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_sort_category",
+                        label: "Sort by Category Option",
+                        type: "text",
+                        value: "Category",
+                        selector: ".sort-option[value='category']",
+                        maxLength: 30
+                    }
+                ]
+            },
+            {
+                id: "cert_card_labels",
+                name: "Certificate Card Labels",
+                icon: "fa-id-card",
+                fields: [
+                    {
+                        id: "cert_card_category_label",
+                        label: "Category Badge Label",
+                        type: "text",
+                        value: "Category:",
+                        selector: ".cert-category-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_subcategory_label",
+                        label: "Subcategory Badge Label",
+                        type: "text",
+                        value: "Type:",
+                        selector: ".cert-subcategory-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_date_label",
+                        label: "Date Label",
+                        type: "text",
+                        value: "Issued:",
+                        selector: ".cert-date-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_issuer_label",
+                        label: "Issuer Label",
+                        type: "text",
+                        value: "Issued by:",
+                        selector: ".cert-issuer-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_view_btn",
+                        label: "View Button Text",
+                        type: "text",
+                        value: "View Certificate",
+                        selector: ".cert-view-btn",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_download_btn",
+                        label: "Download Button Text",
+                        type: "text",
+                        value: "Download",
+                        selector: ".cert-download-btn",
+                        maxLength: 30
+                    },
+                    {
+                        id: "cert_card_share_btn",
+                        label: "Share Button Text",
+                        type: "text",
+                        value: "Share",
+                        selector: ".cert-share-btn",
+                        maxLength: 30
+                    }
+                ]
+            },
+            {
+                id: "cert_stats",
+                name: "Certificate Statistics Labels",
+                icon: "fa-chart-bar",
+                fields: [
+                    {
+                        id: "stat_total_label",
+                        label: "Total Certificates Label",
+                        type: "text",
+                        value: "Total Certificates",
+                        selector: ".stat-total-label",
+                        maxLength: 50
+                    },
+                    {
+                        id: "stat_academic_label",
+                        label: "Academic Count Label",
+                        type: "text",
+                        value: "Academic",
+                        selector: ".stat-academic-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "stat_skill_label",
+                        label: "Skill Count Label",
+                        type: "text",
+                        value: "Skills",
+                        selector: ".stat-skill-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "stat_medical_label",
+                        label: "Medical Count Label",
+                        type: "text",
+                        value: "Medical",
+                        selector: ".stat-medical-label",
+                        maxLength: 30
+                    },
+                    {
+                        id: "stat_recent_label",
+                        label: "Recent Certificates Heading",
+                        type: "text",
+                        value: "Recently Added",
+                        selector: ".stat-recent-heading",
+                        maxLength: 50
+                    }
+                ]
+            },
+            {
+                id: "cert_modal",
+                name: "Certificate Viewer Modal",
+                icon: "fa-window-maximize",
+                fields: [
+                    {
+                        id: "modal_title",
+                        label: "Modal Title",
+                        type: "text",
+                        value: "Certificate Details",
+                        selector: ".cert-modal-title",
+                        maxLength: 50
+                    },
+                    {
+                        id: "modal_close_btn",
+                        label: "Close Button Text",
+                        type: "text",
+                        value: "Close",
+                        selector: ".cert-modal-close",
+                        maxLength: 20
+                    },
+                    {
+                        id: "modal_fullscreen_btn",
+                        label: "Fullscreen Button Text",
+                        type: "text",
+                        value: "Fullscreen",
+                        selector: ".cert-modal-fullscreen",
+                        maxLength: 30
+                    },
+                    {
+                        id: "modal_print_btn",
+                        label: "Print Button Text",
+                        type: "text",
+                        value: "Print",
+                        selector: ".cert-modal-print",
+                        maxLength: 20
+                    },
+                    {
+                        id: "modal_download_btn",
+                        label: "Download Button Text",
+                        type: "text",
+                        value: "Download Certificate",
+                        selector: ".cert-modal-download",
+                        maxLength: 30
+                    },
+                    {
+                        id: "modal_info_title",
+                        label: "Information Section Title",
+                        type: "text",
+                        value: "Certificate Information",
+                        selector: ".cert-modal-info-title",
+                        maxLength: 50
+                    },
+                    {
+                        id: "modal_no_cert_msg",
+                        label: "No Certificate Message",
+                        type: "text",
+                        value: "No certificates found. Upload your first certificate!",
+                        selector: ".no-certificates-message",
+                        maxLength: 100
+                    }
+                ]
+            },
+            {
+                id: "cert_messages",
+                name: "User Messages & Notifications",
+                icon: "fa-comment",
+                fields: [
+                    {
+                        id: "msg_upload_success",
+                        label: "Upload Success Message",
+                        type: "text",
+                        value: "Certificate uploaded successfully!",
+                        selector: ".upload-success-msg",
+                        maxLength: 100
+                    },
+                    {
+                        id: "msg_upload_error",
+                        label: "Upload Error Message",
+                        type: "text",
+                        value: "Failed to upload certificate. Please try again.",
+                        selector: ".upload-error-msg",
+                        maxLength: 100
+                    },
+                    {
+                        id: "msg_delete_confirm",
+                        label: "Delete Confirmation Message",
+                        type: "text",
+                        value: "Are you sure you want to delete this certificate?",
+                        selector: ".delete-confirm-msg",
+                        maxLength: 100
+                    },
+                    {
+                        id: "msg_delete_success",
+                        label: "Delete Success Message",
+                        type: "text",
+                        value: "Certificate deleted successfully!",
+                        selector: ".delete-success-msg",
+                        maxLength: 100
+                    },
+                    {
+                        id: "msg_loading",
+                        label: "Loading Message",
+                        type: "text",
+                        value: "Loading certificates...",
+                        selector: ".loading-msg",
+                        maxLength: 50
+                    },
+                    {
+                        id: "msg_no_results",
+                        label: "No Search Results Message",
+                        type: "text",
+                        value: "No certificates match your search.",
+                        selector: ".no-results-msg",
+                        maxLength: 100
+                    }
+                ]
+            }
+        ]
+    },
+    
     about: {
         title: "About Page - Complete",
         description: "Bio, education, skills, languages, hobbies - everything editable",

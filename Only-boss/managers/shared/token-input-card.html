@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Token Manager - A3KM Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .token-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+        }
+
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-value.valid {
+            color: #28a745;
+        }
+
+        .status-value.invalid {
+            color: #dc3545;
+        }
+
+        .status-value.pending {
+            color: #ffc107;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        .toggle-password:hover {
+            color: #667eea;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .help-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .help-link:hover {
+            text-decoration: underline;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: flex;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -100% 0;
+            }
+            100% {
+                background-position: 100% 0;
+            }
+        }
+
+        .managers-list {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .managers-list h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .manager-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .manager-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .manager-icon {
+            font-size: 20px;
+        }
+
+        .manager-name {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .manager-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        @media (max-width: 600px) {
+            .token-card {
+                padding: 30px 20px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-danger {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="token-card">
+            <!-- Header -->
+            <div class="header">
+                <div class="icon-container">
+                    🔐
+                </div>
+                <h1>GitHub Token Manager</h1>
+                <p>একবার token দিন, সব জায়গায় কাজ করবে</p>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Token Status -->
+            <div class="status-section" id="statusSection">
+                <div class="status-item">
+                    <span class="status-label">Token Status</span>
+                    <span class="status-value pending" id="tokenStatus">No Token</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Token Added</span>
+                    <span class="status-value" id="tokenDate">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Days Until Expiry</span>
+                    <span class="status-value" id="tokenExpiry">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Masked Token</span>
+                    <span class="status-value" id="maskedToken">-</span>
+                </div>
+            </div>
+
+            <!-- Token Input -->
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="githubToken">GitHub Personal Access Token</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="githubToken" 
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        >
+                        <button class="toggle-password" id="togglePassword" type="button">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="help-text">
+                        ℹ️ Need a token? 
+                        <a href="https://github.com/settings/tokens/new" target="_blank" class="help-link">
+                            Create one here
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button class="btn btn-primary" id="saveBtn">
+                    💾 Save Token
+                </button>
+                <button class="btn btn-secondary" id="validateBtn">
+                    ✓ Validate
+                </button>
+                <button class="btn btn-danger" id="clearBtn">
+                    🗑️ Clear Token
+                </button>
+            </div>
+
+            <!-- Managers List -->
+            <div class="managers-list">
+                <h3>📱 Connected Managers (6)</h3>
+                <div class="manager-item">
+                    <span class="manager-icon">📚</span>
+                    <span class="manager-name">Books Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+                <div class="manager-item">
+                    <span class="manager-icon">🎥</span>
+                    <span class="manager-name">Videos Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+                <div class="manager-item">
+                    <span class="manager-icon">📄</span>
+                    <span class="manager-name">Papers Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+                <div class="manager-item">
+                    <span class="manager-icon">📝</span>
+                    <span class="manager-name">Posts Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+                <div class="manager-item">
+                    <span class="manager-icon">📹</span>
+                    <span class="manager-name">Vlogs Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+                <div class="manager-item">
+                    <span class="manager-icon">🎓</span>
+                    <span class="manager-name">Certificates Manager</span>
+                    <span class="manager-status"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Token Manager Script -->
+    <script src="github-token-manager.js"></script>
+
+    <script>
+        // ==================== DOM ELEMENTS ====================
+        const tokenInput = document.getElementById('githubToken');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const saveBtn = document.getElementById('saveBtn');
+        const validateBtn = document.getElementById('validateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const statusSection = document.getElementById('statusSection');
+
+        // ==================== INITIALIZATION ====================
+        
+        // Load existing token status
+        updateTokenStatus();
+
+        // ==================== EVENT LISTENERS ====================
+
+        // Toggle password visibility
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = tokenInput.type === 'password' ? 'text' : 'password';
+            tokenInput.type = type;
+            togglePasswordBtn.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Save token
+        saveBtn.addEventListener('click', async () => {
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                showAlert('Please enter a GitHub token', 'danger');
+                return;
+            }
+
+            try {
+                disableButtons();
+                showProgress(30);
+                
+                // Save token
+                githubTokenManager.saveToken(token);
+                showProgress(60);
+                
+                // Validate token
+                const validation = await githubTokenManager.validateToken();
+                showProgress(100);
+                
+                if (validation.valid) {
+                    showAlert('✅ Token saved and validated successfully!', 'success');
+                    tokenInput.value = '';
+                    updateTokenStatus();
+                } else {
+                    showAlert(`⚠️ Token saved but validation failed: ${validation.error}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`❌ Error: ${error.message}`, 'danger');
+            } finally {
+                enableButtons();
+                hideProgress();
+            }
+        });
+
+        // Validate token
+        validateBtn.addEventListener('click', async () => {
+            try {
+                disableButtons();
+                showProgress(50);
+                
+                const validation = await githubTokenManager.validateToken();
+                showProgress(100);
+                
+                if (validation.valid) {
+                    showAlert('✅ Token is valid!', 'success');
+                    updateTokenStatus();
+                } else {
+                    showAlert(`❌ ${validation.error}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`❌ Error: ${error.message}`, 'danger');
+            } finally {
+                enableButtons();
+                hideProgress();
+            }
+        });
+
+        // Clear token
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the token? All managers will lose access.')) {
+                githubTokenManager.clearToken();
+                tokenInput.value = '';
+                showAlert('🗑️ Token cleared successfully', 'info');
+                updateTokenStatus();
+            }
+        });
+
+        // ==================== HELPER FUNCTIONS ====================
+
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} show">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => {
+                        alertContainer.innerHTML = '';
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        function showProgress(percent) {
+            progressBar.classList.add('show');
+            progressFill.style.width = `${percent}%`;
+        }
+
+        function hideProgress() {
+            setTimeout(() => {
+                progressBar.classList.remove('show');
+                progressFill.style.width = '0%';
+            }, 500);
+        }
+
+        function disableButtons() {
+            saveBtn.disabled = true;
+            validateBtn.disabled = true;
+            clearBtn.disabled = true;
+        }
+
+        function enableButtons() {
+            saveBtn.disabled = false;
+            validateBtn.disabled = false;
+            clearBtn.disabled = false;
+        }
+
+        function updateTokenStatus() {
+            const info = githubTokenManager.getTokenInfo();
+            
+            if (!info) {
+                document.getElementById('tokenStatus').textContent = 'No Token';
+                document.getElementById('tokenStatus').className = 'status-value invalid';
+                document.getElementById('tokenDate').textContent = '-';
+                document.getElementById('tokenExpiry').textContent = '-';
+                document.getElementById('maskedToken').textContent = '-';
+                validateBtn.disabled = true;
+                clearBtn.disabled = true;
+            } else {
+                const statusElement = document.getElementById('tokenStatus');
+                statusElement.textContent = info.status.message;
+                statusElement.className = `status-value ${info.status.valid ? 'valid' : 'invalid'}`;
+                
+                document.getElementById('tokenDate').textContent = info.addedDate;
+                document.getElementById('tokenExpiry').textContent = `${info.daysUntilExpiry} days`;
+                document.getElementById('maskedToken').textContent = info.maskedToken;
+                
+                validateBtn.disabled = false;
+                clearBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

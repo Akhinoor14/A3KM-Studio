@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Mobile Detection & Block System -->
+    <link rel="stylesheet" href="../../../Optimization/mobile-block.css">
+    <script src="../../../Optimization/mobile-block.js"></script>
+    
+    <title>Global Analytics Dashboard - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .header { background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .header h1 { color: #333; font-size: 32px; display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #667eea, #764ba2); padding: 25px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3); }
+        .stat-card h3 { font-size: 32px; margin-bottom: 8px; }
+        .stat-card p { opacity: 0.9; font-size: 14px; }
+        .stat-card small { opacity: 0.7; font-size: 12px; }
+        .chart-container { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .chart-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        .chart-item { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .table-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f5f5f5; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { font-weight: 600; color: #333; }
+        tr:hover { background: #f9f9f9; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-primary { background: #e3f2fd; color: #1976d2; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Global Analytics Dashboard</h1>
+            <p>Complete overview of all website content and statistics</p>
+            <button class="btn btn-primary" onclick="refreshData()" style="margin-top: 15px;">
+                <i class="fas fa-sync"></i> Refresh Data
+            </button>
+        </div>
+
+        <!-- Overall Stats -->
+        <div class="stats-grid" id="statsContainer">
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Total Content Items</p>
+                <small id="totalItems">Books, Videos, Papers & Posts</small>
+            </div>
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Total Projects</p>
+                <small id="totalProjects">Arduino, MATLAB, SolidWorks</small>
+            </div>
+            <div class="stat-card">
+                <h3>0</h3>
+                <p>Total Certificates</p>
+                <small id="totalCerts">Academic, Skill & Medical</small>
+            </div>
+            <div class="stat-card">
+                <h3>0MB</h3>
+                <p>Total Storage Used</p>
+                <small id="storageUsed">GitHub repository size</small>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <!-- Content Distribution Pie -->
+            <div class="chart-item">
+                <div class="chart-title"><i class="fas fa-pie-chart"></i> Content Distribution</div>
+                <canvas id="contentChart"></canvas>
+            </div>
+
+            <!-- Category Breakdown Bar -->
+            <div class="chart-item">
+                <div class="chart-title"><i class="fas fa-bar-chart"></i> Content by Category</div>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <!-- Upload Timeline -->
+            <div class="chart-item">
+                <div class="chart-title"><i class="fas fa-line-chart"></i> Upload Activity (Last 30 Days)</div>
+                <canvas id="timelineChart"></canvas>
+            </div>
+
+            <!-- Certificate Distribution -->
+            <div class="chart-item">
+                <div class="chart-title"><i class="fas fa-certificate"></i> Certificate Categories</div>
+                <canvas id="certChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Content Breakdown Table -->
+        <div class="table-container">
+            <div class="chart-title" style="margin-bottom: 20px;">
+                <i class="fas fa-table"></i> Detailed Content Breakdown
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Content Type</th>
+                        <th>Count</th>
+                        <th>Recent Addition</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #999;">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="table-container" style="margin-top: 30px;">
+            <div class="chart-title" style="margin-bottom: 20px;">
+                <i class="fas fa-history"></i> Recent Activities
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Activity</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="activityBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: #999;">No recent activities</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../../shared/github-token-manager.js"></script>
+    <script>
+        let tokenManager = null;
+        // Data structure
+        let analyticsData = {
+            books: 0,
+            videos: 0,
+            papers: 0,
+            posts: 0,
+            vlogs: 0,
+            projects: 0,
+            certificates: { academic: 0, skill: 0, medical: 0 },
+            lastUpdated: new Date()
+        };
+
+        let charts = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            tokenManager = typeof GitHubTokenManager !== 'undefined' ? new GitHubTokenManager() : null;
+            loadAnalyticsData();
+            initializeCharts();
+            refreshData();
+            
+            // Live update every 2 seconds
+            setInterval(() => {
+                loadAnalyticsData();
+                updateStats();
+                updateCharts();
+            }, 2000);
+        });
+
+        // Load analytics data from localStorage
+        function loadAnalyticsData() {
+            // Count content items from Content Studio
+            const contentTypes = ['books-pdfs', 'educational-videos', 'research-papers', 'written-posts', 'video-content'];
+            contentTypes.forEach(type => {
+                const key = `content_${type}`;
+                const saved = localStorage.getItem(key);
+                const count = saved ? JSON.parse(saved).length : 0;
+                
+                if (type === 'books-pdfs') analyticsData.books = count;
+                else if (type === 'educational-videos') analyticsData.videos = count;
+                else if (type === 'research-papers') analyticsData.papers = count;
+                else if (type === 'written-posts') analyticsData.posts = count;
+                else if (type === 'video-content') analyticsData.vlogs = count;
+            });
+
+            // Count projects
+            analyticsData.projects = (localStorage.getItem('projects') ? JSON.parse(localStorage.getItem('projects')).length : 0);
+
+            // Count certificates
+            const certData = localStorage.getItem('a3km_certificates');
+            if (certData) {
+                const certs = JSON.parse(certData);
+                certs.forEach(cert => {
+                    if (cert.category === 'Academic') analyticsData.certificates.academic++;
+                    else if (cert.category === 'Skill') analyticsData.certificates.skill++;
+                    else if (cert.category === 'Medical') analyticsData.certificates.medical++;
+                });
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Content Distribution
+            const contentCtx = document.getElementById('contentChart').getContext('2d');
+            charts.content = new Chart(contentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Books', 'Videos', 'Papers', 'Posts', 'Vlogs'],
+                    datasets: [{
+                        data: [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs],
+                        backgroundColor: ['#667eea', '#764ba2', '#ff6b6b', '#51cf66', '#ffd43b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+
+            // Category Breakdown
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            charts.category = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Books', 'Videos', 'Papers', 'Posts', 'Vlogs'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs],
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: { responsive: true, indexAxis: 'y' }
+            });
+
+            // Timeline - Real data from activity logs
+            const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            const activityLogs = JSON.parse(localStorage.getItem('a3km_activity_logs') || '[]');
+            const uploadsByDay = {};
+            const now = new Date();
+            
+            // Count uploads by day for last 30 days
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                const dateKey = date.toISOString().split('T')[0];
+                uploadsByDay[dateKey] = 0;
+            }
+            
+            activityLogs.forEach(log => {
+                const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+                if (uploadsByDay.hasOwnProperty(logDate)) {
+                    uploadsByDay[logDate]++;
+                }
+            });
+            
+            const labels = Object.keys(uploadsByDay).map(d => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            });
+            const data = Object.values(uploadsByDay);
+            
+            charts.timeline = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Activities',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // Certificates
+            const certCtx = document.getElementById('certChart').getContext('2d');
+            charts.cert = new Chart(certCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Academic', 'Skill', 'Medical'],
+                    datasets: [{
+                        data: [analyticsData.certificates.academic, analyticsData.certificates.skill, analyticsData.certificates.medical],
+                        backgroundColor: ['#51cf66', '#ff922b', '#748ffc']
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadAnalyticsData();
+            updateStats();
+            updateTable();
+            updateCharts();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs;
+            document.querySelectorAll('.stat-card h3')[0].textContent = total;
+            document.querySelectorAll('.stat-card h3')[1].textContent = analyticsData.projects;
+            document.querySelectorAll('.stat-card h3')[2].textContent = 
+                analyticsData.certificates.academic + analyticsData.certificates.skill + analyticsData.certificates.medical;
+        }
+
+        // Update table
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td><i class="fas fa-book"></i> Books</td>
+                    <td><strong>${analyticsData.books}</strong></td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                    <td><button class="btn" style="background: #e3f2fd; color: #1976d2; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px;">View</button></td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-video"></i> Videos</td>
+                    <td><strong>${analyticsData.videos}</strong></td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                    <td><button class="btn" style="background: #e3f2fd; color: #1976d2; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px;">View</button></td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-file-pdf"></i> Papers</td>
+                    <td><strong>${analyticsData.papers}</strong></td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                    <td><button class="btn" style="background: #e3f2fd; color: #1976d2; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px;">View</button></td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-newspaper"></i> Posts</td>
+                    <td><strong>${analyticsData.posts}</strong></td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td><button class="btn" style="background: #e3f2fd; color: #1976d2; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px;">View</button></td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-play-circle"></i> Vlogs</td>
+                    <td><strong>${analyticsData.vlogs}</strong></td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td><span class="badge badge-warning">Active</span></td>
+                    <td><button class="btn" style="background: #e3f2fd; color: #1976d2; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px;">View</button></td>
+                </tr>
+            `;
+        }
+
+        // Update charts
+        function updateCharts() {
+            if (charts.content) {
+                charts.content.data.datasets[0].data = [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs];
+                charts.content.update();
+            }
+            if (charts.category) {
+                charts.category.data.datasets[0].data = [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs];
+                charts.category.update();
+            }
+            if (charts.cert) {
+                charts.cert.data.datasets[0].data = [analyticsData.certificates.academic, analyticsData.certificates.skill, analyticsData.certificates.medical];
+                charts.cert.update();
+            }
+        }
+    </script>
+</body>
+</html>

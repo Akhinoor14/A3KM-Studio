@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Mobile Detection & Block System -->
+  <link rel="stylesheet" href="../Optimization/mobile-block.css" />
+  <script src="../Optimization/mobile-block.js"></script>
   <meta name="description" content="About Md Akhinoor Islam - Portfolio presented by A3KM Studio | Part of Noor Academy" />
   <title>About - Md Akhinoor Islam | Portfolio by A3KM Studio</title>
     <link rel="icon" href="../images/favicon.svg" type="image/svg+xml" />
@@ -664,8 +668,11 @@
     }
   </script>
 
-  <!-- Scroll to Top Button -->
-  <button id="scrollToTopBtn" class="scroll-to-top-btn" title="Back to Top">
+  <!-- Scroll to Top Button with Progress Bar -->
+  <button id="scrollToTopBtn" class="scroll-to-top-btn" title="Back to Top (Press HOME key)">
+    <svg class="progress-ring" width="50" height="50" style="position: absolute; inset: 0;">
+      <circle class="progress-ring__circle" cx="25" cy="25" r="22" />
+    </svg>
     <i class="fas fa-arrow-up"></i>
   </button>
 
@@ -685,26 +692,91 @@
   })();
   </script>
 
-  <!-- Scroll to Top Functionality -->
+  <!-- Enhanced Scroll to Top Functionality -->
   <script>
   (function() {
     const scrollBtn = document.getElementById('scrollToTopBtn');
+    const progressCircle = document.querySelector('.progress-ring__circle');
+    const circumference = 2 * Math.PI * 22; // radius = 22
     
-    // Show/hide button based on scroll position
+    if (progressCircle) {
+      progressCircle.style.strokeDasharray = circumference;
+      progressCircle.style.strokeDashoffset = circumference;
+    }
+    
+    // Update progress bar and show/hide button
     window.addEventListener('scroll', function() {
-      if (window.scrollY > 300) {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      
+      // Smart Show/Hide: Show only after scrolling 300px
+      if (scrollTop > 300) {
         scrollBtn.classList.add('visible');
       } else {
         scrollBtn.classList.remove('visible');
       }
+      
+      // Update progress ring
+      if (progressCircle) {
+        const offset = circumference - (scrollPercent / 100) * circumference;
+        progressCircle.style.strokeDashoffset = offset;
+      }
     });
     
-    // Smooth scroll to top
-    scrollBtn.addEventListener('click', function() {
+    // Click to scroll to top smoothly
+    scrollBtn.addEventListener('click', function(e) {
+      e.preventDefault();
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
+    });
+    
+    // Keyboard shortcut: HOME key goes to top
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Home') {
+        e.preventDefault();
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+      // END key goes to bottom
+      if (e.key === 'End') {
+        e.preventDefault();
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    });
+    
+    // Add keyboard hint on hover
+    scrollBtn.addEventListener('mouseenter', function() {
+      const hint = document.createElement('div');
+      hint.className = 'keyboard-hint';
+      hint.textContent = 'Click or Press HOME';
+      hint.style.cssText = `
+        position: absolute;
+        bottom: 70px;
+        right: 0;
+        background: rgba(204, 0, 0, 0.95);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        animation: slideInRight 0.3s ease-out;
+        z-index: 1000;
+      `;
+      scrollBtn.parentElement.appendChild(hint);
+    });
+    
+    scrollBtn.addEventListener('mouseleave', function() {
+      const hint = document.querySelector('.keyboard-hint');
+      if (hint) hint.remove();
     });
   })();
   </script>

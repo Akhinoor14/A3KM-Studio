@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Educational Videos Manager - A3KM Studio</title>
+  <link rel="stylesheet" href="books-manager.html">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border-top: 4px solid #8B0000; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .back-btn { background: rgba(139, 0, 0, 0.1); border: 2px solid #8B0000; padding: 10px 20px; border-radius: 10px; color: #8B0000; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .back-btn:hover { background: #8B0000; color: white; }
+    h1 { color: #8B0000; font-size: 32px; margin-bottom: 10px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0; }
+    .tab { padding: 12px 24px; background: transparent; border: none; color: #666; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab.active { color: #8B0000; border-bottom-color: #8B0000; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #8B0000; }
+    textarea { resize: vertical; min-height: 100px; }
+    .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B0000, #C80000); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+    .file-upload-label { display: flex; align-items: center; justify-content: center; padding: 40px; border: 2px dashed #8B0000; border-radius: 10px; cursor: pointer; background: #fff5f5; }
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .content-card { border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; transition: all 0.3s; }
+    .content-card:hover { border-color: #8B0000; box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2); }
+    .card-thumbnail { width: 100%; height: 150px; object-fit: cover; background: linear-gradient(135deg, #8B0000, #C80000); }
+    .card-body { padding: 15px; }
+    .card-title { font-weight: 600; color: #333; margin-bottom: 8px; }
+    .card-meta { font-size: 11px; color: #999; margin-bottom: 10px; }
+    .card-actions { display: flex; gap: 8px; }
+    .card-actions button { flex: 1; padding: 8px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .card-actions button:hover { background: #8B0000; color: white; border-color: #8B0000; }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar input { flex: 1; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: linear-gradient(135deg, #8B0000, #C80000); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
+    .progress { margin-top: 20px; display: none; }
+    .progress.active { display: block; }
+    .progress-bar { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #8B0000, #C80000); width: 0%; transition: width 0.3s; }
+    .progress-text { text-align: center; color: #8B0000; font-size: 14px; font-weight: 600; }
+    .success-message { background: #4caf50; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; text-align: center; }
+    .success-message.active { display: block; }
+    .youtube-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>🎓 Educational Videos Manager</h1>
+        <p style="color: #666;">Manage course videos and tutorials</p>
+      </div>
+      <a href="content-hub.html" class="back-btn">← Back to Hub</a>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('upload')">📤 Upload</button>
+      <button class="tab" onclick="switchTab('manage')">📋 Manage</button>
+      <button class="tab" onclick="switchTab('stats')">📊 Statistics</button>
+    </div>
+
+    <!-- UPLOAD TAB -->
+    <div id="uploadTab" class="tab-content active">
+      <form id="uploadForm">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Loading categories...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Video Title</label>
+          <input type="text" id="title" placeholder="Enter video title..." required>
+        </div>
+
+        <div class="youtube-toggle">
+          <input type="checkbox" id="isYoutube">
+          <label for="isYoutube" style="margin: 0;">This is a YouTube video</label>
+        </div>
+
+        <div class="form-group" id="youtubeUrlGroup" style="display: none;">
+          <label>YouTube URL</label>
+          <input type="url" id="youtubeUrl" placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID">
+        </div>
+
+        <div class="form-group" id="videoFileGroup">
+          <label>Video File</label>
+          <input type="file" id="videoFile" accept="video/*" style="display: none;">
+          <label for="videoFile" class="file-upload-label">
+            🎬 Choose video file
+          </label>
+          <div id="fileInfo" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="description" placeholder="Course description..." rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Instructor/Creator</label>
+          <input type="text" id="author" placeholder="Instructor name..." value="Md Akhinoor Islam">
+        </div>
+
+        <div class="form-group">
+          <label>Number of Episodes</label>
+          <input type="number" id="episodes" placeholder="12" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label>Total Duration</label>
+          <input type="text" id="duration" placeholder="2h 30m" required>
+        </div>
+
+        <div class="form-group">
+          <label>Difficulty Level</label>
+          <select id="difficulty" required>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Beginner to Intermediate">Beginner to Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Institution/Platform</label>
+          <input type="text" id="institution" placeholder="A3KM Studio" value="A3KM Studio">
+        </div>
+
+        <div class="form-group">
+          <label>Language</label>
+          <input type="text" id="language" placeholder="en, bn, bn-en" value="en">
+        </div>
+
+        <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" id="tags" placeholder="programming, python, tutorial">
+        </div>
+
+        <div class="form-group">
+          <label>Thumbnail (Auto-fetched for YouTube)</label>
+          <input type="file" id="thumbnail" accept="image/*" style="display: none;">
+          <label for="thumbnail" class="file-upload-label">
+            🖼️ Choose thumbnail image
+          </label>
+          <div id="thumbnailInfo" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+        </div>
+
+        <button type="submit" class="btn-primary">📤 Upload Video</button>
+
+        <div class="progress" id="progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">Processing...</div>
+        </div>
+
+        <div class="success-message" id="successMessage">
+          ✅ Video uploaded successfully!
+        </div>
+      </form>
+    </div>
+
+    <!-- MANAGE TAB -->
+    <div id="manageTab" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search videos..." onkeyup="filterContent()">
+        <select id="sortBy" onchange="filterContent()">
+          <option value="date">Newest First</option>
+          <option value="title">Title A-Z</option>
+          <option value="author">By Instructor</option>
+        </select>
+      </div>
+      <div class="content-grid" id="contentGrid">
+        <p style="text-align: center; padding: 40px; color: #999;">Loading videos...</p>
+      </div>
+    </div>
+
+    <!-- STATISTICS TAB -->
+    <div id="statsTab" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3 id="totalVideos">0</h3>
+          <p>Total Videos</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="totalCategories">0</h3>
+          <p>Categories</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="totalSize">0 MB</h3>
+          <p>Total Size</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="svg-generator.js"></script>
+  <script src="github-content-uploader.js"></script>
+  <script src="content-manager.js"></script>
+  <script src="thumbnail-handler.js"></script>
+  <script>
+    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    const CONTENT_TYPE = 'educational-videos';
+    
+    const svgGenerator = new SVGCoverGenerator();
+    const thumbnailHandler = new ThumbnailHandler();
+    const githubUploader = new GitHubContentUploader({
+      token: GITHUB_TOKEN,
+      owner: 'Akhinoor14',
+      repo: 'A3KM-Studio',
+      onProgress: (data) => { document.getElementById('progressFill').style.width = '60%'; },
+      onError: (error) => alert('Error: ' + error.error)
+    });
+    
+    const contentManager = new ContentManager(githubUploader);
+    let currentContent = [];
+
+    async function loadCategories() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const categorySelect = document.getElementById('category');
+        categorySelect.innerHTML = '<option value="">Select category...</option>';
+        if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
+          data.categoryGroups.forEach(group => {
+            if (group.categories) {
+              group.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    }
+
+    document.getElementById('isYoutube').addEventListener('change', function() {
+      const isYoutube = this.checked;
+      document.getElementById('youtubeUrlGroup').style.display = isYoutube ? 'block' : 'none';
+      document.getElementById('videoFileGroup').style.display = isYoutube ? 'none' : 'block';
+    });
+
+    document.getElementById('videoFile').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        document.getElementById('fileInfo').textContent = `🎬 ${file.name} (${contentManager.formatFileSize(file.size)})`;
+      }
+    });
+
+    document.getElementById('thumbnail').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        document.getElementById('thumbnailInfo').textContent = `🖼️ ${file.name} (${contentManager.formatFileSize(file.size)})`;
+      }
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Validate GitHub token
+      if (GITHUB_TOKEN === 'YOUR_GITHUB_TOKEN_HERE' || !GITHUB_TOKEN) {
+        alert('❌ Please set your GitHub token first!');
+        return;
+      }
+      
+      const progress = document.getElementById('progress');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const successMessage = document.getElementById('successMessage');
+      progress.classList.add('active');
+      successMessage.classList.remove('active');
+      
+      try {
+        const category = document.getElementById('category').value;
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        const author = document.getElementById('author').value;
+        const tags = document.getElementById('tags').value.split(',').map(t => t.trim());
+        const isYoutube = document.getElementById('isYoutube').checked;
+        const youtubeUrl = document.getElementById('youtubeUrl').value;
+        const videoFile = document.getElementById('videoFile').files[0];
+        const thumbnailFile = document.getElementById('thumbnail').files[0];
+        
+        progressText.textContent = 'Checking for duplicates...';
+        progressFill.style.width = '20%';
+        const duplicateCheck = await contentManager.checkDuplicates(CONTENT_TYPE, title, category);
+        if (duplicateCheck.isDuplicate && !confirm(`⚠️ Duplicate found. Upload anyway?`)) {
+          progress.classList.remove('active');
+          return;
+        }
+        
+        progressText.textContent = 'Generating cover...';
+        progressFill.style.width = '40%';
+        const coverSVG = await svgGenerator.generateCover(category, 0);
+        const contentId = `video-${Date.now()}`;
+        
+        let youtubeId = null;
+        if (isYoutube && youtubeUrl) {
+          progressText.textContent = 'Extracting YouTube ID...';
+          progressFill.style.width = '50%';
+          const match = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+          youtubeId = match ? match[1] : null;
+        }
+        
+        progressText.textContent = 'Uploading to GitHub...';
+        progressFill.style.width = '70%';
+        const uploadResult = await githubUploader.uploadCompleteContent({
+          contentType: CONTENT_TYPE,
+          category: category,
+          contentId: contentId,
+          title: title,
+          description: description,
+          tags: tags,
+          author: author,
+          contentFile: videoFile,
+          thumbnailFile: thumbnailFile,
+          coverSVG: coverSVG,
+          youtubeId: youtubeId,
+          metadata: {
+            episodes: parseInt(document.getElementById('episodes').value) || 1,
+            duration: document.getElementById('duration').value || '0m',
+            difficulty: document.getElementById('difficulty').value || 'Beginner',
+            playlist: [], // Empty initially
+            institution: document.getElementById('institution').value || 'A3KM Studio',
+            views: 0,
+            enrolled: 0,
+            language: document.getElementById('language').value || 'en',
+            youtubeUrl: youtubeUrl,
+            isYoutubeContent: isYoutube
+          }
+        });
+        
+        contentManager.createBackup(CONTENT_TYPE, uploadResult);
+        contentManager.addToHistory({
+          action: 'upload',
+          contentType: CONTENT_TYPE,
+          contentId: contentId,
+          title: title,
+          timestamp: new Date().toISOString()
+        });
+        
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Complete!';
+        progress.classList.remove('active');
+        successMessage.classList.add('active');
+        setTimeout(() => { this.reset(); successMessage.classList.remove('active'); }, 3000);
+        
+      } catch (error) {
+        progress.classList.remove('active');
+        alert(`❌ Upload failed: ${error.message}`);
+      }
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName + 'Tab').classList.add('active');
+      event.target.classList.add('active');
+      if (tabName === 'manage') loadManageContent();
+      if (tabName === 'stats') loadStatistics();
+    }
+
+    async function loadManageContent() {
+      const grid = document.getElementById('contentGrid');
+      grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">Loading...</p>';
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        currentContent = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        renderContent(currentContent);
+      } catch (error) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load</p>';
+      }
+    }
+
+    function renderContent(items) {
+      const grid = document.getElementById('contentGrid');
+      if (items.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No videos yet</p>';
+        return;
+      }
+      grid.innerHTML = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'content-card';
+        card.innerHTML = `
+          <img src="${item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <div class="card-body">
+            <div class="card-title">${item.title}</div>
+            <div class="card-meta">
+              📁 ${item.category}<br>
+              👤 ${item.author || 'Unknown'}<br>
+              🕐 ${contentManager.formatDate(item.date)}
+            </div>
+            <div class="card-actions">
+              <button onclick="alert('Edit soon')">✏️ Edit</button>
+              <button onclick="deleteVideo('${item.id}')">🗑️</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterContent() {
+      const query = document.getElementById('searchInput').value;
+      const sortBy = document.getElementById('sortBy').value;
+      let filtered = contentManager.searchContent(currentContent, query);
+      filtered = contentManager.sortItems(filtered, sortBy, 'desc');
+      renderContent(filtered);
+    }
+
+    async function loadStatistics() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const items = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        document.getElementById('totalVideos').textContent = items.length;
+        const categories = new Set(items.map(item => item.category));
+        document.getElementById('totalCategories').textContent = categories.size;
+        const totalSize = items.reduce((sum, item) => sum + (item.fileSize || 0), 0);
+        document.getElementById('totalSize').textContent = contentManager.formatFileSize(totalSize);
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    function deleteVideo(id) {
+      if (confirm('Delete this video?')) {
+        contentManager.deleteContent(CONTENT_TYPE, id)
+          .then(() => { alert('✅ Deleted!'); loadManageContent(); })
+          .catch(err => alert('❌ Failed: ' + err.message));
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCategories);
+  </script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+</body>
+</html>
