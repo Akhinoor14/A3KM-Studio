@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only Boss Dashboard - Administrator Control Panel</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Only Boss Navbar Styles -->
+    <link rel="stylesheet" href="../shared/only-boss-navbar.css">
+    
+    <!-- Dashboard Specific Styles -->
+    <link rel="stylesheet" href="only-boss-dashboard-new.css">
+</head>
+<body>
+    <!-- Only Boss Navbar -->
+    <div id="onlyBossNavbar"></div>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="dashboard-header-content">
+            <div class="dashboard-title-section">
+                <div class="crown-icon-wrapper">
+                    <i class="fas fa-crown crown-icon"></i>
+                </div>
+                <div>
+                    <h1 class="dashboard-main-title">Administrator Control Panel</h1>
+                    <p class="dashboard-subtitle">Session Active • Last Login: <span id="lastLogin">--</span></p>
+                </div>
+            </div>
+            <button class="dashboard-logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <i class="fas fa-tasks"></i>
+                <div>
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Management Tools</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <div class="stat-value">Active</div>
+                    <div class="stat-label">Security Status</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <div class="stat-value">Online</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="section-header">
+            <h2><i class="fas fa-tools"></i> Management Tools</h2>
+            <p>Centralized control panel for website content and configuration</p>
+        </div>
+
+        <!-- Admin Cards Grid -->
+        <div class="admin-grid">
+            <div class="admin-card" onclick="window.location.href='../managers/Content-studio/upload-interface.html'">
+                <i class="fas fa-upload card-icon"></i>
+                <h3 class="card-title">Content Upload</h3>
+                <p class="card-description">Upload books, videos, papers & posts with auto cover generation</p>
+            </div>
+
+            <div class="admin-card" onclick="window.location.href='../managers/certificates/certificates-manager.html'">
+                <i class="fas fa-certificate card-icon"></i>
+                <h3 class="card-title">Certificates</h3>
+                <p class="card-description">Manage academic and professional certifications</p>
+            </div>
+
+            <div class="admin-card" onclick="window.location.href='../managers/security/generate-password-hash.html'">
+                <i class="fas fa-key card-icon"></i>
+                <h3 class="card-title">Password Hash</h3>
+                <p class="card-description">Generate secure SHA-256 password hashes</p>
+            </div>
+
+            <div class="admin-card matlab-card" onclick="window.location.href='../managers/matlab/matlab-manager.html'">
+                <i class="fas fa-chart-line card-icon"></i>
+                <h3 class="card-title">MATLAB Projects</h3>
+                <p class="card-description">Manage MATLAB code, plots, and video demos</p>
+            </div>
+
+            <div class="admin-card youtube-card" onclick="window.location.href='../../Content Studio/video-content/update-durations.html'">
+                <i class="fas fa-video card-icon"></i>
+                <h3 class="card-title">YouTube Duration</h3>
+                <p class="card-description">Auto-fetch video durations from YouTube API</p>
+            </div>
+
+            <div class="admin-card" onclick="window.location.href='../managers/content-editing/content-editor.html'">
+                <i class="fas fa-edit card-icon"></i>
+                <h3 class="card-title">Content Editor</h3>
+                <p class="card-description">Edit website text and descriptions</p>
+            </div>
+
+            <div class="admin-card" onclick="window.location.href='../managers/projects/project-creator/project-manager.html'">
+                <i class="fas fa-magic card-icon"></i>
+                <h3 class="card-title">AI Project Creator</h3>
+                <p class="card-description">Generate complete web projects with AI planning</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard JavaScript -->
+    <script>
+        // Load Only Boss Navbar
+        fetch('../shared/only-boss-navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('onlyBossNavbar').innerHTML = data;
+                // Set active page
+                const navLinks = document.querySelectorAll('.only-boss-navbar a');
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === 'only-boss-dashboard.html') {
+                        link.classList.add('active');
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+
+        // Authentication Check
+        function checkAuthentication() {
+            const isAuthenticated = localStorage.getItem('onlyBossAuthenticated');
+            const authTime = localStorage.getItem('authTime');
+            
+            if (!isAuthenticated || !authTime) {
+                window.location.href = '../auth/only-boss.html';
+                return false;
+            }
+            
+            const currentTime = new Date().getTime();
+            const loginTime = parseInt(authTime);
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (currentTime - loginTime > sessionDuration) {
+                localStorage.removeItem('onlyBossAuthenticated');
+                localStorage.removeItem('authTime');
+                alert('Session expired. Please login again.');
+                window.location.href = '../auth/only-boss.html';
+                return false;
+            }
+            
+            // Display last login time
+            const loginDate = new Date(loginTime);
+            document.getElementById('lastLogin').textContent = loginDate.toLocaleString();
+            
+            return true;
+        }
+
+        // Logout Function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('onlyBossAuthenticated');
+                localStorage.removeItem('authTime');
+                window.location.href = '../auth/only-boss.html';
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthentication();
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+        });
+
+        // Prevent going back after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            if (!localStorage.getItem('onlyBossAuthenticated')) {
+                window.location.href = '../auth/only-boss.html';
+            }
+        };
+    </script>
+</body>
+</html>

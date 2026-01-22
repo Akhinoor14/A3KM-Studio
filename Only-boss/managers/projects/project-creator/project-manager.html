@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project Manager - Only Boss</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Only Boss Navbar -->
+    <link rel="stylesheet" href="../../../shared/only-boss-navbar.css">
+    
+    <style>
+        :root {
+            --primary: #cc0000;
+            --primary-dark: #990000;
+            --bg-dark: #0a0a0a;
+            --border: rgba(204, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000;
+            color: rgba(255, 255, 255, 0.95);
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+        
+        /* Engineering Grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent 0 19px, rgba(204, 0, 0, 0.06) 19px 20px),
+                repeating-linear-gradient(90deg, transparent 0 19px, rgba(204, 0, 0, 0.06) 19px 20px);
+            background-size: 20px 20px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            background: rgba(20, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .page-header p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .status-bar {
+            background: rgba(20, 0, 0, 0.4);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .dot.good { background: #00cc00; }
+        .dot.warn { background: #ff9900; }
+        .dot.bad { background: #cc0000; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(20, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .card h3 {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
+        }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(204, 0, 0, 0.5);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(204, 0, 0, 0.4);
+        }
+        
+        .action-bar {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+        
+        #planSections {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .section-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        
+        .section-card h4 {
+            color: var(--primary);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .chip {
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid var(--primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        
+        #jsonOut {
+            width: 100%;
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        #previewContent {
+            margin-top: 1rem;
+        }
+        
+        #projectList {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .project-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .project-info h4 {
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .project-info p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+        
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .project-actions button {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            body {
+                padding-top: 60px;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Only Boss Navbar -->
+    <div id="onlyBossNavbar"></div>
+    
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-magic"></i>
+                AI Project Manager
+            </h1>
+            <p>Intelligent project structure generator with AI-powered recommendations</p>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="dot good"></div>
+            <span id="statusText">Ready to create amazing projects</span>
+        </div>
+        
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- Input Form -->
+            <div class="card">
+                <h3><i class="fas fa-edit"></i> Project Configuration</h3>
+                <div class="form-group">
+                    <label for="name">Project Name</label>
+                    <input type="text" id="name" placeholder="My Awesome Project">
+                </div>
+                <div class="form-group">
+                    <label for="type">Project Type</label>
+                    <select id="type">
+                        <option value="library">Library</option>
+                        <option value="webapp">Web App</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="doc">Documentation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="audience">Target Audience</label>
+                    <select id="audience">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="pro">Professional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="design">Design Theme</label>
+                    <select id="design">
+                        <option value="crimson">Crimson Engineering</option>
+                        <option value="dark">Dark Mode</option>
+                        <option value="light">Light Mode</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="goal">Project Goal</label>
+                    <textarea id="goal" rows="3" placeholder="Describe the main purpose..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="features">Features (comma separated)</label>
+                    <input type="text" id="features" placeholder="search, export, calculator">
+                </div>
+                
+                <div class="action-bar">
+                    <button class="btn" id="btnSuggest">
+                        <i class="fas fa-lightbulb"></i> Generate Plan
+                    </button>
+                    <button class="btn btn-secondary" id="btnTemplate">
+                        <i class="fas fa-file-alt"></i> Apply Template
+                    </button>
+                    <button class="btn btn-secondary" id="btnAutoLayout">
+                        <i class="fas fa-th"></i> Auto Layout
+                    </button>
+                    <button class="btn btn-secondary" id="btnScore">
+                        <i class="fas fa-chart-line"></i> Quality Score
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Generated Plan -->
+            <div class="card">
+                <h3><i class="fas fa-sitemap"></i> Generated Plan</h3>
+                <div id="planSections"></div>
+                <div id="previewContent"></div>
+                <div class="action-bar">
+                    <button class="btn" id="btnValidate">
+                        <i class="fas fa-check-circle"></i> Validate
+                    </button>
+                    <button class="btn" id="btnCreate">
+                        <i class="fas fa-save"></i> Save Project
+                    </button>
+                    <button class="btn btn-secondary" id="btnExport">
+                        <i class="fas fa-download"></i> Export JSON
+                    </button>
+                    <button class="btn btn-secondary" id="btnSync">
+                        <i class="fas fa-cloud-upload-alt"></i> Sync GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- JSON Output -->
+        <div class="card">
+            <h3><i class="fas fa-code"></i> Project JSON</h3>
+            <textarea id="jsonOut" readonly></textarea>
+        </div>
+        
+        <!-- Saved Projects -->
+        <div class="card">
+            <h3><i class="fas fa-folder-open"></i> Saved Projects</h3>
+            <div id="projectList"></div>
+        </div>
+    </div>
+    
+    <!-- Load Navbar -->
+    <script>
+        fetch('../../../shared/only-boss-navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('onlyBossNavbar').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+    </script>
+    
+    <!-- Main Script -->
+    <script src="project-manager.js"></script>
+</body>
+</html>

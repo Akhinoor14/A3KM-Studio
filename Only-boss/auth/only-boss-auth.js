@@ -34,7 +34,7 @@ const loginBtn = document.getElementById('step1Btn');
 const errorMsg = document.getElementById('error1');
 
 function showSuccess() {
-    window.location.href = 'only-boss-dashboard.html';
+    window.location.href = '../dashboard/only-boss-dashboard-redesigned.html';
 }
 
 function showError(message) {
