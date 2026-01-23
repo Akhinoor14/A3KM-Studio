@@ -149,6 +149,10 @@
                     </div>
                 </div>
                 
+                <div class="desktop-highlight">
+                    <span class="desktop-highlight-icon">💻</span>
+                    <span class="desktop-highlight-text">For the <b>BEST EXPERIENCE</b>, use <b>Desktop/Laptop</b></span>
+                </div>
                 <div class="mobile-footer">
                     <p>⚠️ Desktop site provides the full A3KM Studio experience</p>
                     <p class="mobile-brand">A3KM STUDIO</p>
