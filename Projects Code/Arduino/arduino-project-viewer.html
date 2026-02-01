@@ -628,13 +628,18 @@
         body:fullscreen .reading-toolbar {
             position: fixed;
             top: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0; /* Start from left edge */
+            right: 340px; /* Leave space for TOC */
+            transform: none; /* Remove centering transform */
             z-index: 10001;
-            width: 90%;
-            max-width: 1400px;
+            width: auto;
+            max-width: none;
             opacity: 1;
-            margin: 0 auto;
+            margin: 0;
+            padding: 12px 20px;
+            justify-content: flex-start; /* Align to left */
+            overflow-x: auto; /* Allow horizontal scroll if needed */
+            overflow-y: visible;
         }
 
         .toolbar-group {
@@ -643,6 +648,7 @@
             gap: 10px;
             padding: 0 10px;
             border-right: 1px solid rgba(204, 0, 0, 0.2);
+            flex-shrink: 0; /* Prevent shrinking */
         }
 
         .toolbar-group:last-child {
@@ -690,6 +696,37 @@
 
         .toolbar-btn i {
             font-size: 1rem;
+        }
+
+        /* Compact toolbar buttons in fullscreen */
+        #documentationSection:fullscreen .toolbar-btn,
+        .fullscreen-fallback .toolbar-btn {
+            padding: 6px 8px;
+            font-size: 0.8rem;
+        }
+        
+        #documentationSection:fullscreen .toolbar-btn span,
+        .fullscreen-fallback .toolbar-btn span {
+            font-size: 0.8rem;
+        }
+        
+        #documentationSection:fullscreen .toolbar-btn i,
+        .fullscreen-fallback .toolbar-btn i {
+            font-size: 0.9rem;
+        }
+        
+        /* Ensure toolbar doesn't overflow */
+        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 3px;
         }
 
         .font-size-display {
@@ -833,7 +870,7 @@
         }
 
         #documentationSection:fullscreen {
-            padding: 70px 340px 20px 20px;
+            padding: 60px 340px 20px 0; /* Changed left padding from 20px to 0 */
             overflow-y: auto;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
             min-height: 100vh;
@@ -844,15 +881,6 @@
 
         #documentationSection:fullscreen .section-title {
             display: none;
-        }
-
-        /* Fullscreen Top Bar - Always Visible, Positioned Left of TOC */
-        #documentationSection:fullscreen .reading-toolbar {
-            top: 0;
-            opacity: 1;
-            right: 340px; /* Move left to avoid TOC overlap */
-            left: 20px;
-            width: auto;
         }
 
         /* Invisible trigger area - no longer needed but keep for compatibility */
@@ -890,6 +918,7 @@
         #documentationSection:fullscreen .doc-content {
             min-height: calc(100vh - 120px);
             width: 100%;
+            padding-left: 20px; /* Add left padding to content instead of container */
         }
 
         #documentationSection:fullscreen .markdown-content {
