@@ -1925,16 +1925,28 @@
         // Projects data - Load from JSON file
         let projects = [];
         let projectsData = null;
+        let currentProject = null;
 
         // Fetch projects data from JSON file
         async function loadProjectsData() {
             try {
+                console.log('📡 Fetching arduino-data.json...');
                 const response = await fetch('arduino-data.json');
+                console.log('📡 Response status:', response.status, response.statusText);
+                
                 if (!response.ok) {
-                    throw new Error('Failed to load projects data');
+                    throw new Error(`Failed to load projects data: ${response.status} ${response.statusText}`);
                 }
+                
                 projectsData = await response.json();
+                console.log('📦 JSON parsed successfully:', projectsData);
+                
+                if (!projectsData || !projectsData.projects || !Array.isArray(projectsData.projects)) {
+                    throw new Error('Invalid JSON structure - missing projects array');
+                }
+                
                 projects = projectsData.projects;
+                console.log(`✅ Loaded ${projects.length} Arduino projects from JSON`);
                 
                 // Map category names from JSON to viewer format
                 projects = projects.map(p => {
@@ -1946,56 +1958,95 @@
                     return {...p, category: oldCategory};
                 });
                 
-                console.log(`Loaded ${projects.length} Arduino projects from JSON`);
+                console.log(`🔄 Projects mapped, still ${projects.length} projects`);
+                
+                // NOW select the current project after data is loaded
+                selectCurrentProject();
+                
                 return projects;
             } catch (error) {
-                console.error('Error loading projects data:', error);
+                console.error('❌ Error loading projects data:', error);
+                console.error('❌ Error details:', error.message);
                 projects = [];
+                
+                // Show error to user
+                document.body.innerHTML = `
+                    <div style="text-align:center;padding:100px;color:white;background:#1a0000;">
+                        <h1 style="color:#ff4444;">⚠️ Failed to Load Arduino Projects</h1>
+                        <p style="font-size:1.2rem;margin:20px 0;">Could not load project data.</p>
+                        <p style="color:#ff8888;margin:10px 0;">Error: ${error.message}</p>
+                        <p style="margin-top:40px;">
+                            <a href="arduino-projects.html" style="color:#cc0000;text-decoration:underline;">← Go Back to Projects List</a>
+                        </p>
+                    </div>
+                `;
+                
                 return projects;
             }
         }
 
         // Get current project from URL (support ?id=, ?project=, and ?category=)
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentProject;
-        
-        // Try category-based parameter (from category cards)
-        const categoryFilter = urlParams.get('category');
-        if (categoryFilter) {
-            const categoryProjects = projects.filter(p => p.category === categoryFilter);
-            if (categoryProjects.length > 0) {
-                currentProject = categoryProjects[0]; // Select first project in category
-                console.log('🎯 Category filter:', categoryFilter, '→ Found', categoryProjects.length, 'projects');
+        function selectCurrentProject() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            console.log('📋 Total projects loaded:', projects.length);
+            console.log('🔍 First few project IDs:', projects.slice(0, 5).map(p => `${p.id} (${p.title})`));
+            
+            // Try category-based parameter (from category cards)
+            const categoryFilter = urlParams.get('category');
+            if (categoryFilter) {
+                const categoryProjects = projects.filter(p => p.category === categoryFilter);
+                if (categoryProjects.length > 0) {
+                    currentProject = categoryProjects[0]; // Select first project in category
+                    console.log('✅ Category filter:', categoryFilter, '→ Found', categoryProjects.length, 'projects');
+                    console.log('✅ Selected project:', currentProject.title);
+                    return;
+                }
             }
-        }
-        
-        // Try folder-based parameter (newer method)
-        if (!currentProject) {
+            
+            // Try folder-based parameter (newer method)
             const projectFolder = urlParams.get('project');
             if (projectFolder) {
                 currentProject = projects.find(p => p.folder === decodeURIComponent(projectFolder));
-                console.log('🔍 Finding by folder:', projectFolder);
+                if (currentProject) {
+                    console.log('✅ Found by folder:', projectFolder, '→', currentProject.title);
+                    return;
+                }
+            }
+            
+            // Fallback to ID-based parameter (legacy support)
+            const projectId = parseInt(urlParams.get('id')) || 1;
+            console.log('🔍 Searching for project with ID:', projectId, '(type:', typeof projectId + ')');
+            currentProject = projects.find(p => {
+                console.log(`  Checking project ${p.id} (type: ${typeof p.id})`);
+                return p.id === projectId;
+            });
+            
+            if (currentProject) {
+                console.log('✅ Found by ID:', projectId, '→', currentProject.title);
+                return;
+            }
+            
+            // Final fallback to first project
+            if (projects.length > 0) {
+                currentProject = projects[0];
+                console.warn('⚠️ No valid project found, defaulting to first project:', currentProject.title);
+            } else {
+                console.error('❌ No projects available!');
             }
         }
-        
-        // Fallback to ID-based parameter (legacy support)
-        if (!currentProject) {
-            const projectId = parseInt(urlParams.get('id')) || 1;
-            currentProject = projects.find(p => p.id === projectId);
-            console.log('🔍 Finding by ID:', projectId);
-        }
-        
-        // Final fallback to first project
-        if (!currentProject) {
-            currentProject = projects[0];
-            console.warn('⚠️ No valid project found, defaulting to first');
-        }
-        
-        console.log('✅ Loaded project:', currentProject.title, '(ID:', currentProject.id + ')');
 
         // Load project data
         function loadProject() {
+            if (!currentProject) {
+                console.error('❌ No project selected! Cannot load project data.');
+                document.body.innerHTML = '<div style="text-align:center;padding:100px;color:white;"><h1>Error: No project found</h1><p>Please check the URL or go back to <a href="arduino-projects.html">Arduino Projects</a></p></div>';
+                return;
+            }
+            
             console.log('📂 Loading project:', currentProject.title);
+            console.log('📁 Folder path:', currentProject.folder);
+            console.log('📄 Code file:', currentProject.codeFile);
             
             // Update UI
             document.getElementById('projectNumber').textContent = `Project ${String(currentProject.id).padStart(2, '0')}`;
