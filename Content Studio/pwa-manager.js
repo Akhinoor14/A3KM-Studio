@@ -321,7 +321,7 @@ const pwaStyles = `
     bottom: -150px;
     left: 20px;
     right: 20px;
-    background: linear-gradient(135deg, #CC0000 0%, #990000 100%);
+    background: linear-gradient(135deg, #8B0000 0%, #5a0000 100%);
     color: white;
     padding: 20px;
     border-radius: 10px;
@@ -363,7 +363,7 @@ const pwaStyles = `
 
 .install-btn {
     background: white;
-    color: #CC0000;
+    color: #8B0000;
     border: none;
     padding: 10px 20px;
     border-radius: 5px;

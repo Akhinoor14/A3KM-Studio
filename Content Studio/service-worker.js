@@ -309,7 +309,7 @@ function getOfflinePage() {
             margin-bottom: 30px;
         }
         .btn {
-            background: #CC0000;
+            background: #8B0000;
             color: #fff;
             padding: 12px 30px;
             border: none;

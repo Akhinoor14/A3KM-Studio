@@ -18,8 +18,11 @@
 
 class GitHubContentUploader {
     constructor(config = {}) {
+        // Auto-load token from localStorage (centralized API config)
+        const storedToken = localStorage.getItem('github_token');
+        
         // GitHub configuration
-        this.token = config.token || '';
+        this.token = config.token || storedToken || '';
         this.owner = config.owner || 'Akhinoor14';
         this.repo = config.repo || 'A3KM-Studio';
         this.branch = config.branch || 'main';
@@ -36,6 +39,11 @@ class GitHubContentUploader {
         // Rate limiting
         this.requestDelay = 500; // ms between requests
         this.maxRetries = 3;
+        
+        // Token status check
+        if (!this.token) {
+            console.warn('⚠️ GitHub token not found. Please configure at: Only-boss/managers/shared/api-config-manager.html');
+        }
     }
 
     // ==================== CONFIGURATION ====================

@@ -127,6 +127,13 @@ class ContentManager {
     }
 
     /**
+     * Alias for editContent - for compatibility
+     */
+    async updateContent(contentType, contentId, updates) {
+        return await this.editContent(contentType, contentId, updates);
+    }
+
+    /**
      * Move content to different category
      */
     async moveToCategory(contentType, contentId, newCategory) {

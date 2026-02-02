@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Book/PDF - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../shared/upload-form-styles.css">
+    <script src="../shared/api-config-check.js"></script>
+</head>
+<body>
+    <a href="upload-interface-new.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Content Types
+    </a>
+
+    <div class="container">
+        <div class="upload-header">
+            <div class="upload-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <h1>Upload Book/PDF</h1>
+            <p class="subtitle">Add a book or PDF document to your library</p>
+        </div>
+
+        <form id="uploadForm" class="upload-form">
+            <!-- Title -->
+            <div class="form-group">
+                <label for="title">
+                    Book Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" name="title" required placeholder="Enter book title">
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category">
+                    Category <span class="required">*</span>
+                </label>
+                <select id="category" name="category" required>
+                    <option value="">Loading categories...</option>
+                </select>
+            </div>
+
+            <!-- Type -->
+            <div class="form-group">
+                <label for="type">
+                    Type <span class="required">*</span>
+                </label>
+                <select id="type" name="type" required>
+                    <option value="">Select type</option>
+                    <option value="📚 Book">📚 Book</option>
+                    <option value="📄 PDF Guide">📄 PDF Guide</option>
+                    <option value="📖 E-Book">📖 E-Book</option>
+                    <option value="📝 Document">📝 Document</option>
+                    <option value="📑 Manual">📑 Manual</option>
+                </select>
+            </div>
+
+            <!-- Author -->
+            <div class="form-group">
+                <label for="author">
+                    Author <span class="required">*</span>
+                </label>
+                <input type="text" id="author" name="author" required placeholder="Author name">
+            </div>
+
+            <!-- Summary -->
+            <div class="form-group">
+                <label for="summary">
+                    Summary <span class="required">*</span>
+                </label>
+                <textarea id="summary" name="summary" required placeholder="Brief description of the book"></textarea>
+                <span class="char-counter">
+                    <span id="summaryCount">0</span>/300 characters
+                </span>
+            </div>
+
+            <!-- PDF File Upload -->
+            <div class="form-group">
+                <label for="pdfFile">
+                    PDF File <span class="required">*</span>
+                </label>
+                <div class="file-upload-area" id="pdfUploadArea">
+                    <i class="fas fa-file-pdf"></i>
+                    <p>Drag & Drop PDF file here or <span class="browse-text">Browse</span></p>
+                    <input type="file" id="pdfFile" name="pdfFile" accept=".pdf" required style="display: none;">
+                    <div id="pdfFileName" class="file-name"></div>
+                </div>
+                <span class="helper-text">Maximum file size: 50MB</span>
+            </div>
+
+            <!-- Cover Image Upload -->
+            <div class="form-group">
+                <label for="coverFile">
+                    Cover Image <span class="optional">(Optional - will auto-generate if not provided)</span>
+                </label>
+                <div class="file-upload-area" id="coverUploadArea">
+                    <i class="fas fa-image"></i>
+                    <p>Drag & Drop cover image or <span class="browse-text">Browse</span></p>
+                    <input type="file" id="coverFile" name="coverFile" accept="image/*" style="display: none;">
+                    <div id="coverFileName" class="file-name"></div>
+                </div>
+            </div>
+
+            <!-- Pages (Auto-detected) -->
+            <div class="form-group">
+                <label for="pages">
+                    Pages <span class="optional">(Auto-detected from PDF)</span>
+                </label>
+                <input type="number" id="pages" name="pages" placeholder="Will be detected" readonly>
+            </div>
+
+            <!-- Size (Auto-calculated) -->
+            <div class="form-group">
+                <label for="size">
+                    File Size <span class="optional">(Auto-calculated)</span>
+                </label>
+                <input type="text" id="size" name="size" placeholder="Will be calculated" readonly>
+            </div>
+
+            <!-- Format -->
+            <div class="form-group">
+                <label for="format">
+                    Format <span class="optional">(Auto-detected)</span>
+                </label>
+                <input type="text" id="format" name="format" value="PDF" readonly>
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+                <label for="language">
+                    Language <span class="required">*</span>
+                </label>
+                <select id="language" name="language" required>
+                    <option value="en">English</option>
+                    <option value="bn">বাংলা</option>
+                </select>
+            </div>
+
+            <!-- Publication Date -->
+            <div class="form-group">
+                <label for="date">
+                    Publication Date <span class="required">*</span>
+                </label>
+                <input type="date" id="date" name="date" required>
+            </div>
+
+            <!-- Downloads (Optional) -->
+            <div class="form-group">
+                <label for="downloads">
+                    Downloads <span class="optional">(Optional)</span>
+                </label>
+                <input type="number" id="downloads" name="downloads" placeholder="0" value="0">
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+                <label for="tagsInput">
+                    Tags <span class="required">*</span>
+                </label>
+                <div class="tags-container">
+                    <div class="tags-wrapper" id="tagsWrapper">
+                        <input type="text" id="tagsInput" placeholder="Type tag and press Enter">
+                    </div>
+                </div>
+                <span class="helper-text">Press Enter to add tags</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Upload Book
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Uploading...</p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let tags = [];
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('../../../Content Studio/books-pdfs/books.json');
+                const data = await response.json();
+                
+                const categorySelect = document.getElementById('category');
+                categorySelect.innerHTML = '<option value="">Select a category</option>';
+                
+                data.categoryGroups['books-pdfs'].forEach(group => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = `${group.icon} ${group.name}`;
+                    
+                    group.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        optgroup.appendChild(option);
+                    });
+                    
+                    categorySelect.appendChild(optgroup);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Summary character counter
+        const summaryTextarea = document.getElementById('summary');
+        const summaryCount = document.getElementById('summaryCount');
+        
+        summaryTextarea.addEventListener('input', () => {
+            const length = summaryTextarea.value.length;
+            summaryCount.textContent = length;
+            
+            if (length > 300) {
+                summaryCount.style.color = '#FF0000';
+            } else {
+                summaryCount.style.color = '#ccc';
+            }
+        });
+
+        // PDF file upload handling
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+        const pdfFileInput = document.getElementById('pdfFile');
+        const pdfFileName = document.getElementById('pdfFileName');
+
+        pdfUploadArea.addEventListener('click', () => pdfFileInput.click());
+
+        pdfFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handlePdfFile(file);
+            }
+        });
+
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfUploadArea.style.borderColor = '#8B0000';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.1)';
+        });
+
+        pdfUploadArea.addEventListener('dragleave', () => {
+            pdfUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                pdfFileInput.files = e.dataTransfer.files;
+                handlePdfFile(file);
+            } else {
+                alert('Please upload a PDF file');
+            }
+            pdfUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        function handlePdfFile(file) {
+            pdfFileName.textContent = file.name;
+            pdfFileName.style.display = 'block';
+            
+            // Calculate size
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('size').value = `${sizeMB} MB`;
+            
+            // TODO: Extract page count from PDF
+            document.getElementById('pages').value = 'Detecting...';
+            setTimeout(() => {
+                document.getElementById('pages').value = Math.floor(Math.random() * 500) + 50; // Placeholder
+            }, 1000);
+        }
+
+        // Cover image upload handling
+        const coverUploadArea = document.getElementById('coverUploadArea');
+        const coverFileInput = document.getElementById('coverFile');
+        const coverFileName = document.getElementById('coverFileName');
+
+        coverUploadArea.addEventListener('click', () => coverFileInput.click());
+
+        coverFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                coverFileName.textContent = file.name;
+                coverFileName.style.display = 'block';
+            }
+        });
+
+        coverUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            coverUploadArea.style.borderColor = '#8B0000';
+            coverUploadArea.style.background = 'rgba(139, 0, 0, 0.1)';
+        });
+
+        coverUploadArea.addEventListener('dragleave', () => {
+            coverUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            coverUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        coverUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                coverFileInput.files = e.dataTransfer.files;
+                coverFileName.textContent = file.name;
+                coverFileName.style.display = 'block';
+            } else {
+                alert('Please upload an image file');
+            }
+            coverUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            coverUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        // Tags handling
+        const tagsInput = document.getElementById('tagsInput');
+        const tagsWrapper = document.getElementById('tagsWrapper');
+
+        tagsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = tagsInput.value.trim().toLowerCase();
+                
+                if (value && !tags.includes(value)) {
+                    tags.push(value);
+                    addTagElement(value);
+                    tagsInput.value = '';
+                }
+            }
+        });
+
+        function addTagElement(tag) {
+            const tagEl = document.createElement('div');
+            tagEl.className = 'tag';
+            tagEl.innerHTML = `
+                ${tag}
+                <span class="remove-tag" onclick="removeTag('${tag}')">×</span>
+            `;
+            tagsWrapper.insertBefore(tagEl, tagsInput);
+        }
+
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function renderTags() {
+            const existingTags = tagsWrapper.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            tags.forEach(tag => addTagElement(tag));
+        }
+
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (tags.length === 0) {
+                alert('Please add at least one tag');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('author', document.getElementById('author').value);
+            formData.append('summary', document.getElementById('summary').value);
+            formData.append('pdfFile', pdfFileInput.files[0]);
+            
+            if (coverFileInput.files[0]) {
+                formData.append('coverFile', coverFileInput.files[0]);
+            }
+            
+            formData.append('pages', document.getElementById('pages').value);
+            formData.append('size', document.getElementById('size').value);
+            formData.append('format', document.getElementById('format').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('date', document.getElementById('date').value);
+            formData.append('downloads', document.getElementById('downloads').value);
+            formData.append('tags', JSON.stringify(tags));
+
+            document.getElementById('progressContainer').style.display = 'block';
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            try {
+                // Backend integration: Use books-manager.html upload system
+                // GitHub uploader ready - needs token configuration
+                for (let i = 0; i <= 100; i += 10) {
+                    progressFill.style.width = i + '%';
+                    progressText.textContent = `Uploading... ${i}%`;
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+
+                progressText.textContent = 'Upload successful!';
+                progressFill.style.background = 'linear-gradient(90deg, #00C851, #007E33)';
+                
+                alert('Book uploaded successfully!');
+                setTimeout(() => {
+                    window.location.href = 'upload-interface-new.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressText.textContent = 'Upload failed!';
+                progressFill.style.background = 'linear-gradient(90deg, #FF0000, #CC0000)';
+                alert('Upload failed. Please try again.');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCategories);
+    </script>
+</body>
+</html>

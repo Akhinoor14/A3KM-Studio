@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Video Blogs Manager - A3KM Studio</title>
+  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
+  <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 20px; }
@@ -47,6 +49,11 @@
     .success-message { background: #4caf50; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; text-align: center; }
     .success-message.active { display: block; }
     .youtube-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 10px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; overflow-y: auto; }
+    .modal.active { display: block; }
+    .modal-content { max-width: 800px; margin: 40px auto; background: white; border-radius: 20px; padding: 40px; position: relative; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #f44336; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+    .modal-close:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -152,6 +159,38 @@
         <div class="stat-card"><h3 id="totalCategories">0</h3><p>Categories</p></div>
         <div class="stat-card"><h3 id="totalSeries">0</h3><p>Series</p></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+      <h2 style="color: #8B0000; margin-bottom: 20px;">✏️ Edit Vlog</h2>
+      <form id="editForm">
+        <input type="hidden" id="editVlogId">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="editCategory" required></select>
+        </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="editTitle" required>
+        </div>
+        <div class="form-group">
+          <label>YouTube URL</label>
+          <input type="url" id="editYoutubeUrl">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="editDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tags</label>
+          <input type="text" id="editTags">
+        </div>
+        <button type="submit" class="btn-primary">💾 Update Vlog</button>
+      </form>
     </div>
   </div>
 
@@ -328,6 +367,7 @@
             <div class="card-title">${item.title}</div>
             <div class="card-meta">📁 ${item.category}<br>👤 ${item.author || 'Unknown'}<br>🕐 ${contentManager.formatDate(item.date)}</div>
             <div class="card-actions">
+              <button onclick="editVlog('${item.id}')">✏️ Edit</button>
               <button onclick="deleteVlog('${item.id}')">🗑️ Delete</button>
             </div>
           </div>
@@ -358,6 +398,40 @@
         contentManager.deleteContent(CONTENT_TYPE, id).then(() => { alert('✅ Deleted!'); loadManageContent(); }).catch(err => alert('❌ Failed: ' + err.message));
       }
     }
+
+    function editVlog(id) {
+      const vlog = currentContent.find(v => v.id === id);
+      if (!vlog) return;
+      document.getElementById('editVlogId').value = id;
+      document.getElementById('editCategory').value = vlog.category;
+      document.getElementById('editTitle').value = vlog.title;
+      document.getElementById('editYoutubeUrl').value = vlog.youtubeUrl || vlog.url || '';
+      document.getElementById('editDescription').value = vlog.description || '';
+      document.getElementById('editTags').value = (vlog.tags || []).join(', ');
+      loadCategories().then(() => { document.getElementById('editCategory').value = vlog.category; });
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const updatedVlog = {
+        id: document.getElementById('editVlogId').value,
+        title: document.getElementById('editTitle').value,
+        category: document.getElementById('editCategory').value,
+        youtubeUrl: document.getElementById('editYoutubeUrl').value,
+        description: document.getElementById('editDescription').value,
+        tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
+        date: new Date().toISOString()
+      };
+      try {
+        await contentManager.updateContent(CONTENT_TYPE, updatedVlog.id, updatedVlog);
+        alert('✅ Vlog updated!');
+        closeEditModal();
+        loadManageContent();
+      } catch (error) { alert('❌ Update failed: ' + error.message); }
+    });
 
     window.addEventListener('DOMContentLoaded', loadCategories);
   </script>

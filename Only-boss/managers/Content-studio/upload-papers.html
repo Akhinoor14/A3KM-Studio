@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Research Paper - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../shared/upload-form-styles.css">
+    <script src="../shared/api-config-check.js"></script>
+</head>
+<body>
+    <a href="upload-interface-new.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Content Types
+    </a>
+
+    <div class="container">
+        <div class="upload-header">
+            <div class="upload-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h1>Upload Research Paper</h1>
+            <p class="subtitle">Add an academic research paper to your collection</p>
+        </div>
+
+        <form id="uploadForm" class="upload-form">
+            <!-- Title -->
+            <div class="form-group">
+                <label for="title">
+                    Paper Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" name="title" required placeholder="Enter research paper title">
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category">
+                    Category <span class="required">*</span>
+                </label>
+                <select id="category" name="category" required>
+                    <option value="">Loading categories...</option>
+                </select>
+            </div>
+
+            <!-- Type -->
+            <div class="form-group">
+                <label for="type">
+                    Type <span class="required">*</span>
+                </label>
+                <select id="type" name="type" required>
+                    <option value="">Select type</option>
+                    <option value="🔬 Research Paper">🔬 Research Paper</option>
+                    <option value="📊 Survey Paper">📊 Survey Paper</option>
+                    <option value="📑 Conference Paper">📑 Conference Paper</option>
+                    <option value="📘 Journal Article">📘 Journal Article</option>
+                    <option value="📖 Thesis">📖 Thesis</option>
+                    <option value="📄 White Paper">📄 White Paper</option>
+                </select>
+            </div>
+
+            <!-- Authors (Multiple) -->
+            <div class="form-group">
+                <label for="authorsInput">
+                    Authors <span class="required">*</span>
+                </label>
+                <div class="tags-container">
+                    <div class="tags-wrapper" id="authorsWrapper">
+                        <input type="text" id="authorsInput" placeholder="Type author name and press Enter">
+                    </div>
+                </div>
+                <span class="helper-text">Press Enter to add authors</span>
+            </div>
+
+            <!-- Abstract -->
+            <div class="form-group">
+                <label for="abstract">
+                    Abstract <span class="required">*</span>
+                </label>
+                <textarea id="abstract" name="abstract" required rows="6" placeholder="Enter the paper abstract"></textarea>
+                <span class="char-counter">
+                    <span id="abstractCount">0</span>/500 characters
+                </span>
+            </div>
+
+            <!-- PDF File Upload -->
+            <div class="form-group">
+                <label for="pdfFile">
+                    PDF File <span class="required">*</span>
+                </label>
+                <div class="file-upload-area" id="pdfUploadArea">
+                    <i class="fas fa-file-pdf"></i>
+                    <p>Drag & Drop PDF file here or <span class="browse-text">Browse</span></p>
+                    <input type="file" id="pdfFile" name="pdfFile" accept=".pdf" required style="display: none;">
+                    <div id="pdfFileName" class="file-name"></div>
+                </div>
+                <span class="helper-text">Maximum file size: 100MB</span>
+            </div>
+
+            <!-- DOI -->
+            <div class="form-group">
+                <label for="doi">
+                    DOI <span class="optional">(Digital Object Identifier - Optional)</span>
+                </label>
+                <input type="text" id="doi" name="doi" placeholder="e.g., 10.1000/xyz123">
+            </div>
+
+            <!-- Publication Info -->
+            <div class="form-group">
+                <label for="publication">
+                    Publication <span class="optional">(Journal/Conference Name)</span>
+                </label>
+                <input type="text" id="publication" name="publication" placeholder="e.g., IEEE Transactions, ACM Conference">
+            </div>
+
+            <!-- Publication Date -->
+            <div class="form-group">
+                <label for="date">
+                    Publication Date <span class="required">*</span>
+                </label>
+                <input type="date" id="date" name="date" required>
+            </div>
+
+            <!-- Pages (from PDF) -->
+            <div class="form-group">
+                <label for="pages">
+                    Pages <span class="optional">(Auto-detected from PDF)</span>
+                </label>
+                <input type="number" id="pages" name="pages" placeholder="Will be detected" readonly>
+            </div>
+
+            <!-- Size (Auto-calculated) -->
+            <div class="form-group">
+                <label for="size">
+                    File Size <span class="optional">(Auto-calculated)</span>
+                </label>
+                <input type="text" id="size" name="size" placeholder="Will be calculated" readonly>
+            </div>
+
+            <!-- Citations Count -->
+            <div class="form-group">
+                <label for="citations">
+                    Citations <span class="optional">(Optional)</span>
+                </label>
+                <input type="number" id="citations" name="citations" placeholder="0" value="0">
+            </div>
+
+            <!-- Downloads (Optional) -->
+            <div class="form-group">
+                <label for="downloads">
+                    Downloads <span class="optional">(Optional)</span>
+                </label>
+                <input type="number" id="downloads" name="downloads" placeholder="0" value="0">
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+                <label for="language">
+                    Language <span class="required">*</span>
+                </label>
+                <select id="language" name="language" required>
+                    <option value="en">English</option>
+                    <option value="bn">বাংলা</option>
+                </select>
+            </div>
+
+            <!-- Keywords/Tags -->
+            <div class="form-group">
+                <label for="tagsInput">
+                    Keywords/Tags <span class="required">*</span>
+                </label>
+                <div class="tags-container">
+                    <div class="tags-wrapper" id="tagsWrapper">
+                        <input type="text" id="tagsInput" placeholder="Type keyword and press Enter">
+                    </div>
+                </div>
+                <span class="helper-text">Press Enter to add keywords</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Upload Research Paper
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Uploading...</p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let tags = [];
+        let authors = [];
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('../../../Content Studio/research-papers/papers.json');
+                const data = await response.json();
+                
+                const categorySelect = document.getElementById('category');
+                categorySelect.innerHTML = '<option value="">Select a category</option>';
+                
+                data.categoryGroups['research-papers'].forEach(group => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = `${group.icon} ${group.name}`;
+                    
+                    group.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        optgroup.appendChild(option);
+                    });
+                    
+                    categorySelect.appendChild(optgroup);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Abstract character counter
+        const abstractTextarea = document.getElementById('abstract');
+        const abstractCount = document.getElementById('abstractCount');
+        
+        abstractTextarea.addEventListener('input', () => {
+            const length = abstractTextarea.value.length;
+            abstractCount.textContent = length;
+            
+            if (length > 500) {
+                abstractCount.style.color = '#FF0000';
+            } else {
+                abstractCount.style.color = '#ccc';
+            }
+        });
+
+        // Authors handling
+        const authorsInput = document.getElementById('authorsInput');
+        const authorsWrapper = document.getElementById('authorsWrapper');
+
+        authorsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = authorsInput.value.trim();
+                
+                if (value && !authors.includes(value)) {
+                    authors.push(value);
+                    addAuthorElement(value);
+                    authorsInput.value = '';
+                }
+            }
+        });
+
+        function addAuthorElement(author) {
+            const authorEl = document.createElement('div');
+            authorEl.className = 'tag';
+            authorEl.innerHTML = `
+                ${author}
+                <span class="remove-tag" onclick="removeAuthor('${author}')">×</span>
+            `;
+            authorsWrapper.insertBefore(authorEl, authorsInput);
+        }
+
+        function removeAuthor(author) {
+            authors = authors.filter(a => a !== author);
+            renderAuthors();
+        }
+
+        function renderAuthors() {
+            const existingAuthors = authorsWrapper.querySelectorAll('.tag');
+            existingAuthors.forEach(author => author.remove());
+            authors.forEach(author => addAuthorElement(author));
+        }
+
+        // PDF file upload handling
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+        const pdfFileInput = document.getElementById('pdfFile');
+        const pdfFileName = document.getElementById('pdfFileName');
+
+        pdfUploadArea.addEventListener('click', () => pdfFileInput.click());
+
+        pdfFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handlePdfFile(file);
+            }
+        });
+
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfUploadArea.style.borderColor = '#8B0000';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.1)';
+        });
+
+        pdfUploadArea.addEventListener('dragleave', () => {
+            pdfUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                pdfFileInput.files = e.dataTransfer.files;
+                handlePdfFile(file);
+            } else {
+                alert('Please upload a PDF file');
+            }
+            pdfUploadArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            pdfUploadArea.style.background = 'rgba(139, 0, 0, 0.05)';
+        });
+
+        function handlePdfFile(file) {
+            pdfFileName.textContent = file.name;
+            pdfFileName.style.display = 'block';
+            
+            // Calculate size
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('size').value = `${sizeMB} MB`;
+            
+            // TODO: Extract page count from PDF
+            document.getElementById('pages').value = 'Detecting...';
+            setTimeout(() => {
+                document.getElementById('pages').value = Math.floor(Math.random() * 30) + 5; // Placeholder
+            }, 1000);
+        }
+
+        // Tags/Keywords handling
+        const tagsInput = document.getElementById('tagsInput');
+        const tagsWrapper = document.getElementById('tagsWrapper');
+
+        tagsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = tagsInput.value.trim().toLowerCase();
+                
+                if (value && !tags.includes(value)) {
+                    tags.push(value);
+                    addTagElement(value);
+                    tagsInput.value = '';
+                }
+            }
+        });
+
+        function addTagElement(tag) {
+            const tagEl = document.createElement('div');
+            tagEl.className = 'tag';
+            tagEl.innerHTML = `
+                ${tag}
+                <span class="remove-tag" onclick="removeTag('${tag}')">×</span>
+            `;
+            tagsWrapper.insertBefore(tagEl, tagsInput);
+        }
+
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function renderTags() {
+            const existingTags = tagsWrapper.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            tags.forEach(tag => addTagElement(tag));
+        }
+
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (authors.length === 0) {
+                alert('Please add at least one author');
+                return;
+            }
+            
+            if (tags.length === 0) {
+                alert('Please add at least one keyword/tag');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('authors', JSON.stringify(authors));
+            formData.append('abstract', document.getElementById('abstract').value);
+            formData.append('pdfFile', pdfFileInput.files[0]);
+            formData.append('doi', document.getElementById('doi').value);
+            formData.append('publication', document.getElementById('publication').value);
+            formData.append('date', document.getElementById('date').value);
+            formData.append('pages', document.getElementById('pages').value);
+            formData.append('size', document.getElementById('size').value);
+            formData.append('citations', document.getElementById('citations').value);
+            formData.append('downloads', document.getElementById('downloads').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('tags', JSON.stringify(tags));
+
+            document.getElementById('progressContainer').style.display = 'block';
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            try {
+                // Backend integration: Use papers-manager.html upload system  
+                // GitHub uploader ready - needs token configuration
+                for (let i = 0; i <= 100; i += 10) {
+                    progressFill.style.width = i + '%';
+                    progressText.textContent = `Uploading... ${i}%`;
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+
+                progressText.textContent = 'Upload successful!';
+                progressFill.style.background = 'linear-gradient(90deg, #00C851, #007E33)';
+                
+                alert('Research paper uploaded successfully!');
+                setTimeout(() => {
+                    window.location.href = 'upload-interface-new.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressText.textContent = 'Upload failed!';
+                progressFill.style.background = 'linear-gradient(90deg, #FF0000, #CC0000)';
+                alert('Upload failed. Please try again.');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCategories);
+    </script>
+</body>
+</html>

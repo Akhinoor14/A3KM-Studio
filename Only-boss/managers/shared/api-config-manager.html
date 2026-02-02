@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Configuration Manager - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title i {
+            font-size: 36px;
+            color: #8B0000;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(90, 0, 0, 0.15));
+            border: 2px solid rgba(139, 0, 0, 0.5);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #8B0000, #5a0000);
+            transform: translateX(-3px);
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.15), rgba(90, 0, 0, 0.1));
+            border-left: 4px solid #8B0000;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .info-banner i {
+            color: #C80000;
+            margin-right: 10px;
+        }
+
+        .api-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .api-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .api-card:hover {
+            border-color: #8B0000;
+            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.3);
+        }
+
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .api-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #8B0000, #C80000);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .api-info h3 {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .api-info p {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .api-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-active {
+            background: rgba(0, 200, 81, 0.2);
+            color: #00C851;
+            border: 1px solid rgba(0, 200, 81, 0.4);
+        }
+
+        .status-inactive {
+            background: rgba(255, 82, 82, 0.2);
+            color: #FF5252;
+            border: 1px solid rgba(255, 82, 82, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #ccc;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #8B0000;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .toggle-visibility {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .toggle-visibility:hover {
+            color: #8B0000;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #8B0000, #C80000);
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 0, 0, 0.4);
+        }
+
+        .btn-test {
+            background: rgba(139, 0, 0, 0.2);
+            color: #fff;
+            border: 2px solid rgba(139, 0, 0, 0.5);
+        }
+
+        .btn-test:hover {
+            background: rgba(139, 0, 0, 0.3);
+        }
+
+        .btn-clear {
+            background: rgba(255, 82, 82, 0.2);
+            color: #FF5252;
+            border: 2px solid rgba(255, 82, 82, 0.4);
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 82, 82, 0.3);
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #777;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .helper-text i {
+            color: #8B0000;
+        }
+
+        .success-message, .error-message {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s;
+        }
+
+        .success-message {
+            background: rgba(0, 200, 81, 0.2);
+            border: 1px solid rgba(0, 200, 81, 0.4);
+            color: #00C851;
+        }
+
+        .error-message {
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid rgba(255, 82, 82, 0.4);
+            color: #FF5252;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .usage-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .usage-info h4 {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .usage-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .usage-info li {
+            color: #999;
+            font-size: 12px;
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .usage-info li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #8B0000;
+        }
+
+        /* ===================================
+           MOBILE OPTIMIZATION
+           =================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                border-radius: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .header-title {
+                flex-direction: column;
+            }
+
+            .header-title i {
+                font-size: 28px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .info-banner {
+                padding: 15px;
+                font-size: 13px;
+            }
+
+            .api-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .api-card {
+                padding: 20px;
+            }
+
+            .api-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .api-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
+            }
+
+            .api-info h3 {
+                font-size: 18px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            input[type="text"],
+            input[type="password"] {
+                font-size: 16px;
+                padding: 12px 40px 12px 12px;
+            }
+
+            .usage-info h4 {
+                font-size: 13px;
+            }
+
+            .usage-info li {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .api-info p {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <i class="fas fa-plug"></i>
+                <div>
+                    <h1>API Configuration Manager</h1>
+                    <p class="subtitle">Centralized API keys management for all systems</p>
+                </div>
+            </div>
+            <a href="../../dashboard/only-boss-dashboard-redesigned.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
+            <strong>Secure Storage:</strong> All API keys are stored locally in your browser (localStorage). They are never sent to any external server except when making authorized API calls.
+        </div>
+
+        <div class="api-grid">
+            <!-- GitHub API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-icon">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="api-info">
+                        <h3>
+                            GitHub Personal Access Token
+                            <span class="api-status status-inactive" id="githubStatus">Inactive</span>
+                        </h3>
+                        <p>Required for content upload, file management, and GitHub integration</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="githubToken">GitHub Token</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                        <button class="toggle-visibility" onclick="toggleVisibility('githubToken')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <p class="helper-text">
+                        <i class="fas fa-link"></i>
+                        <a href="https://github.com/settings/tokens" target="_blank" style="color: #8B0000;">Generate token</a>
+                        (requires: repo, workflow permissions)
+                    </p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-save" onclick="saveAPI('github')">
+                        <i class="fas fa-save"></i>
+                        Save Token
+                    </button>
+                    <button class="btn btn-test" onclick="testAPI('github')">
+                        <i class="fas fa-check-circle"></i>
+                        Test Connection
+                    </button>
+                    <button class="btn btn-clear" onclick="clearAPI('github')">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div class="success-message" id="githubSuccess"></div>
+                <div class="error-message" id="githubError"></div>
+
+                <div class="usage-info">
+                    <h4>Used by:</h4>
+                    <ul>
+                        <li>Content Upload System (all 5 types)</li>
+                        <li>Posts, Videos, Books, Papers Managers</li>
+                        <li>File upload & deletion operations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- YouTube API -->
+            <div class="api-card">
+                <div class="api-header">
+                    <div class="api-icon">
+                        <i class="fab fa-youtube"></i>
+                    </div>
+                    <div class="api-info">
+                        <h3>
+                            YouTube Data API v3
+                            <span class="api-status status-inactive" id="youtubeStatus">Inactive</span>
+                        </h3>
+                        <p>Auto-fetch video details, duration, and thumbnails</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="youtubeApiKey">YouTube API Key</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="youtubeApiKey" placeholder="AIzaSyXxxxxxxxxxxxxxxxxxxx">
+                        <button class="toggle-visibility" onclick="toggleVisibility('youtubeApiKey')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <p class="helper-text">
+                        <i class="fas fa-link"></i>
+                        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: #8B0000;">Get API key</a>
+                        (enable YouTube Data API v3)
+                    </p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-save" onclick="saveAPI('youtube')">
+                        <i class="fas fa-save"></i>
+                        Save Key
+                    </button>
+                    <button class="btn btn-test" onclick="testAPI('youtube')">
+                        <i class="fas fa-check-circle"></i>
+                        Test API
+                    </button>
+                    <button class="btn btn-clear" onclick="clearAPI('youtube')">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div class="success-message" id="youtubeSuccess"></div>
+                <div class="error-message" id="youtubeError"></div>
+
+                <div class="usage-info">
+                    <h4>Used by:</h4>
+                    <ul>
+                        <li>Video Upload System (auto-fetch feature)</li>
+                        <li>Educational Videos Upload</li>
+                        <li>Video duration updater</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Future APIs Placeholder -->
+            <div class="api-card" style="opacity: 0.6;">
+                <div class="api-header">
+                    <div class="api-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="api-info">
+                        <h3>Additional APIs</h3>
+                        <p>More API integrations coming soon (Cloudinary, Analytics, etc.)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load existing API keys
+        function loadAPIs() {
+            const githubToken = localStorage.getItem('github_token');
+            const youtubeKey = localStorage.getItem('youtube_api_key');
+
+            if (githubToken) {
+                document.getElementById('githubToken').value = githubToken;
+                updateStatus('github', true);
+            }
+
+            if (youtubeKey) {
+                document.getElementById('youtubeApiKey').value = youtubeKey;
+                updateStatus('youtube', true);
+            }
+        }
+
+        // Toggle password visibility
+        function toggleVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target.closest('button').querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Save API key
+        function saveAPI(type) {
+            let key, storageKey;
+            
+            if (type === 'github') {
+                key = document.getElementById('githubToken').value.trim();
+                storageKey = 'github_token';
+            } else if (type === 'youtube') {
+                key = document.getElementById('youtubeApiKey').value.trim();
+                storageKey = 'youtube_api_key';
+            }
+
+            if (!key) {
+                showMessage(type, 'error', 'Please enter a valid API key');
+                return;
+            }
+
+            try {
+                localStorage.setItem(storageKey, key);
+                updateStatus(type, true);
+                showMessage(type, 'success', `✓ ${type === 'github' ? 'GitHub token' : 'YouTube API key'} saved successfully!`);
+            } catch (error) {
+                showMessage(type, 'error', 'Failed to save: ' + error.message);
+            }
+        }
+
+        // Test API connection
+        async function testAPI(type) {
+            if (type === 'github') {
+                const token = document.getElementById('githubToken').value.trim();
+                if (!token) {
+                    showMessage('github', 'error', 'Please enter GitHub token first');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('https://api.github.com/user', {
+                        headers: {
+                            'Authorization': `token ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showMessage('github', 'success', `✓ Connected as: ${data.login}`);
+                    } else {
+                        showMessage('github', 'error', '✗ Invalid token or no permissions');
+                    }
+                } catch (error) {
+                    showMessage('github', 'error', '✗ Connection failed: ' + error.message);
+                }
+            } else if (type === 'youtube') {
+                const key = document.getElementById('youtubeApiKey').value.trim();
+                if (!key) {
+                    showMessage('youtube', 'error', 'Please enter YouTube API key first');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ&key=${key}`);
+                    
+                    if (response.ok) {
+                        showMessage('youtube', 'success', '✓ YouTube API working correctly!');
+                    } else {
+                        const error = await response.json();
+                        showMessage('youtube', 'error', '✗ ' + (error.error?.message || 'Invalid API key'));
+                    }
+                } catch (error) {
+                    showMessage('youtube', 'error', '✗ Connection failed: ' + error.message);
+                }
+            }
+        }
+
+        // Clear API key
+        function clearAPI(type) {
+            if (confirm('Are you sure you want to remove this API key?')) {
+                if (type === 'github') {
+                    localStorage.removeItem('github_token');
+                    document.getElementById('githubToken').value = '';
+                    updateStatus('github', false);
+                    showMessage('github', 'success', 'GitHub token removed');
+                } else if (type === 'youtube') {
+                    localStorage.removeItem('youtube_api_key');
+                    document.getElementById('youtubeApiKey').value = '';
+                    updateStatus('youtube', false);
+                    showMessage('youtube', 'success', 'YouTube API key removed');
+                }
+            }
+        }
+
+        // Update status badge
+        function updateStatus(type, isActive) {
+            const statusEl = document.getElementById(`${type}Status`);
+            if (isActive) {
+                statusEl.textContent = 'Active';
+                statusEl.className = 'api-status status-active';
+            } else {
+                statusEl.textContent = 'Inactive';
+                statusEl.className = 'api-status status-inactive';
+            }
+        }
+
+        // Show message
+        function showMessage(type, messageType, text) {
+            const successEl = document.getElementById(`${type}Success`);
+            const errorEl = document.getElementById(`${type}Error`);
+            
+            successEl.style.display = 'none';
+            errorEl.style.display = 'none';
+
+            if (messageType === 'success') {
+                successEl.innerHTML = `<i class="fas fa-check-circle"></i> ${text}`;
+                successEl.style.display = 'flex';
+                setTimeout(() => successEl.style.display = 'none', 5000);
+            } else {
+                errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${text}`;
+                errorEl.style.display = 'flex';
+                setTimeout(() => errorEl.style.display = 'none', 5000);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadAPIs);
+    </script>
+</body>
+</html>

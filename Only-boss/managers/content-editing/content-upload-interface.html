@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
-  <!-- Mobile Detection & Block System -->
-  <link rel="stylesheet" href="../../../Optimization/mobile-block.css">
-  <script src="../../../Optimization/mobile-block.js"></script>
+  <!-- Universal Mobile Optimization System -->
+  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
+  <script src="../../../Optimization/mobile-universal.js" defer></script>
   
   <title>Content Upload Manager | A3KM Studio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -1115,6 +1115,44 @@
 
     // Initialize
     loadCategories();
+
+    // ===== API CONFIGURATION AUTO-ACCESS =====
+    let githubToken = localStorage.getItem('github_token');
+    let youtubeApiKey = localStorage.getItem('youtube_api_key');
+
+    // Check for API keys and show notification if missing
+    function checkAPIConfiguration() {
+      if (!githubToken) {
+        const banner = document.createElement('div');
+        banner.style.cssText = `
+          background: linear-gradient(135deg, rgba(255, 82, 82, 0.2), rgba(255, 152, 0, 0.2));
+          border-left: 4px solid #FF5252;
+          padding: 15px 20px;
+          border-radius: 10px;
+          margin-bottom: 20px;
+          color: white;
+          animation: fadeInDown 0.4s ease;
+        `;
+        banner.innerHTML = `
+          <div style="display: flex; align-items: start; gap: 10px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #FFD700;"></i>
+            <div>
+              <strong style="font-size: 16px;">⚠️ GitHub API Not Configured</strong>
+              <p style="margin-top: 5px; font-size: 14px; opacity: 0.9;">
+                Upload functionality requires GitHub token. 
+                <a href="../shared/api-config-manager.html" style="color: #FFD700; text-decoration: underline; font-weight: 600;">
+                  Configure API keys here →
+                </a>
+              </p>
+            </div>
+          </div>
+        `;
+        document.querySelector('.container').insertBefore(banner, document.querySelector('.header'));
+      }
+    }
+
+    // Initialize API check
+    checkAPIConfiguration();
 
     // Elements
     const contentTypeSelect = document.getElementById('contentType');

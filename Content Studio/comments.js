@@ -38,7 +38,7 @@ class CommentSystem {
     generateAvatar(name) {
         // Generate simple avatar based on initials
         const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        const colors = ['#CC0000', '#FF3333', '#990000', '#FF6666', '#CC0033'];
+        const colors = ['#8B0000', '#C80000', '#5a0000', '#AA0000', '#8B0033'];
         const bgColor = colors[name.length % colors.length];
         
         return {

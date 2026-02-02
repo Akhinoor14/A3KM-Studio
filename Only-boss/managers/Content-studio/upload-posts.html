@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Written Post - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../shared/upload-form-styles.css">
+    <script src="../shared/api-config-check.js"></script>
+</head>
+<body>
+    <a href="upload-interface-new.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Content Types
+    </a>
+
+    <div class="container">
+        <div class="upload-header">
+            <div class="upload-icon">
+                <i class="fas fa-pen-fancy"></i>
+            </div>
+            <h1>Upload Written Post</h1>
+            <p class="subtitle">Create a new blog post with markdown content</p>
+        </div>
+
+        <form id="uploadForm" class="upload-form">
+            <!-- Title -->
+            <div class="form-group">
+                <label for="title">
+                    Post Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" name="title" required placeholder="Enter post title">
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category">
+                    Category <span class="required">*</span>
+                </label>
+                <select id="category" name="category" required>
+                    <option value="">Loading categories...</option>
+                </select>
+            </div>
+
+            <!-- Summary -->
+            <div class="form-group">
+                <label for="summary">
+                    Summary <span class="required">*</span>
+                </label>
+                <textarea id="summary" name="summary" required placeholder="Brief description of the post (max 200 characters)" maxlength="200"></textarea>
+                <span class="char-count">0 / 200</span>
+            </div>
+
+            <!-- Markdown Content File -->
+            <div class="form-group">
+                <label for="contentFile">
+                    Markdown Content File <span class="required">*</span>
+                </label>
+                <div class="file-upload-area" id="contentFileArea">
+                    <i class="fas fa-file-code"></i>
+                    <p>Click or drag .md file here</p>
+                    <span class="file-info">.md files only, max 5MB</span>
+                </div>
+                <input type="file" id="contentFile" accept=".md" style="display: none;" required>
+                <div id="contentFileName" class="file-name"></div>
+            </div>
+
+            <!-- Cover Image (Optional) -->
+            <div class="form-group">
+                <label for="coverImage">
+                    Cover Image <span class="optional">(Optional - Auto-generated if not provided)</span>
+                </label>
+                <div class="file-upload-area" id="coverImageArea">
+                    <i class="fas fa-image"></i>
+                    <p>Click or drag image here</p>
+                    <span class="file-info">PNG, JPG, SVG - max 2MB</span>
+                </div>
+                <input type="file" id="coverImage" accept="image/*" style="display: none;">
+                <div id="coverImageName" class="file-name"></div>
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+                <label for="tagsInput">
+                    Tags <span class="required">*</span>
+                </label>
+                <div class="tags-container">
+                    <div class="tags-wrapper" id="tagsWrapper">
+                        <input type="text" id="tagsInput" placeholder="Type tag and press Enter">
+                    </div>
+                </div>
+                <span class="helper-text">Press Enter to add tags</span>
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+                <label for="language">
+                    Language <span class="required">*</span>
+                </label>
+                <select id="language" name="language" required>
+                    <option value="en">English</option>
+                    <option value="bn">Bengali (বাংলা)</option>
+                </select>
+            </div>
+
+            <!-- Read Time (Auto-calculated) -->
+            <div class="form-group">
+                <label for="readTime">
+                    Estimated Read Time <span class="optional">(Auto-calculated)</span>
+                </label>
+                <input type="number" id="readTime" name="readTime" placeholder="Minutes" readonly>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Upload Post
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Uploading...</p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let tags = [];
+        let categoriesData = null;
+
+        // Load categories from Content Studio
+        async function loadCategories() {
+            try {
+                const response = await fetch('../../../Content Studio/written-posts/posts.json');
+                const data = await response.json();
+                categoriesData = data.categoryGroups;
+                
+                const categorySelect = document.getElementById('category');
+                categorySelect.innerHTML = '<option value="">Select a category</option>';
+                
+                data.categoryGroups.forEach(group => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = `${group.icon} ${group.name}`;
+                    
+                    group.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    categorySelect.appendChild(optgroup);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                document.getElementById('category').innerHTML = '<option value="">Error loading categories</option>';
+            }
+        }
+
+        // Tags handling
+        const tagsInput = document.getElementById('tagsInput');
+        const tagsWrapper = document.getElementById('tagsWrapper');
+
+        tagsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = tagsInput.value.trim().toLowerCase();
+                
+                if (value && !tags.includes(value)) {
+                    tags.push(value);
+                    addTagElement(value);
+                    tagsInput.value = '';
+                }
+            }
+        });
+
+        function addTagElement(tag) {
+            const tagEl = document.createElement('div');
+            tagEl.className = 'tag';
+            tagEl.innerHTML = `
+                ${tag}
+                <span class="remove-tag" onclick="removeTag('${tag}')">×</span>
+            `;
+            tagsWrapper.insertBefore(tagEl, tagsInput);
+        }
+
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function renderTags() {
+            const existingTags = tagsWrapper.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            tags.forEach(tag => addTagElement(tag));
+        }
+
+        // File upload handling
+        const contentFileArea = document.getElementById('contentFileArea');
+        const contentFileInput = document.getElementById('contentFile');
+        const contentFileName = document.getElementById('contentFileName');
+
+        contentFileArea.addEventListener('click', () => contentFileInput.click());
+        contentFileArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            contentFileArea.style.borderColor = '#8B0000';
+        });
+        contentFileArea.addEventListener('dragleave', () => {
+            contentFileArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+        });
+        contentFileArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            contentFileArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            if (e.dataTransfer.files.length) {
+                contentFileInput.files = e.dataTransfer.files;
+                handleContentFile();
+            }
+        });
+
+        contentFileInput.addEventListener('change', handleContentFile);
+
+        function handleContentFile() {
+            const file = contentFileInput.files[0];
+            if (file) {
+                if (file.name.endsWith('.md')) {
+                    contentFileName.textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                    contentFileName.style.display = 'block';
+                    
+                    // Auto-calculate read time based on file size
+                    const estimatedWords = file.size / 5; // Rough estimate
+                    const readTime = Math.max(1, Math.ceil(estimatedWords / 200)); // 200 words per minute
+                    document.getElementById('readTime').value = readTime;
+                } else {
+                    alert('Please select a .md (Markdown) file');
+                    contentFileInput.value = '';
+                }
+            }
+        }
+
+        // Cover image handling
+        const coverImageArea = document.getElementById('coverImageArea');
+        const coverImageInput = document.getElementById('coverImage');
+        const coverImageName = document.getElementById('coverImageName');
+
+        coverImageArea.addEventListener('click', () => coverImageInput.click());
+        coverImageArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            coverImageArea.style.borderColor = '#8B0000';
+        });
+        coverImageArea.addEventListener('dragleave', () => {
+            coverImageArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+        });
+        coverImageArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            coverImageArea.style.borderColor = 'rgba(139, 0, 0, 0.4)';
+            if (e.dataTransfer.files.length) {
+                coverImageInput.files = e.dataTransfer.files;
+                handleCoverImage();
+            }
+        });
+
+        coverImageInput.addEventListener('change', handleCoverImage);
+
+        function handleCoverImage() {
+            const file = coverImageInput.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    coverImageName.textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                    coverImageName.style.display = 'block';
+                } else {
+                    alert('Please select an image file');
+                    coverImageInput.value = '';
+                }
+            }
+        }
+
+        // Character count for summary
+        const summaryInput = document.getElementById('summary');
+        const charCount = document.querySelector('.char-count');
+
+        summaryInput.addEventListener('input', () => {
+            const length = summaryInput.value.length;
+            charCount.textContent = `${length} / 200`;
+            charCount.style.color = length > 180 ? '#FF0000' : 'rgba(255, 255, 255, 0.5)';
+        });
+
+        // Form submission
+        const uploadForm = document.getElementById('uploadForm');
+        
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validation
+            if (tags.length === 0) {
+                alert('Please add at least one tag');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('type', 'post');
+            formData.append('title', document.getElementById('title').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('summary', document.getElementById('summary').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('readTime', document.getElementById('readTime').value);
+            formData.append('tags', JSON.stringify(tags));
+            formData.append('contentFile', contentFileInput.files[0]);
+            
+            if (coverImageInput.files[0]) {
+                formData.append('coverImage', coverImageInput.files[0]);
+            }
+
+            // Show progress
+            document.getElementById('progressContainer').style.display = 'block';
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            try {
+                // Note: Backend integration ready - connect to posts-manager.html upload system
+                // For now using simulated upload
+                for (let i = 0; i <= 100; i += 10) {
+                    progressFill.style.width = i + '%';
+                    progressText.textContent = `Uploading... ${i}%`;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+
+                // TODO: Replace with actual backend API call
+                // const response = await fetch('/api/upload-post', {
+                //     method: 'POST',
+                //     body: formData
+                // });
+
+                progressText.textContent = 'Upload successful!';
+                progressFill.style.background = 'linear-gradient(90deg, #00C851, #007E33)';
+                
+                alert('Post uploaded successfully!');
+                
+                // Reset form
+                setTimeout(() => {
+                    window.location.href = 'upload-interface-new.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressText.textContent = 'Upload failed!';
+                progressFill.style.background = 'linear-gradient(90deg, #FF0000, #CC0000)';
+                alert('Upload failed. Please try again.');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+        });
+    </script>
+</body>
+</html>

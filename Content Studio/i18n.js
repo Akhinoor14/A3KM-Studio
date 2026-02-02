@@ -375,7 +375,7 @@ const i18nStyles = `
 }
 
 .lang-btn.active {
-    background: #CC0000;
+    background: #8B0000;
     color: #fff;
 }
 

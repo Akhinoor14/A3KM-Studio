@@ -114,7 +114,7 @@
       const pathData = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
       
       path.setAttribute('d', pathData);
-      path.setAttribute('stroke', 'rgba(204, 0, 0, 0.2)');
+      path.setAttribute('stroke', 'rgba(139, 0, 0, 0.2)');
       path.setAttribute('stroke-width', '1');
       path.setAttribute('fill', 'none');
       path.style.cssText = `
@@ -153,9 +153,9 @@
         position: absolute;
         width: 6px;
         height: 6px;
-        background: #CC0000;
+        background: #8B0000;
         border-radius: 50%;
-        box-shadow: 0 0 20px rgba(204, 0, 0, 0.8), 0 0 40px rgba(204, 0, 0, 0.4);
+        box-shadow: 0 0 20px rgba(139, 0, 0, 0.8), 0 0 40px rgba(139, 0, 0, 0.4);
         left: ${Math.random() * 100}%;
         top: ${Math.random() * 100}%;
         animation: nodePulse ${2 + Math.random() * 3}s ease-in-out infinite;
@@ -203,7 +203,7 @@
       position: fixed;
       width: 4px;
       height: 4px;
-      background: rgba(204, 0, 0, 0.6);
+      background: rgba(139, 0, 0, 0.6);
       border-radius: 50%;
       pointer-events: none;
       left: ${x}px;

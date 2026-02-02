@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Written Posts Manager - A3KM Studio</title>
+  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
+  <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 20px; }
@@ -47,6 +49,11 @@
     .success-message { background: #4caf50; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; text-align: center; }
     .success-message.active { display: block; }
     .markdown-help { background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 12px; color: #666; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; overflow-y: auto; }
+    .modal.active { display: block; }
+    .modal-content { max-width: 800px; margin: 40px auto; background: white; border-radius: 20px; padding: 40px; position: relative; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #f44336; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+    .modal-close:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -139,6 +146,44 @@
         <div class="stat-card"><h3 id="totalCategories">0</h3><p>Categories</p></div>
         <div class="stat-card"><h3 id="totalWords">0</h3><p>Total Words</p></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+      <h2 style="color: #8B0000; margin-bottom: 20px;">✏️ Edit Post</h2>
+      <form id="editForm">
+        <input type="hidden" id="editPostId">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="editCategory" required>
+            <option value="">Loading categories...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Post Title</label>
+          <input type="text" id="editTitle" required>
+        </div>
+        <div class="form-group">
+          <label>Content (Markdown)</label>
+          <textarea id="editContent" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Excerpt</label>
+          <textarea id="editDescription" style="min-height: 80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Author</label>
+          <input type="text" id="editAuthor">
+        </div>
+        <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" id="editTags">
+        </div>
+        <button type="submit" class="btn-primary">💾 Update Post</button>
+      </form>
     </div>
   </div>
 
@@ -295,6 +340,7 @@
             <div class="card-title">${item.title}</div>
             <div class="card-meta">📁 ${item.category}<br>👤 ${item.author || 'Unknown'}<br>🕐 ${contentManager.formatDate(item.date)}</div>
             <div class="card-actions">
+              <button onclick="editPost('${item.id}')">✏️ Edit</button>
               <button onclick="deletePost('${item.id}')">🗑️ Delete</button>
             </div>
           </div>
@@ -325,6 +371,54 @@
         contentManager.deleteContent(CONTENT_TYPE, id).then(() => { alert('✅ Deleted!'); loadManageContent(); }).catch(err => alert('❌ Failed: ' + err.message));
       }
     }
+
+    function editPost(id) {
+      const post = currentContent.find(p => p.id === id);
+      if (!post) return;
+      
+      document.getElementById('editPostId').value = id;
+      document.getElementById('editCategory').value = post.category;
+      document.getElementById('editTitle').value = post.title;
+      document.getElementById('editContent').value = post.content || '';
+      document.getElementById('editDescription').value = post.description || post.summary || '';
+      document.getElementById('editAuthor').value = post.author || '';
+      document.getElementById('editTags').value = (post.tags || []).join(', ');
+      
+      loadCategories().then(() => {
+        document.getElementById('editCategory').value = post.category;
+      });
+      
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editPostId').value;
+      
+      const updatedPost = {
+        id: id,
+        title: document.getElementById('editTitle').value,
+        category: document.getElementById('editCategory').value,
+        content: document.getElementById('editContent').value,
+        description: document.getElementById('editDescription').value,
+        author: document.getElementById('editAuthor').value,
+        tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
+        date: new Date().toISOString()
+      };
+      
+      try {
+        await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
+        alert('✅ Post updated successfully!');
+        closeEditModal();
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Update failed: ' + error.message);
+      }
+    });
 
     window.addEventListener('DOMContentLoaded', loadCategories);
   </script>

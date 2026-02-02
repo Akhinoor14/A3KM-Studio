@@ -5,7 +5,7 @@ const ledTypes = {
     red: {
         name: 'Red',
         voltage: 2.0,
-        color: '#FF0000',
+        color: '#C80000',
         typical: '1.8-2.2V'
     },
     green: {

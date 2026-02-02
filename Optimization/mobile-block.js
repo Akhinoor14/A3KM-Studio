@@ -1,9 +1,14 @@
 /**
- * Mobile Device Blocker for A3KM Studio
- * Detects mobile devices and displays warning message
- * Desktop users remain unaffected
+ * Mobile Device Blocker for A3KM Studio - DISABLED
+ * This file has been disabled and is no longer active
+ * Mobile optimization is now handled by mobile-universal.js
+ * Date Disabled: February 2, 2026
  */
 
+// ENTIRE BLOCKING SYSTEM DISABLED - DO NOT USE
+console.log('[mobile-block.js] This file is disabled. Mobile optimization is handled by mobile-universal.js');
+
+/* DISABLED CODE - Kept for reference only
 (function() {
     'use strict';
     
@@ -229,3 +234,5 @@
     }, 100);
     
 })();
+
+END OF DISABLED CODE - This file no longer blocks mobile devices */

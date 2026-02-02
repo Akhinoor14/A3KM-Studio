@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Educational Video - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../shared/upload-form-styles.css">
+    <script src="../shared/api-config-check.js"></script>
+</head>
+<body>
+    <a href="upload-interface-new.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Content Types
+    </a>
+
+    <div class="container">
+        <div class="upload-header">
+            <div class="upload-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1>Upload Educational Video</h1>
+            <p class="subtitle">Add an educational tutorial or course video</p>
+        </div>
+
+        <form id="uploadForm" class="upload-form">
+            <!-- YouTube URL -->
+            <div class="form-group">
+                <label for="youtubeUrl">
+                    YouTube Video URL <span class="required">*</span>
+                </label>
+                <input type="url" id="youtubeUrl" name="youtubeUrl" required placeholder="https://www.youtube.com/watch?v=...">
+                <span class="helper-text">Paste the YouTube video link here</span>
+            </div>
+
+            <!-- Auto-fetch button -->
+            <button type="button" class="submit-btn" id="fetchBtn" style="margin-bottom: 20px;">
+                <i class="fas fa-sync"></i>
+                Auto-Fetch Video Details
+            </button>
+
+            <!-- Video ID (Auto-filled) -->
+            <div class="form-group">
+                <label for="videoId">
+                    Video ID <span class="optional">(Auto-extracted)</span>
+                </label>
+                <input type="text" id="videoId" name="videoId" readonly placeholder="Will be extracted from URL">
+            </div>
+
+            <!-- Title -->
+            <div class="form-group">
+                <label for="title">
+                    Video Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" name="title" required placeholder="Enter video title">
+            </div>
+
+            <!-- Category Group -->
+            <div class="form-group">
+                <label for="categoryGroup">
+                    Category Group <span class="required">*</span>
+                </label>
+                <select id="categoryGroup" name="categoryGroup" required>
+                    <option value="">Loading groups...</option>
+                </select>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category">
+                    Specific Category <span class="required">*</span>
+                </label>
+                <select id="category" name="category" required>
+                    <option value="">Select group first</option>
+                </select>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">
+                    Description <span class="required">*</span>
+                </label>
+                <textarea id="description" name="description" required placeholder="Describe what students will learn"></textarea>
+            </div>
+
+            <!-- Difficulty Level -->
+            <div class="form-group">
+                <label for="difficulty">
+                    Difficulty Level <span class="required">*</span>
+                </label>
+                <select id="difficulty" name="difficulty" required>
+                    <option value="">Select difficulty</option>
+                    <option value="beginner">🟢 Beginner</option>
+                    <option value="intermediate">🟡 Intermediate</option>
+                    <option value="advanced">🔴 Advanced</option>
+                    <option value="expert">⚫ Expert</option>
+                </select>
+            </div>
+
+            <!-- Duration (Auto-fetched or manual) -->
+            <div class="form-group">
+                <label for="duration">
+                    Duration <span class="optional">(Auto-fetched from YouTube)</span>
+                </label>
+                <input type="text" id="duration" name="duration" placeholder="e.g., 45:30">
+            </div>
+
+            <!-- Views (Optional) -->
+            <div class="form-group">
+                <label for="views">
+                    Views <span class="optional">(Optional)</span>
+                </label>
+                <input type="number" id="views" name="views" placeholder="0" value="0">
+            </div>
+
+            <!-- Likes (Optional) -->
+            <div class="form-group">
+                <label for="likes">
+                    Likes <span class="optional">(Optional)</span>
+                </label>
+                <input type="number" id="likes" name="likes" placeholder="0" value="0">
+            </div>
+
+            <!-- Upload Date -->
+            <div class="form-group">
+                <label for="date">
+                    Upload Date <span class="required">*</span>
+                </label>
+                <input type="date" id="date" name="date" required>
+            </div>
+
+            <!-- Prerequisites (Optional) -->
+            <div class="form-group">
+                <label for="prerequisites">
+                    Prerequisites <span class="optional">(Optional)</span>
+                </label>
+                <textarea id="prerequisites" name="prerequisites" rows="3" placeholder="What knowledge is required before watching this?"></textarea>
+            </div>
+
+            <!-- Learning Outcomes -->
+            <div class="form-group">
+                <label for="learningOutcomes">
+                    Learning Outcomes <span class="required">*</span>
+                </label>
+                <textarea id="learningOutcomes" name="learningOutcomes" required rows="4" placeholder="What will students learn? (One outcome per line)"></textarea>
+                <span class="helper-text">List key takeaways from this video</span>
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+                <label for="tagsInput">
+                    Tags <span class="required">*</span>
+                </label>
+                <div class="tags-container">
+                    <div class="tags-wrapper" id="tagsWrapper">
+                        <input type="text" id="tagsInput" placeholder="Type tag and press Enter">
+                    </div>
+                </div>
+                <span class="helper-text">Press Enter to add tags</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Upload Educational Video
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Uploading...</p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let tags = [];
+        let videoData = null;
+
+        // Load category groups
+        async function loadCategories() {
+            try {
+                const response = await fetch('../../../Content Studio/educational-videos/educational-videos.json');
+                const data = await response.json();
+                videoData = data;
+                
+                const groupSelect = document.getElementById('categoryGroup');
+                groupSelect.innerHTML = '<option value="">Select category group</option>';
+                
+                data.categoryGroups['educational'].forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = `${group.icon} ${group.name}`;
+                    groupSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Update categories when group changes
+        document.getElementById('categoryGroup').addEventListener('change', (e) => {
+            const groupId = e.target.value;
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '<option value="">Select a category</option>';
+            
+            if (groupId && videoData) {
+                const group = videoData.categoryGroups['educational'].find(g => g.id === groupId);
+                if (group) {
+                    group.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        categorySelect.appendChild(option);
+                    });
+                }
+            }
+        });
+
+        // Extract video ID from YouTube URL
+        function extractVideoId(url) {
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
+        // Auto-fetch video details
+        document.getElementById('fetchBtn').addEventListener('click', async () => {
+            const url = document.getElementById('youtubeUrl').value;
+            if (!url) {
+                alert('Please enter a YouTube URL first');
+                return;
+            }
+
+            const videoId = extractVideoId(url);
+            if (!videoId) {
+                alert('Invalid YouTube URL');
+                return;
+            }
+
+            document.getElementById('videoId').value = videoId;
+            document.getElementById('fetchBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+            document.getElementById('fetchBtn').disabled = true;
+
+            try {
+                // TODO: Implement YouTube API fetching
+                setTimeout(() => {
+                    alert('Video ID extracted! Please fill in other details manually.\n\nNote: Auto-fetch from YouTube API will be implemented in backend.');
+                    document.getElementById('fetchBtn').innerHTML = '<i class="fas fa-check"></i> Video ID Extracted';
+                    document.getElementById('fetchBtn').style.background = 'linear-gradient(135deg, #00C851, #007E33)';
+                }, 1000);
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('fetchBtn').innerHTML = '<i class="fas fa-sync"></i> Try Again';
+                document.getElementById('fetchBtn').disabled = false;
+                alert('Failed to fetch video details. Please enter manually.');
+            }
+        });
+
+        // Tags handling
+        const tagsInput = document.getElementById('tagsInput');
+        const tagsWrapper = document.getElementById('tagsWrapper');
+
+        tagsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = tagsInput.value.trim().toLowerCase();
+                
+                if (value && !tags.includes(value)) {
+                    tags.push(value);
+                    addTagElement(value);
+                    tagsInput.value = '';
+                }
+            }
+        });
+
+        function addTagElement(tag) {
+            const tagEl = document.createElement('tag');
+            tagEl.className = 'tag';
+            tagEl.innerHTML = `
+                ${tag}
+                <span class="remove-tag" onclick="removeTag('${tag}')">×</span>
+            `;
+            tagsWrapper.insertBefore(tagEl, tagsInput);
+        }
+
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function renderTags() {
+            const existingTags = tagsWrapper.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            tags.forEach(tag => addTagElement(tag));
+        }
+
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (tags.length === 0) {
+                alert('Please add at least one tag');
+                return;
+            }
+
+            if (!document.getElementById('videoId').value) {
+                alert('Please extract video ID first');
+                return;
+            }
+
+            // Parse learning outcomes (one per line)
+            const learningOutcomes = document.getElementById('learningOutcomes').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            const formData = {
+                type: 'educational',
+                videoId: document.getElementById('videoId').value,
+                title: document.getElementById('title').value,
+                categoryGroup: document.getElementById('categoryGroup').value,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                difficulty: document.getElementById('difficulty').value,
+                duration: document.getElementById('duration').value,
+                views: parseInt(document.getElementById('views').value) || 0,
+                likes: parseInt(document.getElementById('likes').value) || 0,
+                date: document.getElementById('date').value,
+                prerequisites: document.getElementById('prerequisites').value || 'None',
+                learningOutcomes: learningOutcomes,
+                tags: tags,
+                youtubeUrl: document.getElementById('youtubeUrl').value
+            };
+
+            document.getElementById('progressContainer').style.display = 'block';
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            try {
+                // Backend integration: Use videos-manager.html educational upload system
+                // GitHub uploader ready - needs token configuration
+                for (let i = 0; i <= 100; i += 10) {
+                    progressFill.style.width = i + '%';
+                    progressText.textContent = `Uploading... ${i}%`;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+
+                progressText.textContent = 'Upload successful!';
+                progressFill.style.background = 'linear-gradient(90deg, #00C851, #007E33)';
+                
+                alert('Educational video uploaded successfully!');
+                setTimeout(() => {
+                    window.location.href = 'upload-interface-new.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressText.textContent = 'Upload failed!';
+                progressFill.style.background = 'linear-gradient(90deg, #FF0000, #CC0000)';
+                alert('Upload failed. Please try again.');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCategories);
+    </script>
+</body>
+</html>

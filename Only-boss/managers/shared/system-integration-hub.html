@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Integration Hub - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 20px;
+            border: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, #8B0000, #FF0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(90, 0, 0, 0.15));
+            border: 2px solid rgba(139, 0, 0, 0.5);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #8B0000, #5a0000);
+            transform: translateX(-3px);
+        }
+
+        .section {
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
+            padding-bottom: 15px;
+        }
+
+        .section-title i {
+            color: #8B0000;
+            font-size: 28px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .status-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .status-card:hover {
+            border-color: #8B0000;
+            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.3);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-connected {
+            background: rgba(0, 200, 81, 0.2);
+            color: #00C851;
+            border: 1px solid rgba(0, 200, 81, 0.4);
+        }
+
+        .badge-missing {
+            background: rgba(255, 82, 82, 0.2);
+            color: #FF5252;
+            border: 1px solid rgba(255, 82, 82, 0.4);
+        }
+
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+            border: 1px solid rgba(255, 193, 7, 0.4);
+        }
+
+        .status-description {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .connections-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .connections-list li {
+            padding: 8px 0;
+            font-size: 12px;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .connections-list li:before {
+            content: "→";
+            color: #8B0000;
+            font-weight: bold;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 12px;
+        }
+
+        .features-list li {
+            padding: 6px 0;
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .features-list li i {
+            color: #8B0000;
+            width: 16px;
+        }
+
+        .btn-test {
+            background: linear-gradient(135deg, #8B0000, #C80000);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 0, 0, 0.4);
+        }
+
+        .integration-flow {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            background: rgba(139, 0, 0, 0.1);
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .flow-arrow {
+            color: #8B0000;
+            font-size: 24px;
+        }
+
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .test-results.show {
+            display: block;
+        }
+
+        .test-results.success {
+            background: rgba(0, 200, 81, 0.2);
+            border: 1px solid rgba(0, 200, 81, 0.4);
+            color: #00C851;
+        }
+
+        .test-results.error {
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid rgba(255, 82, 82, 0.4);
+            color: #FF5252;
+        }
+
+        /* ===================================
+           MOBILE OPTIMIZATION
+           =================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 20px;
+                flex-wrap: wrap;
+            }
+
+            .section-title i {
+                font-size: 22px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .status-card {
+                padding: 15px;
+            }
+
+            .status-name {
+                font-size: 16px;
+            }
+
+            .status-description {
+                font-size: 12px;
+            }
+
+            .connections-list li,
+            .features-list li {
+                font-size: 11px;
+            }
+
+            .btn-test {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .integration-flow {
+                flex-direction: column;
+            }
+
+            .flow-box {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .back-btn {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+
+            .status-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../../dashboard/only-boss-dashboard-redesigned.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+
+        <div class="header">
+            <h1><i class="fas fa-project-diagram"></i> System Integration Hub</h1>
+            <p>Complete overview of all system connections, features & data flow</p>
+        </div>
+
+        <!-- API Configuration Status -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-plug"></i>
+                API Configuration System
+            </h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fab fa-github"></i>
+                            GitHub API
+                        </span>
+                        <span class="status-badge badge-connected" id="githubStatus">Connected</span>
+                    </div>
+                    <p class="status-description">Personal Access Token for content upload & management</p>
+                    <ul class="connections-list">
+                        <li>content-upload-interface.html</li>
+                        <li>upload-interface-new.html (5 upload pages)</li>
+                        <li>github-content-uploader.js</li>
+                        <li>All manager systems</li>
+                    </ul>
+                    <button class="btn-test" onclick="testGitHubAPI()">Test Connection</button>
+                    <div class="test-results" id="githubTestResult"></div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fab fa-youtube"></i>
+                            YouTube API
+                        </span>
+                        <span class="status-badge badge-warning" id="youtubeStatus">Optional</span>
+                    </div>
+                    <p class="status-description">Data API v3 for video duration & details fetching</p>
+                    <ul class="connections-list">
+                        <li>upload-videos.html</li>
+                        <li>upload-educational.html</li>
+                        <li>update-durations.html</li>
+                    </ul>
+                    <button class="btn-test" onclick="testYouTubeAPI()">Test Connection</button>
+                    <div class="test-results" id="youtubeTestResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload System Status -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-upload"></i>
+                Content Upload System
+            </h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-file-alt"></i>
+                            Upload Interface (New)
+                        </span>
+                        <span class="status-badge badge-connected">Active</span>
+                    </div>
+                    <p class="status-description">5-card selection system with dedicated upload forms</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> upload-posts.html (Blog Posts)</li>
+                        <li><i class="fas fa-check"></i> upload-videos.html (Videos)</li>
+                        <li><i class="fas fa-check"></i> upload-educational.html (Educational)</li>
+                        <li><i class="fas fa-check"></i> upload-books.html (Books & PDFs)</li>
+                        <li><i class="fas fa-check"></i> upload-papers.html (Research Papers)</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-file-code"></i>
+                            Upload Interface (Legacy)
+                        </span>
+                        <span class="status-badge badge-connected">Active</span>
+                    </div>
+                    <p class="status-description">Original single-page upload system</p>
+                    <ul class="connections-list">
+                        <li>content-upload-interface.html</li>
+                        <li>Supports all 5 content types</li>
+                        <li>Auto category loading from JSON</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manager Systems Status -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-tasks"></i>
+                Content Manager Systems
+            </h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-pen"></i>
+                            Posts Manager
+                        </span>
+                        <span class="status-badge badge-connected">Full Features</span>
+                    </div>
+                    <p class="status-description">Written posts & blog articles management</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> Upload new posts</li>
+                        <li><i class="fas fa-check"></i> Edit existing posts</li>
+                        <li><i class="fas fa-check"></i> Delete posts</li>
+                        <li><i class="fas fa-check"></i> Category management</li>
+                        <li><i class="fas fa-check"></i> Statistics dashboard</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-video"></i>
+                            Videos Manager
+                        </span>
+                        <span class="status-badge badge-connected">Full Features</span>
+                    </div>
+                    <p class="status-description">Video content & educational videos</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> YouTube URL support</li>
+                        <li><i class="fas fa-check"></i> Edit video metadata</li>
+                        <li><i class="fas fa-check"></i> Category groups</li>
+                        <li><i class="fas fa-check"></i> Duration tracking</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-book"></i>
+                            Books Manager
+                        </span>
+                        <span class="status-badge badge-connected">Full Features</span>
+                    </div>
+                    <p class="status-description">Books & PDF documents management</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> PDF upload support</li>
+                        <li><i class="fas fa-check"></i> Edit book details</li>
+                        <li><i class="fas fa-check"></i> Author management</li>
+                        <li><i class="fas fa-check"></i> Page count tracking</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-file-pdf"></i>
+                            Papers Manager
+                        </span>
+                        <span class="status-badge badge-connected">Full Features</span>
+                    </div>
+                    <p class="status-description">Research papers & academic documents</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> Multiple authors support</li>
+                        <li><i class="fas fa-check"></i> DOI tracking</li>
+                        <li><i class="fas fa-check"></i> Abstract & keywords</li>
+                        <li><i class="fas fa-check"></i> Citation management</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-film"></i>
+                            Vlogs Manager
+                        </span>
+                        <span class="status-badge badge-connected">Full Features</span>
+                    </div>
+                    <p class="status-description">Personal video blogs & vlogs</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> Vlog upload</li>
+                        <li><i class="fas fa-check"></i> Edit functionality</li>
+                        <li><i class="fas fa-check"></i> Category system</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backend Integration -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-server"></i>
+                Backend Integration
+            </h2>
+            
+            <div class="integration-flow">
+                <div class="flow-box">Upload Form</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box">content-manager.js</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box">github-uploader.js</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box">GitHub Repository</div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-cogs"></i>
+                            content-manager.js
+                        </span>
+                        <span class="status-badge badge-connected">Active</span>
+                    </div>
+                    <p class="status-description">Main backend controller for CRUD operations</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> loadContent(contentType)</li>
+                        <li><i class="fas fa-check"></i> editContent(type, id, updates)</li>
+                        <li><i class="fas fa-check"></i> updateContent() - alias</li>
+                        <li><i class="fas fa-check"></i> deleteContent(type, id)</li>
+                        <li><i class="fas fa-check"></i> uploadCompleteContent()</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fab fa-github"></i>
+                            github-content-uploader.js
+                        </span>
+                        <span class="status-badge badge-connected">Auto-Token</span>
+                    </div>
+                    <p class="status-description">GitHub API integration with auto token loading</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> Auto-loads from localStorage</li>
+                        <li><i class="fas fa-check"></i> uploadFile(path, content, message)</li>
+                        <li><i class="fas fa-check"></i> getFile(path)</li>
+                        <li><i class="fas fa-check"></i> replaceJSON(path, data)</li>
+                        <li><i class="fas fa-check"></i> Progress tracking</li>
+                    </ul>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-name">
+                            <i class="fas fa-image"></i>
+                            svg-generator.js
+                        </span>
+                        <span class="status-badge badge-connected">Active</span>
+                    </div>
+                    <p class="status-description">Auto cover image generation</p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> SVG cover generation</li>
+                        <li><i class="fas fa-check"></i> Category-based themes</li>
+                        <li><i class="fas fa-check"></i> Custom gradients</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow Diagram -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-exchange-alt"></i>
+                Complete Data Flow
+            </h2>
+            <div style="background: rgba(20, 20, 20, 0.6); padding: 30px; border-radius: 15px; border: 2px solid rgba(139, 0, 0, 0.3);">
+                <div class="integration-flow" style="flex-direction: column; align-items: stretch;">
+                    <div class="flow-box">1. User opens Dashboard → Clicks Content Upload</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">2. upload-interface-new.html → Select content type (5 cards)</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">3. Individual upload form (posts/videos/books/papers/educational)</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">4. Form validates → Loads categories from JSON</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">5. User fills form → Uploads file/enters data</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">6. content-manager.js processes data</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">7. github-content-uploader.js (auto-loads token from localStorage)</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">8. Uploads to GitHub Repository (Content Studio/)</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">9. Updates JSON file with new content metadata</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">10. Manager pages (posts/videos/books-manager.html) display content</div>
+                    <span class="flow-arrow" style="text-align: center;">↓</span>
+                    <div class="flow-box">11. Edit/Delete operations via manager → Updates GitHub</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check API configuration status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAPIStatus();
+        });
+
+        function checkAPIStatus() {
+            const githubToken = localStorage.getItem('github_token');
+            const youtubeKey = localStorage.getItem('youtube_api_key');
+
+            // Update GitHub status
+            const githubStatus = document.getElementById('githubStatus');
+            if (githubToken) {
+                githubStatus.textContent = 'Connected';
+                githubStatus.className = 'status-badge badge-connected';
+            } else {
+                githubStatus.textContent = 'Not Configured';
+                githubStatus.className = 'status-badge badge-missing';
+            }
+
+            // Update YouTube status
+            const youtubeStatus = document.getElementById('youtubeStatus');
+            if (youtubeKey) {
+                youtubeStatus.textContent = 'Connected';
+                youtubeStatus.className = 'status-badge badge-connected';
+            } else {
+                youtubeStatus.textContent = 'Not Configured';
+                youtubeStatus.className = 'status-badge badge-warning';
+            }
+        }
+
+        async function testGitHubAPI() {
+            const resultDiv = document.getElementById('githubTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-results show';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing connection...';
+
+            const token = localStorage.getItem('github_token');
+            if (!token) {
+                resultDiv.className = 'test-results show error';
+                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> No token configured. <a href="api-config-manager.html" style="color: #FFD700; text-decoration: underline;">Configure here</a>';
+                return;
+            }
+
+            try {
+                const response = await fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `token ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'test-results show success';
+                    resultDiv.innerHTML = `<i class="fas fa-check-circle"></i> Connected successfully as: <strong>${data.login}</strong>`;
+                } else {
+                    throw new Error('Invalid token or no permissions');
+                }
+            } catch (error) {
+                resultDiv.className = 'test-results show error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> Connection failed: ${error.message}`;
+            }
+        }
+
+        async function testYouTubeAPI() {
+            const resultDiv = document.getElementById('youtubeTestResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-results show';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing API...';
+
+            const key = localStorage.getItem('youtube_api_key');
+            if (!key) {
+                resultDiv.className = 'test-results show error';
+                resultDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> No API key configured. <a href="api-config-manager.html" style="color: #FFD700; text-decoration: underline;">Configure here</a>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ&key=${key}`);
+                
+                if (response.ok) {
+                    resultDiv.className = 'test-results show success';
+                    resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> YouTube API working correctly!';
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Invalid API key');
+                }
+            } catch (error) {
+                resultDiv.className = 'test-results show error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> API test failed: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
