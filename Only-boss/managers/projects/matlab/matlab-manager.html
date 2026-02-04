@@ -792,6 +792,49 @@
             background: rgba(0, 118, 168, 0.2);
         }
 
+        /* File Replacement Section */
+        .file-replacement-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 118, 168, 0.05);
+            border: 2px dashed rgba(0, 118, 168, 0.3);
+            border-radius: 12px;
+        }
+
+        .file-replacement-section h4 {
+            color: var(--matlab-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .file-replace-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 118, 168, 0.2);
+            border-radius: 8px;
+        }
+
+        .file-replace-item label {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .file-replace-item input[type="file"] {
+            max-width: 300px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
         /* JSON Editor */
         .json-editor {
             width: 100%;
@@ -1308,15 +1351,97 @@
             return true;
         }
 
-        function checkDuplicate(title) {
-            const sanitized = sanitizeInput(title.toLowerCase());
-            const exists = projectsData.projects.some(p => 
-                p.title.toLowerCase() === sanitized
+        function checkDuplicate(title, excludeId = null) {
+            const sanitized = sanitizeInput(title.toLowerCase().trim());
+            
+            // Exact match check
+            const exactMatch = projectsData.projects.find(p => 
+                p.id !== excludeId && p.title.toLowerCase().trim() === sanitized
             );
-            if (exists) {
-                return confirm('⚠️ A project with similar name already exists.\n\nContinue anyway?');
+            
+            if (exactMatch) {
+                alert(`❌ Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
+                return false;
             }
+            
+            // Similarity check (>80% similar)
+            const similarProjects = projectsData.projects.filter(p => {
+                if (p.id === excludeId) return false;
+                const similarity = calculateSimilarity(sanitized, p.title.toLowerCase().trim());
+                return similarity > 0.8;
+            });
+            
+            if (similarProjects.length > 0) {
+                const names = similarProjects.map(p => `• ${p.title}`).join('\n');
+                return confirm(`⚠️ Similar projects found:\n\n${names}\n\nContinue anyway?`);
+            }
+            
             return true;
+        }
+        
+        // Calculate string similarity (Levenshtein distance)
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+        
+        // Generate folder name with auto-numbering
+        function generateFolderName(number, title) {
+            const paddedNumber = String(number).padStart(2, '0');
+            const sanitizedTitle = sanitizeInput(title)
+                .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+            return `${paddedNumber} ${sanitizedTitle}`;
+        }
+        
+        // Validate replacement file
+        function validateReplaceFile(input) {
+            const files = input.files;
+            if (!files || files.length === 0) return true;
+            
+            let allValid = true;
+            Array.from(files).forEach(file => {
+                if (!validateFileSize(file)) {
+                    allValid = false;
+                    input.value = ''; // Clear invalid file
+                }
+            });
+            
+            return allValid;
         }
 
         // ===== CACHING SYSTEM =====
@@ -1456,7 +1581,7 @@
             const zipFile = document.getElementById('zipFile').files[0]?.name || '';
 
             const nextId = projectsData.projects.length + 1;
-            const folderName = `${String(nextId).padStart(2, '0')} ${title}`;
+            const folderName = generateFolderName(nextId, title);
             
             // Get selected toolboxes
             const selectedToolboxes = [];
@@ -1483,11 +1608,13 @@
                 },
                 tags: [category, "MATLAB", ...selectedToolboxes.slice(0, 3)],
                 dateAdded: new Date().toISOString().split('T')[0],
+                lastModified: new Date().toISOString(),
                 views: 0,
                 downloads: 0
             };
 
             projectsData.projects.push(newProject);
+            projectsData.statistics.lastUpdated = new Date().toISOString();
             saveToCache(projectsData); // Update cache
 
             updateStats();
@@ -1649,8 +1776,16 @@
             const project = projectsData.projects.find(p => p.id === id);
             if (!project) return;
 
+            // Get updated values
+            const newTitle = sanitizeInput(document.getElementById('editTitle').value.trim());
+            
+            // Check duplicate (excluding current project)
+            if (!checkDuplicate(newTitle, id)) {
+                return;
+            }
+
             // Update project data
-            project.title = sanitizeInput(document.getElementById('editTitle').value.trim());
+            project.title = newTitle;
             project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
             project.category = document.getElementById('editCategory').value;
             project.difficulty = document.getElementById('editDifficulty').value;
@@ -1662,25 +1797,67 @@
                 project.toolboxes.push(cb.value);
             });
             
-            // Update folder name
-            const projectIndex = projectsData.projects.findIndex(p => p.id === id);
-            project.folder = `${String(projectIndex + 1).padStart(2, '0')} ${project.title}`;
+            // Handle file replacements
+            const replacedFiles = [];
+            const codeFile = document.getElementById('replaceCodeFile').files[0];
+            const imageFiles = document.getElementById('replaceImageFiles').files;
+            const readmeFile = document.getElementById('replaceReadmeFile').files[0];
+            const zipFile = document.getElementById('replaceZipFile').files[0];
             
-            // Update UI and cache
+            if (!project.files) project.files = {};
+            
+            if (codeFile) {
+                if (!validateFileSize(codeFile)) return;
+                project.files.code = codeFile.name;
+                replacedFiles.push(`Code: ${codeFile.name}`);
+            }
+            
+            if (imageFiles.length > 0) {
+                const validImages = Array.from(imageFiles).filter(f => validateFileSize(f));
+                if (validImages.length > 0) {
+                    project.files.images = validImages.map(f => f.name);
+                    replacedFiles.push(`Images: ${validImages.length} file(s)`);
+                }
+            }
+            
+            if (readmeFile) {
+                if (!validateFileSize(readmeFile)) return;
+                project.files.readme = readmeFile.name;
+                replacedFiles.push(`README: ${readmeFile.name}`);
+            }
+            
+            if (zipFile) {
+                if (!validateFileSize(zipFile)) return;
+                project.files.zip = zipFile.name;
+                replacedFiles.push(`ZIP: ${zipFile.name}`);
+            }
+            
+            // Auto-rename folder with proper numbering
+            const projectIndex = projectsData.projects.findIndex(p => p.id === id);
+            project.folder = generateFolderName(projectIndex + 1, project.title);
+            
+            // Update statistics
+            projectsData.statistics.lastUpdated = new Date().toISOString();
+            project.lastModified = new Date().toISOString();
+            
+            saveToCache(projectsData);
+            
+            // Update displays
             updateStats();
             renderProjectsList();
             updateJSONEditor();
             updateFolderStructure();
-            saveToCache(projectsData);
-            
-            // Close modal
             closeEditModal();
             
-            // Success message
+            const filesInfo = replacedFiles.length > 0 
+                ? `\n\n📁 Replaced Files:\n${replacedFiles.map(f => `  • ${f}`).join('\n')}` 
+                : '';
+            
             const toolboxList = project.toolboxes.length > 0 
                 ? `\n\n📦 Toolboxes: ${project.toolboxes.join(', ')}` 
                 : '';
-            alert(`✅ Project updated successfully!${toolboxList}\n\n⚠️ Remember to:\n1. Rename folder in GitHub\n2. Download updated JSON\n3. Push changes`);
+            
+            alert(`✅ Project updated successfully!${toolboxList}${filesInfo}\n\n⚠️ Remember to:\n1. Download JSON and push to GitHub\n2. Replace files in Projects Storage/MATLAB Projects/${project.folder}/`);
         }
 
         function deleteProject(id) {
@@ -2244,6 +2421,54 @@ Useful for understanding [concept] in [field/application].`
                     <div class="edit-toolboxes-grid" id="editToolboxesContainer">
                         <!-- Toolboxes will be populated by JavaScript -->
                     </div>
+                </div>
+
+                <!-- File Replacement Section -->
+                <div class="file-replacement-section">
+                    <h4>
+                        <i class="fas fa-file-upload"></i>
+                        Replace Project Files
+                    </h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">
+                        📤 Upload new versions to replace existing files. Leave empty to keep current files.
+                    </p>
+                    
+                    <div class="file-replace-item">
+                        <label>
+                            <i class="fas fa-file-code"></i>
+                            MATLAB Code (.m)
+                        </label>
+                        <input type="file" id="replaceCodeFile" accept=".m,.mlx" onchange="validateReplaceFile(this)">
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <label>
+                            <i class="fas fa-images"></i>
+                            Result Images/Plots
+                        </label>
+                        <input type="file" id="replaceImageFiles" accept="image/*" multiple onchange="validateReplaceFile(this)">
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <label>
+                            <i class="fas fa-file-alt"></i>
+                            README.md
+                        </label>
+                        <input type="file" id="replaceReadmeFile" accept=".md,.txt" onchange="validateReplaceFile(this)">
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <label>
+                            <i class="fas fa-file-archive"></i>
+                            Project ZIP File
+                        </label>
+                        <input type="file" id="replaceZipFile" accept=".zip,.rar,.7z" onchange="validateReplaceFile(this)">
+                    </div>
+                    
+                    <small style="color: #FFC107; display: block; margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> Replacing files cannot be undone. Original files will be marked as "replaced" in version history.
+                    </small>
                 </div>
 
                 <div class="modal-actions">

@@ -692,6 +692,45 @@
             gap: 12px;
         }
 
+        .file-replacement-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 137, 123, 0.05);
+            border: 2px dashed rgba(0, 137, 123, 0.3);
+            border-radius: 12px;
+        }
+
+        .file-replacement-section h4 {
+            color: var(--arduino-teal);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-replace-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 137, 123, 0.2);
+            border-radius: 8px;
+        }
+
+        .file-replace-item label {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-replace-item input[type="file"] {
+            max-width: 250px;
+            font-size: 0.85rem;
+        }
+
         .modal-close-btn {
             width: 40px;
             height: 40px;
@@ -1302,15 +1341,71 @@
             });
         });
 
-        function checkDuplicate(title) {
-            const sanitized = sanitizeInput(title.toLowerCase());
-            const exists = arduinoData.projects.some(p => 
-                p.title.toLowerCase() === sanitized
+        function checkDuplicate(title, excludeId = null) {
+            const sanitized = sanitizeInput(title.toLowerCase().trim());
+            
+            // Exact match check
+            const exactMatch = arduinoData.projects.find(p => 
+                p.id !== excludeId && p.title.toLowerCase().trim() === sanitized
             );
-            if (exists) {
-                return confirm('⚠️ A project with similar name already exists.\n\nContinue anyway?');
+            
+            if (exactMatch) {
+                showAlert('error', `❌ Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
+                return false;
             }
+            
+            // Similarity check (>80% similar)
+            const similarProjects = arduinoData.projects.filter(p => {
+                if (p.id === excludeId) return false;
+                const similarity = calculateSimilarity(sanitized, p.title.toLowerCase().trim());
+                return similarity > 0.8;
+            });
+            
+            if (similarProjects.length > 0) {
+                const names = similarProjects.map(p => `• ${p.title}`).join('\n');
+                return confirm(`⚠️ Similar projects found:\n\n${names}\n\nContinue anyway?`);
+            }
+            
             return true;
+        }
+        
+        // Calculate string similarity (Levenshtein distance)
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
         }
 
         // ===== CACHING SYSTEM =====
@@ -2078,9 +2173,9 @@ This project combines [technology 1] with [technology 2] to create a fully funct
         document.getElementById('uploadForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const title = sanitizeInput(document.getElementById('projectTitle').value);
+            const title = sanitizeInput(document.getElementById('projectTitle').value.trim());
             
-            // Duplicate check
+            // Duplicate check (no exclusion for new projects)
             if (!checkDuplicate(title)) {
                 return;
             }
@@ -2099,22 +2194,26 @@ This project combines [technology 1] with [technology 2] to create a fully funct
                 }
             }
             
+            const projectNumber = arduinoData.projects.length + 1;
+            
             const newProject = {
-                id: arduinoData.projects.length + 1,
-                folder: `${String(arduinoData.projects.length + 1).padStart(2, '0')} ${title}`,
+                id: projectNumber,
+                folder: generateFolderName(projectNumber, title),
                 title: title,
-                subtitle: sanitizeInput(document.getElementById('projectSubtitle').value),
+                subtitle: sanitizeInput(document.getElementById('projectSubtitle').value.trim()),
                 category: document.getElementById('projectCategory').value,
-                description: sanitizeInput(document.getElementById('projectDescription').value),
+                difficulty: document.getElementById('projectDifficulty').value,
+                description: sanitizeInput(document.getElementById('projectDescription').value.trim()),
                 components: Array.from(document.querySelectorAll('.component-checkbox input:checked')).map(cb => sanitizeInput(cb.value)),
-                tinkercad: document.getElementById('tinkercadUrl').value,
                 files: {
                     code: Array.from(document.getElementById('codeFiles').files).map(f => f.name),
                     images: Array.from(document.getElementById('imageFiles').files).map(f => f.name),
                     readme: document.getElementById('readmeFile').files[0]?.name || '',
-                    explanation: document.getElementById('explanationFile').files[0]?.name || ''
+                    explanation: document.getElementById('explanationFile').files[0]?.name || '',
+                    tinkercadUrl: document.getElementById('tinkercadUrl').value.trim()
                 },
                 dateAdded: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
                 views: 0,
                 downloads: 0
             };
@@ -2124,7 +2223,7 @@ This project combines [technology 1] with [technology 2] to create a fully funct
             arduinoData.statistics.lastUpdated = new Date().toISOString();
 
             saveToCache(arduinoData);
-            showAlert('success', `✅ Project "${newProject.title}" added successfully! Don't forget to save JSON.`);
+            showAlert('success', `✅ Project "${newProject.title}" added successfully!\n\n📁 Folder: ${newProject.folder}\n📊 Components: ${newProject.components.length}\n\n⚠️ Don't forget to save JSON and upload files to GitHub.`);
             
             updateStats();
             renderProjectsList();
@@ -2207,8 +2306,16 @@ This project combines [technology 1] with [technology 2] to create a fully funct
             const project = arduinoData.projects.find(p => p.id === id);
             if (!project) return;
 
+            // Get updated values
+            const newTitle = sanitizeInput(document.getElementById('editTitle').value.trim());
+            
+            // Check duplicate (excluding current project)
+            if (!checkDuplicate(newTitle, id)) {
+                return;
+            }
+
             // Update project data
-            project.title = sanitizeInput(document.getElementById('editTitle').value.trim());
+            project.title = newTitle;
             project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
             project.category = document.getElementById('editCategory').value;
             project.difficulty = document.getElementById('editDifficulty').value;
@@ -2223,12 +2330,47 @@ This project combines [technology 1] with [technology 2] to create a fully funct
             if (!project.files) project.files = {};
             project.files.tinkercadUrl = document.getElementById('editTinkercadUrl').value.trim();
             
-            // Update folder name
+            // Handle file replacements
+            const replacedFiles = [];
+            const codeFile = document.getElementById('replaceCodeFile').files[0];
+            const imageFiles = document.getElementById('replaceImageFiles').files;
+            const readmeFile = document.getElementById('replaceReadmeFile').files[0];
+            const explanationFile = document.getElementById('replaceExplanationFile').files[0];
+            
+            if (codeFile) {
+                if (!validateFileSize(codeFile)) return;
+                project.files.code = [codeFile.name];
+                replacedFiles.push(`Code: ${codeFile.name}`);
+            }
+            
+            if (imageFiles.length > 0) {
+                const validImages = Array.from(imageFiles).filter(f => validateFileSize(f));
+                if (validImages.length > 0) {
+                    project.files.images = validImages.map(f => f.name);
+                    replacedFiles.push(`Images: ${validImages.length} file(s)`);
+                }
+            }
+            
+            if (readmeFile) {
+                if (!validateFileSize(readmeFile)) return;
+                project.files.readme = readmeFile.name;
+                replacedFiles.push(`README: ${readmeFile.name}`);
+            }
+            
+            if (explanationFile) {
+                if (!validateFileSize(explanationFile)) return;
+                project.files.explanation = explanationFile.name;
+                replacedFiles.push(`Explanation: ${explanationFile.name}`);
+            }
+            
+            // Auto-rename folder with proper numbering
             const projectIndex = arduinoData.projects.findIndex(p => p.id === id);
-            project.folder = `${String(projectIndex + 1).padStart(2, '0')} ${project.title}`;
+            project.folder = generateFolderName(projectIndex + 1, project.title);
             
             // Update statistics
             arduinoData.statistics.lastUpdated = new Date().toISOString();
+            project.lastModified = new Date().toISOString();
+            
             saveToCache(arduinoData);
             
             // Update displays
@@ -2237,7 +2379,45 @@ This project combines [technology 1] with [technology 2] to create a fully funct
             updateJSONEditor();
             closeEditModal();
             
-            showAlert('success', `✅ Project updated successfully!\n\n📊 Updated: ${project.components.length} components\n\n⚠️ Remember to download JSON and push to GitHub.`);
+            const filesInfo = replacedFiles.length > 0 
+                ? `\n\n📁 Replaced Files:\n${replacedFiles.map(f => `  • ${f}`).join('\n')}` 
+                : '';
+            
+            showAlert('success', `✅ Project updated successfully!\n\n📊 Updated: ${project.components.length} components${filesInfo}\n\n⚠️ Remember to download JSON and push to GitHub.`);
+        }
+        
+        // Generate folder name with auto-numbering
+        function generateFolderName(number, title) {
+            const paddedNumber = String(number).padStart(2, '0');
+            const sanitizedTitle = sanitizeInput(title)
+                .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+            return `${paddedNumber} ${sanitizedTitle}`;
+        }
+        
+        // Validate replacement file
+        function validateReplaceFile(input) {
+            const files = input.files;
+            if (!files || files.length === 0) return true;
+            
+            let allValid = true;
+            Array.from(files).forEach(file => {
+                if (!validateFileSize(file)) {
+                    allValid = false;
+                    input.value = ''; // Clear invalid file
+                }
+            });
+            
+            return allValid;
+        }
+        
+        // Update JSON editor
+        function updateJSONEditor() {
+            const editor = document.getElementById('jsonEditor');
+            if (editor) {
+                editor.value = JSON.stringify(arduinoData, null, 2);
+            }
         }
 
         // Delete project
@@ -2334,9 +2514,212 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
             document.getElementById('folderStructure').textContent = structure;
         }
 
+        // Render projects list with edit/delete buttons
+        function renderProjectsList() {
+            const container = document.getElementById('projectsList');
+            if (!container) return;
+            
+            if (arduinoData.projects.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <h3>No projects yet</h3>
+                        <p>Upload your first Arduino project to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Pagination
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const pageProjects = arduinoData.projects.slice(start, end);
+            
+            container.innerHTML = pageProjects.map(project => `
+                <div class="project-item">
+                    <input type="checkbox" onchange="toggleSelection(${project.id})" 
+                           style="width: 20px; height: 20px; cursor: pointer;" 
+                           ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    <div class="project-number">${String(project.id).padStart(2, '0')}</div>
+                    <div class="project-info">
+                        <h4>${sanitizeInput(project.title)}</h4>
+                        <p><i class="fas fa-folder"></i> ${sanitizeInput(project.folder)}</p>
+                        <p><i class="fas fa-tag"></i> ${arduinoData.categories[project.category]?.name || project.category}</p>
+                        ${project.components && project.components.length > 0 ? 
+                            `<p><i class="fas fa-microchip"></i> ${project.components.length} components</p>` : ''}
+                    </div>
+                    <div class="project-actions">
+                        <button class="btn-icon" onclick="editProject(${project.id})" title="Edit Project">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="deleteProject(${project.id})" title="Delete Project">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update pagination
+            const totalPages = Math.ceil(arduinoData.projects.length / ITEMS_PER_PAGE);
+            if (document.getElementById('currentPageNum')) {
+                document.getElementById('currentPageNum').textContent = currentPage;
+                document.getElementById('totalPages').textContent = totalPages;
+            }
+        }
+        
+        // Edit project function
+        function editProject(id) {
+            const project = arduinoData.projects.find(p => p.id === id);
+            if (!project) {
+                showAlert('error', '❌ Project not found!');
+                return;
+            }
+
+            // Populate edit form
+            document.getElementById('editProjectId').value = project.id;
+            document.getElementById('editTitle').value = project.title;
+            document.getElementById('editSubtitle').value = project.subtitle || '';
+            document.getElementById('editCategory').value = project.category;
+            document.getElementById('editDifficulty').value = project.difficulty || 'Beginner';
+            document.getElementById('editDescription').value = project.description || '';
+            document.getElementById('editTinkercadUrl').value = project.files?.tinkercadUrl || project.tinkercad || '';
+            
+            // Populate components
+            const allComponents = [
+                'Arduino UNO', 'LED', 'Resistor', 'Breadboard', 'Jumper Wires',
+                'Potentiometer', 'Servo Motor', 'DC Motor', 'Ultrasonic Sensor',
+                'Temperature Sensor', 'PIR Motion Sensor', 'IR Sensor',
+                'LCD Display', 'OLED Display', 'Buzzer', 'Push Button',
+                'RGB LED', 'Relay Module', 'Bluetooth Module', 'WiFi Module'
+            ];
+            
+            const componentsContainer = document.getElementById('editComponentsContainer');
+            if (componentsContainer) {
+                componentsContainer.innerHTML = allComponents.map((comp, idx) => {
+                    const isChecked = project.components && project.components.includes(comp);
+                    return `
+                        <div class="component-checkbox">
+                            <input type="checkbox" id="edit-comp-${idx}" value="${comp}" ${isChecked ? 'checked' : ''}>
+                            <label for="edit-comp-${idx}">${comp}</label>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Update component count
+                updateEditComponentCount();
+                
+                // Add event listeners to checkboxes
+                componentsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('change', updateEditComponentCount);
+                });
+            }
+            
+            // Display current files
+            displayCurrentFiles(project);
+            
+            // Show modal
+            const modal = document.getElementById('editModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+        
+        // Display current project files
+        function displayCurrentFiles(project) {
+            // Code files
+            const codeContainer = document.getElementById('currentCodeFiles');
+            if (codeContainer && project.files && project.files.code) {
+                const codeFiles = Array.isArray(project.files.code) ? project.files.code : [project.files.code];
+                codeContainer.innerHTML = codeFiles.length > 0 
+                    ? `📄 Current: ${codeFiles.map(f => `<span style="background: rgba(0, 137, 123, 0.2); padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${f}</span>`).join('')}` 
+                    : '❌ No files';
+            }
+            
+            // Image files
+            const imageContainer = document.getElementById('currentImageFiles');
+            if (imageContainer && project.files && project.files.images) {
+                const imageFiles = Array.isArray(project.files.images) ? project.files.images : [project.files.images];
+                imageContainer.innerHTML = imageFiles.length > 0 
+                    ? `🖼️ Current: ${imageFiles.length} file(s) - ${imageFiles.map(f => `<span style="background: rgba(0, 137, 123, 0.2); padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${f}</span>`).join('')}` 
+                    : '❌ No files';
+            }
+            
+            // README file
+            const readmeContainer = document.getElementById('currentReadmeFile');
+            if (readmeContainer && project.files) {
+                readmeContainer.innerHTML = project.files.readme 
+                    ? `📄 Current: <span style="background: rgba(0, 137, 123, 0.2); padding: 2px 8px; border-radius: 4px;">${project.files.readme}</span>` 
+                    : '❌ No file';
+            }
+            
+            // Explanation file
+            const explanationContainer = document.getElementById('currentExplanationFile');
+            if (explanationContainer && project.files) {
+                explanationContainer.innerHTML = project.files.explanation 
+                    ? `📄 Current: <span style="background: rgba(0, 137, 123, 0.2); padding: 2px 8px; border-radius: 4px;">${project.files.explanation}</span>` 
+                    : '❌ No file';
+            }
+        }
+        
+        // Delete project file
+        function deleteProjectFile(fileType) {
+            const id = parseInt(document.getElementById('editProjectId').value);
+            const project = arduinoData.projects.find(p => p.id === id);
+            if (!project || !project.files) return;
+            
+            const fileNames = {
+                'code': 'Arduino Code',
+                'images': 'Circuit Images',
+                'readme': 'README.md',
+                'explanation': 'Explanation Document'
+            };
+            
+            if (confirm(`🗑️ Delete ${fileNames[fileType]}?\n\n⚠️ This will remove from JSON only.\nYou must manually delete files from GitHub folder.`)) {
+                // Delete from project object
+                if (fileType === 'code' || fileType === 'images') {
+                    project.files[fileType] = [];
+                } else {
+                    project.files[fileType] = '';
+                }
+                
+                // Update display
+                displayCurrentFiles(project);
+                
+                // Show success message
+                const tempAlert = document.createElement('div');
+                tempAlert.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(76, 175, 80, 0.95); color: white; padding: 15px 20px; border-radius: 8px; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                tempAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${fileNames[fileType]} marked for deletion!`;
+                document.body.appendChild(tempAlert);
+                setTimeout(() => tempAlert.remove(), 3000);
+            }
+        }
+        
+        // Delete project function
+        function deleteProject(id) {
+            const project = arduinoData.projects.find(p => p.id === id);
+            if (!project) return;
+
+            if (confirm(`⚠️ Delete "${project.title}"?\n\n📁 Folder: ${project.folder}\n\nThis action cannot be undone in JSON.\n\n⚠️ You'll need to manually delete the folder from GitHub.`)) {
+                // Remove from array
+                arduinoData.projects = arduinoData.projects.filter(p => p.id !== id);
+                arduinoData.statistics.totalProjects = arduinoData.projects.length;
+                arduinoData.statistics.lastUpdated = new Date().toISOString();
+                
+                saveToCache(arduinoData);
+                
+                showAlert('success', `✅ Project "${project.title}" deleted from JSON!\n\n⚠️ Don't forget to:\n1. Delete folder "${project.folder}" from GitHub\n2. Download updated JSON\n3. Push changes to GitHub`);
+                
+                updateStats();
+                renderProjectsList();
+                updateJSONEditor();
+                generateFolderStructure();
+            }
+        }
+
         // Show alert messages
         function showAlert(type, message) {
             const alert = document.getElementById(type + 'Alert');
+            if (!alert) return;
             alert.textContent = message;
             alert.style.display = 'block';
             
@@ -2522,6 +2905,94 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
                     <small style="color: var(--arduino-teal); margin-top: 10px; display: block;">
                         <i class="fas fa-info-circle"></i> 
                         <span id="editComponentCount">0 components selected</span>
+                    </small>
+                </div>
+
+                <!-- File Replacement Section -->
+                <div class="file-replacement-section">
+                    <h4>
+                        <i class="fas fa-file-upload"></i>
+                        Manage Project Files
+                    </h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">
+                        🗑️ Delete existing files or 📤 Upload new versions to replace them.
+                    </p>
+                    
+                    <div class="file-replace-item">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-file-code"></i>
+                                Arduino Code (.ino)
+                            </label>
+                            <div id="currentCodeFiles" style="color: var(--arduino-teal); font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current files will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('code')" style="background: rgba(244, 67, 54, 0.2); border-color: #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceCodeFile" accept=".ino,.cpp,.c" onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-images"></i>
+                                Circuit Images
+                            </label>
+                            <div id="currentImageFiles" style="color: var(--arduino-teal); font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current files will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('images')" style="background: rgba(244, 67, 54, 0.2); border-color: #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceImageFiles" accept="image/*" multiple onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-file-alt"></i>
+                                README.md
+                            </label>
+                            <div id="currentReadmeFile" style="color: var(--arduino-teal); font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current file will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('readme')" style="background: rgba(244, 67, 54, 0.2); border-color: #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceReadmeFile" accept=".md,.txt" onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-graduation-cap"></i>
+                                Explanation Document
+                            </label>
+                            <div id="currentExplanationFile" style="color: var(--arduino-teal); font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current file will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('explanation')" style="background: rgba(244, 67, 54, 0.2); border-color: #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceExplanationFile" accept=".md,.txt,.pdf" onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <small style="color: #FFC107; display: block; margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> Delete will remove files from JSON. You must manually delete from GitHub folder. Replace will update JSON immediately.
                     </small>
                 </div>
 

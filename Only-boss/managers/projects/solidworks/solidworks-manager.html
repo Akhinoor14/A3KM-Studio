@@ -853,6 +853,48 @@
         .modal-btn-cancel:hover {
             background: rgba(255, 69, 0, 0.2);
         }
+        
+        /* File Replacement Section */
+        .file-replacement-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 69, 0, 0.05);
+            border: 2px dashed rgba(255, 69, 0, 0.3);
+            border-radius: 12px;
+        }
+        
+        .file-replacement-section h4 {
+            color: #FF4500;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-replace-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 69, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .file-replace-item label {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .file-replace-item input[type="file"] {
+            max-width: 250px;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -2020,6 +2062,100 @@
             `).join('');
         }
 
+        // Check for duplicate projects with similarity detection
+        function checkDuplicate(title, excludeId = null) {
+            const sanitized = sanitizeInput(title.toLowerCase().trim());
+            
+            // Exact match check
+            const exactMatch = projectsData.projects.find(p => 
+                p.id !== excludeId && p.title.toLowerCase().trim() === sanitized
+            );
+            
+            if (exactMatch) {
+                alert(`❌ Duplicate Found!\\n\\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\\n\\nPlease use a different name.`);
+                return false;
+            }
+            
+            // Similarity check (>80% similar)
+            const similarProjects = projectsData.projects.filter(p => {
+                if (p.id === excludeId) return false;
+                const similarity = calculateSimilarity(sanitized, p.title.toLowerCase().trim());
+                return similarity > 0.8;
+            });
+            
+            if (similarProjects.length > 0) {
+                const names = similarProjects.map(p => `• ${p.title}`).join('\\n');
+                return confirm(`⚠️ Similar projects found:\\n\\n${names}\\n\\nContinue anyway?`);
+            }
+            
+            return true;
+        }
+        
+        // Calculate string similarity (Levenshtein distance)
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+        
+        // Generate folder name with auto-numbering
+        function generateFolderName(number, title) {
+            const paddedNumber = String(number).padStart(2, '0');
+            const sanitizedTitle = sanitizeInput(title)
+                .replace(/[^a-zA-Z0-9\\s-]/g, '') // Remove special chars
+                .replace(/\\s+/g, ' ') // Normalize spaces
+                .trim();
+            return `${paddedNumber} ${sanitizedTitle}`;
+        }
+        
+        // Validate replacement file
+        function validateReplaceFile(input) {
+            const files = input.files;
+            if (!files || files.length === 0) return true;
+            
+            let allValid = true;
+            Array.from(files).forEach(file => {
+                if (!validateFileSize(file)) {
+                    allValid = false;
+                    input.value = ''; // Clear invalid file
+                }
+            });
+            
+            return allValid;
+        }
+        
         // Search functionality
         document.getElementById('searchInput')?.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
@@ -2031,6 +2167,100 @@
             });
         });
 
+        // Check for duplicate projects with similarity detection
+        function checkDuplicate(title, excludeId = null) {
+            const sanitized = sanitizeInput(title.toLowerCase().trim());
+            
+            // Exact match check
+            const exactMatch = projectsData.projects.find(p => 
+                p.id !== excludeId && p.title.toLowerCase().trim() === sanitized
+            );
+            
+            if (exactMatch) {
+                alert(`❌ Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
+                return false;
+            }
+            
+            // Similarity check (>80% similar)
+            const similarProjects = projectsData.projects.filter(p => {
+                if (p.id === excludeId) return false;
+                const similarity = calculateSimilarity(sanitized, p.title.toLowerCase().trim());
+                return similarity > 0.8;
+            });
+            
+            if (similarProjects.length > 0) {
+                const names = similarProjects.map(p => `• ${p.title}`).join('\n');
+                return confirm(`⚠️ Similar projects found:\n\n${names}\n\nContinue anyway?`);
+            }
+            
+            return true;
+        }
+        
+        // Calculate string similarity (Levenshtein distance)
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+        
+        // Generate folder name with auto-numbering
+        function generateFolderName(number, title) {
+            const paddedNumber = String(number).padStart(2, '0');
+            const sanitizedTitle = sanitizeInput(title)
+                .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+            return `${paddedNumber} ${sanitizedTitle}`;
+        }
+        
+        // Validate replacement file
+        function validateReplaceFile(input) {
+            const files = input.files;
+            if (!files || files.length === 0) return true;
+            
+            let allValid = true;
+            Array.from(files).forEach(file => {
+                if (!validateFileSize(file)) {
+                    allValid = false;
+                    input.value = ''; // Clear invalid file
+                }
+            });
+            
+            return allValid;
+        }
+        
         // Edit project
         function editProject(id) {
             const project = projectsData.projects.find(p => p.id === id);
@@ -2093,8 +2323,97 @@
                 cb.addEventListener('change', updateEditMaterialCount);
             });
             
+            // Display current files
+            displayCurrentFiles(project);
+            
             // Show modal
             document.getElementById('editModal').classList.add('active');
+        }
+        
+        // Display current project files
+        function displayCurrentFiles(project) {
+            // Model files
+            const modelContainer = document.getElementById('currentModelFiles');
+            if (modelContainer && project.files && project.files.cad) {
+                const modelFiles = Array.isArray(project.files.cad) ? project.files.cad : [project.files.cad];
+                modelContainer.innerHTML = modelFiles.length > 0 
+                    ? `📦 Current: ${modelFiles.map(f => `<span style="background: rgba(255, 69, 0, 0.2); padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${f}</span>`).join('')}` 
+                    : '❌ No files';
+            }
+            
+            // ZIP file
+            const zipContainer = document.getElementById('currentZipFile');
+            if (zipContainer && project.files) {
+                zipContainer.innerHTML = project.files.zip 
+                    ? `📦 Current: <span style="background: rgba(255, 69, 0, 0.2); padding: 2px 8px; border-radius: 4px;">${project.files.zip}</span>` 
+                    : '❌ No file';
+            }
+            
+            // Image files
+            const imageContainer = document.getElementById('currentImageFiles');
+            if (imageContainer && project.files && project.files.images) {
+                const imageFiles = Array.isArray(project.files.images) ? project.files.images : [project.files.images];
+                imageContainer.innerHTML = imageFiles.length > 0 
+                    ? `🖼️ Current: ${imageFiles.length} file(s) - ${imageFiles.map(f => `<span style="background: rgba(255, 69, 0, 0.2); padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${f}</span>`).join('')}` 
+                    : '❌ No files';
+            }
+            
+            // README file
+            const readmeContainer = document.getElementById('currentReadmeFile');
+            if (readmeContainer && project.files) {
+                readmeContainer.innerHTML = project.files.readme 
+                    ? `📄 Current: <span style="background: rgba(255, 69, 0, 0.2); padding: 2px 8px; border-radius: 4px;">${project.files.readme}</span>` 
+                    : '❌ No file';
+            }
+            
+            // Documentation files
+            const docContainer = document.getElementById('currentDocFiles');
+            if (docContainer && project.files && project.files.documentation) {
+                const docFiles = Array.isArray(project.files.documentation) ? project.files.documentation : [project.files.documentation];
+                docContainer.innerHTML = docFiles.length > 0 
+                    ? `📄 Current: ${docFiles.length} file(s) - ${docFiles.map(f => `<span style="background: rgba(255, 69, 0, 0.2); padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${f}</span>`).join('')}` 
+                    : '❌ No files';
+            }
+        }
+        
+        // Delete project file
+        function deleteProjectFile(fileType) {
+            const id = parseInt(document.getElementById('editProjectId').value);
+            const project = projectsData.projects.find(p => p.id === id);
+            if (!project || !project.files) return;
+            
+            const fileNames = {
+                'models': 'SolidWorks Models',
+                'zip': 'ZIP Archive',
+                'images': 'Preview Images',
+                'readme': 'README.md',
+                'docs': 'Technical Documentation'
+            };
+            
+            if (confirm(`🗑️ Delete ${fileNames[fileType]}?\n\n⚠️ This will remove from JSON only.\nYou must manually delete files from GitHub folder.`)) {
+                // Delete from project object
+                if (fileType === 'models') {
+                    project.files.cad = [];
+                } else if (fileType === 'zip') {
+                    project.files.zip = '';
+                } else if (fileType === 'images') {
+                    project.files.images = [];
+                } else if (fileType === 'readme') {
+                    project.files.readme = '';
+                } else if (fileType === 'docs') {
+                    project.files.documentation = [];
+                }
+                
+                // Update display
+                displayCurrentFiles(project);
+                
+                // Show success message
+                const tempAlert = document.createElement('div');
+                tempAlert.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(76, 175, 80, 0.95); color: white; padding: 15px 20px; border-radius: 8px; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                tempAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${fileNames[fileType]} marked for deletion!`;
+                document.body.appendChild(tempAlert);
+                setTimeout(() => tempAlert.remove(), 3000);
+            }
         }
 
         // Update feature count in edit modal
@@ -2102,10 +2421,7 @@
             const count = document.querySelectorAll('#editFeaturesContainer input:checked').length;
             const counter = document.getElementById('editFeatureCount');
             if (counter) {
-                counter.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    <span>${count} feature${count !== 1 ? 's' : ''} selected</span>
-                `;
+                counter.textContent = `${count} feature${count !== 1 ? 's' : ''} selected`;
             }
         }
 
@@ -2114,10 +2430,7 @@
             const count = document.querySelectorAll('#editMaterialsContainer input:checked').length;
             const counter = document.getElementById('editMaterialCount');
             if (counter) {
-                counter.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    <span>${count} material${count !== 1 ? 's' : ''} selected</span>
-                `;
+                counter.textContent = `${count} material${count !== 1 ? 's' : ''} selected`;
             }
         }
 
@@ -2132,12 +2445,20 @@
             const project = projectsData.projects.find(p => p.id === id);
             if (!project) return;
 
+            // Get updated values
+            const newTitle = sanitizeInput(document.getElementById('editTitle').value.trim());
+            
+            // Check duplicate (excluding current project)
+            if (!checkDuplicate(newTitle, id)) {
+                return;
+            }
+
             // Update project data
-            project.title = document.getElementById('editTitle').value.trim();
-            project.subtitle = document.getElementById('editSubtitle').value.trim();
+            project.title = newTitle;
+            project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
             project.category = document.getElementById('editCategory').value;
             project.difficulty = document.getElementById('editDifficulty').value;
-            project.description = document.getElementById('editDescription').value.trim();
+            project.description = sanitizeInput(document.getElementById('editDescription').value.trim());
             project.partsCount = document.getElementById('editPartsCount').value ? parseInt(document.getElementById('editPartsCount').value) : null;
             project.weight = document.getElementById('editWeight').value ? parseFloat(document.getElementById('editWeight').value) : null;
             
@@ -2153,8 +2474,66 @@
                 project.materials.push(cb.value);
             });
             
-            // Update folder name
-            project.folder = `${String(project.id).padStart(2, '0')} ${project.title}`;
+            // Handle file replacements
+            const replacedFiles = [];
+            const modelFiles = document.getElementById('replaceModelFiles')?.files;
+            const zipFile = document.getElementById('replaceZipFile')?.files[0];
+            const imageFiles = document.getElementById('replaceImageFiles')?.files;
+            const readmeFile = document.getElementById('replaceReadmeFile')?.files[0];
+            const docFiles = document.getElementById('replaceDocFiles')?.files;
+            
+            if (!project.files) project.files = {};
+            
+            if (modelFiles && modelFiles.length > 0) {
+                const validModels = Array.from(modelFiles).filter(f => validateFileSize(f));
+                if (validModels.length > 0) {
+                    if (!project.files.cad) project.files.cad = [];
+                    project.files.cad = validModels.map(f => f.name);
+                    replacedFiles.push(`CAD Files: ${validModels.length} file(s)`);
+                }
+            }
+            
+            if (zipFile) {
+                if (validateFileSize(zipFile)) {
+                    project.files.zip = zipFile.name;
+                    replacedFiles.push(`ZIP Archive: ${zipFile.name}`);
+                }
+            }
+            
+            if (imageFiles && imageFiles.length > 0) {
+                const validImages = Array.from(imageFiles).filter(f => validateFileSize(f));
+                if (validImages.length > 0) {
+                    if (!project.files.images) project.files.images = [];
+                    project.files.images = validImages.map(f => f.name);
+                    replacedFiles.push(`Images: ${validImages.length} file(s)`);
+                }
+            }
+            
+            if (readmeFile) {
+                if (validateFileSize(readmeFile)) {
+                    project.files.readme = readmeFile.name;
+                    replacedFiles.push(`README: ${readmeFile.name}`);
+                }
+            }
+            
+            if (docFiles && docFiles.length > 0) {
+                const validDocs = Array.from(docFiles).filter(f => validateFileSize(f));
+                if (validDocs.length > 0) {
+                    if (!project.files.documentation) project.files.documentation = [];
+                    project.files.documentation = validDocs.map(f => f.name);
+                    replacedFiles.push(`Documentation: ${validDocs.length} file(s)`);
+                }
+            }
+            
+            // Auto-rename folder with proper numbering
+            const projectIndex = projectsData.projects.findIndex(p => p.id === id);
+            project.folder = generateFolderName(projectIndex + 1, project.title);
+            
+            // Update timestamps
+            project.lastModified = new Date().toISOString();
+            
+            // Save to cache
+            saveToCache(projectsData);
             
             // Update UI
             updateStats();
@@ -2172,8 +2551,12 @@
             if (project.partsCount) details.push(`🧩 Parts: ${project.partsCount}`);
             if (project.weight) details.push(`⚖️ Weight: ${project.weight}kg`);
             
+            const filesInfo = replacedFiles.length > 0 
+                ? `\n\n📁 Replaced Files:\n${replacedFiles.map(f => `  • ${f}`).join('\n')}` 
+                : '';
+            
             const detailsText = details.length > 0 ? '\n\n' + details.join('\n') : '';
-            alert(`✅ Project updated successfully!${detailsText}`);
+            alert(`✅ Project updated successfully!\n\n📁 Folder: "${project.folder}"${detailsText}${filesInfo}\n\n⚠️ Remember to download JSON and upload new files to GitHub.`);
         }
 
         // Delete project
@@ -2457,7 +2840,10 @@ This part is designed for [specific application] in [industry/system].`
     <div id="editModal" class="edit-modal">
         <div class="edit-modal-content">
             <div class="edit-modal-header">
-                <h2><i class="fas fa-edit"></i> Edit SolidWorks Project</h2>
+                <h2>
+                    <i class="fas fa-edit"></i>
+                    Edit SolidWorks Project
+                </h2>
                 <button class="modal-close-btn" onclick="closeEditModal()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -2467,91 +2853,220 @@ This part is designed for [specific application] in [industry/system].`
                 <input type="hidden" id="editProjectId">
 
                 <div class="edit-form-group">
-                    <label><i class="fas fa-tag"></i> Project Title</label>
-                    <input type="text" id="editTitle" required>
+                    <label>
+                        <i class="fas fa-heading"></i>
+                        Project Title *
+                    </label>
+                    <input type="text" id="editTitle" class="form-input" required>
                 </div>
 
                 <div class="edit-form-group">
-                    <label><i class="fas fa-align-left"></i> Subtitle</label>
-                    <input type="text" id="editSubtitle">
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Subtitle
+                    </label>
+                    <input type="text" id="editSubtitle" class="form-input">
+                </div>
+
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="edit-form-group">
+                        <label>
+                            <i class="fas fa-folder"></i>
+                            Category *
+                        </label>
+                        <select id="editCategory" class="form-input" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="parts">🔩 Parts Design</option>
+                            <option value="assemblies">🏭️ Assemblies</option>
+                            <option value="mechanical">⚙️ Mechanical Systems</option>
+                            <option value="industrial">🏭 Industrial Design</option>
+                        </select>
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label>
+                            <i class="fas fa-signal"></i>
+                            Difficulty Level
+                        </label>
+                        <select id="editDifficulty" class="form-input">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Professional">Professional</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="edit-form-group">
-                    <label><i class="fas fa-folder"></i> Category</label>
-                    <select id="editCategory" required>
-                        <option value="parts">🔩 Parts Design</option>
-                        <option value="assemblies">🏭️ Assemblies</option>
-                        <option value="mechanical">⚙️ Mechanical Systems</option>
-                        <option value="industrial">🏭 Industrial Design</option>
-                    </select>
-                </div>
-
-                <div class="edit-form-group">
-                    <label><i class="fas fa-signal"></i> Difficulty Level</label>
-                    <select id="editDifficulty" required>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Professional">Professional</option>
-                        <option value="Commercial">Commercial</option>
-                    </select>
-                </div>
-
-                <div class="edit-form-group">
-                    <label><i class="fas fa-comment"></i> Description</label>
-                    <textarea id="editDescription" rows="4"></textarea>
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Description
+                    </label>
+                    <textarea id="editDescription" class="form-input" rows="4"></textarea>
                 </div>
 
                 <!-- Features Selection -->
-                <div class="edit-features-section">
-                    <h3>
-                        <i class="fas fa-tools"></i> 
+                <div class="edit-form-group">
+                    <label>
+                        <i class="fas fa-tools"></i>
                         SolidWorks Features Used
-                        <span id="editFeatureCount" class="edit-counter">
-                            <i class="fas fa-check-circle"></i>
-                            <span>0 features selected</span>
-                        </span>
-                    </h3>
-                    <div class="edit-features-grid" id="editFeaturesContainer">
+                    </label>
+                    <div id="editFeaturesContainer" style="max-height: 200px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
                         <!-- Features will be populated by JavaScript -->
                     </div>
+                    <small style="color: #FF4500; margin-top: 10px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="editFeatureCount">0 features selected</span>
+                    </small>
                 </div>
 
                 <!-- Materials Selection -->
-                <div class="edit-materials-section">
-                    <h3>
-                        <i class="fas fa-layer-group"></i> 
+                <div class="edit-form-group">
+                    <label>
+                        <i class="fas fa-layer-group"></i>
                         Materials Used
-                        <span id="editMaterialCount" class="edit-counter">
-                            <i class="fas fa-check-circle"></i>
-                            <span>0 materials selected</span>
-                        </span>
-                    </h3>
-                    <div class="edit-materials-grid" id="editMaterialsContainer">
+                    </label>
+                    <div id="editMaterialsContainer" style="max-height: 150px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
                         <!-- Materials will be populated by JavaScript -->
                     </div>
+                    <small style="color: #FF4500; margin-top: 10px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="editMaterialCount">0 materials selected</span>
+                    </small>
                 </div>
 
                 <!-- Assembly Information -->
-                <div class="edit-assembly-section">
-                    <h3><i class="fas fa-cubes"></i> Assembly Information</h3>
-                    <div class="edit-assembly-fields">
-                        <div class="edit-form-group">
-                            <label><i class="fas fa-puzzle-piece"></i> Parts Count</label>
-                            <input type="number" id="editPartsCount" min="1" placeholder="e.g., 15">
-                        </div>
-                        <div class="edit-form-group">
-                            <label><i class="fas fa-weight-hanging"></i> Weight (kg)</label>
-                            <input type="number" id="editWeight" step="0.01" min="0" placeholder="e.g., 2.5">
-                        </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="edit-form-group">
+                        <label>
+                            <i class="fas fa-puzzle-piece"></i>
+                            Parts Count
+                        </label>
+                        <input type="number" id="editPartsCount" class="form-input" min="1" placeholder="e.g., 15">
+                    </div>
+                    <div class="edit-form-group">
+                        <label>
+                            <i class="fas fa-weight-hanging"></i>
+                            Weight (kg)
+                        </label>
+                        <input type="number" id="editWeight" class="form-input" step="0.01" min="0" placeholder="e.g., 2.5">
                     </div>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn modal-btn-cancel" onclick="closeEditModal()">
-                        <i class="fas fa-times"></i> Cancel
+                <!-- File Replacement Section -->
+                <div class="file-replacement-section">
+                    <h4>
+                        <i class="fas fa-file-upload"></i>
+                        Manage Project Files
+                    </h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">
+                        🗑️ Delete existing files or 📤 Upload new versions to replace them.
+                    </p>
+                    
+                    <div class="file-replace-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-cube"></i>
+                                SolidWorks Models (.sldprt, .sldasm, .slddrw)
+                            </label>
+                            <div id="currentModelFiles" style="color: #FF4500; font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current files will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('models')" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceModelFiles" accept=".sldprt,.sldasm,.slddrw,.step,.iges" multiple onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-file-archive"></i>
+                                ZIP Archive (Complete Project Package)
+                            </label>
+                            <div id="currentZipFile" style="color: #FF4500; font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current file will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('zip')" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceZipFile" accept=".zip,.rar" onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-images"></i>
+                                Preview Images/Renders
+                            </label>
+                            <div id="currentImageFiles" style="color: #FF4500; font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current files will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('images')" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceImageFiles" accept="image/*" multiple onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-file-alt"></i>
+                                README.md
+                            </label>
+                            <div id="currentReadmeFile" style="color: #FF4500; font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current file will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('readme')" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceReadmeFile" accept=".md,.txt" onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="file-replace-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>
+                                <i class="fas fa-file-pdf"></i>
+                                Technical Documentation
+                            </label>
+                            <div id="currentDocFiles" style="color: #FF4500; font-size: 0.85rem; margin-top: 5px;">
+                                <!-- Current files will be shown here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn" onclick="deleteProjectFile('docs')" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336; padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <input type="file" id="replaceDocFiles" accept=".pdf,.doc,.docx,.md,.txt" multiple onchange="validateReplaceFile(this)" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <small style="color: #FFC107; display: block; margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> Delete will remove files from JSON. You must manually delete from GitHub folder. Replace will update JSON immediately.
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-check"></i>
+                        Save Changes
                     </button>
-                    <button type="submit" class="modal-btn modal-btn-save">
-                        <i class="fas fa-save"></i> Save Changes
+                    <button type="button" class="btn" onclick="closeEditModal()" style="background: rgba(244, 67, 54, 0.2); border: 1px solid #F44336; color: #F44336;">
+                        <i class="fas fa-times"></i>
+                        Cancel
                     </button>
                 </div>
             </form>
