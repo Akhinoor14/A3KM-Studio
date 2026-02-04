@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Books Manager - A3KM Studio</title>
+  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
+  <script src="../../../Optimization/mobile-universal.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
+    .container { display: flex; min-height: 100vh; background: white; }
+    .sidebar { width: 280px; background: linear-gradient(180deg, #2c1810 0%, #3d2415 100%); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 4px solid #8B4513; }
+    .sidebar-header { background: linear-gradient(135deg, #8B4513, #A0522D); padding: 30px 20px; color: white; }
+    .sidebar-header h1 { font-size: 22px; margin-bottom: 5px; }
+    .sidebar-header p { font-size: 12px; opacity: 0.9; }
+    .sidebar-nav { padding: 20px 0; }
+    .tab-item { display: flex; align-items: center; gap: 12px; padding: 15px 25px; color: #ccc; cursor: pointer; transition: all 0.3s; border-left: 4px solid transparent; font-weight: 600; font-size: 14px; }
+    .tab-item:hover { background: rgba(139, 69, 19, 0.1); color: white; }
+    .tab-item.active { background: rgba(139, 69, 19, 0.2); color: white; border-left-color: #8B4513; }
+    .quick-stats { padding: 20px; background: rgba(139, 69, 19, 0.1); margin: 20px; border-radius: 10px; }
+    .quick-stats h3 { color: #ccc; font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+    .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; color: #fff; }
+    .stat-value { font-weight: 700; color: #D2691E; font-size: 18px; }
+    .main-content { flex: 1; background: #f8f9fa; padding: 40px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 25px 30px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .back-btn { background: rgba(139, 69, 19, 0.1); border: 2px solid #8B4513; padding: 10px 20px; border-radius: 10px; color: #8B4513; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .back-btn:hover { background: #8B4513; color: white; }
+    h1 { color: #8B4513; font-size: 32px; margin-bottom: 10px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #8B4513; }
+    textarea { resize: vertical; min-height: 100px; }
+    .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B4513, #A0522D); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+    .btn-primary:hover { opacity: 0.9; }
+    .bulk-actions { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; padding: 15px; background: white; border-radius: 10px; }
+    .bulk-actions button { padding: 10px 20px; border: 2px solid #8B4513; background: white; color: #8B4513; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .bulk-actions button:hover { background: #8B4513; color: white; }
+    .bulk-actions .selected-count { color: #8B4513; font-weight: 700; margin-left: auto; }
+    .content-card { position: relative; border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; transition: all 0.3s; background: white; }
+    .content-card:hover { border-color: #8B4513; box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2); }
+    .content-card input[type="checkbox"] { position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; cursor: pointer; z-index: 10; }
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .card-thumbnail { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, #8B4513, #A0522D); }
+    .card-body { padding: 15px; }
+    .card-title { font-weight: 600; color: #333; margin-bottom: 8px; font-size: 16px; }
+    .card-meta { font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.6; }
+    .card-actions { display: flex; gap: 8px; }
+    .card-actions button { flex: 1; padding: 8px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .card-actions button:hover { background: #8B4513; color: white; border-color: #8B4513; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; }
+    .pagination button { padding: 10px 20px; border: 2px solid #8B4513; background: white; color: #8B4513; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .pagination button:hover:not(:disabled) { background: #8B4513; color: white; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
+    .pagination .page-info { color: #666; font-weight: 600; }
+    .book-badge { display: inline-block; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 5px; }
+    .badge-pages { background: #2196f3; color: white; }
+    .badge-size { background: #ff9800; color: white; }
+    .badge-downloads { background: #4caf50; color: white; }
+    .badge-format { background: #9c27b0; color: white; }
+    .badge-pdf { background: #e74c3c; color: white; }
+    .badge-epub { background: #3498db; color: white; }
+    .badge-mobi { background: #f39c12; color: white; }
+    .badge-en { background: #4caf50; color: white; }
+    .badge-bn { background: #ff5722; color: white; }
+    .badge-hi { background: #ff9800; color: white; }
+    .badge-mixed { background: linear-gradient(90deg, #ff5722, #4caf50); color: white; }
+    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-group select, .filter-group input { padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; flex: 1; min-width: 200px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; overflow-y: auto; }
+    .modal.active { display: block; }
+    .modal-content { max-width: 900px; margin: 40px auto; background: white; border-radius: 20px; padding: 40px; position: relative; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #f44336; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+    .modal-close:hover { background: #d32f2f; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: linear-gradient(135deg, #8B4513, #A0522D); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
+    .stat-card p { font-size: 14px; opacity: 0.9; }
+    .progress { margin-top: 20px; display: none; }
+    .progress.active { display: block; }
+    .progress-bar { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #8B4513, #A0522D); width: 0%; transition: width 0.3s; }
+    .progress-text { text-align: center; color: #8B4513; font-size: 14px; font-weight: 600; }
+    .file-upload-preview { margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 10px; display: none; }
+    .file-upload-preview.active { display: block; }
+    .file-upload-preview img { max-width: 200px; height: auto; border-radius: 8px; margin-top: 10px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: relative; }
+      .form-grid { grid-template-columns: 1fr; }
+      .filter-group { flex-direction: column; }
+      .content-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h1>📚 Books Manager</h1>
+        <p>Digital Library Management</p>
+      </div>
+      <div class="sidebar-nav">
+        <div class="tab-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+        <div class="tab-item" onclick="switchTab('upload')">📤 Upload Book</div>
+        <div class="tab-item" onclick="switchTab('manage')">📋 Manage Books</div>
+        <div class="tab-item" onclick="switchTab('stats')">📈 Statistics</div>
+      </div>
+      <div class="quick-stats">
+        <h3>Quick Stats</h3>
+        <div class="stat-item">
+          <span>Total Books</span>
+          <span class="stat-value" id="quickTotalBooks">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Total Pages</span>
+          <span class="stat-value" id="quickTotalPages">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Total Downloads</span>
+          <span class="stat-value" id="quickTotalDownloads">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Library Size</span>
+          <span class="stat-value" id="quickLibrarySize">0 MB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <div>
+          <h1>Books Manager</h1>
+          <p style="color: #666;">Manage your digital library and book resources</p>
+        </div>
+        <a href="content-hub.html" class="back-btn">← Back to Hub</a>
+      </div>
+
+      <!-- DASHBOARD TAB -->
+      <div id="dashboardTab" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3 id="dashTotalBooks">0</h3>
+            <p>Total Books</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="dashTotalPages">0</h3>
+            <p>Total Pages</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="dashTotalDownloads">0</h3>
+            <p>Total Downloads</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="dashLibrarySize">0 MB</h3>
+            <p>Library Size</p>
+          </div>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 15px;">
+          <h2 style="color: #8B4513; margin-bottom: 20px;">📖 Quick Guide</h2>
+          <ul style="line-height: 2; color: #666;">
+            <li><strong>Upload Book:</strong> Add new books with PDF/EPUB/MOBI files</li>
+            <li><strong>Manage Books:</strong> Edit, delete, or update existing books</li>
+            <li><strong>Bulk Operations:</strong> Select multiple books for bulk delete</li>
+            <li><strong>Advanced Filters:</strong> Filter by format, language, or sort by various criteria</li>
+            <li><strong>Track Downloads:</strong> Monitor book download statistics</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- UPLOAD TAB -->
+      <div id="uploadTab" class="tab-content">
+        <form id="uploadForm">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="category" required>
+              <option value="">Loading categories...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Book Title</label>
+            <input type="text" id="title" placeholder="Enter book title..." required>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>👤 Author</label>
+              <input type="text" id="author" placeholder="Author name..." value="Md Akhinoor Islam" required>
+            </div>
+
+            <div class="form-group">
+              <label>📄 Number of Pages</label>
+              <input type="number" id="pages" placeholder="320" min="1">
+            </div>
+
+            <div class="form-group">
+              <label>📦 Format</label>
+              <select id="format" required>
+                <option value="PDF">PDF</option>
+                <option value="EPUB">EPUB</option>
+                <option value="MOBI">MOBI</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>🌐 Language</label>
+              <select id="language" required>
+                <option value="en">🇬🇧 English</option>
+                <option value="bn" selected>🇧🇩 Bengali (বাংলা)</option>
+                <option value="bn-en">🇧🇩🇬🇧 Bengali-English Mix</option>
+                <option value="hi">🇮🇳 Hindi (हिन्दी)</option>
+                <option value="ar">🇸🇦 Arabic (العربية)</option>
+                <option value="ur">🇵🇰 Urdu (اردو)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>📝 Summary/Description</label>
+            <textarea id="summary" placeholder="Book summary and description..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>🏷️ Tags (comma-separated)</label>
+            <input type="text" id="tags" placeholder="programming, python, tutorial, beginner">
+          </div>
+
+          <div class="form-group">
+            <label>📚 Book File (PDF/EPUB/MOBI)</label>
+            <input type="file" id="bookFile" accept=".pdf,.epub,.mobi" required>
+          </div>
+
+          <div class="form-group">
+            <label>🖼️ Cover Image (Optional)</label>
+            <input type="file" id="coverImage" accept="image/*">
+            <div class="file-upload-preview" id="coverPreview">
+              <strong>Cover Preview:</strong>
+              <img id="coverPreviewImg" alt="Cover Preview">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">📤 Upload Book</button>
+
+          <div class="progress" id="progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Processing...</div>
+          </div>
+        </form>
+      </div>
+
+      <!-- MANAGE TAB -->
+      <div id="manageTab" class="tab-content">
+        <div class="bulk-actions">
+          <button onclick="selectAll()">✅ Select All</button>
+          <button onclick="deselectAll()">❌ Deselect All</button>
+          <button onclick="bulkDelete()" style="background: #f44336; color: white; border-color: #f44336;">🗑️ Delete Selected</button>
+          <span class="selected-count">Selected: <span id="selectedCount">0</span></span>
+        </div>
+
+        <div class="filter-group">
+          <input type="text" id="searchInput" placeholder="🔍 Search books..." onkeyup="filterContent()">
+          <select id="filterFormat" onchange="filterContent()">
+            <option value="">All Formats</option>
+            <option value="PDF">📕 PDF</option>
+            <option value="EPUB">📗 EPUB</option>
+            <option value="MOBI">📘 MOBI</option>
+          </select>
+          <select id="filterLanguage" onchange="filterContent()">
+            <option value="">All Languages</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="bn">🇧🇩 Bengali</option>
+            <option value="bn-en">🇧🇩🇬🇧 Mixed</option>
+            <option value="hi">🇮🇳 Hindi</option>
+            <option value="ar">🇸🇦 Arabic</option>
+            <option value="ur">🇵🇰 Urdu</option>
+          </select>
+          <select id="sortBy" onchange="filterContent()">
+            <option value="date">Newest First</option>
+            <option value="title">Title A-Z</option>
+            <option value="pages">Most Pages</option>
+            <option value="downloads">Most Downloaded</option>
+            <option value="author">By Author</option>
+          </select>
+        </div>
+
+        <div class="content-grid" id="contentGrid">
+          <p style="text-align: center; padding: 40px; color: #999;">Loading books...</p>
+        </div>
+
+        <div class="pagination">
+          <button id="prevPage" onclick="changePage(-1)">← Previous</button>
+          <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+          <button id="nextPage" onclick="changePage(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- STATISTICS TAB -->
+      <div id="statsTab" class="tab-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3 id="totalBooks">0</h3>
+            <p>Total Books</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="totalCategories">0</h3>
+            <p>Categories</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="avgPages">0</h3>
+            <p>Avg Pages/Book</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="totalLibrarySize">0 MB</h3>
+            <p>Total Library Size</p>
+          </div>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 15px; margin-bottom: 20px;">
+          <h2 style="color: #8B4513; margin-bottom: 20px;">📊 Books by Format</h2>
+          <div id="formatBreakdown" style="line-height: 2; color: #666;"></div>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 15px;">
+          <h2 style="color: #8B4513; margin-bottom: 20px;">🌍 Books by Language</h2>
+          <div id="languageBreakdown" style="line-height: 2; color: #666;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+      <h2 style="color: #8B4513; margin-bottom: 20px;">✏️ Edit Book</h2>
+      <form id="editForm">
+        <input type="hidden" id="editBookId">
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="editCategory" required></select>
+        </div>
+
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="editTitle" required>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Author</label>
+            <input type="text" id="editAuthor" required>
+          </div>
+
+          <div class="form-group">
+            <label>Pages</label>
+            <input type="number" id="editPages" min="1">
+          </div>
+
+          <div class="form-group">
+            <label>File Size</label>
+            <input type="text" id="editSize" placeholder="5.2 MB">
+          </div>
+
+          <div class="form-group">
+            <label>Format</label>
+            <select id="editFormat" required>
+              <option value="PDF">PDF</option>
+              <option value="EPUB">EPUB</option>
+              <option value="MOBI">MOBI</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Language</label>
+            <select id="editLanguage" required>
+              <option value="en">🇬🇧 English</option>
+              <option value="bn">🇧🇩 Bengali</option>
+              <option value="bn-en">🇧🇩🇬🇧 Mixed</option>
+              <option value="hi">🇮🇳 Hindi</option>
+              <option value="ar">🇸🇦 Arabic</option>
+              <option value="ur">🇵🇰 Urdu</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Downloads</label>
+            <input type="number" id="editDownloads" min="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Summary</label>
+          <textarea id="editSummary" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Tags</label>
+          <input type="text" id="editTags" placeholder="programming, python, tutorial">
+        </div>
+
+        <button type="submit" class="btn-primary">💾 Update Book</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="svg-generator.js"></script>
+  <script src="github-content-uploader.js"></script>
+  <script src="content-manager.js"></script>
+  <script src="thumbnail-handler.js"></script>
+  <script>
+    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    const CONTENT_TYPE = 'books-pdfs';
+    
+    const svgGenerator = new SVGCoverGenerator();
+    const thumbnailHandler = new ThumbnailHandler();
+    const githubUploader = new GitHubContentUploader({
+      token: GITHUB_TOKEN,
+      owner: 'Akhinoor14',
+      repo: 'A3KM-Studio',
+      onProgress: (data) => updateProgressUI(data),
+      onError: (error) => showError(error.error)
+    });
+    
+    const contentManager = new ContentManager(githubUploader);
+    let currentContent = [];
+    let filteredContent = [];
+    let selectedBooks = new Set();
+    let currentPage = 1;
+    const ITEMS_PER_PAGE = 12;
+
+    // Tab switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName + 'Tab').classList.add('active');
+      event.target.classList.add('active');
+      
+      if (tabName === 'manage') { loadManageContent(); resetPagination(); }
+      if (tabName === 'stats') loadStatistics();
+      if (tabName === 'dashboard') loadDashboard();
+    }
+
+    function resetPagination() {
+      currentPage = 1;
+      selectedBooks.clear();
+      updateSelectedCount();
+    }
+
+    // Load categories
+    async function loadCategories() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const categorySelect = document.getElementById('category');
+        const editCategorySelect = document.getElementById('editCategory');
+        
+        categorySelect.innerHTML = '<option value="">Select category...</option>';
+        editCategorySelect.innerHTML = '<option value="">Select category...</option>';
+        
+        if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
+          data.categoryGroups.forEach(group => {
+            if (group.categories) {
+              group.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option.cloneNode(true));
+                editCategorySelect.appendChild(option);
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    }
+
+    // Cover preview
+    document.getElementById('coverImage').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('coverPreviewImg').src = e.target.result;
+          document.getElementById('coverPreview').classList.add('active');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Form submission
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (GITHUB_TOKEN === 'YOUR_GITHUB_TOKEN_HERE' || !GITHUB_TOKEN) {
+        alert('❌ Please set your GitHub token first!');
+        return;
+      }
+      
+      const progress = document.getElementById('progress');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      progress.classList.add('active');
+      
+      try {
+        const category = document.getElementById('category').value;
+        const title = document.getElementById('title').value;
+        const author = document.getElementById('author').value;
+        const summary = document.getElementById('summary').value;
+        const pages = document.getElementById('pages').value;
+        const format = document.getElementById('format').value;
+        const language = document.getElementById('language').value;
+        const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
+        const bookFile = document.getElementById('bookFile').files[0];
+        const coverFile = document.getElementById('coverImage').files[0];
+        
+        if (!bookFile) {
+          alert('⚠️ Please select a book file!');
+          progress.classList.remove('active');
+          return;
+        }
+        
+        progressText.textContent = 'Checking for duplicates...';
+        progressFill.style.width = '10%';
+        const duplicateCheck = await contentManager.checkDuplicates(CONTENT_TYPE, title, category);
+        if (duplicateCheck.isDuplicate) {
+          const confirm = window.confirm(`⚠️ A book with title "${title}" already exists. Upload anyway?`);
+          if (!confirm) {
+            progress.classList.remove('active');
+            return;
+          }
+        }
+        
+        progressText.textContent = 'Generating cover...';
+        progressFill.style.width = '20%';
+        const coverSVG = await svgGenerator.generateCover(category, 0);
+        
+        progressText.textContent = 'Uploading to GitHub...';
+        progressFill.style.width = '40%';
+        
+        const contentId = `book-${Date.now()}`;
+        const fileSizeBytes = bookFile.size;
+        const fileSizeMB = (fileSizeBytes / (1024 * 1024)).toFixed(2);
+        
+        const uploadResult = await githubUploader.uploadCompleteContent({
+          contentType: CONTENT_TYPE,
+          category: category,
+          contentId: contentId,
+          title: title,
+          description: summary,
+          tags: tags,
+          author: author,
+          contentFile: bookFile,
+          thumbnailFile: coverFile,
+          coverSVG: coverSVG,
+          metadata: {
+            pages: pages ? parseInt(pages) : null,
+            size: `${fileSizeMB} MB`,
+            format: format,
+            language: language,
+            downloads: 0
+          }
+        });
+        
+        progressFill.style.width = '100%';
+        progressText.textContent = '✅ Complete!';
+        
+        contentManager.createBackup(CONTENT_TYPE, uploadResult);
+        contentManager.addToHistory({
+          action: 'upload',
+          contentType: CONTENT_TYPE,
+          contentId: contentId,
+          title: title,
+          timestamp: new Date().toISOString()
+        });
+        
+        alert('✅ Book uploaded successfully!');
+        this.reset();
+        document.getElementById('coverPreview').classList.remove('active');
+        progress.classList.remove('active');
+        
+      } catch (error) {
+        console.error('Upload failed:', error);
+        progress.classList.remove('active');
+        alert(`❌ Upload failed: ${error.message}`);
+      }
+    });
+
+    // Load manage content
+    async function loadManageContent() {
+      const grid = document.getElementById('contentGrid');
+      grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">Loading...</p>';
+      
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        currentContent = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        filterContent();
+      } catch (error) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load books</p>';
+      }
+    }
+
+    // Filter content
+    function filterContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const sortBy = document.getElementById('sortBy').value;
+      const format = document.getElementById('filterFormat').value;
+      const language = document.getElementById('filterLanguage').value;
+      
+      let filtered = currentContent.filter(item => {
+        const matchSearch = !query || 
+          item.title.toLowerCase().includes(query) ||
+          (item.summary || '').toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query) ||
+          (item.author || '').toLowerCase().includes(query) ||
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query)));
+        
+        const matchFormat = !format || item.format === format;
+        const matchLanguage = !language || item.language === language;
+        
+        return matchSearch && matchFormat && matchLanguage;
+      });
+      
+      filtered.sort((a, b) => {
+        if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === 'pages') return (b.pages || 0) - (a.pages || 0);
+        if (sortBy === 'downloads') return (b.downloads || 0) - (a.downloads || 0);
+        if (sortBy === 'author') return (a.author || '').localeCompare(b.author || '');
+        return 0;
+      });
+      
+      currentPage = 1;
+      renderContent(filtered);
+    }
+
+    // Render content
+    function renderContent(items) {
+      const grid = document.getElementById('contentGrid');
+      filteredContent = items;
+      
+      if (items.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No books found</p>';
+        updatePaginationControls(0);
+        return;
+      }
+      
+      const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+      const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIdx = startIdx + ITEMS_PER_PAGE;
+      const pageItems = items.slice(startIdx, endIdx);
+      
+      grid.innerHTML = '';
+      pageItems.forEach(item => {
+        const isSelected = selectedBooks.has(item.id);
+        const card = document.createElement('div');
+        card.className = 'content-card';
+        
+        const formatClass = item.format === 'PDF' ? 'badge-pdf' : 
+                           item.format === 'EPUB' ? 'badge-epub' : 
+                           item.format === 'MOBI' ? 'badge-mobi' : 'badge-format';
+        
+        const languageMap = {
+          'en': '🇬🇧 EN',
+          'bn': '🇧🇩 BN',
+          'bn-en': '🇧🇩🇬🇧 Mix',
+          'hi': '🇮🇳 HI',
+          'ar': '🇸🇦 AR',
+          'ur': '🇵🇰 UR'
+        };
+        
+        const badges = [];
+        if (item.pages) badges.push(`<span class="book-badge badge-pages">📄 ${item.pages} pages</span>`);
+        if (item.size) badges.push(`<span class="book-badge badge-size">💾 ${item.size}</span>`);
+        if (item.format) badges.push(`<span class="book-badge ${formatClass}">${item.format}</span>`);
+        if (item.downloads > 0) badges.push(`<span class="book-badge badge-downloads">📥 ${item.downloads}</span>`);
+        if (item.language) badges.push(`<span class="book-badge badge-en">${languageMap[item.language] || item.language}</span>`);
+        
+        card.innerHTML = `
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
+          <img src="${item.cover || item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B4513, #A0522D)'">
+          <div class="card-body">
+            <div style="margin-bottom: 8px;">${badges.join(' ')}</div>
+            <div class="card-title">${item.title}</div>
+            <div class="card-meta">
+              📁 ${item.category}<br>
+              👤 ${item.author || 'Unknown Author'}<br>
+              🗓️ ${contentManager.formatDate(item.date)}
+            </div>
+            <div class="card-actions">
+              <button onclick="editBook('${item.id}')">✏️ Edit</button>
+              <button onclick="deleteBook('${item.id}')" style="color: #f44336;">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      
+      updatePaginationControls(totalPages);
+    }
+
+    function updatePaginationControls(totalPages) {
+      document.getElementById('currentPage').textContent = currentPage;
+      document.getElementById('totalPages').textContent = totalPages;
+      document.getElementById('prevPage').disabled = currentPage === 1;
+      document.getElementById('nextPage').disabled = currentPage >= totalPages || totalPages === 0;
+    }
+
+    function changePage(delta) {
+      const totalPages = Math.ceil(filteredContent.length / ITEMS_PER_PAGE);
+      const newPage = currentPage + delta;
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderContent(filteredContent);
+      }
+    }
+
+    // Selection functions
+    function toggleSelect(id) {
+      if (selectedBooks.has(id)) {
+        selectedBooks.delete(id);
+      } else {
+        selectedBooks.add(id);
+      }
+      updateSelectedCount();
+    }
+
+    function selectAll() {
+      const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIdx = startIdx + ITEMS_PER_PAGE;
+      const pageItems = filteredContent.slice(startIdx, endIdx);
+      pageItems.forEach(item => selectedBooks.add(item.id));
+      updateSelectedCount();
+      renderContent(filteredContent);
+    }
+
+    function deselectAll() {
+      selectedBooks.clear();
+      updateSelectedCount();
+      renderContent(filteredContent);
+    }
+
+    function updateSelectedCount() {
+      document.getElementById('selectedCount').textContent = selectedBooks.size;
+    }
+
+    // Bulk delete
+    async function bulkDelete() {
+      if (selectedBooks.size === 0) {
+        alert('⚠️ No books selected!');
+        return;
+      }
+      
+      const confirmed = confirm(`⚠️ Delete ${selectedBooks.size} book(s)?\n\nThis action cannot be undone!`);
+      if (!confirmed) return;
+      
+      const progress = document.getElementById('progress');
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      
+      progress.classList.add('active');
+      progressText.textContent = `Deleting 0/${selectedBooks.size}...`;
+      
+      let deleted = 0;
+      const booksToDelete = Array.from(selectedBooks);
+      
+      for (const id of booksToDelete) {
+        try {
+          await contentManager.deleteContent(CONTENT_TYPE, id);
+          deleted++;
+          progressFill.style.width = `${(deleted / booksToDelete.length) * 100}%`;
+          progressText.textContent = `Deleting ${deleted}/${booksToDelete.length}...`;
+        } catch (err) {
+          console.error('Delete failed:', err);
+        }
+      }
+      
+      progress.classList.remove('active');
+      selectedBooks.clear();
+      updateSelectedCount();
+      alert(`✅ Deleted ${deleted} book(s)!`);
+      loadManageContent();
+    }
+
+    function deleteBook(id) {
+      const book = currentContent.find(b => b.id === id);
+      const title = book ? book.title : 'this book';
+      
+      if (confirm(`⚠️ Delete "${title}"?\n\nThis action cannot be undone!`)) {
+        contentManager.deleteContent(CONTENT_TYPE, id)
+          .then(() => { alert('✅ Book deleted successfully!'); loadManageContent(); })
+          .catch(err => alert('❌ Delete failed: ' + err.message));
+      }
+    }
+
+    // Edit book
+    function editBook(id) {
+      const book = currentContent.find(b => b.id === id);
+      if (!book) return;
+      
+      document.getElementById('editBookId').value = id;
+      document.getElementById('editTitle').value = book.title;
+      document.getElementById('editAuthor').value = book.author || '';
+      document.getElementById('editPages').value = book.pages || '';
+      document.getElementById('editSize').value = book.size || '';
+      document.getElementById('editFormat').value = book.format || 'PDF';
+      document.getElementById('editLanguage').value = book.language || 'en';
+      document.getElementById('editDownloads').value = book.downloads || 0;
+      document.getElementById('editSummary').value = book.summary || book.description || '';
+      document.getElementById('editTags').value = (book.tags || []).join(', ');
+      
+      loadCategories().then(() => {
+        document.getElementById('editCategory').value = book.category;
+      });
+      
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editBookId').value;
+      const originalBook = currentContent.find(b => b.id === id);
+      
+      const updatedBook = {
+        ...originalBook,
+        id: id,
+        category: document.getElementById('editCategory').value,
+        title: document.getElementById('editTitle').value,
+        author: document.getElementById('editAuthor').value,
+        pages: parseInt(document.getElementById('editPages').value) || null,
+        size: document.getElementById('editSize').value,
+        format: document.getElementById('editFormat').value,
+        language: document.getElementById('editLanguage').value,
+        downloads: parseInt(document.getElementById('editDownloads').value) || 0,
+        summary: document.getElementById('editSummary').value,
+        tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
+        date: originalBook.date || new Date().toISOString().split('T')[0]
+      };
+      
+      try {
+        await contentManager.updateContent(CONTENT_TYPE, id, updatedBook);
+        alert('✅ Book updated successfully!');
+        closeEditModal();
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Update failed: ' + error.message);
+      }
+    });
+
+    // Load dashboard
+    async function loadDashboard() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const books = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        
+        const totalPages = books.reduce((sum, b) => sum + (b.pages || 0), 0);
+        const totalDownloads = books.reduce((sum, b) => sum + (b.downloads || 0), 0);
+        
+        // Calculate total library size
+        let totalSizeMB = 0;
+        books.forEach(book => {
+          if (book.size) {
+            const sizeStr = book.size.toString().replace(/[^0-9.]/g, '');
+            totalSizeMB += parseFloat(sizeStr) || 0;
+          }
+        });
+        
+        document.getElementById('dashTotalBooks').textContent = books.length;
+        document.getElementById('dashTotalPages').textContent = totalPages.toLocaleString();
+        document.getElementById('dashTotalDownloads').textContent = totalDownloads;
+        document.getElementById('dashLibrarySize').textContent = totalSizeMB.toFixed(1) + ' MB';
+        
+        document.getElementById('quickTotalBooks').textContent = books.length;
+        document.getElementById('quickTotalPages').textContent = totalPages.toLocaleString();
+        document.getElementById('quickTotalDownloads').textContent = totalDownloads;
+        document.getElementById('quickLibrarySize').textContent = totalSizeMB.toFixed(1) + ' MB';
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+      }
+    }
+
+    // Load statistics
+    async function loadStatistics() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const books = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        
+        document.getElementById('totalBooks').textContent = books.length;
+        
+        const categories = new Set(books.map(b => b.category));
+        document.getElementById('totalCategories').textContent = categories.size;
+        
+        const avgPages = books.length > 0 ? Math.round(books.reduce((sum, b) => sum + (b.pages || 0), 0) / books.length) : 0;
+        document.getElementById('avgPages').textContent = avgPages;
+        
+        let totalSizeMB = 0;
+        books.forEach(book => {
+          if (book.size) {
+            const sizeStr = book.size.toString().replace(/[^0-9.]/g, '');
+            totalSizeMB += parseFloat(sizeStr) || 0;
+          }
+        });
+        document.getElementById('totalLibrarySize').textContent = totalSizeMB.toFixed(1) + ' MB';
+        
+        // Format breakdown
+        const formatCounts = {};
+        books.forEach(book => {
+          const format = book.format || 'Unknown';
+          formatCounts[format] = (formatCounts[format] || 0) + 1;
+        });
+        
+        const formatHtml = Object.entries(formatCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([format, count]) => {
+            const icon = format === 'PDF' ? '📕' : format === 'EPUB' ? '📗' : format === 'MOBI' ? '📘' : '📙';
+            return `<div style="margin-bottom: 10px;"><strong>${icon} ${format}:</strong> ${count} books (${((count/books.length)*100).toFixed(1)}%)</div>`;
+          })
+          .join('');
+        document.getElementById('formatBreakdown').innerHTML = formatHtml || '<p style="color: #999;">No data available</p>';
+        
+        // Language breakdown
+        const languageCounts = {};
+        books.forEach(book => {
+          const language = book.language || 'en';
+          languageCounts[language] = (languageCounts[language] || 0) + 1;
+        });
+        
+        const languageMap = {
+          'en': '🇬🇧 English',
+          'bn': '🇧🇩 Bengali',
+          'bn-en': '🇧🇩🇬🇧 Mixed',
+          'hi': '🇮🇳 Hindi',
+          'ar': '🇸🇦 Arabic',
+          'ur': '🇵🇰 Urdu'
+        };
+        
+        const languageHtml = Object.entries(languageCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([lang, count]) => {
+            const langName = languageMap[lang] || lang;
+            return `<div style="margin-bottom: 10px;"><strong>${langName}:</strong> ${count} books (${((count/books.length)*100).toFixed(1)}%)</div>`;
+          })
+          .join('');
+        document.getElementById('languageBreakdown').innerHTML = languageHtml || '<p style="color: #999;">No data available</p>';
+        
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    function updateProgressUI(data) {
+      const stages = {
+        'uploading': 60,
+        'uploaded': 80,
+        'updating JSON': 95
+      };
+      document.getElementById('progressFill').style.width = `${stages[data.stage] || 50}%`;
+    }
+
+    function showError(message) {
+      alert('❌ Error: ' + message);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      loadDashboard();
+    });
+  </script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+</body>
+</html>

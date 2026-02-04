@@ -674,6 +674,56 @@ class ContentManager {
             return null;
         }
     }
+
+    // ==================== MARKDOWN FILE HANDLING ====================
+
+    /**
+     * Load markdown file from GitHub
+     */
+    async loadMarkdownFile(filePath) {
+        try {
+            const fileData = await this.githubUploader.getFile(filePath);
+            const content = atob(fileData.content);
+            return content;
+        } catch (error) {
+            console.error('Error loading markdown file:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Save markdown file to GitHub
+     */
+    async saveMarkdownFile(filePath, content) {
+        try {
+            // uploadFile automatically handles existing files by checking SHA
+            await this.githubUploader.uploadFile(
+                filePath,
+                content,
+                `Update ${filePath}`,
+                false // content is plain text, not base64
+            );
+
+            return true;
+        } catch (error) {
+            console.error('Error saving markdown file:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete markdown file from GitHub
+     */
+    async deleteMarkdownFile(filePath) {
+        try {
+            // deleteFile automatically fetches SHA internally
+            await this.githubUploader.deleteFile(filePath, `Delete ${filePath}`);
+            return true;
+        } catch (error) {
+            console.error('Error deleting markdown file:', error);
+            throw error;
+        }
+    }
 }
 
 // Export

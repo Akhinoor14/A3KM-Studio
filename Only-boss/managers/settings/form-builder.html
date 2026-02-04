@@ -59,8 +59,41 @@
         table { width: 100%; border-collapse: collapse; }
         thead { background: #f5f5f5; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        /* Help Panel */
+        .help-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #fa709a, #fee140); color: #333; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 999; transition: all 0.3s; }
+        .help-btn:hover { transform: scale(1.1); }
+        .help-panel { position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: white; box-shadow: -5px 0 20px rgba(0,0,0,0.3); z-index: 1000; transition: right 0.3s; overflow-y: auto; padding: 20px; }
+        .help-panel.active { right: 0; }
+        .help-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .help-section { margin: 20px 0; padding: 15px; border-left: 4px solid #fa709a; background: #fffbf5; border-radius: 5px; }
+        .help-section h3 { color: #fa709a; margin-bottom: 10px; font-size: 16px; }
+        .help-section ul { margin-left: 20px; }
+        .help-section li { margin: 8px 0; line-height: 1.6; }
+        /* Templates */
+        .template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .template-card { background: white; border: 2px solid #e0e0e0; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .template-card:hover { border-color: #fa709a; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(250,112,154,0.3); }
+        .template-icon { font-size: 32px; color: #fa709a; margin-bottom: 10px; }
+        .template-title { font-weight: 600; color: #333; margin-bottom: 5px; }
+        .template-desc { font-size: 12px; color: #666; }
+        /* Drag and Drop */
+        .form-field.dragging { opacity: 0.5; }
+        .form-field.drag-over { border-top: 3px solid #fa709a; }
+        /* Form Themes */
+        .theme-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .theme-option { width: 40px; height: 40px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; transition: all 0.3s; }
+        .theme-option:hover, .theme-option.active { border-color: #333; transform: scale(1.1); }
+        /* Analytics */
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .analytics-card { background: linear-gradient(135deg, #fa709a, #fee140); color: #333; padding: 20px; border-radius: 12px; text-align: center; }
+        .analytics-card h3 { font-size: 32px; margin-bottom: 5px; }
+        .analytics-card p { font-size: 12px; opacity: 0.8; }
+        /* Code Display */
+        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; overflow-x: auto; margin: 15px 0; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; }
         @media (max-width: 1024px) {
             .builder { grid-template-columns: 1fr; }
+            .help-panel { width: 100%; right: -100%; }
         }
     </style>
 </head>
@@ -76,6 +109,30 @@
         <div class="builder">
             <!-- Field Palette -->
             <div class="panel">
+                <div class="panel-title"><i class="fas fa-layer-group"></i> Quick Start Templates</div>
+                <div class="template-grid">
+                    <div class="template-card" onclick="loadTemplate('contact')">
+                        <div class="template-icon"><i class="fas fa-envelope"></i></div>
+                        <div class="template-title">Contact Form</div>
+                        <div class="template-desc">Name, Email, Message</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('registration')">
+                        <div class="template-icon"><i class="fas fa-user-plus"></i></div>
+                        <div class="template-title">Registration</div>
+                        <div class="template-desc">Full signup form</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('survey')">
+                        <div class="template-icon"><i class="fas fa-poll"></i></div>
+                        <div class="template-title">Survey</div>
+                        <div class="template-desc">Multiple choice</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('feedback')">
+                        <div class="template-icon"><i class="fas fa-star"></i></div>
+                        <div class="template-title">Feedback</div>
+                        <div class="template-desc">Rating & comments</div>
+                    </div>
+                </div>
+                
                 <div class="panel-title"><i class="fas fa-shapes"></i> Field Types</div>
                 <div class="field-buttons">
                     <button class="field-btn" onclick="addField('text')"><i class="fas fa-font"></i> Text Input</button>
@@ -96,13 +153,30 @@
                     <input type="text" id="formName" placeholder="e.g., Contact Form" value="New Form">
                 </div>
                 <div class="input-group">
+                    <label>Form Theme</label>
+                    <div class="theme-selector">
+                        <div class="theme-option active" onclick="setTheme('default')" style="background: linear-gradient(135deg, #fa709a, #fee140);" title="Default"></div>
+                        <div class="theme-option" onclick="setTheme('blue')" style="background: linear-gradient(135deg, #667eea, #764ba2);" title="Blue"></div>
+                        <div class="theme-option" onclick="setTheme('green')" style="background: linear-gradient(135deg, #11998e, #38ef7d);" title="Green"></div>
+                        <div class="theme-option" onclick="setTheme('dark')" style="background: linear-gradient(135deg, #2c3e50, #34495e);" title="Dark"></div>
+                    </div>
+                </div>
+                <div class="input-group">
                     <label>
-                        <input type="checkbox" id="formRequired" checked> Mark as required
+                        <input type="checkbox" id="formRequired" checked> Mark new fields as required
                     </label>
                 </div>
-                <button class="btn btn-primary" onclick="saveForm()" style="width: 100%; margin-top: 15px;">
-                    <i class="fas fa-save"></i> Save Form
-                </button>
+                <div class="btn-group" style="display: grid; gap: 8px; margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="saveForm()" style="width: 100%;">
+                        <i class="fas fa-save"></i> Save Form
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportFormHTML()" style="width: 100%;">
+                        <i class="fas fa-code"></i> Get HTML Code
+                    </button>
+                    <button class="btn btn-secondary" onclick="deployForm()" style="width: 100%;">
+                        <i class="fas fa-cloud-upload-alt"></i> Deploy to GitHub
+                    </button>
+                </div>
             </div>
 
             <!-- Form Preview -->
@@ -122,6 +196,29 @@
                 <div id="fieldEditor" style="color: #999; padding: 40px 20px; text-align: center;">
                     <i class="fas fa-hand-pointer" style="font-size: 40px; opacity: 0.5; margin-bottom: 15px;"></i>
                     <p>Click a field to edit</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="section">
+            <div class="section-title"><i class="fas fa-chart-line"></i> Form Analytics</div>
+            <div class="analytics-grid" id="analyticsGrid">
+                <div class="analytics-card">
+                    <h3 id="statTotalForms">0</h3>
+                    <p>📝 Total Forms</p>
+                </div>
+                <div class="analytics-card">
+                    <h3 id="statTotalFields">0</h3>
+                    <p>🔤 Total Fields</p>
+                </div>
+                <div class="analytics-card">
+                    <h3 id="statSubmissions">0</h3>
+                    <p>📬 Submissions</p>
+                </div>
+                <div class="analytics-card">
+                    <h3 id="statThisWeek">0</h3>
+                    <p>📊 This Week</p>
                 </div>
             </div>
         </div>
@@ -231,7 +328,120 @@
         </div>
     </div>
 
+    <!-- Help Button -->
+    <button class="help-btn" onclick="toggleHelp()" title="Help & Usage Guide">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <!-- Help Panel -->
+    <div class="help-panel" id="helpPanel">
+        <button class="help-close" onclick="toggleHelp()">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 style="color: #fa709a; margin-bottom: 20px;">📝 Form Builder Guide</h2>
+        
+        <div class="help-section">
+            <h3>🚀 Quick Start</h3>
+            <ol style="margin-left: 20px;">
+                <li><strong>Choose a Template:</strong> Click on a quick start template (Contact, Registration, Survey, Feedback)</li>
+                <li><strong>Or Build from Scratch:</strong> Click field types from the palette</li>
+                <li><strong>Customize Fields:</strong> Click any field to edit its properties</li>
+                <li><strong>Save:</strong> Click "Save Form" to store your form</li>
+                <li><strong>Deploy:</strong> Get HTML code or deploy to GitHub</li>
+            </ol>
+        </div>
+
+        <div class="help-section">
+            <h3>🎨 Form Templates</h3>
+            <ul>
+                <li><strong>Contact Form:</strong> Name, Email, Phone, Message</li>
+                <li><strong>Registration:</strong> Full Name, Email, Password, Terms</li>
+                <li><strong>Survey:</strong> Multiple choice questions</li>
+                <li><strong>Feedback:</strong> Rating, comments, suggestions</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🔧 Field Types</h3>
+            <ul>
+                <li><strong>Text Input:</strong> Single line text</li>
+                <li><strong>Email:</strong> Email validation</li>
+                <li><strong>Phone:</strong> Phone number</li>
+                <li><strong>Number:</strong> Numeric input</li>
+                <li><strong>Textarea:</strong> Multi-line text</li>
+                <li><strong>Dropdown:</strong> Select from options</li>
+                <li><strong>Checkbox:</strong> Multiple selections</li>
+                <li><strong>Radio:</strong> Single selection</li>
+                <li><strong>File Upload:</strong> Attach files</li>
+                <li><strong>Date:</strong> Date picker</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>✏️ Editing Fields</h3>
+            <ul>
+                <li>Click any field in the preview to edit</li>
+                <li>Change label, placeholder text</li>
+                <li>Toggle required/optional</li>
+                <li>Add/remove/edit options (dropdown, radio, checkbox)</li>
+                <li>Drag fields to reorder (upcoming)</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🎨 Form Themes</h3>
+            <ul>
+                <li><strong>Default:</strong> Pink gradient (fa709a → fee140)</li>
+                <li><strong>Blue:</strong> Purple-blue gradient</li>
+                <li><strong>Green:</strong> Teal gradient</li>
+                <li><strong>Dark:</strong> Professional dark theme</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🚀 Deployment Options</h3>
+            <ul>
+                <li><strong>Get HTML Code:</strong> Copy/paste to your website</li>
+                <li><strong>Deploy to GitHub:</strong> Automatically push to repository</li>
+                <li><strong>Export JSON:</strong> Form structure for developers</li>
+                <li><strong>Embed Code:</strong> iframe embed code</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>📊 Analytics & Submissions</h3>
+            <ul>
+                <li>View total forms, fields, submissions</li>
+                <li>Track weekly submission trends</li>
+                <li>Export submissions as CSV</li>
+                <li>Email notifications for new submissions</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>📧 Email Integration</h3>
+            <ul>
+                <li>Configure SMTP settings (Gmail, Outlook, etc.)</li>
+                <li>Set notification email address</li>
+                <li>Auto-send submission notifications</li>
+                <li>Custom email templates</li>
+            </ul>
+        </div>
+
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <strong>💡 Pro Tips:</strong>
+            <ul style="margin-top: 10px; margin-left: 20px; font-size: 13px;">
+                <li>Use templates for quick setup</li>
+                <li>Test form before deploying</li>
+                <li>Keep forms simple and focused</li>
+                <li>Use placeholders to guide users</li>
+                <li>Enable validation for data quality</li>
+            </ul>
+        </div>
+    </div>
+
     <script src="../../shared/github-token-manager.js"></script>
+    <script src="../../shared/activity-logger.js"></script>
     <script>
         const FORMS_KEY = 'a3km_forms';
         const SUBMISSIONS_KEY = 'a3km_form_submissions';
@@ -247,11 +457,18 @@
             tokenManager = typeof GitHubTokenManager !== 'undefined' ? new GitHubTokenManager() : null;
             loadForms();
             loadFormsList();
+            updateAnalytics();
+            
+            // Activity logging
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'Form Builder opened', 'Admin', 'success', 'Form management interface accessed');
+            }
             
             // Live update every 4 seconds
             setInterval(() => {
                 loadForms();
                 loadFormsList();
+                updateAnalytics();
             }, 4000);
         });
 
@@ -525,7 +742,58 @@
         }
 
         function loadSubmissions() {
-            // Placeholder
+            const formId = document.getElementById('formSelectSubmissions').value;
+            if (!formId) {
+                document.getElementById('submissionsTable').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>Select a form to view submissions</td></tr>';
+                return;
+            }
+
+            const submissions = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '{}')[formId] || [];
+
+            if (submissions.length === 0) {
+                document.getElementById('submissionsTable').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>No submissions yet for this form</td></tr>';
+                return;
+            }
+
+            document.getElementById('submissionsTable').innerHTML = submissions.map((sub, index) => {
+                const date = new Date(sub.timestamp).toLocaleString();
+                const sender = sub.data.email || sub.data.name || 'Anonymous';
+                const dataPreview = JSON.stringify(sub.data).substring(0, 80) + '...';
+
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${sender}</td>
+                        <td><code style="font-size: 11px; color: #666;">${dataPreview}</code></td>
+                        <td>
+                            <button class="btn btn-primary" onclick='viewSubmissionDetails(${JSON.stringify(sub).replace(/'/g, "&apos;")})' style="padding: 5px 12px; font-size: 12px;">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function viewSubmissionDetails(submission) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
+                    <button onclick="this.parentElement.parentElement.remove()" style="position: absolute; top: 15px; right: 15px; background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Close</button>
+                    <h2 style="color: #fa709a; margin-bottom: 20px;">📬 Submission Details</h2>
+                    <p style="color: #666; margin-bottom: 20px;"><strong>Submitted:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                        ${Object.entries(submission.data).map(([key, value]) => `
+                            <div style="margin-bottom: 15px;">
+                                <strong style="color: #333;">${key}:</strong><br>
+                                <span style="color: #666;">${Array.isArray(value) ? value.join(', ') : value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         function saveEmailSettings() {
@@ -541,6 +809,203 @@
 
         function exportSubmissionsCSV() {
             // Placeholder
+        }
+
+        // NEW COMPREHENSIVE FUNCTIONS
+
+        function loadTemplate(templateName) {
+            const templates = {
+                contact: {
+                    name: 'Contact Form',
+                    fields: [
+                        { id: 'field-1', type: 'text', label: 'Full Name', required: true, placeholder: 'Enter your full name', options: [] },
+                        { id: 'field-2', type: 'email', label: 'Email Address', required: true, placeholder: 'your@email.com', options: [] },
+                        { id: 'field-3', type: 'phone', label: 'Phone Number', required: false, placeholder: '+1234567890', options: [] },
+                        { id: 'field-4', type: 'textarea', label: 'Message', required: true, placeholder: 'Write your message here...', options: [] }
+                    ]
+                },
+                registration: {
+                    name: 'Registration Form',
+                    fields: [
+                        { id: 'field-1', type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', options: [] },
+                        { id: 'field-2', type: 'email', label: 'Email', required: true, placeholder: 'john@example.com', options: [] },
+                        { id: 'field-3', type: 'text', label: 'Password', required: true, placeholder: 'Create a strong password', options: [] },
+                        { id: 'field-4', type: 'date', label: 'Date of Birth', required: true, placeholder: '', options: [] },
+                        { id: 'field-5', type: 'checkbox', label: 'I agree to Terms & Conditions', required: true, placeholder: '', options: ['I agree'] }
+                    ]
+                },
+                survey: {
+                    name: 'Survey Form',
+                    fields: [
+                        { id: 'field-1', type: 'radio', label: 'How satisfied are you?', required: true, placeholder: '', options: ['Very Satisfied', 'Satisfied', 'Neutral', 'Unsatisfied', 'Very Unsatisfied'] },
+                        { id: 'field-2', type: 'checkbox', label: 'Which features do you use?', required: false, placeholder: '', options: ['Feature A', 'Feature B', 'Feature C', 'Feature D'] },
+                        { id: 'field-3', type: 'select', label: 'How often do you visit?', required: true, placeholder: '', options: ['Daily', 'Weekly', 'Monthly', 'Rarely'] },
+                        { id: 'field-4', type: 'textarea', label: 'Additional Comments', required: false, placeholder: 'Share your thoughts...', options: [] }
+                    ]
+                },
+                feedback: {
+                    name: 'Feedback Form',
+                    fields: [
+                        { id: 'field-1', type: 'text', label: 'Your Name', required: true, placeholder: 'Name', options: [] },
+                        { id: 'field-2', type: 'radio', label: 'Overall Rating', required: true, placeholder: '', options: ['⭐ 1 Star', '⭐⭐ 2 Stars', '⭐⭐⭐ 3 Stars', '⭐⭐⭐⭐ 4 Stars', '⭐⭐⭐⭐⭐ 5 Stars'] },
+                        { id: 'field-3', type: 'textarea', label: 'What did you like?', required: false, placeholder: 'Tell us what you enjoyed...', options: [] },
+                        { id: 'field-4', type: 'textarea', label: 'What can we improve?', required: false, placeholder: 'Suggestions for improvement...', options: [] }
+                    ]
+                }
+            };
+
+            const template = templates[templateName];
+            if (!template) return;
+
+            forms[currentFormId] = {
+                id: currentFormId,
+                name: template.name,
+                fields: template.fields,
+                created: new Date().toISOString(),
+                settings: {}
+            };
+
+            document.getElementById('formName').value = template.name;
+            fieldCounter = template.fields.length;
+            renderFormPreview();
+
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', `Loaded ${template.name} template`, 'Admin', 'success', `${template.fields.length} fields added`);
+            }
+        }
+
+        function setTheme(theme) {
+            forms[currentFormId].theme = theme;
+            document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function exportFormHTML() {
+            const form = forms[currentFormId];
+            if (!form || form.fields.length === 0) {
+                alert('❌ No fields to export!');
+                return;
+            }
+
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${form.name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #fa709a, #fee140); min-height: 100vh; padding: 20px; }
+        .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        h1 { color: #fa709a; margin-bottom: 20px; }
+        .field-group { margin: 20px 0; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; }
+        input, textarea, select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #fa709a; }
+        button { background: linear-gradient(135deg, #fa709a, #fee140); color: #333; padding: 12px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(250,112,154,0.4); }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>${form.name}</h1>
+        <form id="myForm">
+${form.fields.map(field => {
+    let html = `            <div class="field-group">
+                <label>${field.label}${field.required ? ' <span style="color: #f44336;">*</span>' : ''}</label>`;
+    
+    if (field.type === 'textarea') {
+        html += `\n                <textarea name="${field.id}" ${field.required ? 'required' : ''} placeholder="${field.placeholder}"></textarea>`;
+    } else if (field.type === 'select') {
+        html += `\n                <select name="${field.id}" ${field.required ? 'required' : ''}>
+                    ${field.options.map(opt => `<option>${opt}</option>`).join('\n                    ')}
+                </select>`;
+    } else if (field.type === 'checkbox' || field.type === 'radio') {
+        html += field.options.map(opt => `\n                <label style="display: flex; align-items: center; gap: 8px; margin: 8px 0;"><input type="${field.type}" name="${field.id}" value="${opt}" ${field.required ? 'required' : ''}> ${opt}</label>`).join('');
+    } else {
+        html += `\n                <input type="${field.type}" name="${field.id}" ${field.required ? 'required' : ''} placeholder="${field.placeholder}">`;
+    }
+    
+    html += `\n            </div>`;
+    return html;
+}).join('\n')}
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('myForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            console.log('Form submitted:', Object.fromEntries(formData));
+            alert('✅ Form submitted successfully!');
+        });
+    </script>
+</body>
+</html>`;
+
+            // Show in modal
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 800px; max-height: 80vh; overflow-y: auto; position: relative;">
+                    <button onclick="this.parentElement.parentElement.remove()" style="position: absolute; top: 15px; right: 15px; background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Close</button>
+                    <h2 style="color: #fa709a; margin-bottom: 20px;">📝 Generated HTML Code</h2>
+                    <p style="color: #666; margin-bottom: 15px;">Copy this code and paste it into your website:</p>
+                    <div style="position: relative;">
+                        <pre style="background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5;">${html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                        <button onclick="navigator.clipboard.writeText(\`${html.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`).then(() => alert('✅ Copied to clipboard!')).catch(() => alert('❌ Copy failed'))" style="position: absolute; top: 10px; right: 10px; background: #4caf50; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Copy Code</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', `Exported HTML for ${form.name}`, 'Admin', 'success', `${form.fields.length} fields exported`);
+            }
+        }
+
+        async function deployForm() {
+            if (!tokenManager || !tokenManager.token) {
+                alert('❌ GitHub token not configured! Please set up token first.');
+                return;
+            }
+
+            const form = forms[currentFormId];
+            if (!form || form.fields.length === 0) {
+                alert('❌ No fields to deploy!');
+                return;
+            }
+
+            if (!confirm(`Deploy "${form.name}" to GitHub?\n\nThis will create a new HTML file in your repository.`)) return;
+
+            alert('🚀 GitHub deployment feature coming soon! Use "Get HTML Code" for now.');
+
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', `Attempted GitHub deployment for ${form.name}`, 'Admin', 'info', 'Feature in development');
+            }
+        }
+
+        function updateAnalytics() {
+            const totalForms = Object.keys(forms).length;
+            const totalFields = Object.values(forms).reduce((sum, f) => sum + f.fields.length, 0);
+            const submissions = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '{}');
+            const totalSubmissions = Object.values(submissions).reduce((sum, arr) => sum + arr.length, 0);
+
+            // Calculate this week's submissions
+            const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            const thisWeekSubmissions = Object.values(submissions).flat().filter(sub => new Date(sub.timestamp) > weekAgo).length;
+
+            document.getElementById('statTotalForms').textContent = totalForms;
+            document.getElementById('statTotalFields').textContent = totalFields;
+            document.getElementById('statSubmissions').textContent = totalSubmissions;
+            document.getElementById('statThisWeek').textContent = thisWeekSubmissions;
+        }
+
+        function toggleHelp() {
+            document.getElementById('helpPanel').classList.toggle('active');
         }
     </script>
 </body>

@@ -643,6 +643,75 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Edit Modal Styles */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .edit-modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .edit-modal-content {
+            background: linear-gradient(135deg, rgba(0, 30, 26, 0.98), rgba(0, 10, 8, 0.99));
+            border: 2px solid var(--arduino-teal);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 137, 123, 0.4);
+            position: relative;
+        }
+
+        .edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 137, 123, 0.3);
+        }
+
+        .edit-modal-header h2 {
+            color: var(--arduino-teal);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #F44336;
+            color: #F44336;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close-btn:hover {
+            background: #F44336;
+            color: white;
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body>
@@ -876,12 +945,26 @@
                         <textarea id="projectDescription" placeholder="Detailed project description..."></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-link"></i>
-                            Tinkercad URL
-                        </label>
-                        <input type="url" id="tinkercadUrl" placeholder="https://www.tinkercad.com/things/...">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-signal"></i>
+                                Difficulty Level
+                            </label>
+                            <select id="projectDifficulty">
+                                <option value="Beginner">Beginner - Basic concepts</option>
+                                <option value="Intermediate">Intermediate - Some experience</option>
+                                <option value="Advanced">Advanced - Complex systems</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-link"></i>
+                                Tinkercad URL
+                            </label>
+                            <input type="url" id="tinkercadUrl" placeholder="https://www.tinkercad.com/things/...">
+                        </div>
                     </div>
 
                     <!-- Components Selection -->
@@ -892,7 +975,7 @@
                         </label>
                         <div class="components-checklist">
                             <div class="component-checkbox">
-                                <input type="checkbox" id="comp-arduino" value="Arduino UNO">
+                                <input type="checkbox" id="comp-arduino" value="Arduino UNO" checked>
                                 <label for="comp-arduino">Arduino UNO</label>
                             </div>
                             <div class="component-checkbox">
@@ -904,8 +987,12 @@
                                 <label for="comp-resistor">Resistor</label>
                             </div>
                             <div class="component-checkbox">
-                                <input type="checkbox" id="comp-breadboard" value="Breadboard">
+                                <input type="checkbox" id="comp-breadboard" value="Breadboard" checked>
                                 <label for="comp-breadboard">Breadboard</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-jumper" value="Jumper Wires">
+                                <label for="comp-jumper">Jumper Wires</label>
                             </div>
                             <div class="component-checkbox">
                                 <input type="checkbox" id="comp-pot" value="Potentiometer">
@@ -916,14 +1003,62 @@
                                 <label for="comp-servo">Servo Motor</label>
                             </div>
                             <div class="component-checkbox">
+                                <input type="checkbox" id="comp-motor" value="DC Motor">
+                                <label for="comp-motor">DC Motor</label>
+                            </div>
+                            <div class="component-checkbox">
                                 <input type="checkbox" id="comp-ultrasonic" value="Ultrasonic Sensor">
                                 <label for="comp-ultrasonic">Ultrasonic Sensor</label>
                             </div>
                             <div class="component-checkbox">
+                                <input type="checkbox" id="comp-temp" value="Temperature Sensor">
+                                <label for="comp-temp">Temperature Sensor</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-pir" value="PIR Motion Sensor">
+                                <label for="comp-pir">PIR Sensor</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-ir" value="IR Sensor">
+                                <label for="comp-ir">IR Sensor</label>
+                            </div>
+                            <div class="component-checkbox">
                                 <input type="checkbox" id="comp-lcd" value="LCD Display">
-                                <label for="comp-lcd">LCD Display</label>
+                                <label for="comp-lcd">LCD 16x2</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-oled" value="OLED Display">
+                                <label for="comp-oled">OLED Display</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-buzzer" value="Buzzer">
+                                <label for="comp-buzzer">Buzzer</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-button" value="Push Button">
+                                <label for="comp-button">Push Button</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-rgb" value="RGB LED">
+                                <label for="comp-rgb">RGB LED</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-relay" value="Relay Module">
+                                <label for="comp-relay">Relay Module</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-bluetooth" value="Bluetooth Module">
+                                <label for="comp-bluetooth">Bluetooth HC-05</label>
+                            </div>
+                            <div class="component-checkbox">
+                                <input type="checkbox" id="comp-wifi" value="WiFi Module">
+                                <label for="comp-wifi">WiFi ESP8266</label>
                             </div>
                         </div>
+                        <small style="color: var(--arduino-teal); margin-top: 10px; display: block;">
+                            <i class="fas fa-info-circle"></i> 
+                            <span id="componentCount">2 components selected</span> (Arduino UNO & Breadboard pre-selected)
+                        </small>
                     </div>
 
                     <!-- File Uploads -->
@@ -1141,6 +1276,31 @@
             }
             return true;
         }
+
+        function validateFileType(file, allowedExtensions) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(ext)) {
+                alert(`⚠️ Invalid file type: .${ext}\nAllowed: ${allowedExtensions.join(', ')}`);
+                return false;
+            }
+            return true;
+        }
+
+        // Update component count display
+        function updateComponentCount() {
+            const count = document.querySelectorAll('.component-checkbox input:checked').length;
+            const counter = document.getElementById('componentCount');
+            if (counter) {
+                counter.textContent = `${count} component${count !== 1 ? 's' : ''} selected`;
+            }
+        }
+
+        // Add event listeners to component checkboxes
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.component-checkbox input').forEach(cb => {
+                cb.addEventListener('change', updateComponentCount);
+            });
+        });
 
         function checkDuplicate(title) {
             const sanitized = sanitizeInput(title.toLowerCase());
@@ -1384,11 +1544,24 @@
             const subtitle = sanitizeInput(document.getElementById('projectSubtitle')?.value.trim() || '');
             const description = sanitizeInput(document.getElementById('projectDescription')?.value.trim() || '');
             const category = document.getElementById('projectCategory').value;
+            const difficulty = document.getElementById('projectDifficulty')?.value || 'Beginner';
             const tinkercadUrl = document.getElementById('tinkercadUrl')?.value.trim() || '';
             
             if (!title || !category) {
-                alert('⚠️ Please fill in all required fields!');
+                alert('⚠️ Please fill in all required fields!\n\nRequired: Project Title, Category');
                 return;
+            }
+            
+            // Validate component selection
+            const components = [];
+            document.querySelectorAll('.component-checkbox input:checked').forEach(cb => {
+                components.push(cb.value);
+            });
+            
+            if (components.length === 0) {
+                if (!confirm('⚠️ No components selected!\n\nContinue without component list?')) {
+                    return;
+                }
             }
             
             // Check duplicate
@@ -1398,12 +1571,6 @@
             const nextId = arduinoData.projects.length > 0 
                 ? Math.max(...arduinoData.projects.map(p => p.id)) + 1 
                 : 1;
-            
-            // Get selected components
-            const components = [];
-            document.querySelectorAll('.component-checkbox input:checked').forEach(cb => {
-                components.push(cb.value);
-            });
             
             // Create folder name (auto-numbered)
             const folderNumber = String(nextId).padStart(2, '0');
@@ -1421,6 +1588,7 @@
                 subtitle: subtitle,
                 description: description,
                 category: category,
+                difficulty: difficulty,
                 components: components,
                 files: {
                     code: hasCode ? `${title.replace(/\\s+/g, '-')}.ino` : '',
@@ -1454,16 +1622,25 @@
             // Show success with auto-generated card preview
             const cardHTML = generateProjectCard(newProject);
             
+            const componentsList = components.length > 0 
+                ? components.join(', ') 
+                : 'No components listed';
+            
             alert(`✅ Project Created Successfully!\\n\\n` +
+                  `📌 Project Details:\\n` +
                   `ID: ${nextId}\\n` +
-                  `Folder: "${folderName}"\\n` +
-                  `Category: ${arduinoData.categories[category].name}\\n\\n` +
-                  `Next Steps:\\n` +
+                  `Title: ${title}\\n` +
+                  `Category: ${arduinoData.categories[category].name}\\n` +
+                  `Difficulty: ${difficulty}\\n` +
+                  `Components: ${components.length}\\n` +
+                  `Folder: "${folderName}"\\n\\n` +
+                  `🔧 Components Used:\\n${componentsList}\\n\\n` +
+                  `📋 Next Steps:\\n` +
                   `1. Download updated JSON from JSON Editor tab\\n` +
                   `2. Create folder: "Projects Storage/Arduino UNO Projects with Tinkercad/${folderName}/"\\n` +
-                  `3. Upload your files to that folder\\n` +
+                  `3. Upload your .ino code and circuit images\\n` +
                   `4. Update arduino-data.json in repository\\n` +
-                  `5. Project card will auto-appear on arduino-projects.html`);
+                  `5. Project will appear on arduino-projects.html`);
             
             // Reset form
             document.getElementById('uploadForm').reset();
@@ -1967,9 +2144,100 @@ This project combines [technology 1] with [technology 2] to create a fully funct
         // Edit project
         function editProject(id) {
             const project = arduinoData.projects.find(p => p.id === id);
-            if (project) {
-                alert(`Edit functionality for: ${project.title}\n\nImplement modal editor here.`);
+            if (!project) return;
+
+            // Populate edit form
+            document.getElementById('editProjectId').value = project.id;
+            document.getElementById('editTitle').value = project.title;
+            document.getElementById('editSubtitle').value = project.subtitle || '';
+            document.getElementById('editCategory').value = project.category;
+            document.getElementById('editDifficulty').value = project.difficulty || 'Beginner';
+            document.getElementById('editDescription').value = project.description || '';
+            document.getElementById('editTinkercadUrl').value = project.files?.tinkercadUrl || '';
+            
+            // Populate components
+            const allComponents = [
+                'Arduino UNO', 'LED', 'Resistor', 'Breadboard', 'Jumper Wires',
+                'Potentiometer', 'Servo Motor', 'DC Motor', 'Ultrasonic Sensor',
+                'Temperature Sensor', 'PIR Motion Sensor', 'IR Sensor',
+                'LCD Display', 'OLED Display', 'Buzzer', 'Push Button',
+                'RGB LED', 'Relay Module', 'Bluetooth Module', 'WiFi Module'
+            ];
+            
+            const componentsContainer = document.getElementById('editComponentsContainer');
+            componentsContainer.innerHTML = allComponents.map((comp, idx) => {
+                const isChecked = project.components && project.components.includes(comp);
+                return `
+                    <div class="component-checkbox">
+                        <input type="checkbox" id="edit-comp-${idx}" value="${comp}" ${isChecked ? 'checked' : ''}>
+                        <label for="edit-comp-${idx}">${comp}</label>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update component count
+            updateEditComponentCount();
+            
+            // Add event listeners to checkboxes
+            componentsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateEditComponentCount);
+            });
+            
+            // Show modal
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // Update component count in edit modal
+        function updateEditComponentCount() {
+            const count = document.querySelectorAll('#editComponentsContainer input:checked').length;
+            const counter = document.getElementById('editComponentCount');
+            if (counter) {
+                counter.textContent = `${count} component${count !== 1 ? 's' : ''} selected`;
             }
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        // Save edited project
+        function saveEditedProject() {
+            const id = parseInt(document.getElementById('editProjectId').value);
+            const project = arduinoData.projects.find(p => p.id === id);
+            if (!project) return;
+
+            // Update project data
+            project.title = sanitizeInput(document.getElementById('editTitle').value.trim());
+            project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
+            project.category = document.getElementById('editCategory').value;
+            project.difficulty = document.getElementById('editDifficulty').value;
+            project.description = sanitizeInput(document.getElementById('editDescription').value.trim());
+            
+            // Update components
+            project.components = [];
+            document.querySelectorAll('#editComponentsContainer input:checked').forEach(cb => {
+                project.components.push(cb.value);
+            });
+            
+            if (!project.files) project.files = {};
+            project.files.tinkercadUrl = document.getElementById('editTinkercadUrl').value.trim();
+            
+            // Update folder name
+            const projectIndex = arduinoData.projects.findIndex(p => p.id === id);
+            project.folder = `${String(projectIndex + 1).padStart(2, '0')} ${project.title}`;
+            
+            // Update statistics
+            arduinoData.statistics.lastUpdated = new Date().toISOString();
+            saveToCache(arduinoData);
+            
+            // Update displays
+            updateStats();
+            renderProjectsList();
+            updateJSONEditor();
+            closeEditModal();
+            
+            showAlert('success', `✅ Project updated successfully!\n\n📊 Updated: ${project.components.length} components\n\n⚠️ Remember to download JSON and push to GitHub.`);
         }
 
         // Delete project
@@ -2166,5 +2434,109 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
             showVersionHistoryModal(projectId, versionHistory, arduinoData.projects);
         };
     </script>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h2>
+                    <i class="fas fa-edit"></i>
+                    Edit Project
+                </h2>
+                <button class="modal-close-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="editForm" onsubmit="event.preventDefault(); saveEditedProject();">
+                <input type="hidden" id="editProjectId">
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-heading"></i>
+                        Project Title *
+                    </label>
+                    <input type="text" id="editTitle" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Subtitle
+                    </label>
+                    <input type="text" id="editSubtitle" class="form-input">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-tag"></i>
+                            Category *
+                        </label>
+                        <select id="editCategory" class="form-input" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="led-basics">LED Projects</option>
+                            <option value="sensors-actuators">Sensors & Actuators</option>
+                            <option value="display-input">Displays & Input</option>
+                            <option value="advanced-projects">Advanced Projects</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-signal"></i>
+                            Difficulty Level
+                        </label>
+                        <select id="editDifficulty" class="form-input">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Description
+                    </label>
+                    <textarea id="editDescription" class="form-input" rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-link"></i>
+                        Tinkercad URL
+                    </label>
+                    <input type="url" id="editTinkercadUrl" class="form-input" placeholder="https://www.tinkercad.com/things/...">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-microchip"></i>
+                        Required Components
+                    </label>
+                    <div id="editComponentsContainer" class="components-checklist" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Components will be populated dynamically -->
+                    </div>
+                    <small style="color: var(--arduino-teal); margin-top: 10px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="editComponentCount">0 components selected</span>
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-save" style="flex: 1;">
+                        <i class="fas fa-check"></i>
+                        Save Changes
+                    </button>
+                    <button type="button" class="btn" onclick="closeEditModal()" style="background: rgba(244, 67, 54, 0.2); border-color: #F44336; color: #F44336;">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

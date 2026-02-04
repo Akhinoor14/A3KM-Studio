@@ -66,6 +66,21 @@ function bindUI(){
   if(btnSyncRepo) btnSyncRepo.onclick = syncRepoProjects;
   const btnBackupAll = document.getElementById('btnBackupAll');
   if(btnBackupAll) btnBackupAll.onclick = exportProjects;
+  
+  // Color picker sync
+  const colorPicker = document.getElementById('primaryColor');
+  const colorHex = document.getElementById('primaryColorHex');
+  if(colorPicker && colorHex){
+    colorPicker.addEventListener('input', (e) => {
+      colorHex.value = e.target.value;
+    });
+    colorHex.addEventListener('input', (e) => {
+      if(/^#[0-9A-F]{6}$/i.test(e.target.value)){
+        colorPicker.value = e.target.value;
+      }
+    });
+  }
+  
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey && e.key==='Enter'){e.preventDefault(); generatePlan();}
     if(e.ctrlKey && e.key.toLowerCase()==='s'){e.preventDefault(); createProject();}
@@ -87,7 +102,18 @@ function inputData(){
   const goal = document.getElementById('goal').value.trim();
   const features = document.getElementById('features').value.split(',').map(s=>s.trim()).filter(Boolean);
   const design = document.getElementById('design').value;
-  return {name,type,audience,goal,features,design};
+  const primaryColor = document.getElementById('primaryColor')?.value || '#cc0000';
+  const framework = document.getElementById('framework')?.value || 'vanilla';
+  const deployment = document.getElementById('deployment')?.value || 'none';
+  const includePackageJson = document.getElementById('includePackageJson')?.checked ?? true;
+  const includeTesting = document.getElementById('includeTesting')?.checked ?? false;
+  const includeAnimations = document.getElementById('includeAnimations')?.checked ?? true;
+  
+  return {
+    name, type, audience, goal, features, design, 
+    primaryColor, framework, deployment,
+    includePackageJson, includeTesting, includeAnimations
+  };
 }
 
 // ---------- AI-style Rules Engine ----------
@@ -101,6 +127,31 @@ const LIB_TEMPLATES = {
     sections: ['Landing','Features','Pricing','Docs','Contact'],
     pages: ['index.html','documentation.html','contact.html'],
     components: ['Header','Footer','Dashboard','Editor']
+  },
+  ecommerce: {
+    sections: ['Hero','Products','Categories','Cart','Checkout','About'],
+    pages: ['index.html','products.html','product-detail.html','cart.html','checkout.html'],
+    components: ['ProductCard','CartWidget','FilterSidebar','PaymentForm','OrderSummary']
+  },
+  blog: {
+    sections: ['Home','Posts','Categories','About','Contact'],
+    pages: ['index.html','blog.html','post.html','category.html','about.html'],
+    components: ['PostCard','CommentSection','Sidebar','SearchBar','Newsletter']
+  },
+  dashboard: {
+    sections: ['Overview','Analytics','Users','Settings','Reports'],
+    pages: ['index.html','dashboard.html','analytics.html','users.html','settings.html'],
+    components: ['Sidebar','StatCard','DataTable','Chart','Modal']
+  },
+  landing: {
+    sections: ['Hero','Features','Pricing','Testimonials','CTA','Footer'],
+    pages: ['index.html'],
+    components: ['HeroSection','FeatureGrid','PricingCard','TestimonialSlider','CTABanner']
+  },
+  portfolio: {
+    sections: ['About','Projects','Skills','Experience','Contact'],
+    pages: ['index.html','project-detail.html'],
+    components: ['ProjectCard','SkillBadge','TimelineItem','ContactForm']
   },
   hardware: {
     sections: ['Overview','Specs','Circuit','Firmware','Assembly'],
@@ -116,21 +167,57 @@ const LIB_TEMPLATES = {
 
 function generatePlan(){
   const d = inputData();
-  if(!d.name){status('Name required','warn');return;}
-  // Learn from history & existing projects
-  const prior = learnFromPrior(d);
-  const base = LIB_TEMPLATES[d.type];
-  const features = enrichFeatures(d.features, prior.features);
-  const sections = enrichSections(base.sections, d, prior.sections);
-  const pages = dedupe([...base.pages, ...prior.pages]);
-  const components = enrichComponents(base.components, features, d.design);
-  const layout = autoLayoutPlan(sections, components, d.design);
-  const style = designTokens(d.design, d.audience);
+  
+  // Enhanced validation
+  if(!d.name){
+    status('⚠️ Project name is required','warn');
+    return;
+  }
+  if(d.name.length < 3){
+    status('⚠️ Project name must be at least 3 characters','warn');
+    return;
+  }
+  if(!/^[a-zA-Z0-9\s_-]+$/.test(d.name)){
+    status('⚠️ Project name contains invalid characters','warn');
+    return;
+  }
+  
+  try {
+    // Learn from history & existing projects
+    const prior = learnFromPrior(d);
+    const base = LIB_TEMPLATES[d.type];
+    
+    if(!base){
+      status('⚠️ Invalid project type','bad');
+      return;
+    }
+    
+    const features = enrichFeatures(d.features, prior.features);
+    const sections = enrichSections(base.sections, d, prior.sections);
+    const pages = dedupe([...base.pages, ...prior.pages]);
+    const components = enrichComponents(base.components, features, d.design);
+    const layout = autoLayoutPlan(sections, components, d.design);
+    const style = designTokens(d.design, d.audience);
 
-  currentPlan = { meta: d, features, sections, pages, components, layout, style, priorSignals: prior.signals };
-  renderPlan(currentPlan);
-  status('Plan generated','good');
-  pushHistory(currentPlan);
+    currentPlan = { 
+      meta: d, 
+      features, 
+      sections, 
+      pages, 
+      components, 
+      layout, 
+      style, 
+      priorSignals: prior.signals 
+    };
+    
+    renderPlan(currentPlan);
+    status('✅ Plan generated successfully','good');
+    pushHistory(currentPlan);
+    
+  } catch(error) {
+    console.error('Plan generation error:', error);
+    status('❌ Error generating plan: ' + error.message,'bad');
+  }
 }
 
 function learnFromPrior(d){
@@ -398,9 +485,195 @@ function generateProjectFiles(project, folders){
   files[`${folders.docs}/GUIDE.md`] = generateGuide(project);
   
   // Generate .gitignore
-  files[`${slug}/.gitignore`] = `node_modules/\n.DS_Store\n*.log\n.env`;
+  files[`${slug}/.gitignore`] = `node_modules/\n.DS_Store\n*.log\n.env\ndist/\nbuild/\n.cache/`;
+  
+  // Generate package.json if enabled
+  if(project.meta?.includePackageJson !== false){
+    files[`${slug}/package.json`] = generatePackageJson(project);
+  }
+  
+  // Generate deployment configs
+  const deployment = project.meta?.deployment || 'none';
+  if(deployment === 'vercel'){
+    files[`${slug}/vercel.json`] = generateVercelConfig(project);
+  } else if(deployment === 'netlify'){
+    files[`${slug}/netlify.toml`] = generateNetlifyConfig(project);
+  } else if(deployment === 'docker'){
+    files[`${slug}/Dockerfile`] = generateDockerfile(project);
+    files[`${slug}/docker-compose.yml`] = generateDockerCompose(project);
+  }
+  
+  // Generate .env template
+  files[`${slug}/.env.example`] = generateEnvTemplate(project);
+  
+  // Generate testing setup if enabled
+  if(project.meta?.includeTesting){
+    files[`${slug}/jest.config.js`] = generateJestConfig(project);
+    files[`${slug}/src/__tests__/app.test.js`] = generateTestFile(project);
+  }
   
   return files;
+}
+
+function generatePackageJson(project){
+  const name = (project.name||'project').toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  const framework = project.meta?.framework || 'vanilla';
+  
+  const dependencies = {};
+  const devDependencies = {
+    "vite": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  };
+  
+  // Add framework-specific dependencies
+  if(framework === 'react'){
+    dependencies['react'] = '^18.2.0';
+    dependencies['react-dom'] = '^18.2.0';
+    devDependencies['@vitejs/plugin-react'] = '^4.0.0';
+  } else if(framework === 'vue'){
+    dependencies['vue'] = '^3.3.0';
+    devDependencies['@vitejs/plugin-vue'] = '^4.0.0';
+  } else if(framework === 'svelte'){
+    dependencies['svelte'] = '^4.0.0';
+    devDependencies['@sveltejs/vite-plugin-svelte'] = '^3.0.0';
+  }
+  
+  // Add testing dependencies if enabled
+  if(project.meta?.includeTesting){
+    devDependencies['jest'] = '^29.0.0';
+    devDependencies['@testing-library/jest-dom'] = '^6.0.0';
+  }
+  
+  const pkg = {
+    name: name,
+    version: '1.0.0',
+    description: project.meta?.goal || 'Project generated by AI Project Manager',
+    main: 'src/index.html',
+    scripts: {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview",
+      "lint": "eslint src",
+      "format": "prettier --write src"
+    },
+    keywords: (project.features || []).slice(0, 5),
+    author: 'Generated by AI Project Manager',
+    license: 'MIT',
+    dependencies: dependencies,
+    devDependencies: devDependencies
+  };
+  
+  if(project.meta?.includeTesting){
+    pkg.scripts.test = 'jest';
+  }
+  
+  return JSON.stringify(pkg, null, 2);
+}
+
+function generateVercelConfig(project){
+  return JSON.stringify({
+    version: 2,
+    builds: [{
+      src: 'src/index.html',
+      use: '@vercel/static'
+    }],
+    routes: [{
+      src: '/(.*)',
+      dest: '/src/$1'
+    }]
+  }, null, 2);
+}
+
+function generateNetlifyConfig(project){
+  return `[build]
+  publish = "src"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"`;
+}
+
+function generateDockerfile(project){
+  return `FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]`;
+}
+
+function generateDockerCompose(project){
+  const name = (project.name||'project').toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  return `version: '3.8'
+
+services:
+  ${name}:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - NODE_ENV=development`;
+}
+
+function generateEnvTemplate(project){
+  return `# Environment Variables Template
+# Copy this file to .env and fill in your values
+
+# API Configuration
+API_URL=http://localhost:3000
+API_KEY=your_api_key_here
+
+# GitHub Configuration (for project sync)
+GITHUB_TOKEN=your_github_token
+GITHUB_REPO=${project.name || 'project'}
+
+# Deployment
+NODE_ENV=development
+PORT=3000`;
+}
+
+function generateJestConfig(project){
+  return `module.exports = {
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  moduleNameMapper: {
+    '\\\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx}',
+    '!src/**/*.test.{js,jsx}',
+  ],
+};`;
+}
+
+function generateTestFile(project){
+  const name = project.name || 'Project';
+  return `describe('${name}', () => {
+  test('should render successfully', () => {
+    document.body.innerHTML = '<div id="app"></div>';
+    const app = document.getElementById('app');
+    expect(app).toBeInTheDocument();
+  });
+  
+  test('should have correct title', () => {
+    const title = document.querySelector('title');
+    expect(title?.textContent).toContain('${name}');
+  });
+});`;
 }
 
 function generateIndexHTML(project){
@@ -555,14 +828,63 @@ function getSectionIcon(section){
 }
 
 function generateCSS(project){
-  const color = project.style?.color || '#cc0000';
+  const color = project.meta?.primaryColor || project.style?.color || '#cc0000';
   const radius = project.style?.radius || 12;
   const dark = project.style?.dark !== false;
+  const includeAnimations = project.meta?.includeAnimations !== false;
+  
+  const animationsCSS = includeAnimations ? `
+/* ==============================================
+   Animations & Transitions
+   ============================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-left {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+.animate-slide-right {
+    animation: slideInRight 0.6s ease-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(${hexToRgb(color)}, 0.5);
+    transition: box-shadow 0.3s ease;
+}
+` : '';
   
   return `/* ==============================================
    ${project.name} - Auto-generated Styles
    Mobile-first responsive design
    Theme: ${dark ? 'Dark' : 'Light'} with ${color}
+   Framework: ${project.meta?.framework || 'Vanilla JS'}
    ============================================== */
 
 /* Reset & Base */
@@ -583,6 +905,7 @@ function generateCSS(project){
     --border: ${dark ? 'rgba(204,0,0,0.25)' : 'rgba(0,0,0,0.1)'};
     --shadow: ${dark ? '0 10px 30px rgba(204,0,0,0.2)' : '0 10px 30px rgba(0,0,0,0.1)'};
     --radius: ${radius}px;
+    --transition: all 0.3s ease;
 }
 
 html {
@@ -590,12 +913,14 @@ html {
 }
 
 body {
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    background: ${dark ? 'linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%)' : '#ffffff'};
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: ${dark ? 'linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'};
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
 }
+
+${animationsCSS}
 
 /* ==============================================
    Navbar - Mobile First
@@ -607,6 +932,7 @@ body {
     top: 0;
     z-index: 1000;
     box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
 }
 
 .nav-container {
@@ -625,7 +951,16 @@ body {
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--primary);
-    text-shadow: 0 0 10px rgba(204,0,0,0.3);
+    text-shadow: 0 0 10px rgba(${hexToRgb(color)}, 0.3);
+}
+
+/* Utility function for hex to rgb conversion */
+function hexToRgb(hex) {
+    const result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
+    return result ? 
+        \`\${parseInt(result[1], 16)}, \${parseInt(result[2], 16)}, \${parseInt(result[3], 16)}\` : 
+        '204, 0, 0';
+}`;
 }
 
 .nav-logo i {

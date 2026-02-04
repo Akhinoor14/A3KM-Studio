@@ -347,6 +347,166 @@
                 gap: 10px;
             }
         }
+
+        /* Help Panel */
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B0000, #C80000);
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.5);
+            z-index: 999;
+            transition: all 0.3s;
+        }
+
+        .help-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(139, 0, 0, 0.7);
+        }
+
+        .help-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: rgba(26, 26, 26, 0.98);
+            border-left: 3px solid #8B0000;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: right 0.3s;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .help-panel.active {
+            right: 0;
+        }
+
+        .help-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .help-close:hover {
+            color: #8B0000;
+        }
+
+        .help-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .help-header h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .help-header p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .help-section {
+            margin: 25px 0;
+            padding: 20px;
+            border-left: 4px solid #8B0000;
+            background: rgba(139, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+
+        .help-section h3 {
+            color: #C80000;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-section ul {
+            margin-left: 25px;
+            color: #ccc;
+        }
+
+        .help-section li {
+            margin: 12px 0;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .help-section code {
+            background: rgba(139, 0, 0, 0.2);
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #FF6B6B;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .help-tips {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(200, 0, 0, 0.05));
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .help-tips h4 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-tips li {
+            padding: 10px 0;
+            color: #ccc;
+            border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+            font-size: 13px;
+        }
+
+        .help-tips li:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .help-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .help-btn {
+                bottom: 15px;
+                right: 15px;
+                width: 55px;
+                height: 55px;
+                font-size: 22px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -742,6 +902,162 @@
                 resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> API test failed: ${error.message}`;
             }
         }
+
+        // Toggle help panel
+        function toggleHelp() {
+            const panel = document.getElementById('helpPanel');
+            panel.classList.toggle('active');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const githubToken = localStorage.getItem('github_token');
+            const youtubeKey = localStorage.getItem('youtube_api_key');
+            
+            console.log('🔐 API Status Check:');
+            console.log('GitHub Token:', githubToken ? '✅ Configured' : '❌ Missing');
+            console.log('YouTube API Key:', youtubeKey ? '✅ Configured' : '⚠️ Not configured (optional)');
+
+            // Update status badges
+            const githubStatus = document.getElementById('githubStatus');
+            const youtubeStatus = document.getElementById('youtubeStatus');
+
+            if (githubToken) {
+                githubStatus.textContent = 'Connected';
+                githubStatus.className = 'status-badge badge-connected';
+            } else {
+                githubStatus.textContent = 'Disconnected';
+                githubStatus.className = 'status-badge badge-disconnected';
+            }
+
+            if (youtubeKey) {
+                youtubeStatus.textContent = 'Connected';
+                youtubeStatus.className = 'status-badge badge-connected';
+            }
+
+            // Log page access
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log(
+                    'system',
+                    'System Integration Hub opened',
+                    'Admin',
+                    'success',
+                    'Viewing system connections and status'
+                );
+            }
+        });
     </script>
+
+    <!-- Help Button -->
+    <button class="help-btn" onclick="toggleHelp()" title="Help & Usage Guide">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <!-- Help Panel -->
+    <div class="help-panel" id="helpPanel">
+        <button class="help-close" onclick="toggleHelp()">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="help-header">
+            <h2><i class="fas fa-life-ring"></i> System Integration Hub Guide</h2>
+            <p>Complete guide to understanding system connections & data flow</p>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-info-circle"></i> What is This Hub?</h3>
+            <ul>
+                <li>Central dashboard showing all system integrations</li>
+                <li>Real-time connection status for APIs (GitHub, YouTube)</li>
+                <li>Overview of all content managers and upload systems</li>
+                <li>Test connections with one click</li>
+                <li>See data flow between different components</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-plug"></i> API Configuration</h3>
+            <ul>
+                <li><strong>GitHub Token:</strong> Required for all content uploads</li>
+                <li><strong>YouTube API:</strong> Optional, only needed for video duration fetching</li>
+                <li>Use <code>Test Connection</code> buttons to verify each API</li>
+                <li>Green "Connected" badge = API working correctly</li>
+                <li>Red "Disconnected" badge = API key missing or invalid</li>
+                <li>Click "Configure API Keys" link if connection fails</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-upload"></i> Upload Systems</h3>
+            <ul>
+                <li><strong>Upload Interface (New):</strong> 5 dedicated cards for each content type</li>
+                <li><strong>Upload Interface (Legacy):</strong> Single-page system supporting all types</li>
+                <li>Both systems are fully functional and can be used</li>
+                <li>New interface is recommended for better UX</li>
+                <li>All uploads automatically save to correct directories</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-tasks"></i> Content Managers</h3>
+            <ul>
+                <li><strong>Posts Manager:</strong> Edit/delete blog posts, view statistics</li>
+                <li><strong>Videos Manager:</strong> Manage YouTube videos, update durations</li>
+                <li><strong>Books Manager:</strong> PDF uploads, author management</li>
+                <li><strong>Papers Manager:</strong> Research papers with DOI tracking</li>
+                <li><strong>Vlogs Manager:</strong> Personal video blog management</li>
+                <li>Each manager has full CRUD operations (Create, Read, Update, Delete)</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-sitemap"></i> Data Flow</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Configure GitHub token in API Manager</li>
+                <li><strong>Step 2:</strong> Choose upload system (new or legacy)</li>
+                <li><strong>Step 3:</strong> Fill form with content details</li>
+                <li><strong>Step 4:</strong> Upload → GitHub API → Repository</li>
+                <li><strong>Step 5:</strong> Content appears in respective manager</li>
+                <li><strong>Step 6:</strong> Visible on website after sync</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-cogs"></i> System Settings</h3>
+            <ul>
+                <li><strong>Navigation Editor:</strong> Customize menu structure</li>
+                <li><strong>SEO Manager:</strong> Meta tags, Open Graph, Twitter Cards</li>
+                <li><strong>Site Settings:</strong> Website name, description, footer</li>
+                <li><strong>Certificate Manager:</strong> Add skill/medical certificates</li>
+                <li><strong>Form Builder:</strong> Create custom contact forms</li>
+                <li>All settings stored in localStorage or GitHub repository</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-shield-alt"></i> Activity & Security</h3>
+            <ul>
+                <li><strong>Activity Logger:</strong> Track all system actions with timestamps</li>
+                <li><strong>IP Detection:</strong> Automatic IP address logging</li>
+                <li><strong>User Tracking:</strong> See who made changes and when</li>
+                <li><strong>Token Security:</strong> GitHub tokens stored in browser localStorage</li>
+                <li><strong>No Server-Side Storage:</strong> Everything runs client-side</li>
+            </ul>
+        </div>
+
+        <div class="help-tips">
+            <h4><i class="fas fa-lightbulb"></i> Pro Tips</h4>
+            <ul>
+                <li><strong>Test APIs First:</strong> Always test connections before uploading</li>
+                <li><strong>Use New Interface:</strong> Better organized with dedicated cards</li>
+                <li><strong>Check Activity Log:</strong> Monitor all system activities in real-time</li>
+                <li><strong>Bookmark This Hub:</strong> Quick access to all system status</li>
+                <li><strong>YouTube API Optional:</strong> System works fine without it</li>
+                <li><strong>Regular Token Refresh:</strong> GitHub tokens expire after 90 days</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../../shared/activity-logger.js"></script>
 </body>
 </html>

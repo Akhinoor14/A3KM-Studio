@@ -64,8 +64,57 @@
         .preview-nav { display: flex; gap: 20px; list-style: none; }
         .preview-nav li { cursor: pointer; padding: 8px 15px; border-radius: 4px; transition: all 0.3s; }
         .preview-nav li:hover { background: rgba(255,255,255,0.2); }
+        /* Drag and Drop */
+        .tree-item.dragging { opacity: 0.5; cursor: grabbing; }
+        .tree-item.drag-over { border-top: 3px solid #1f93ff; }
+        .sub-menu { margin-left: 25px; border-left: 2px solid #e0e0e0; padding-left: 10px; }
+        .sub-menu .tree-item { font-size: 13px; }
+        /* Templates */
+        .template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .template-card { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: all 0.3s; }
+        .template-card:hover { border-color: #1f93ff; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(31,147,255,0.3); }
+        .template-card i { font-size: 30px; color: #1f93ff; margin-bottom: 10px; }
+        .template-card h4 { font-size: 14px; margin-bottom: 5px; }
+        .template-card p { font-size: 11px; color: #999; }
+        /* Menu Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 20px; text-align: center; }
+        .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
+        .stat-card p { font-size: 12px; opacity: 0.9; }
+        /* Undo/Redo */
+        .history-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .history-controls button { padding: 8px 12px; }
+        .history-controls .disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Auto-save */
+        .auto-save-indicator { position: fixed; bottom: 20px; right: 20px; background: rgba(76,175,80,0.95); color: white; padding: 10px 20px; border-radius: 25px; font-size: 12px; box-shadow: 0 3px 15px rgba(0,0,0,0.3); animation: fadeInOut 2s; }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        /* Color picker */
+        .color-picker-group { display: flex; gap: 10px; align-items: center; }
+        .color-preview { width: 40px; height: 40px; border-radius: 5px; border: 2px solid #ddd; cursor: pointer; }
+        /* Bulk operations */
+        .bulk-panel { background: #f0f7ff; border: 2px solid #1f93ff; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .bulk-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .checkbox-item { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        /* Page Deployment */
+        .page-browser { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; background: white; padding: 15px; margin: 15px 0; }
+        .page-item { display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; margin: 10px 0; transition: all 0.3s; cursor: pointer; }
+        .page-item:hover { border-color: #1f93ff; background: #f0f7ff; }
+        .page-item.selected { border-color: #1f93ff; background: #e3f2fd; }
+        .page-item.has-navbar { border-left: 5px solid #4caf50; }
+        .page-item input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .page-info { flex: 1; }
+        .page-name { font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; }
+        .page-path { font-size: 12px; color: #999; margin-top: 3px; }
+        .page-status { font-size: 11px; padding: 3px 8px; border-radius: 4px; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .deployment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+        .code-preview { background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+        .apply-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .page-count { background: #1f93ff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; }
         @media (max-width: 1024px) {
             .menu-builder { grid-template-columns: 1fr; }
+            .deployment-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -77,10 +126,47 @@
             <p>Create, edit, and manage website navigation menus</p>
         </div>
 
+        <!-- Menu Stats -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-chart-line"></i> Menu Statistics
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h3 id="statTotalItems">0</h3>
+                    <p>📋 Total Items</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3 id="statActiveMenus">0</h3>
+                    <p>🎯 Active Menus</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h3 id="statWithBadges">0</h3>
+                    <p>🏷️ Items with Badges</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <h3 id="statSubMenus">0</h3>
+                    <p>📂 Sub-menu Items</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Menu Builder -->
         <div class="section">
             <div class="section-title">
                 <i class="fas fa-sitemap"></i> Menu Builder
+            </div>
+            
+            <div class="history-controls">
+                <button class="btn btn-secondary" id="undoBtn" onclick="undoAction()" disabled>
+                    <i class="fas fa-undo"></i> Undo
+                </button>
+                <button class="btn btn-secondary" id="redoBtn" onclick="redoAction()" disabled>
+                    <i class="fas fa-redo"></i> Redo
+                </button>
+                <span style="margin-left: auto; color: #999; font-size: 13px;">
+                    <i class="fas fa-keyboard"></i> Ctrl+Z / Ctrl+Y for Undo/Redo
+                </span>
             </div>
 
             <div class="menu-builder">
@@ -128,6 +214,19 @@
                                 </select>
                             </div>
                             <div class="input-group">
+                                <label for="itemParent">Parent Menu</label>
+                                <select id="itemParent" onchange="updateSelectedItem()">
+                                    <option value="">None (Top Level)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="color-picker-group">
+                                    <span>Badge Color</span>
+                                    <input type="color" id="itemBadgeColor" value="#1f93ff" onchange="updateSelectedItem()">
+                                    <div class="color-preview" id="colorPreview" style="background: #1f93ff;"></div>
+                                </label>
+                            </div>
+                            <div class="input-group">
                                 <label>
                                     <input type="checkbox" id="itemBadge" onchange="updateSelectedItem()"> Show Badge
                                 </label>
@@ -155,6 +254,75 @@
                 <ul class="preview-nav" id="menuPreview">
                     <li><i class="fas fa-spinner fa-spin"></i> Loading menu...</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Menu Templates -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-layer-group"></i> Quick Templates
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Start with a pre-built menu template and customize it</p>
+            <div class="template-grid">
+                <div class="template-card" onclick="applyTemplate('corporate')">
+                    <i class="fas fa-building"></i>
+                    <h4>Corporate</h4>
+                    <p>Professional business menu</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('portfolio')">
+                    <i class="fas fa-briefcase"></i>
+                    <h4>Portfolio</h4>
+                    <p>Showcase your work</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('blog')">
+                    <i class="fas fa-blog"></i>
+                    <h4>Blog</h4>
+                    <p>Content-focused menu</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('ecommerce')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h4>E-Commerce</h4>
+                    <p>Online store layout</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('landing')">
+                    <i class="fas fa-rocket"></i>
+                    <h4>Landing Page</h4>
+                    <p>Simple single page</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('documentation')">
+                    <i class="fas fa-book"></i>
+                    <h4>Documentation</h4>
+                    <p>Technical docs menu</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Operations -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-tasks"></i> Bulk Operations
+            </div>
+            <div class="bulk-panel">
+                <div style="margin-bottom: 15px;">
+                    <strong>🎯 Quick Actions:</strong>
+                </div>
+                <div class="bulk-actions">
+                    <button class="btn btn-secondary" onclick="duplicateCurrentMenu()">
+                        <i class="fas fa-copy"></i> Duplicate Menu
+                    </button>
+                    <button class="btn btn-secondary" onclick="sortMenuItems('alpha')">
+                        <i class="fas fa-sort-alpha-down"></i> Sort A-Z
+                    </button>
+                    <button class="btn btn-secondary" onclick="addBadgesToAll()">
+                        <i class="fas fa-tags"></i> Add Badges to All
+                    </button>
+                    <button class="btn btn-secondary" onclick="openAllInNewTab()">
+                        <i class="fas fa-external-link-alt"></i> Open All in New Tab
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllItems()">
+                        <i class="fas fa-trash-alt"></i> Clear All Items
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -215,6 +383,65 @@
             <div id="manageStatus"></div>
         </div>
 
+        <!-- Page Deployment -->
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-code"></i> Deploy to Pages
+            </div>
+            
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <strong>⚠️ Important:</strong> This will inject/remove navigation HTML in actual website pages. Make sure to backup your files first!
+            </div>
+
+            <div class="apply-controls">
+                <button class="btn btn-primary" onclick="scanWebsitePages()">
+                    <i class="fas fa-search"></i> Scan Website Pages
+                </button>
+                <button class="btn btn-secondary" onclick="selectAllPages()">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button class="btn btn-secondary" onclick="deselectAllPages()">
+                    <i class="fas fa-square"></i> Deselect All
+                </button>
+                <span class="page-count" id="selectedCount">0 pages selected</span>
+            </div>
+
+            <div class="page-browser" id="pageBrowser">
+                <div style="padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>Click "Scan Website Pages" to find HTML files</p>
+                </div>
+            </div>
+
+            <div class="deployment-grid">
+                <div>
+                    <h4 style="margin-bottom: 15px;">📋 Generated Navbar Code</h4>
+                    <div class="code-preview" id="navbarCode">
+                        <!-- Generated navbar HTML will appear here -->
+                        <span style="color: #999;">Select pages and generate navbar code...</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 15px;">🎯 Deployment Actions</h4>
+                    <div class="btn-group" style="flex-direction: column; align-items: stretch;">
+                        <button class="btn btn-primary" onclick="generateNavbarCode()" style="width: 100%;">
+                            <i class="fas fa-code"></i> Generate Navbar HTML
+                        </button>
+                        <button class="btn btn-success" onclick="applyNavbarToPages()" style="width: 100%;">
+                            <i class="fas fa-plus-circle"></i> Apply Navbar to Selected Pages
+                        </button>
+                        <button class="btn btn-danger" onclick="removeNavbarFromPages()" style="width: 100%;">
+                            <i class="fas fa-minus-circle"></i> Remove Navbar from Selected Pages
+                        </button>
+                        <button class="btn btn-secondary" onclick="previewNavbarOnPage()" style="width: 100%;">
+                            <i class="fas fa-eye"></i> Preview on Page
+                        </button>
+                    </div>
+                    <div id="deploymentStatus" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Icon Selector -->
         <div class="section">
             <div class="section-title">
@@ -229,6 +456,7 @@
     </div>
 
     <script src="../../shared/github-token-manager.js"></script>
+    <script src="../../shared/activity-logger.js"></script>
     <script>
         const MENU_STORAGE_KEY = 'a3km_navigation_menus';
         const ICON_LIBRARY = ['fa-home', 'fa-user', 'fa-cog', 'fa-bell', 'fa-envelope', 'fa-chart-bar', 'fa-folder', 'fa-file', 'fa-image', 'fa-video', 'fa-book', 'fa-download', 'fa-upload', 'fa-share', 'fa-heart', 'fa-star', 'fa-calendar', 'fa-clock', 'fa-map-marker', 'fa-phone', 'fa-globe', 'fa-link', 'fa-code', 'fa-database', 'fa-server', 'fa-cloud', 'fa-lock', 'fa-key', 'fa-shield'];
@@ -237,37 +465,836 @@
         let currentMenuId = 'main';
         let currentItemId = null;
         let menus = {};
+        let history = [];
+        let historyIndex = -1;
+        let draggedElement = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             tokenManager = typeof GitHubTokenManager !== 'undefined' ? new GitHubTokenManager() : null;
             loadMenus();
             initIconPicker();
+            initKeyboardShortcuts();
             document.getElementById('importFile').addEventListener('change', e => {
                 if (e.target.files[0]) importMenuFile(e.target.files[0]);
             });
             
+            // Color picker preview update
+            document.getElementById('itemBadgeColor').addEventListener('input', e => {
+                document.getElementById('colorPreview').style.background = e.target.value;
+            });
+            
+            // Auto-save every 30 seconds
+            setInterval(() => {
+                saveMenus(true);
+            }, 30000);
+            
             // Live update every 5 seconds
             setInterval(() => {
-                loadMenus();
-                renderMenuTree();
+                updateMenuStats();
             }, 5000);
+            
+            // Log activity on page load
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'Navigation Editor opened', 'Admin', 'success', `Current menu: ${currentMenuId}`);
+            
+            // Log activity on page load
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'Navigation Editor opened', 'Admin', 'success', `Current menu: ${currentMenuId}`);
+            }
         });
+
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveMenu();
+                } else if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undoAction();
+                } else if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redoAction();
+                } else if (e.key === 'Delete' && currentItemId) {
+                    e.preventDefault();
+                    deleteMenuItem();
+                }
+            });
+        }
+
+        function saveToHistory() {
+            history = history.slice(0, historyIndex + 1);
+            history.push(JSON.parse(JSON.stringify(menus)));
+            historyIndex++;
+            updateHistoryButtons();
+        }
+
+        function undoAction() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                menus = JSON.parse(JSON.stringify(history[historyIndex]));
+                saveMenus();
+                loadMenuLayout();
+            }
+        }
+
+        function redoAction() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                menus = JSON.parse(JSON.stringify(history[historyIndex]));
+                saveMenus();
+                loadMenuLayout();
+            }
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+        }
+
+        function initDragDrop() {
+            const treeItems = document.querySelectorAll('.tree-item');
+            treeItems.forEach(item => {
+                item.draggable = true;
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            
+            const menu = menus[currentMenuId];
+            const draggedId = parseInt(draggedElement.getAttribute('data-id'));
+            const targetId = parseInt(this.getAttribute('data-id'));
+            
+            const draggedIndex = menu.items.findIndex(i => i.id === draggedId);
+            const targetIndex = menu.items.findIndex(i => i.id === targetId);
+            
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+                const [removed] = menu.items.splice(draggedIndex, 1);
+                menu.items.splice(targetIndex, 0, removed);
+                saveToHistory();
+                saveMenus();
+                renderMenuTree();
+                renderPreview();
+            }
+            
+            return false;
+        }
+
+        function handleDragEnd() {
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        function updateMenuStats() {
+            let totalItems = 0;
+            let withBadges = 0;
+            let subMenus = 0;
+            
+            Object.values(menus).forEach(menu => {
+                if (menu.items) {
+                    totalItems += menu.items.length;
+                    withBadges += menu.items.filter(i => i.badge).length;
+                    subMenus += menu.items.filter(i => i.parent).length;
+                }
+            });
+            
+            document.getElementById('statTotalItems').textContent = totalItems;
+            document.getElementById('statActiveMenus').textContent = Object.keys(menus).length;
+            document.getElementById('statWithBadges').textContent = withBadges;
+            document.getElementById('statSubMenus').textContent = subMenus;
+        }
+
+        const menuTemplates = {
+            corporate: [
+                { id: 1, label: 'Home', url: '/', icon: 'fa-home', target: '_self' },
+                { id: 2, label: 'About Us', url: '/about', icon: 'fa-info-circle', target: '_self' },
+                { id: 3, label: 'Services', url: '/services', icon: 'fa-briefcase', target: '_self' },
+                { id: 4, label: 'Team', url: '/team', icon: 'fa-users', target: '_self' },
+                { id: 5, label: 'Contact', url: '/contact', icon: 'fa-envelope', target: '_self' }
+            ],
+            portfolio: [
+                { id: 1, label: 'Home', url: '/', icon: 'fa-home', target: '_self' },
+                { id: 2, label: 'Portfolio', url: '/portfolio', icon: 'fa-folder', target: '_self' },
+                { id: 3, label: 'About', url: '/about', icon: 'fa-user', target: '_self' },
+                { id: 4, label: 'Blog', url: '/blog', icon: 'fa-blog', target: '_self' },
+                { id: 5, label: 'Contact', url: '/contact', icon: 'fa-phone', target: '_self' }
+            ],
+            blog: [
+                { id: 1, label: 'Home', url: '/', icon: 'fa-home', target: '_self' },
+                { id: 2, label: 'Blog', url: '/blog', icon: 'fa-newspaper', target: '_self' },
+                { id: 3, label: 'Categories', url: '/categories', icon: 'fa-tags', target: '_self' },
+                { id: 4, label: 'About', url: '/about', icon: 'fa-user', target: '_self' },
+                { id: 5, label: 'Subscribe', url: '/subscribe', icon: 'fa-rss', target: '_self', badge: true, badgeText: 'New' }
+            ],
+            ecommerce: [
+                { id: 1, label: 'Shop', url: '/shop', icon: 'fa-shopping-bag', target: '_self' },
+                { id: 2, label: 'Categories', url: '/categories', icon: 'fa-list', target: '_self' },
+                { id: 3, label: 'Cart', url: '/cart', icon: 'fa-shopping-cart', target: '_self', badge: true, badgeText: '0' },
+                { id: 4, label: 'Account', url: '/account', icon: 'fa-user', target: '_self' },
+                { id: 5, label: 'Support', url: '/support', icon: 'fa-headset', target: '_self' }
+            ],
+            landing: [
+                { id: 1, label: 'Features', url: '#features', icon: 'fa-star', target: '_self' },
+                { id: 2, label: 'Pricing', url: '#pricing', icon: 'fa-dollar-sign', target: '_self' },
+                { id: 3, label: 'Testimonials', url: '#testimonials', icon: 'fa-comments', target: '_self' },
+                { id: 4, label: 'FAQ', url: '#faq', icon: 'fa-question-circle', target: '_self' },
+                { id: 5, label: 'Sign Up', url: '#signup', icon: 'fa-user-plus', target: '_self', badge: true, badgeText: 'Free' }
+            ],
+            documentation: [
+                { id: 1, label: 'Getting Started', url: '/docs/start', icon: 'fa-rocket', target: '_self' },
+                { id: 2, label: 'API Reference', url: '/docs/api', icon: 'fa-code', target: '_self' },
+                { id: 3, label: 'Guides', url: '/docs/guides', icon: 'fa-book-open', target: '_self' },
+                { id: 4, label: 'Examples', url: '/docs/examples', icon: 'fa-file-code', target: '_self' },
+                { id: 5, label: 'Support', url: '/support', icon: 'fa-life-ring', target: '_self' }
+            ]
+        };
+
+        function applyTemplate(templateName) {
+            if (!confirm(`Apply ${templateName} template? This will replace current menu items.`)) return;
+            
+            const menu = menus[currentMenuId];
+            menu.items = JSON.parse(JSON.stringify(menuTemplates[templateName]));
+            saveToHistory();
+            saveMenus();
+            renderMenuTree();
+            renderPreview();
+            showAutoSaveIndicator('Template applied!');
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', `Applied ${templateName} template`, 'Admin', 'success', `${menu.items.length} items loaded from ${templateName} template`);
+            }
+        }
+
+        function duplicateCurrentMenu() {
+            const newId = `${currentMenuId}_copy_${Date.now()}`;
+            menus[newId] = JSON.parse(JSON.stringify(menus[currentMenuId]));
+            menus[newId].id = newId;
+            menus[newId].name = menus[currentMenuId].name + ' (Copy)';
+            saveToHistory();
+            saveMenus();
+            showAutoSaveIndicator('Menu duplicated!');
+        }
+
+        function sortMenuItems(type) {
+            const menu = menus[currentMenuId];
+            if (type === 'alpha') {
+                menu.items.sort((a, b) => a.label.localeCompare(b.label));
+            }
+            saveToHistory();
+            saveMenus();
+            renderMenuTree();
+            renderPreview();
+            showAutoSaveIndicator('Menu sorted!');
+        }
+
+        function addBadgesToAll() {
+            const badgeText = prompt('Enter badge text for all items:', 'New');
+            if (!badgeText) return;
+            
+            const menu = menus[currentMenuId];
+            menu.items.forEach(item => {
+                item.badge = true;
+                item.badgeText = badgeText;
+            });
+            saveToHistory();
+            saveMenus();
+            renderMenuTree();
+            renderPreview();
+            showAutoSaveIndicator('Badges added to all items!');
+        }
+
+        function openAllInNewTab() {
+            const menu = menus[currentMenuId];
+            menu.items.forEach(item => item.target = '_blank');
+            saveToHistory();
+            saveMenus();
+            renderMenuTree();
+            showAutoSaveIndicator('All items set to open in new tab!');
+        }
+
+        function clearAllItems() {
+            if (!confirm('Delete all menu items? This cannot be undone.')) return;
+            
+            const menu = menus[currentMenuId];
+            menu.items = [];
+            currentItemId = null;
+            document.getElementById('editorPanel').style.display = 'block';
+            document.getElementById('editorForm').style.display = 'none';
+            saveToHistory();
+            saveMenus();
+            renderMenuTree();
+            renderPreview();
+            showAutoSaveIndicator('All items cleared!');
+        }
+
+        function showAutoSaveIndicator(message = 'Auto-saved ✓') {
+            const indicator = document.createElement('div');
+            indicator.className = 'auto-save-indicator';
+            indicator.innerHTML = `<i class="fas fa-check"></i> ${message}`;
+            document.body.appendChild(indicator);
+            setTimeout(() => indicator.remove(), 2000);
+        }
+
+        // PAGE DEPLOYMENT FUNCTIONS
+        let websitePages = [];
+        let selectedPages = [];
+
+        const commonPagePaths = [
+            { path: 'index.html', name: 'Home Page' },
+            { path: 'About me/about.html', name: 'About Page' },
+            { path: 'Contact/contact.html', name: 'Contact Page' },
+            { path: 'Projects Code/projects.html', name: 'Projects Page' },
+            { path: 'Content Studio/hub.html', name: 'Content Hub' },
+            { path: 'Only-boss/dashboard/only-boss-dashboard-redesigned.html', name: 'Boss Dashboard' }
+        ];
+
+        function scanWebsitePages() {
+            const browser = document.getElementById('pageBrowser');
+            browser.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Scanning pages...</div>';
+            
+            setTimeout(() => {
+                websitePages = commonPagePaths.map((page, idx) => ({
+                    id: idx,
+                    path: page.path,
+                    name: page.name,
+                    hasNavbar: false,
+                    selected: false
+                }));
+                
+                renderPageBrowser();
+                showAutoSaveIndicator('✅ Found ' + websitePages.length + ' pages');
+            }, 1000);
+        }
+
+        function renderPageBrowser() {
+            const browser = document.getElementById('pageBrowser');
+            
+            if (websitePages.length === 0) {
+                browser.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;"><i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i><p>No pages found. Click "Scan Website Pages"</p></div>';
+                return;
+            }
+            
+            browser.innerHTML = websitePages.map(page => `
+                <div class="page-item ${page.selected ? 'selected' : ''} ${page.hasNavbar ? 'has-navbar' : ''}" onclick="togglePageSelection(${page.id})">
+                    <input type="checkbox" ${page.selected ? 'checked' : ''} onclick="event.stopPropagation(); togglePageSelection(${page.id});">
+                    <div class="page-info">
+                        <div class="page-name">
+                            <i class="fas fa-file-code"></i>
+                            ${page.name}
+                            ${page.hasNavbar ? '<span class="page-status status-active">✓ Has Navbar</span>' : '<span class="page-status status-inactive">✗ No Navbar</span>'}
+                        </div>
+                        <div class="page-path">${page.path}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateSelectedCount();
+        }
+
+        function togglePageSelection(id) {
+            const page = websitePages.find(p => p.id === id);
+            if (page) {
+                page.selected = !page.selected;
+                renderPageBrowser();
+            }
+        }
+
+        function selectAllPages() {
+            websitePages.forEach(page => page.selected = true);
+            renderPageBrowser();
+        }
+
+        function deselectAllPages() {
+            websitePages.forEach(page => page.selected = false);
+            renderPageBrowser();
+        }
+
+        function updateSelectedCount() {
+            const count = websitePages.filter(p => p.selected).length;
+            document.getElementById('selectedCount').textContent = `${count} pages selected`;
+        }
+
+        function generateNavbarCode() {
+            const menu = menus[currentMenuId];
+            if (!menu.items || menu.items.length === 0) {
+                document.getElementById('navbarCode').innerHTML = '<span style="color: #f44336;">⚠️ No menu items to generate. Add items first!</span>';
+                return;
+            }
+            
+            const navbarHTML = `<!-- A3KM Navigation Bar - Auto-generated -->
+<style>
+    /* A3KM Navbar Styles - DO NOT EDIT MANUALLY */
+    .a3km-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #1f93ff, #0081cf);
+        padding: 15px 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        z-index: 9999;
+        transition: all 0.3s ease;
+    }
+    .a3km-navbar-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        gap: 25px;
+        align-items: center;
+        justify-content: ${menu.alignment || 'left'};
+    }
+    .a3km-navbar a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 15px;
+        border-radius: 5px;
+        transition: all 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .a3km-navbar a:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+    .a3km-navbar-badge {
+        background: var(--badge-color, #ff4444);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .a3km-mobile-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+    }
+    /* Body padding to prevent content overlap */
+    body.a3km-has-navbar {
+        padding-top: 60px !important;
+    }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .a3km-navbar-container {
+            flex-direction: column;
+            gap: 10px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .a3km-navbar-container.active {
+            max-height: 500px;
+            opacity: 1;
+            padding: 15px 0;
+        }
+        .a3km-mobile-toggle {
+            display: block;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+        .a3km-navbar a {
+            width: 100%;
+            justify-content: center;
+        }
+        body.a3km-has-navbar {
+            padding-top: 55px !important;
+        }
+    }
+    /* Smooth scroll behavior */
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+
+<nav class="a3km-navbar" id="a3kmNavbar">
+    <button class="a3km-mobile-toggle" onclick="document.querySelector('.a3km-navbar-container').classList.toggle('active')" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="a3km-navbar-container">
+        ${menu.items.filter(item => !item.parent).map(item => `
+        <a href="${item.url}" target="${item.target}" ${item.badgeColor ? `style="--badge-color: ${item.badgeColor};"` : ''}>
+            <i class="fas ${item.icon}"></i>
+            <span>${item.label}</span>
+            ${item.badge ? `<span class="a3km-navbar-badge">${item.badgeText}</span>` : ''}
+        </a>`).join('')}
+    </div>
+</nav>
+
+<script>
+    // Add body class for padding
+    document.body.classList.add('a3km-has-navbar');
+    
+    // Navbar scroll behavior (optional: hide on scroll down, show on scroll up)
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('a3kmNavbar');
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScroll = currentScroll;
+    });
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navbar = document.querySelector('.a3km-navbar');
+        const container = document.querySelector('.a3km-navbar-container');
+        if (!navbar.contains(e.target) && container.classList.contains('active')) {
+            container.classList.remove('active');
+        }
+    });
+</script>
+<!-- End Navigation Bar -->`;
+            
+            document.getElementById('navbarCode').textContent = navbarHTML;
+            showAutoSaveIndicator('✅ Production-ready navbar generated!');
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'Production navbar code generated', 'Admin', 'success', `Menu: ${menu.name}, ${menu.items.length} items, ${navbarHTML.length} characters`);
+            }
+        }
+
+        function applyNavbarToPages() {
+            const selected = websitePages.filter(p => p.selected);
+            if (selected.length === 0) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ No pages selected!</div>';
+                return;
+            }
+            
+            const navbarCode = document.getElementById('navbarCode').textContent;
+            if (!navbarCode || navbarCode.includes('No menu items')) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ Generate navbar code first!</div>';
+                return;
+            }
+            
+            if (!tokenManager || !tokenManager.token) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ GitHub token not configured! Please set up GitHub integration first.</div>';
+                return;
+            }
+            
+            if (!confirm(`Apply navbar to ${selected.length} pages?\n\nThis will inject navigation HTML into:\n${selected.map(p => '• ' + p.name).join('\n')}\n\n⚠️ This will commit changes to your GitHub repository!`)) return;
+            
+            document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-info"><i class="fas fa-spinner fa-spin"></i> Applying navbar to pages via GitHub API...</div>';
+            
+            applyNavbarViaGitHub(selected, navbarCode);
+        }
+
+        async function applyNavbarViaGitHub(pages, navbarCode) {
+            const owner = 'Akhinoor14';
+            const repo = 'A3KM-Studio';
+            const token = tokenManager.token;
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            for (const page of pages) {
+                try {
+                    // Fetch current file content
+                    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${page.path}`, {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch ${page.path}: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    let content = atob(data.content);
+                    
+                    // Check if navbar already exists
+                    if (content.includes('<!-- A3KM Navigation Bar - Auto-generated -->')) {
+                        // Remove old navbar (including old inline styles version)
+                        const regex = /<!-- A3KM Navigation Bar - Auto-generated -->[\s\S]*?<!-- End Navigation Bar -->/g;
+                        content = content.replace(regex, '');
+                        // Remove old body padding class if exists
+                        content = content.replace(/class="a3km-has-navbar"/g, '');
+                        content = content.replace(/<body([^>]*)>/i, '<body$1>');
+                    }
+                    
+                    // Check if FontAwesome is included
+                    const hasFontAwesome = content.includes('font-awesome') || content.includes('fontawesome');
+                    let fontAwesomeLink = '';
+                    if (!hasFontAwesome) {
+                        fontAwesomeLink = '\n    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">';
+                    }
+                    
+                    // Inject FontAwesome if needed (before </head>)
+                    if (fontAwesomeLink) {
+                        content = content.replace(/<\/head>/i, fontAwesomeLink + '\n</head>');
+                    }
+                    
+                    // Find body tag - handle multiple formats
+                    const bodyRegex = /<body[^>]*>/i;
+                    const bodyMatch = content.match(bodyRegex);
+                    
+                    if (!bodyMatch) {
+                        throw new Error('No <body> tag found in HTML');
+                    }
+                    
+                    // Inject navbar right after body tag
+                    const bodyTag = bodyMatch[0];
+                    const bodyIndex = content.indexOf(bodyTag);
+                    const afterBodyIndex = bodyIndex + bodyTag.length;
+                    
+                    const newContent = content.slice(0, afterBodyIndex) + 
+                                     '\n' + navbarCode + '\n' + 
+                                     content.slice(afterBodyIndex);
+                    
+                    // Validate that injection was successful
+                    if (!newContent.includes('<!-- A3KM Navigation Bar - Auto-generated -->')) {
+                        throw new Error('Failed to inject navbar - validation failed');
+                    }
+                    
+                    // Commit changes
+                    const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${page.path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Add A3KM navigation bar to ${page.name} [auto-generated]`,
+                            content: btoa(unescape(encodeURIComponent(newContent))),
+                            sha: data.sha
+                        })
+                    });
+                    
+                    if (updateResponse.ok) {
+                        page.hasNavbar = true;
+                        successCount++;
+                    } else {
+                        const errorData = await updateResponse.json();
+                        throw new Error(`GitHub API error: ${errorData.message || updateResponse.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Error applying navbar to ${page.path}:`, error);
+                    errors.push(`${page.name}: ${error.message}`);
+                    errorCount++;
+                }
+            }
+            
+            renderPageBrowser();
+            
+            if (successCount > 0 && errorCount === 0) {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-success">✅ Navbar applied to ${successCount} pages successfully!\n\nPages updated:\n${pages.map(p => '• ' + p.name).join('\n')}\n\n💡 Features added:\n• Fixed positioning (stays at top)\n• Responsive design (mobile-friendly)\n• Smooth animations\n• No content overlap\n• FontAwesome icons\n\n🚀 Changes committed to GitHub!</div>`;
+                showAutoSaveIndicator('✅ Navbar deployed to GitHub!');
+            } else if (successCount > 0 && errorCount > 0) {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-info">⚠️ Partial success: ${successCount} succeeded, ${errorCount} failed\n\nErrors:\n${errors.join('\n')}</div>`;
+            } else {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-error">❌ Failed to apply navbar\n\nErrors:\n${errors.join('\n')}\n\n💡 Tip: Check if GitHub token has write permissions.</div>`;
+            }
+            
+            // Save deployment info
+            localStorage.setItem('a3km_navbar_deployments', JSON.stringify({
+                timestamp: new Date().toISOString(),
+                menuId: currentMenuId,
+                pages: pages.map(p => p.path),
+                success: successCount,
+                failed: errorCount
+            }));
+        }
+
+        function removeNavbarFromPages() {
+            const selected = websitePages.filter(p => p.selected);
+            if (selected.length === 0) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ No pages selected!</div>';
+                return;
+            }
+            
+            if (!tokenManager || !tokenManager.token) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ GitHub token not configured! Please set up GitHub integration first.</div>';
+                return;
+            }
+            
+            if (!confirm(`Remove navbar from ${selected.length} pages?\n\nThis will remove navigation HTML from:\n${selected.map(p => '• ' + p.name).join('\n')}\n\n⚠️ This will commit changes to your GitHub repository!`)) return;
+            
+            document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-info"><i class="fas fa-spinner fa-spin"></i> Removing navbar from pages via GitHub API...</div>';
+            
+            removeNavbarViaGitHub(selected);
+        }
+
+        async function removeNavbarViaGitHub(pages) {
+            const owner = 'Akhinoor14';
+            const repo = 'A3KM-Studio';
+            const token = tokenManager.token;
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            for (const page of pages) {
+                try {
+                    // Fetch current file content
+                    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${page.path}`, {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch ${page.path}: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    let content = atob(data.content);
+                    
+                    // Check if navbar exists
+                    if (!content.includes('<!-- A3KM Navigation Bar - Auto-generated -->')) {
+                        errors.push(`${page.name}: No navbar found`);
+                        errorCount++;
+                        continue;
+                    }
+                    
+                    // Remove navbar
+                    const regex = /<!-- A3KM Navigation Bar - Auto-generated -->[\s\S]*?<!-- End Navigation Bar -->/g;
+                    let newContent = content.replace(regex, '');
+                    
+                    // Remove body padding class if exists
+                    newContent = newContent.replace(/class="a3km-has-navbar"/g, '');
+                    
+                    // Clean up extra newlines
+                    newContent = newContent.replace(/\n{3,}/g, '\n\n');
+                    
+                    // Validate removal
+                    if (newContent === content) {
+                        throw new Error('Failed to remove navbar - no changes detected');
+                    }
+                    
+                    // Commit changes
+                    const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${page.path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Remove A3KM navigation bar from ${page.name} [auto-generated]`,
+                            content: btoa(unescape(encodeURIComponent(newContent))),
+                            sha: data.sha
+                        })
+                    });
+                    
+                    if (updateResponse.ok) {
+                        page.hasNavbar = false;
+                        successCount++;
+                    } else {
+                        const errorData = await updateResponse.json();
+                        throw new Error(`GitHub API error: ${errorData.message || updateResponse.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Error removing navbar from ${page.path}:`, error);
+                    errors.push(`${page.name}: ${error.message}`);
+                    errorCount++;
+                }
+            }
+            
+            renderPageBrowser();
+            
+            if (successCount > 0 && errorCount === 0) {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-success">✅ Navbar removed from ${successCount} pages!\n\nPages updated:\n${pages.map(p => '• ' + p.name).join('\n')}\n\n🧹 Cleaned up:\n• All navbar HTML\n• CSS styles\n• JavaScript code\n• Body padding\n\n🚀 Changes committed to GitHub!</div>`;
+                showAutoSaveIndicator('✅ Navbar removed from GitHub!');
+            } else if (successCount > 0 && errorCount > 0) {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-info">⚠️ Partial success: ${successCount} succeeded, ${errorCount} failed\n\nErrors:\n${errors.join('\n')}</div>`;
+            } else {
+                document.getElementById('deploymentStatus').innerHTML = `<div class="status-message status-error">❌ Failed to remove navbar\n\nErrors:\n${errors.join('\n')}\n\n💡 Tip: Check if navbar exists on selected pages.</div>`;
+            }
+        }
+
+        function previewNavbarOnPage() {
+            const selected = websitePages.filter(p => p.selected);
+            if (selected.length === 0) {
+                document.getElementById('deploymentStatus').innerHTML = '<div class="status-message status-error">❌ Select a page to preview!</div>';
+                return;
+            }
+            
+            const menu = menus[currentMenuId];
+            const previewWindow = window.open('', 'Navbar Preview', 'width=1200,height=700');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Navbar Preview - ${selected[0].name}</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                </head>
+                <body style="margin: 0; font-family: Arial, sans-serif;">
+                    <nav style="background: linear-gradient(135deg, #1f93ff, #0081cf); padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="max-width: 1400px; margin: 0 auto; display: flex; gap: 25px; align-items: center;">
+                            ${menu.items.filter(item => !item.parent).map(item => `
+                            <a href="${item.url}" target="${item.target}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 8px 15px; border-radius: 5px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='transparent'">
+                                <i class="fas ${item.icon}"></i>
+                                <span>${item.label}</span>
+                                ${item.badge ? `<span style="background: ${item.badgeColor || '#ff4444'}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">${item.badgeText}</span>` : ''}
+                            </a>`).join('')}
+                        </div>
+                    </nav>
+                    <div style="padding: 40px; max-width: 1400px; margin: 0 auto;">
+                        <h1>Preview: ${selected[0].name}</h1>
+                        <p style="color: #666;">This is how the navbar will look on <strong>${selected[0].path}</strong></p>
+                        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                            <h2>Sample Page Content</h2>
+                            <p>Your page content will appear below the navigation bar.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            showAutoSaveIndicator('✅ Preview opened!');
+        }
 
         function loadMenus() {
             menus = JSON.parse(localStorage.getItem(MENU_STORAGE_KEY) || '{}');
             if (!menus.main) {
+                // Create empty menu structure - user will build their own menu
                 menus.main = {
                     id: 'main',
                     name: 'Main Navigation',
                     position: 'top',
                     alignment: 'left',
-                    items: [
-                        { id: 1, label: 'Home', url: '/', icon: 'fa-home', target: '_self' },
-                        { id: 2, label: 'About', url: '/about', icon: 'fa-user', target: '_self' },
-                        { id: 3, label: 'Projects', url: '/projects', icon: 'fa-folder', target: '_self' }
-                    ]
+                    items: []
                 };
                 saveMenus();
+                
+                // Log initial setup
+                if (typeof ActivityLogger !== 'undefined') {
+                    ActivityLogger.log('system', 'Navigation menu initialized', 'Admin', 'success', 'Empty menu structure created - ready for customization');
+                }
             }
             loadMenuLayout();
         }
@@ -306,17 +1333,23 @@
 
             menu.items.forEach(item => {
                 const div = document.createElement('div');
-                div.className = `tree-item ${currentItemId === item.id ? 'active' : ''}`;
+                div.className = `tree-item ${currentItemId === item.id ? 'active' : ''} ${item.parent ? 'sub-menu' : ''}`;
+                div.setAttribute('data-id', item.id);
                 div.onclick = () => selectMenuItem(item.id);
+                const badgeColor = item.badgeColor || '#1f93ff';
                 div.innerHTML = `
                     <div class="tree-item-label">
+                        <i class="fas fa-grip-vertical" style="color: #999; margin-right: 5px;"></i>
                         <i class="fas ${item.icon}"></i> ${item.label}
-                        ${item.badge ? `<span style="background: #1f93ff; color: white; border-radius: 3px; padding: 2px 6px; font-size: 10px; margin-left: 5px;">${item.badgeText}</span>` : ''}
+                        ${item.badge ? `<span style="background: ${badgeColor}; color: white; border-radius: 3px; padding: 2px 6px; font-size: 10px; margin-left: 5px;">${item.badgeText}</span>` : ''}
                     </div>
-                    <div class="tree-item-url">${item.url}</div>
+                    <div class="tree-item-url">${item.url} ${item.target === '_blank' ? '<i class="fas fa-external-link-alt" style="font-size: 10px;"></i>' : ''}</div>
                 `;
                 tree.appendChild(div);
             });
+            
+            initDragDrop();
+            updateMenuStats();
         }
 
         function selectMenuItem(id) {
@@ -331,6 +1364,17 @@
                 document.getElementById('itemTarget').value = item.target || '_self';
                 document.getElementById('itemBadge').checked = item.badge || false;
                 document.getElementById('itemBadgeText').value = item.badgeText || '';
+                document.getElementById('itemBadgeColor').value = item.badgeColor || '#1f93ff';
+                document.getElementById('colorPreview').style.background = item.badgeColor || '#1f93ff';
+                
+                // Update parent selector
+                const parentSelect = document.getElementById('itemParent');
+                parentSelect.innerHTML = '<option value="">None (Top Level)</option>';
+                menu.items.forEach(i => {
+                    if (i.id !== id) {
+                        parentSelect.innerHTML += `<option value="${i.id}" ${item.parent === i.id ? 'selected' : ''}>${i.label}</option>`;
+                    }
+                });
 
                 document.getElementById('editorPanel').style.display = 'none';
                 document.getElementById('editorForm').style.display = 'block';
@@ -350,12 +1394,21 @@
                 icon: 'fa-link',
                 target: '_self',
                 badge: false,
-                badgeText: ''
+                badgeText: '',
+                badgeColor: '#1f93ff',
+                parent: null
             });
 
             currentItemId = newId;
             selectMenuItem(newId);
+            saveToHistory();
             saveMenus();
+            updateMenuStats();
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', 'Menu item added', 'Admin', 'success', `Menu: ${menu.name}, Item ID: ${newId}, Total items: ${menu.items.length}`);
+            }
         }
 
         function updateSelectedItem() {
@@ -369,16 +1422,20 @@
                 item.target = document.getElementById('itemTarget').value;
                 item.badge = document.getElementById('itemBadge').checked;
                 item.badgeText = document.getElementById('itemBadgeText').value;
+                item.badgeColor = document.getElementById('itemBadgeColor').value;
+                item.parent = document.getElementById('itemParent').value || null;
 
                 renderMenuTree();
                 renderPreview();
+                saveMenus(true);
             }
         }
 
         function deleteMenuItem() {
-            if (!confirm('Delete this menu item?')) return;
+            if (!confirm('❌ Delete this menu item? This cannot be undone.')) return;
             
             const menu = menus[currentMenuId];
+            const itemLabel = menu.items.find(i => i.id === currentItemId)?.label || 'Unknown';
             menu.items = menu.items.filter(i => i.id !== currentItemId);
             currentItemId = null;
 
@@ -387,7 +1444,15 @@
 
             renderMenuTree();
             renderPreview();
+            saveToHistory();
             saveMenus();
+            updateMenuStats();
+            showAutoSaveIndicator('Item deleted');
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', 'Menu item deleted', 'Admin', 'success', `Deleted: ${itemLabel}, Remaining items: ${menu.items.length}`);
+            }
         }
 
         function renderPreview() {
@@ -399,11 +1464,12 @@
                 return;
             }
 
-            preview.innerHTML = menu.items.map(item => `
+            preview.innerHTML = menu.items.filter(i => !i.parent).map(item => `
                 <li style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas ${item.icon}"></i> 
                     ${item.label}
-                    ${item.badge ? `<span style="background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px;">${item.badgeText}</span>` : ''}
+                    ${item.badge ? `<span style="background: ${item.badgeColor || 'rgba(255,255,255,0.3)'}; padding: 2px 6px; border-radius: 3px; font-size: 11px; color: white;">${item.badgeText}</span>` : ''}
+                    ${item.target === '_blank' ? '<i class="fas fa-external-link-alt" style="font-size: 10px;"></i>' : ''}
                 </li>
             `).join('');
         }
@@ -413,12 +1479,16 @@
             menus[currentMenuId].position = document.getElementById('menuPosition').value;
             menus[currentMenuId].alignment = document.getElementById('menuAlignment').value;
 
+            saveToHistory();
             saveMenus();
-            document.getElementById('manageStatus').innerHTML = '<div class="status-message status-success"><i class="fas fa-check-circle"></i> Menu saved successfully!</div>';
+            document.getElementById('manageStatus').innerHTML = '<div class="status-message status-success"><i class="fas fa-check-circle"></i> ✅ Menu saved successfully!</div>';
         }
 
-        function saveMenus() {
+        function saveMenus(isAutoSave = false) {
             localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menus));
+            if (isAutoSave) {
+                // Silent auto-save, no indicator needed for every keystroke
+            }
         }
 
         function exportMenu() {
@@ -431,6 +1501,11 @@
             link.download = `menu-${currentMenuId}-${Date.now()}.json`;
             link.click();
             URL.revokeObjectURL(url);
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'Menu exported as JSON', 'Admin', 'success', `Menu: ${menu.name}, ${menu.items.length} items, ${dataStr.length} bytes`);
+            }
         }
 
         function importMenu() {

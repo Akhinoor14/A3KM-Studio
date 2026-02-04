@@ -331,6 +331,158 @@
             color: #8B0000;
         }
 
+        /* Help Panel */
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B0000, #C80000);
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.5);
+            z-index: 999;
+            transition: all 0.3s;
+        }
+
+        .help-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(139, 0, 0, 0.7);
+        }
+
+        .help-panel {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 500px;
+            height: 100vh;
+            background: rgba(26, 26, 26, 0.98);
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            transition: right 0.3s;
+            overflow-y: auto;
+            padding: 30px;
+            border-left: 3px solid #8B0000;
+        }
+
+        .help-panel.active {
+            right: 0;
+        }
+
+        .help-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .help-close:hover {
+            color: #8B0000;
+        }
+
+        .help-section {
+            margin: 25px 0;
+            padding: 20px;
+            border-left: 4px solid #8B0000;
+            background: rgba(139, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .help-section h3 {
+            color: #C80000;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-section li {
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .help-section li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #8B0000;
+            font-weight: bold;
+        }
+
+        .help-section code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #C80000;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pro-tips {
+            background: rgba(0, 200, 81, 0.1);
+            border: 2px solid rgba(0, 200, 81, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .pro-tips h4 {
+            color: #00C851;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .connected {
+            background: rgba(0, 200, 81, 0.2);
+            color: #00C851;
+            border: 1px solid rgba(0, 200, 81, 0.4);
+        }
+
+        .disconnected {
+            background: rgba(255, 82, 82, 0.2);
+            color: #FF5252;
+            border: 1px solid rgba(255, 82, 82, 0.4);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* ===================================
            MOBILE OPTIMIZATION
            =================================== */
@@ -740,7 +892,199 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', loadAPIs);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAPIs();
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('system', 'API Configuration Manager opened', 'Admin', 'success', 'API management interface accessed');
+            }
+        });
+
+        // Toggle help panel
+        function toggleHelp() {
+            document.getElementById('helpPanel').classList.toggle('active');
+        }
+
+        // Check connection status for all APIs
+        async function checkAllConnections() {
+            const githubToken = localStorage.getItem('github_token');
+            const youtubeKey = localStorage.getItem('youtube_api_key');
+            
+            // Update connection indicators
+            if (githubToken) {
+                document.getElementById('githubConnection').className = 'connection-status connected';
+                document.getElementById('githubConnection').innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+            } else {
+                document.getElementById('githubConnection').className = 'connection-status disconnected pulse';
+                document.getElementById('githubConnection').innerHTML = '<i class="fas fa-exclamation-circle"></i> Not Connected';
+            }
+            
+            if (youtubeKey) {
+                document.getElementById('youtubeConnection').className = 'connection-status connected';
+                document.getElementById('youtubeConnection').innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+            } else {
+                document.getElementById('youtubeConnection').className = 'connection-status disconnected pulse';
+                document.getElementById('youtubeConnection').innerHTML = '<i class="fas fa-exclamation-circle"></i> Not Connected';
+            }
+        }
+
+        // Update save functions to log activity
+        const originalSaveAPI = saveAPI;
+        saveAPI = function(type) {
+            originalSaveAPI(type);
+            
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', `${type === 'github' ? 'GitHub' : 'YouTube'} API key saved`, 'Admin', 'success', `API key configured for ${type}`);
+            }
+            
+            checkAllConnections();
+        };
+
+        const originalClearAPI = clearAPI;
+        clearAPI = function(type) {
+            if (confirm('Are you sure you want to remove this API key?')) {
+                if (type === 'github') {
+                    localStorage.removeItem('github_token');
+                    document.getElementById('githubToken').value = '';
+                    updateStatus('github', false);
+                    showMessage('github', 'success', 'GitHub token removed');
+                    
+                    // Log activity
+                    if (typeof ActivityLogger !== 'undefined') {
+                        ActivityLogger.log('edit', 'GitHub token removed', 'Admin', 'success', 'GitHub API disconnected');
+                    }
+                } else if (type === 'youtube') {
+                    localStorage.removeItem('youtube_api_key');
+                    document.getElementById('youtubeApiKey').value = '';
+                    updateStatus('youtube', false);
+                    showMessage('youtube', 'success', 'YouTube API key removed');
+                    
+                    // Log activity
+                    if (typeof ActivityLogger !== 'undefined') {
+                        ActivityLogger.log('edit', 'YouTube API key removed', 'Admin', 'success', 'YouTube API disconnected');
+                    }
+                }
+                
+                checkAllConnections();
+            }
+        };
+
+        // Check connections on load
+        setTimeout(checkAllConnections, 500);
     </script>
+
+    <!-- Help Button -->
+    <button class="help-btn" onclick="toggleHelp()" title="Help & Usage Guide">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <!-- Help Panel -->
+    <div class="help-panel" id="helpPanel">
+        <button class="help-close" onclick="toggleHelp()">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h2 style="color: #C80000; margin-bottom: 25px; font-size: 24px;">
+            <i class="fas fa-book"></i> API Configuration Guide
+        </h2>
+
+        <div class="help-section">
+            <h3><i class="fas fa-rocket"></i> Quick Start</h3>
+            <ul>
+                <li>Choose GitHub or YouTube API section</li>
+                <li>Enter your API key/token</li>
+                <li>Click <code>Save</code> to store securely</li>
+                <li>Click <code>Test Connection</code> to verify</li>
+                <li>API is now available to all managers!</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fab fa-github"></i> GitHub Token Setup</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Go to github.com/settings/tokens</li>
+                <li><strong>Step 2:</strong> Click "Generate new token (classic)"</li>
+                <li><strong>Step 3:</strong> Select scopes: <code>repo</code>, <code>workflow</code></li>
+                <li><strong>Step 4:</strong> Copy token and paste here</li>
+                <li><strong>Expires:</strong> Recommended 90 days</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fab fa-youtube"></i> YouTube API Setup</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Go to console.cloud.google.com</li>
+                <li><strong>Step 2:</strong> Create project or select existing</li>
+                <li><strong>Step 3:</strong> Enable "YouTube Data API v3"</li>
+                <li><strong>Step 4:</strong> Create credentials → API key</li>
+                <li><strong>Step 5:</strong> Copy API key and paste here</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-plug"></i> Where These Are Used</h3>
+            <ul>
+                <li><strong>GitHub Token:</strong></li>
+                <li>• Content Studio (Upload books, papers, videos)</li>
+                <li>• Certificate Manager (Upload certificates)</li>
+                <li>• Site Settings (Deploy configurations)</li>
+                <li>• Navigation Editor (Deploy navbar)</li>
+                <li>• SEO Manager (Deploy meta tags)</li>
+                <li><strong>YouTube API:</strong></li>
+                <li>• Video Gallery (Fetch video details)</li>
+                <li>• Educational Videos (Channel data)</li>
+                <li>• Video Content Hub (Playlists)</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-shield-alt"></i> Security & Privacy</h3>
+            <ul>
+                <li>Keys stored locally in browser (localStorage)</li>
+                <li>Never sent to external servers</li>
+                <li>Basic encoding applied (not full encryption)</li>
+                <li>Clear keys anytime with <code>Clear</code> button</li>
+                <li>Recommended: Use fine-grained tokens with minimal scopes</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-check-double"></i> Testing Your Keys</h3>
+            <ul>
+                <li><strong>GitHub:</strong> Tests by fetching your repo info</li>
+                <li><strong>YouTube:</strong> Tests with sample video query</li>
+                <li>✓ Success = Key is valid and working</li>
+                <li>✗ Error = Invalid key or wrong permissions</li>
+                <li>Test after saving to ensure connectivity</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-sync-alt"></i> Troubleshooting</h3>
+            <ul>
+                <li><strong>Token Expired:</strong> Generate new token on GitHub</li>
+                <li><strong>Permission Denied:</strong> Check token scopes</li>
+                <li><strong>API Limit:</strong> GitHub: 5000/hour, YouTube: 10000/day</li>
+                <li><strong>Connection Failed:</strong> Check internet connection</li>
+                <li><strong>Keys Not Working:</strong> Clear and re-enter</li>
+            </ul>
+        </div>
+
+        <div class="pro-tips">
+            <h4><i class="fas fa-lightbulb"></i> Pro Tips</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding-left: 0; margin: 10px 0; color: #ccc;">💡 <strong>Tip 1:</strong> Set token expiry to 90 days and renew before it expires</li>
+                <li style="padding-left: 0; margin: 10px 0; color: #ccc;">💡 <strong>Tip 2:</strong> Use separate tokens for development and production</li>
+                <li style="padding-left: 0; margin: 10px 0; color: #ccc;">💡 <strong>Tip 3:</strong> Test connection after every save to verify</li>
+                <li style="padding-left: 0; margin: 10px 0; color: #ccc;">💡 <strong>Tip 4:</strong> Keep a backup copy of your tokens securely</li>
+                <li style="padding-left: 0; margin: 10px 0; color: #ccc;">💡 <strong>Tip 5:</strong> Monitor API usage in GitHub/Google Cloud Console</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Activity Logger Integration -->
+    <script src="../../shared/activity-logger.js"></script>
 </body>
 </html>

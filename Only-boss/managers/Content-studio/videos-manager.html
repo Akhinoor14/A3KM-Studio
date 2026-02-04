@@ -8,9 +8,22 @@
   <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 20px; }
-    .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border-top: 4px solid #8B0000; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; padding: 0; }
+    .container { display: flex; min-height: 100vh; background: white; }
+    .sidebar { width: 280px; background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 4px solid #8B0000; }
+    .sidebar-header { background: linear-gradient(135deg, #8B0000, #C80000); padding: 30px 20px; color: white; }
+    .sidebar-header h1 { font-size: 22px; margin-bottom: 5px; }
+    .sidebar-header p { font-size: 12px; opacity: 0.9; }
+    .sidebar-nav { padding: 20px 0; }
+    .tab-item { display: flex; align-items: center; gap: 12px; padding: 15px 25px; color: #ccc; cursor: pointer; transition: all 0.3s; border-left: 4px solid transparent; font-weight: 600; font-size: 14px; }
+    .tab-item:hover { background: rgba(139, 0, 0, 0.1); color: white; }
+    .tab-item.active { background: rgba(139, 0, 0, 0.2); color: white; border-left-color: #8B0000; }
+    .quick-stats { padding: 20px; background: rgba(139, 0, 0, 0.1); margin: 20px; border-radius: 10px; }
+    .quick-stats h3 { color: #ccc; font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+    .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; color: #fff; }
+    .stat-value { font-weight: 700; color: #8B0000; font-size: 18px; }
+    .main-content { flex: 1; background: #f8f9fa; padding: 40px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 25px 30px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .back-btn { background: rgba(139, 0, 0, 0.1); border: 2px solid #8B0000; padding: 10px 20px; border-radius: 10px; color: #8B0000; font-weight: 600; cursor: pointer; text-decoration: none; }
     .back-btn:hover { background: #8B0000; color: white; }
     h1 { color: #8B0000; font-size: 32px; margin-bottom: 10px; }
@@ -54,6 +67,24 @@
     .modal-content { max-width: 800px; margin: 40px auto; background: white; border-radius: 20px; padding: 40px; position: relative; }
     .modal-close { position: absolute; top: 20px; right: 20px; background: #f44336; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
     .modal-close:hover { background: #d32f2f; }
+    .bulk-actions { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; padding: 15px; background: white; border-radius: 10px; }
+    .bulk-actions button { padding: 10px 20px; border: 2px solid #8B0000; background: white; color: #8B0000; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .bulk-actions button:hover { background: #8B0000; color: white; }
+    .bulk-actions .selected-count { color: #8B0000; font-weight: 700; margin-left: auto; }
+    .content-card input[type="checkbox"] { position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; cursor: pointer; z-index: 10; }
+    .content-card { position: relative; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; }
+    .pagination button { padding: 10px 20px; border: 2px solid #8B0000; background: white; color: #8B0000; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .pagination button:hover:not(:disabled) { background: #8B0000; color: white; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
+    .pagination .page-info { color: #666; font-weight: 600; }
+    .video-badge { display: inline-block; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 5px; }
+    .badge-youtube { background: #ff0000; color: white; }
+    .badge-uploaded { background: #4caf50; color: white; }
+    .badge-duration { background: #2196f3; color: white; }
+    .badge-views { background: #ff9800; color: white; }
+    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .filter-group select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; flex: 1; }
   </style>
 </head>
 <body>
@@ -108,42 +139,23 @@
 
         <div class="form-group">
           <label>Description</label>
-          <textarea id="description" placeholder="Course description..." rows="3"></textarea>
+          <textarea id="description" placeholder="Video description..." rows="3" required></textarea>
         </div>
 
         <div class="form-group">
-          <label>Instructor/Creator</label>
-          <input type="text" id="author" placeholder="Instructor name..." value="Md Akhinoor Islam">
-        </div>
-
-        <div class="form-group">
-          <label>Number of Episodes</label>
-          <input type="number" id="episodes" placeholder="12" min="1" required>
-        </div>
-
-        <div class="form-group">
-          <label>Total Duration</label>
-          <input type="text" id="duration" placeholder="2h 30m" required>
-        </div>
-
-        <div class="form-group">
-          <label>Difficulty Level</label>
-          <select id="difficulty" required>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Beginner to Intermediate">Beginner to Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Institution/Platform</label>
-          <input type="text" id="institution" placeholder="A3KM Studio" value="A3KM Studio">
+          <label>Duration (MM:SS or HH:MM:SS)</label>
+          <input type="text" id="duration" placeholder="18:45 or 1:30:20" required pattern="^\d{1,2}:\d{2}(:\d{2})?$">
+          <small style="color: #999; font-size: 12px;">Format: Minutes:Seconds or Hours:Minutes:Seconds</small>
         </div>
 
         <div class="form-group">
           <label>Language</label>
-          <input type="text" id="language" placeholder="en, bn, bn-en" value="en">
+          <select id="language" required>
+            <option value="bn">🇧🇩 Bengali (বাংলা)</option>
+            <option value="en" selected>🇬🇧 English</option>
+            <option value="bn-en">🇧🇩🇬🇧 Bengali-English Mix</option>
+            <option value="hi">🇮🇳 Hindi (हिन्दी)</option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -177,16 +189,38 @@
 
     <!-- MANAGE TAB -->
     <div id="manageTab" class="tab-content">
-      <div class="search-bar">
+      <div class="bulk-actions">
+        <button onclick="selectAll()">✅ Select All</button>
+        <button onclick="deselectAll()">❌ Deselect All</button>
+        <button onclick="bulkDelete()" style="background: #f44336; color: white; border-color: #f44336;">🗑️ Delete Selected</button>
+        <span class="selected-count">Selected: <span id="selectedCount">0</span></span>
+      </div>
+      
+      <div class="filter-group">
         <input type="text" id="searchInput" placeholder="🔍 Search videos..." onkeyup="filterContent()">
+        <select id="filterLanguage" onchange="filterContent()">
+          <option value="">All Languages</option>
+          <option value="bn">🇧🇩 Bengali</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="bn-en">🇧🇩🇬🇧 Mixed</option>
+          <option value="hi">🇮🇳 Hindi</option>
+        </select>
         <select id="sortBy" onchange="filterContent()">
           <option value="date">Newest First</option>
           <option value="title">Title A-Z</option>
-          <option value="author">By Instructor</option>
+          <option value="views">Most Viewed</option>
+          <option value="duration">By Duration</option>
         </select>
       </div>
+      
       <div class="content-grid" id="contentGrid">
         <p style="text-align: center; padding: 40px; color: #999;">Loading videos...</p>
+      </div>
+      
+      <div class="pagination">
+        <button id="prevPage" onclick="changePage(-1)">← Previous</button>
+        <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+        <button id="nextPage" onclick="changePage(1)">Next →</button>
       </div>
     </div>
 
@@ -216,28 +250,55 @@
       <h2 style="color: #8B0000; margin-bottom: 20px;">✏️ Edit Video</h2>
       <form id="editForm">
         <input type="hidden" id="editVideoId">
+        
         <div class="form-group">
           <label>Category</label>
           <select id="editCategory" required>
             <option value="">Loading categories...</option>
           </select>
         </div>
+        
         <div class="form-group">
           <label>Video Title</label>
           <input type="text" id="editTitle" required>
         </div>
-        <div class="form-group">
-          <label>YouTube URL</label>
-          <input type="url" id="editYoutubeUrl">
-        </div>
+        
         <div class="form-group">
           <label>Description</label>
-          <textarea id="editDescription"></textarea>
+          <textarea id="editDescription" rows="3" required></textarea>
         </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label>Duration (MM:SS)</label>
+            <input type="text" id="editDuration" placeholder="18:45" pattern="^\d{1,2}:\d{2}(:\d{2})?$" required>
+          </div>
+          <div class="form-group">
+            <label>Views</label>
+            <input type="number" id="editViews" min="0" value="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Language</label>
+          <select id="editLanguage" required>
+            <option value="bn">🇧🇩 Bengali (বাংলা)</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="bn-en">🇧🇩🇬🇧 Bengali-English Mix</option>
+            <option value="hi">🇮🇳 Hindi (हिन्दी)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>YouTube URL</label>
+          <input type="url" id="editYoutubeUrl" placeholder="https://youtu.be/VIDEO_ID">
+        </div>
+        
         <div class="form-group">
           <label>Tags (comma-separated)</label>
-          <input type="text" id="editTags">
+          <input type="text" id="editTags" placeholder="programming, python, tutorial">
         </div>
+        
         <button type="submit" class="btn-primary">💾 Update Video</button>
       </form>
     </div>
@@ -263,6 +324,10 @@
     
     const contentManager = new ContentManager(githubUploader);
     let currentContent = [];
+    let filteredContent = [];
+    let selectedVideos = new Set();
+    let currentPage = 1;
+    const ITEMS_PER_PAGE = 12;
 
     async function loadCategories() {
       try {
@@ -369,16 +434,11 @@
           coverSVG: coverSVG,
           youtubeId: youtubeId,
           metadata: {
-            episodes: parseInt(document.getElementById('episodes').value) || 1,
-            duration: document.getElementById('duration').value || '0m',
-            difficulty: document.getElementById('difficulty').value || 'Beginner',
-            playlist: [], // Empty initially
-            institution: document.getElementById('institution').value || 'A3KM Studio',
+            duration: document.getElementById('duration').value,
+            language: document.getElementById('language').value,
             views: 0,
-            enrolled: 0,
-            language: document.getElementById('language').value || 'en',
             youtubeUrl: youtubeUrl,
-            isYoutubeContent: isYoutube
+            videoId: youtubeId
           }
         });
         
@@ -408,8 +468,14 @@
       document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
       document.getElementById(tabName + 'Tab').classList.add('active');
       event.target.classList.add('active');
-      if (tabName === 'manage') loadManageContent();
+      if (tabName === 'manage') { loadManageContent(); resetPagination(); }
       if (tabName === 'stats') loadStatistics();
+    }
+    
+    function resetPagination() {
+      currentPage = 1;
+      selectedVideos.clear();
+      updateSelectedCount();
     }
 
     async function loadManageContent() {
@@ -426,38 +492,108 @@
 
     function renderContent(items) {
       const grid = document.getElementById('contentGrid');
+      filteredContent = items;
+      
       if (items.length === 0) {
-        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No videos yet</p>';
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No videos found</p>';
+        updatePaginationControls(0);
         return;
       }
+      
+      // Pagination
+      const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+      const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIdx = startIdx + ITEMS_PER_PAGE;
+      const pageItems = items.slice(startIdx, endIdx);
+      
       grid.innerHTML = '';
-      items.forEach(item => {
+      pageItems.forEach(item => {
+        const isSelected = selectedVideos.has(item.id);
         const card = document.createElement('div');
         card.className = 'content-card';
+        
+        const badges = [];
+        if (item.youtubeUrl || item.videoId) badges.push('<span class="video-badge badge-youtube">📺 YouTube</span>');
+        else badges.push('<span class="video-badge badge-uploaded">📁 Uploaded</span>');
+        if (item.duration) badges.push(`<span class="video-badge badge-duration">⏱️ ${item.duration}</span>`);
+        if (item.views > 0) badges.push(`<span class="video-badge badge-views">👁️ ${item.views}</span>`);
+        if (item.language) {
+          const langMap = {bn: '🇧🇩', en: '🇬🇧', 'bn-en': '🇧🇩🇬🇧', hi: '🇮🇳'};
+          badges.push(`<span class="video-badge" style="background: #607d8b;">${langMap[item.language] || '🌐'} ${item.language.toUpperCase()}</span>`);
+        }
+        
         card.innerHTML = `
-          <img src="${item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
+          <img src="${item.thumbnail || item.coverImage || `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
           <div class="card-body">
+            <div style="margin-bottom: 8px;">${badges.join(' ')}</div>
             <div class="card-title">${item.title}</div>
             <div class="card-meta">
               📁 ${item.category}<br>
-              👤 ${item.author || 'Unknown'}<br>
+              🎬 ${item.videoId || 'Local Video'}<br>
               🕐 ${contentManager.formatDate(item.date)}
             </div>
             <div class="card-actions">
-              <button onclick="editVideo('${item.id}')">✏️ Edit</button>
-              <button onclick="deleteVideo('${item.id}')">🗑️</button>
+              <button onclick="editVideo('${item.id}')" style="font-size: 14px;">✏️ Edit</button>
+              <button onclick="deleteVideo('${item.id}')" style="font-size: 14px; color: #f44336;">🗑️ Delete</button>
             </div>
           </div>
         `;
         grid.appendChild(card);
       });
+      
+      updatePaginationControls(totalPages);
+    }
+    
+    function updatePaginationControls(totalPages) {
+      document.getElementById('currentPage').textContent = currentPage;
+      document.getElementById('totalPages').textContent = totalPages;
+      document.getElementById('prevPage').disabled = currentPage === 1;
+      document.getElementById('nextPage').disabled = currentPage >= totalPages || totalPages === 0;
+    }
+    
+    function changePage(delta) {
+      const totalPages = Math.ceil(filteredContent.length / ITEMS_PER_PAGE);
+      const newPage = currentPage + delta;
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderContent(filteredContent);
+      }
     }
 
     function filterContent() {
-      const query = document.getElementById('searchInput').value;
+      const query = document.getElementById('searchInput').value.toLowerCase();
       const sortBy = document.getElementById('sortBy').value;
-      let filtered = contentManager.searchContent(currentContent, query);
-      filtered = contentManager.sortItems(filtered, sortBy, 'desc');
+      const language = document.getElementById('filterLanguage').value;
+      
+      let filtered = currentContent.filter(item => {
+        const matchSearch = !query || 
+          item.title.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query) ||
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query)));
+        
+        const matchLanguage = !language || item.language === language;
+        
+        return matchSearch && matchLanguage;
+      });
+      
+      // Sort
+      filtered.sort((a, b) => {
+        if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
+        if (sortBy === 'duration') {
+          const getDurationSeconds = (dur) => {
+            const parts = dur.split(':').map(Number);
+            return parts.length === 2 ? parts[0]*60 + parts[1] : parts[0]*3600 + parts[1]*60 + parts[2];
+          };
+          return getDurationSeconds(b.duration || '0:0') - getDurationSeconds(a.duration || '0:0');
+        }
+        return 0;
+      });
+      
+      currentPage = 1;
       renderContent(filtered);
     }
 
@@ -475,11 +611,79 @@
       }
     }
 
+    function toggleSelect(id) {
+      if (selectedVideos.has(id)) {
+        selectedVideos.delete(id);
+      } else {
+        selectedVideos.add(id);
+      }
+      updateSelectedCount();
+    }
+    
+    function selectAll() {
+      const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIdx = startIdx + ITEMS_PER_PAGE;
+      const pageItems = filteredContent.slice(startIdx, endIdx);
+      pageItems.forEach(item => selectedVideos.add(item.id));
+      updateSelectedCount();
+      renderContent(filteredContent);
+    }
+    
+    function deselectAll() {
+      selectedVideos.clear();
+      updateSelectedCount();
+      renderContent(filteredContent);
+    }
+    
+    function updateSelectedCount() {
+      document.getElementById('selectedCount').textContent = selectedVideos.size;
+    }
+    
+    async function bulkDelete() {
+      if (selectedVideos.size === 0) {
+        alert('⚠️ No videos selected!');
+        return;
+      }
+      
+      const confirmed = confirm(`⚠️ Delete ${selectedVideos.size} video(s)?\n\nThis action cannot be undone!`);
+      if (!confirmed) return;
+      
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      const progress = document.getElementById('progress');
+      
+      progress.classList.add('active');
+      progressText.textContent = `Deleting 0/${selectedVideos.size}...`;
+      
+      let deleted = 0;
+      const videosToDelete = Array.from(selectedVideos);
+      
+      for (const id of videosToDelete) {
+        try {
+          await contentManager.deleteContent(CONTENT_TYPE, id);
+          deleted++;
+          progressFill.style.width = `${(deleted / videosToDelete.length) * 100}%`;
+          progressText.textContent = `Deleting ${deleted}/${videosToDelete.length}...`;
+        } catch (err) {
+          console.error('Delete failed:', err);
+        }
+      }
+      
+      progress.classList.remove('active');
+      selectedVideos.clear();
+      updateSelectedCount();
+      alert(`✅ Deleted ${deleted} video(s)!`);
+      loadManageContent();
+    }
+    
     function deleteVideo(id) {
-      if (confirm('Delete this video?')) {
+      const video = currentContent.find(v => v.id === id);
+      const title = video ? video.title : 'this video';
+      
+      if (confirm(`⚠️ Delete "${title}"?\n\nThis action cannot be undone!`)) {
         contentManager.deleteContent(CONTENT_TYPE, id)
-          .then(() => { alert('✅ Deleted!'); loadManageContent(); })
-          .catch(err => alert('❌ Failed: ' + err.message));
+          .then(() => { alert('✅ Video deleted successfully!'); loadManageContent(); })
+          .catch(err => alert('❌ Delete failed: ' + err.message));
       }
     }
 
@@ -488,10 +692,12 @@
       if (!video) return;
       
       document.getElementById('editVideoId').value = id;
-      document.getElementById('editCategory').value = video.category;
       document.getElementById('editTitle').value = video.title;
       document.getElementById('editDescription').value = video.description || '';
-      document.getElementById('editYoutubeUrl').value = video.youtubeUrl || video.url || '';
+      document.getElementById('editDuration').value = video.duration || '';
+      document.getElementById('editViews').value = video.views || 0;
+      document.getElementById('editLanguage').value = video.language || 'en';
+      document.getElementById('editYoutubeUrl').value = video.youtubeUrl || '';
       document.getElementById('editTags').value = (video.tags || []).join(', ');
       
       loadCategories().then(() => {
@@ -508,15 +714,28 @@
     document.getElementById('editForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('editVideoId').value;
+      const originalVideo = currentContent.find(v => v.id === id);
+      
+      const youtubeUrl = document.getElementById('editYoutubeUrl').value;
+      let videoId = originalVideo.videoId;
+      if (youtubeUrl) {
+        const match = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+        videoId = match ? match[1] : videoId;
+      }
       
       const updatedVideo = {
+        ...originalVideo,
         id: id,
         title: document.getElementById('editTitle').value,
         category: document.getElementById('editCategory').value,
         description: document.getElementById('editDescription').value,
-        youtubeUrl: document.getElementById('editYoutubeUrl').value,
+        duration: document.getElementById('editDuration').value,
+        views: parseInt(document.getElementById('editViews').value) || 0,
+        language: document.getElementById('editLanguage').value,
+        youtubeUrl: youtubeUrl,
+        videoId: videoId,
         tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
-        date: new Date().toISOString()
+        date: originalVideo.date
       };
       
       try {

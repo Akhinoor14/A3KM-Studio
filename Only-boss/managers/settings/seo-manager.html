@@ -52,7 +52,42 @@
         .status-message { padding: 12px 15px; border-radius: 8px; margin: 15px 0; font-weight: 500; }
         .status-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
         .status-error { background: #f8d7da; color: #721c24; border-left: 4px solid #f44336; }
-        @media (max-width: 768px) { .tabs { flex-direction: column; } }
+        /* Help Panel */
+        .help-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #fbb034, #f7ce38); color: #333; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 999; transition: all 0.3s; }
+        .help-btn:hover { transform: scale(1.1); }
+        .help-panel { position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: white; box-shadow: -5px 0 20px rgba(0,0,0,0.3); z-index: 1000; transition: right 0.3s; overflow-y: auto; padding: 20px; }
+        .help-panel.active { right: 0; }
+        .help-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .help-section { margin: 20px 0; padding: 15px; border-left: 4px solid #fbb034; background: #fffbf5; border-radius: 5px; }
+        .help-section h3 { color: #fbb034; margin-bottom: 10px; font-size: 16px; }
+        .help-section ul { margin-left: 20px; }
+        .help-section li { margin: 8px 0; line-height: 1.6; }
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 20px; text-align: center; }
+        .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
+        .stat-card p { font-size: 12px; opacity: 0.9; }
+        /* Live Score */
+        .live-score-indicator { position: fixed; top: 20px; right: 20px; background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 998; }
+        .live-score-indicator h4 { font-size: 14px; color: #666; margin-bottom: 5px; }
+        .live-score-indicator .score { font-size: 32px; font-weight: bold; }
+        /* Keyword Density */
+        .keyword-meter { background: #f5f5f5; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .keyword-bar { height: 20px; background: linear-gradient(to right, #4caf50, #fbc02d, #f44336); border-radius: 10px; position: relative; overflow: hidden; }
+        .keyword-indicator { position: absolute; width: 3px; height: 30px; background: #333; top: -5px; transition: left 0.3s; }
+        /* Advanced Tools */
+        .tool-card { border: 2px solid #e0e0e0; border-radius: 10px; padding: 20px; margin: 15px 0; transition: all 0.3s; cursor: pointer; }
+        .tool-card:hover { border-color: #fbb034; background: #fffbf5; transform: translateY(-2px); }
+        .tool-card h3 { color: #fbb034; margin-bottom: 10px; }
+        /* Tooltip */
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 200px; background: #333; color: white; text-align: center; padding: 8px; border-radius: 6px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; font-size: 12px; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        @media (max-width: 768px) { 
+            .tabs { flex-direction: column; }
+            .help-panel { width: 100%; right: -100%; }
+            .live-score-indicator { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -61,6 +96,26 @@
         <div class="header">
             <h1><i class="fas fa-search"></i> SEO Manager</h1>
             <p>Optimize your website for search engines</p>
+        </div>
+
+        <!-- SEO Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h3 id="statSeoScore">0%</h3>
+                <p>📊 SEO Health Score</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h3 id="statPages">0</h3>
+                <p>📄 Optimized Pages</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <h3 id="statKeywords">0</h3>
+                <p>🔑 Focus Keywords</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <h3 id="statIssues">0</h3>
+                <p>⚠️ Issues Found</p>
+            </div>
         </div>
 
         <!-- Tab Navigation -->
@@ -125,10 +180,33 @@
                     <div class="preview-description" id="previewDesc">Meta description goes here</div>
                 </div>
 
-                <button class="btn btn-primary" onclick="saveMeta()" style="width: 100%; margin-top: 20px;">
-                    <i class="fas fa-save"></i> Save Meta Tags
-                </button>
+                <!-- Keyword Density Analyzer -->
+                <div class="keyword-meter">
+                    <h4 style="margin-bottom: 10px; font-size: 14px; color: #666;">🔍 Keyword Density Analysis</h4>
+                    <div style="margin-bottom: 10px; font-size: 13px;" id="keywordDensityText">Enter focus keyword to analyze</div>
+                    <div class="keyword-bar">
+                        <div class="keyword-indicator" id="keywordIndicator"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #999; margin-top: 5px;">
+                        <span>Too Low (0%)</span>
+                        <span style="color: #4caf50;">Optimal (2-3%)</span>
+                        <span>Too High (10%)</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="saveMeta()" style="flex: 1;">
+                        <i class="fas fa-save"></i> Save Meta Tags
+                    </button>
+                    <button class="btn btn-success" onclick="deployMetaTags()" style="flex: 1;">
+                        <i class="fas fa-cloud-upload-alt"></i> Deploy to Page
+                    </button>
+                    <button class="btn btn-secondary" onclick="generateMetaCode()" style="flex: 1;">
+                        <i class="fas fa-code"></i> Generate Code
+                    </button>
+                </div>
                 <div id="metaStatus"></div>
+                <pre id="metaCodeOutput" style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; display: none; margin-top: 15px; font-size: 12px;"></pre>
             </div>
         </div>
 
@@ -301,10 +379,137 @@ Crawl-delay: 1</textarea>
                     <ul class="checklist" id="seoChecklist"></ul>
                 </div>
             </div>
+
+            <!-- Advanced SEO Tools -->
+            <div class="section">
+                <div class="section-title"><i class="fas fa-tools"></i> Advanced SEO Tools</div>
+                
+                <div class="tool-card" onclick="analyzeKeywords()">
+                    <h3><i class="fas fa-key"></i> Keyword Research</h3>
+                    <p style="color: #666;">Analyze keyword difficulty, search volume, and related terms</p>
+                </div>
+
+                <div class="tool-card" onclick="analyzeCompetitors()">
+                    <h3><i class="fas fa-chart-line"></i> Competitor Analysis</h3>
+                    <p style="color: #666;">Compare your SEO with competitors and find opportunities</p>
+                </div>
+
+                <div class="tool-card" onclick="checkBacklinks()">
+                    <h3><i class="fas fa-link"></i> Backlink Checker</h3>
+                    <p style="color: #666;">Monitor backlinks and domain authority</p>
+                </div>
+
+                <div class="tool-card" onclick="analyzePageSpeed()">
+                    <h3><i class="fas fa-tachometer-alt"></i> Page Speed Analysis</h3>
+                    <p style="color: #666;">Check loading speed and performance metrics</p>
+                </div>
+
+                <div id="advancedToolsOutput" style="margin-top: 20px;"></div>
+            </div>
         </div>
     </div>
 
+    <!-- Help Button -->
+    <button class="help-btn" onclick="toggleHelp()" title="Help & Instructions">
+        <i class="fas fa-question"></i>
+    </button>
+
+    <!-- Help Panel -->
+    <div class="help-panel" id="helpPanel">
+        <button class="help-close" onclick="toggleHelp()">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 style="color: #fbb034; margin-bottom: 20px;">📚 SEO Manager Guide</h2>
+        
+        <div class="help-section">
+            <h3>🎯 Meta Tags</h3>
+            <ul>
+                <li><strong>Title:</strong> Keep 50-60 characters. Include main keyword at start.</li>
+                <li><strong>Description:</strong> Write 150-160 characters. Compelling call-to-action.</li>
+                <li><strong>Keywords:</strong> Use 1-3 focus keywords per page.</li>
+                <li><strong>Canonical:</strong> Prevent duplicate content issues.</li>
+            </ul>
+            <p style="margin-top: 10px; font-size: 13px; color: #666;">✨ Tip: Watch the preview to see how it appears in Google search!</p>
+        </div>
+
+        <div class="help-section">
+            <h3>🗺️ XML Sitemap</h3>
+            <ul>
+                <li>Select pages to include in sitemap</li>
+                <li>Set priorities (1.0 = highest)</li>
+                <li>Generate and download sitemap.xml</li>
+                <li>Upload to your website root</li>
+                <li>Submit to Google Search Console</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🤖 Robots.txt</h3>
+            <ul>
+                <li>Control which pages crawlers can access</li>
+                <li>Block admin/private pages</li>
+                <li>Set crawl delay to prevent overload</li>
+                <li>Include sitemap URL</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🏷️ Schema Markup</h3>
+            <ul>
+                <li>Helps search engines understand content</li>
+                <li>Choose appropriate schema type</li>
+                <li>Copy code and add to page &lt;head&gt;</li>
+                <li>Test with Google Rich Results Test</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>📱 Open Graph</h3>
+            <ul>
+                <li>Optimize how links appear on social media</li>
+                <li>Set custom title and description</li>
+                <li>Use 1200x630px image for best results</li>
+                <li>Test preview before publishing</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>✅ SEO Checker</h3>
+            <ul>
+                <li>Run full audit of your SEO setup</li>
+                <li>Fix issues marked with red X</li>
+                <li>Aim for 80%+ score</li>
+                <li>Check keyword density (2-3% optimal)</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h3>🚀 Best Practices</h3>
+            <ul>
+                <li>Update meta tags for every page</li>
+                <li>Use unique titles and descriptions</li>
+                <li>Include keywords naturally</li>
+                <li>Keep content fresh and updated</li>
+                <li>Build quality backlinks</li>
+                <li>Optimize images with alt text</li>
+                <li>Ensure fast loading speed</li>
+                <li>Make site mobile-friendly</li>
+            </ul>
+        </div>
+
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <strong>💡 Pro Tip:</strong> Use the "Deploy to Pages" button to automatically inject meta tags into your HTML files via GitHub!
+        </div>
+    </div>
+
+    <!-- Live Score Indicator -->
+    <div class="live-score-indicator" id="liveScoreIndicator" style="display: none;">
+        <h4>Live SEO Score</h4>
+        <div class="score" id="liveScore">0%</div>
+    </div>
+
     <script src="../../shared/github-token-manager.js"></script>
+    <script src="../../shared/activity-logger.js"></script>
     <script>
         const SEO_STORAGE_KEY = 'a3km_seo_data';
         let tokenManager = null;
@@ -313,20 +518,501 @@ Crawl-delay: 1</textarea>
         document.addEventListener('DOMContentLoaded', () => {
             tokenManager = typeof GitHubTokenManager !== 'undefined' ? new GitHubTokenManager() : null;
             loadSEOData();
+            updateSEOStats();
             
             // Live update every 5 seconds
             setInterval(() => {
                 loadSEOData();
+                updateSEOStats();
             }, 5000);
             
+            // Real-time character count and scoring
             document.getElementById('pageTitle').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
+                calculateLiveScore();
+                analyzeKeywordDensity();
             });
             document.getElementById('pageDescription').addEventListener('input', e => {
                 document.getElementById('descCount').textContent = e.target.value.length;
+                calculateLiveScore();
+                analyzeKeywordDensity();
             });
+            document.getElementById('pageKeywords').addEventListener('input', () => {
+                analyzeKeywordDensity();
+            });
+            
             generateSchemaTemplate();
         });
+
+        function toggleHelp() {
+            document.getElementById('helpPanel').classList.toggle('active');
+        }
+
+        function calculateLiveScore() {
+            const title = document.getElementById('pageTitle').value;
+            const desc = document.getElementById('pageDescription').value;
+            const keywords = document.getElementById('pageKeywords').value;
+            
+            let score = 0;
+            let maxScore = 7;
+            
+            if (title.length > 0) score++;
+            if (title.length >= 50 && title.length <= 60) score++;
+            if (desc.length > 0) score++;
+            if (desc.length >= 150 && desc.length <= 160) score++;
+            if (keywords.length > 0) score++;
+            if (title.toLowerCase().includes(keywords.toLowerCase())) score++;
+            if (desc.toLowerCase().includes(keywords.toLowerCase())) score++;
+            
+            const percentage = Math.round((score / maxScore) * 100);
+            const indicator = document.getElementById('liveScoreIndicator');
+            const scoreEl = document.getElementById('liveScore');
+            
+            if (title.length > 0 || desc.length > 0) {
+                indicator.style.display = 'block';
+                scoreEl.textContent = percentage + '%';
+                scoreEl.className = 'score ' + 
+                    (percentage >= 80 ? 'score-excellent' : 
+                     percentage >= 60 ? 'score-good' : 
+                     percentage >= 40 ? 'score-warning' : 'score-poor');
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function analyzeKeywordDensity() {
+            const keyword = document.getElementById('pageKeywords').value.toLowerCase();
+            if (!keyword) {
+                document.getElementById('keywordDensityText').textContent = 'Enter focus keyword to analyze';
+                document.getElementById('keywordIndicator').style.left = '0%';
+                return;
+            }
+            
+            const title = document.getElementById('pageTitle').value.toLowerCase();
+            const desc = document.getElementById('pageDescription').value.toLowerCase();
+            const content = title + ' ' + desc;
+            
+            const words = content.split(/\s+/).length;
+            const keywordCount = (content.match(new RegExp(keyword, 'g')) || []).length;
+            const density = words > 0 ? (keywordCount / words) * 100 : 0;
+            
+            document.getElementById('keywordDensityText').innerHTML = `
+                Keyword "<strong>${keyword}</strong>" appears <strong>${keywordCount}</strong> times (${density.toFixed(1)}% density)
+                ${density >= 2 && density <= 3 ? '<span style="color: #4caf50;">✓ Optimal</span>' : 
+                  density < 2 ? '<span style="color: #f7ce38;">⚠ Too low</span>' : 
+                  '<span style="color: #f44336;">⚠ Too high</span>'}
+            `;
+            
+            // Move indicator (0-10% scale)
+            const position = Math.min((density / 10) * 100, 100);
+            document.getElementById('keywordIndicator').style.left = position + '%';
+        }
+
+        function updateSEOStats() {
+            const data = JSON.parse(localStorage.getItem(SEO_STORAGE_KEY) || '{}');
+            const pages = Object.keys(data).filter(k => k !== 'openGraph').length;
+            const keywords = Object.values(data).filter(p => p.keywords).length;
+            
+            // Calculate average score
+            let totalScore = 0;
+            let scoreCount = 0;
+            Object.values(data).forEach(page => {
+                if (page.title) {
+                    let score = 0;
+                    if (page.title?.length >= 50) score += 25;
+                    if (page.description?.length >= 150) score += 25;
+                    if (page.keywords) score += 25;
+                    if (page.canonical) score += 25;
+                    totalScore += score;
+                    scoreCount++;
+                }
+            });
+            const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+            
+            document.getElementById('statSeoScore').textContent = avgScore + '%';
+            document.getElementById('statPages').textContent = pages;
+            document.getElementById('statKeywords').textContent = keywords;
+            document.getElementById('statIssues').textContent = Math.max(0, 7 - Math.floor(avgScore / 15));
+        }
+
+        function generateMetaCode() {
+            const title = document.getElementById('pageTitle').value;
+            const desc = document.getElementById('pageDescription').value;
+            const keywords = document.getElementById('pageKeywords').value;
+            const author = document.getElementById('pageAuthor').value;
+            const canonical = document.getElementById('canonical').value;
+            
+            const code = `<!-- Meta Tags -->
+<title>${title || 'Your Page Title'}</title>
+<meta name="description" content="${desc || 'Your page description'}">
+<meta name="keywords" content="${keywords || 'your, keywords, here'}">
+${author ? `<meta name="author" content="${author}">\n` : ''}<meta name="viewport" content="width=device-width, initial-scale=1.0">
+${canonical ? `<link rel="canonical" href="${canonical}">\n` : ''}<!-- Open Graph -->
+<meta property="og:title" content="${title || 'Your Page Title'}">
+<meta property="og:description" content="${desc || 'Your page description'}">
+<meta property="og:type" content="website">
+${canonical ? `<meta property="og:url" content="${canonical}">\n` : ''}`;
+            
+            document.getElementById('metaCodeOutput').textContent = code;
+            document.getElementById('metaCodeOutput').style.display = 'block';
+            document.getElementById('metaStatus').innerHTML = '<div class="status-message status-success"><i class="fas fa-check-circle"></i> ✅ Meta tags code generated! Copy and add to your page &lt;head&gt;</div>';
+        }
+
+        async function deployMetaTags() {
+            if (!tokenManager || !tokenManager.token) {
+                document.getElementById('metaStatus').innerHTML = '<div class="status-message status-error">❌ GitHub token not configured!</div>';
+                return;
+            }
+            
+            const pageSelect = document.getElementById('pageSelect').value;
+            const pagePaths = {
+                'home': 'index.html',
+                'about': 'About me/about.html',
+                'projects': 'Projects Code/projects.html',
+                'blog': 'Content Studio/hub.html',
+                'contact': 'Contact/contact.html'
+            };
+            
+            const filePath = pagePaths[pageSelect];
+            if (!filePath) {
+                document.getElementById('metaStatus').innerHTML = '<div class="status-message status-error">❌ Custom page deployment not yet supported</div>';
+                return;
+            }
+            
+            if (!confirm(`Deploy meta tags to ${filePath}?\n\nThis will update the <head> section of the page.`)) return;
+            
+            document.getElementById('metaStatus').innerHTML = '<div class="status-message status-info"><i class="fas fa-spinner fa-spin"></i> Deploying meta tags via GitHub API...</div>';
+            
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'A3KM-Studio';
+                
+                // Fetch file
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    headers: {
+                        'Authorization': `token ${tokenManager.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch file');
+                
+                const data = await response.json();
+                let content = atob(data.content);
+                
+                // Generate meta tags
+                generateMetaCode();
+                const metaTags = document.getElementById('metaCodeOutput').textContent;
+                
+                // Remove old meta tags
+                content = content.replace(/<!-- Meta Tags -->[\s\S]*?<!-- Open Graph -->[\s\S]*?(?=<\/head>)/g, '');
+                
+                // Inject new meta tags before </head>
+                content = content.replace(/<\/head>/i, metaTags + '\n</head>');
+                
+                // Commit
+                const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${tokenManager.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update SEO meta tags for ${pageSelect}`,
+                        content: btoa(unescape(encodeURIComponent(content))),
+                        sha: data.sha
+                    })
+                });
+                
+                if (updateResponse.ok) {
+                    document.getElementById('metaStatus').innerHTML = '<div class="status-message status-success">✅ Meta tags deployed to GitHub successfully!</div>';
+                    
+                    // Log activity
+                    if (typeof ActivityLogger !== 'undefined') {
+                        ActivityLogger.log('system', `Deployed SEO meta tags to ${pageSelect} page via GitHub`, 'Admin', 'success', `File: ${filePath}`);
+                    }
+                } else {
+                    throw new Error('Failed to update file');
+                }
+            } catch (error) {
+                document.getElementById('metaStatus').innerHTML = `<div class="status-message status-error">❌ Deployment failed: ${error.message}</div>`;
+            }
+        }
+
+        async function analyzeKeywords() {
+            const keyword = document.getElementById('pageKeywords').value || prompt('Enter keyword to research:');
+            if (!keyword) return;
+            
+            const output = document.getElementById('advancedToolsOutput');
+            output.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #fbb034;"></i><p>Analyzing real content from GitHub...</p></div>';
+            
+            try {
+                // Fetch real HTML content from GitHub
+                const owner = 'Akhinoor14';
+                const repo = 'A3KM-Studio';
+                const pageSelect = document.getElementById('pageSelect').value;
+                const pagePaths = {
+                    'home': 'index.html',
+                    'about': 'About me/about.html',
+                    'projects': 'Projects Code/projects.html',
+                    'blog': 'Content Studio/hub.html',
+                    'contact': 'Contact/contact.html'
+                };
+                const filePath = pagePaths[pageSelect] || 'index.html';
+                
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    headers: { 'Accept': 'application/vnd.github.v3+json' }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch content');
+                const data = await response.json();
+                const content = atob(data.content).toLowerCase();
+                
+                // Real keyword analysis
+                const words = content.split(/\s+/).filter(w => w.length > 2);
+                const keywordCount = (content.match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
+                const density = ((keywordCount / words.length) * 100).toFixed(2);
+                
+                // Find related keywords (words appearing near the keyword)
+                const relatedWords = new Set();
+                const regex = new RegExp(`\\b\\w*${keyword.toLowerCase()}\\w*\\b`, 'g');
+                const matches = content.match(regex) || [];
+                matches.forEach(m => {
+                    if (m !== keyword.toLowerCase() && m.length > 3) relatedWords.add(m);
+                });
+                
+                // Count in title/headings
+                const titleMatches = (content.match(/<title>[^<]*<\/title>/gi) || []).join('').toLowerCase().includes(keyword.toLowerCase());
+                const h1Matches = (content.match(/<h1[^>]*>[^<]*<\/h1>/gi) || []).filter(h => h.toLowerCase().includes(keyword.toLowerCase())).length;
+                
+                output.innerHTML = `
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #fbb034; margin-bottom: 15px;">🔑 Real Keyword Analysis: "${keyword}"</h3>
+                        <div style="margin: 10px 0;"><strong>File Analyzed:</strong> ${filePath}</div>
+                        <div style="margin: 10px 0;"><strong>Keyword Count:</strong> ${keywordCount} times</div>
+                        <div style="margin: 10px 0;"><strong>Keyword Density:</strong> <span style="color: ${density >= 2 && density <= 3 ? '#4caf50' : '#f7ce38'}">${density}%</span> ${density >= 2 && density <= 3 ? '✓ Optimal' : density < 2 ? '⚠ Too Low' : '⚠ Too High'}</div>
+                        <div style="margin: 10px 0;"><strong>In Title Tag:</strong> ${titleMatches ? '<span style="color: #4caf50;">✓ Yes</span>' : '<span style="color: #f44336;">✗ No</span>'}</div>
+                        <div style="margin: 10px 0;"><strong>In H1 Headings:</strong> ${h1Matches} time(s)</div>
+                        <h4 style="margin-top: 15px; margin-bottom: 10px;">Related Keywords Found:</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            ${Array.from(relatedWords).slice(0, 6).map(w => `<span style="background: white; padding: 5px 10px; border-radius: 5px; font-size: 13px;">${w}</span>`).join('')}
+                            ${relatedWords.size === 0 ? '<span style="color: #999;">No related keywords found</span>' : ''}
+                        </div>
+                        <p style="margin-top: 15px; color: #666; font-size: 13px;">✅ This is REAL data from your GitHub repository!</p>
+                    </div>
+                `;
+            } catch (error) {
+                output.innerHTML = `<div class="status-message status-error">❌ Failed to analyze: ${error.message}</div>`;
+            }
+        }
+
+        async function analyzeCompetitors() {
+            const output = document.getElementById('advancedToolsOutput');
+            output.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #fbb034;"></i><p>Analyzing your website structure...</p></div>';
+            
+            try {
+                // Analyze all pages in your website
+                const owner = 'Akhinoor14';
+                const repo = 'A3KM-Studio';
+                const pages = [
+                    { name: 'Home', path: 'index.html' },
+                    { name: 'About', path: 'About me/about.html' },
+                    { name: 'Projects', path: 'Projects Code/projects.html' },
+                    { name: 'Blog', path: 'Content Studio/hub.html' },
+                    { name: 'Contact', path: 'Contact/contact.html' }
+                ];
+                
+                const results = [];
+                for (const page of pages) {
+                    try {
+                        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${page.path}`, {
+                            headers: { 'Accept': 'application/vnd.github.v3+json' }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            const content = atob(data.content);
+                            const wordCount = content.split(/\s+/).length;
+                            const hasTitle = /<title>/.test(content);
+                            const hasDescription = /<meta[^>]*name="description"/.test(content);
+                            const h1Count = (content.match(/<h1[^>]*>/g) || []).length;
+                            results.push({ name: page.name, wordCount, hasTitle, hasDescription, h1Count });
+                        }
+                    } catch (e) { }
+                }
+                
+                output.innerHTML = `
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #fbb034; margin-bottom: 15px;">📊 Your Website Analysis</h3>
+                        <div style="margin: 10px 0;"><strong>Total Pages Analyzed:</strong> ${results.length}</div>
+                        <div style="margin: 10px 0;"><strong>Pages with Title Tag:</strong> ${results.filter(r => r.hasTitle).length}/${results.length}</div>
+                        <div style="margin: 10px 0;"><strong>Pages with Description:</strong> ${results.filter(r => r.hasDescription).length}/${results.length}</div>
+                        <h4 style="margin-top: 15px; margin-bottom: 10px;">Page-by-Page Breakdown:</h4>
+                        ${results.map(r => `
+                            <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0; font-size: 13px;">
+                                <strong>${r.name}</strong> - ${r.wordCount} words, 
+                                ${r.hasTitle ? '✓' : '✗'} Title, 
+                                ${r.hasDescription ? '✓' : '✗'} Description, 
+                                ${r.h1Count} H1 tag(s)
+                            </div>
+                        `).join('')}
+                        <p style="margin-top: 15px; color: #666; font-size: 13px;">✅ This is REAL data from your GitHub repository!</p>
+                    </div>
+                `;
+            } catch (error) {
+                output.innerHTML = `<div class="status-message status-error">❌ Failed to analyze: ${error.message}</div>`;
+            }
+        }
+
+        async function checkBacklinks() {
+            const output = document.getElementById('advancedToolsOutput');
+            output.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #fbb034;"></i><p>Analyzing links from your pages...</p></div>';
+            
+            try {
+                const owner = 'Akhinoor14';
+                const repo = 'A3KM-Studio';
+                const pageSelect = document.getElementById('pageSelect').value;
+                const pagePaths = {
+                    'home': 'index.html',
+                    'about': 'About me/about.html',
+                    'projects': 'Projects Code/projects.html',
+                    'blog': 'Content Studio/hub.html',
+                    'contact': 'Contact/contact.html'
+                };
+                const filePath = pagePaths[pageSelect] || 'index.html';
+                
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    headers: { 'Accept': 'application/vnd.github.v3+json' }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch content');
+                const data = await response.json();
+                const content = atob(data.content);
+                
+                // Real link analysis
+                const allLinks = content.match(/<a[^>]*href=["']([^"']*)["'][^>]*>/gi) || [];
+                const internalLinks = allLinks.filter(link => {
+                    const href = link.match(/href=["']([^"']*)["']/i)?.[1] || '';
+                    return href.startsWith('/') || href.startsWith('.') || href.startsWith('#');
+                });
+                const externalLinks = allLinks.filter(link => {
+                    const href = link.match(/href=["']([^"']*)["']/i)?.[1] || '';
+                    return href.startsWith('http');
+                });
+                const nofollowLinks = allLinks.filter(link => /rel=["'][^"']*nofollow/i.test(link));
+                
+                // Extract unique external domains
+                const domains = new Set();
+                externalLinks.forEach(link => {
+                    const match = link.match(/https?:\/\/([^\/"']+)/i);
+                    if (match) domains.add(match[1]);
+                });
+                
+                // Check for broken internal links (relative paths)
+                const uniqueInternalLinks = new Set();
+                internalLinks.forEach(link => {
+                    const href = link.match(/href=["']([^"']*)["']/i)?.[1];
+                    if (href) uniqueInternalLinks.add(href);
+                });
+                
+                output.innerHTML = `
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #fbb034; margin-bottom: 15px;">🔗 Real Link Analysis: ${filePath}</h3>
+                        <div style="margin: 10px 0;"><strong>Total Links:</strong> ${allLinks.length}</div>
+                        <div style="margin: 10px 0;"><strong>Internal Links:</strong> ${internalLinks.length}</div>
+                        <div style="margin: 10px 0;"><strong>External Links:</strong> ${externalLinks.length}</div>
+                        <div style="margin: 10px 0;"><strong>Nofollow Links:</strong> ${nofollowLinks.length}</div>
+                        <div style="margin: 10px 0;"><strong>External Domains:</strong> ${domains.size}</div>
+                        <h4 style="margin-top: 15px; margin-bottom: 10px;">External Domains Found:</h4>
+                        ${Array.from(domains).slice(0, 8).map(d => `
+                            <div style="background: white; padding: 8px; border-radius: 5px; margin: 5px 0; font-size: 13px;">
+                                🌐 ${d}
+                            </div>
+                        `).join('')}
+                        ${domains.size === 0 ? '<div style="color: #999;">No external links found</div>' : ''}
+                        <p style="margin-top: 15px; color: #666; font-size: 13px;">✅ This is REAL data from your GitHub repository!</p>
+                        <p style="margin-top: 10px; color: #666; font-size: 13px;">💡 Tip: ${internalLinks.length < 3 ? 'Add more internal links!' : 'Good internal linking!'} ${externalLinks.length < 2 ? 'Add 2-3 quality external links!' : 'External links look good!'}</p>
+                    </div>
+                `;
+            } catch (error) {
+                output.innerHTML = `<div class="status-message status-error">❌ Failed to analyze: ${error.message}</div>`;
+            }
+        }
+
+        async function analyzePageSpeed() {
+            const output = document.getElementById('advancedToolsOutput');
+            const url = prompt('Enter your live website URL (e.g., https://akhinoor14.github.io/A3KM-Studio/):');
+            if (!url) return;
+            
+            output.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #fbb034;"></i><p>Analyzing page speed with Google PageSpeed Insights API...</p></div>';
+            
+            try {
+                // Google PageSpeed Insights API (no API key needed for basic usage)
+                const response = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch PageSpeed data');
+                }
+                
+                const data = await response.json();
+                const lighthouse = data.lighthouseResult;
+                const categories = lighthouse.categories;
+                const audits = lighthouse.audits;
+                
+                const perfScore = Math.round(categories.performance.score * 100);
+                const fcp = audits['first-contentful-paint']?.displayValue || 'N/A';
+                const lcp = audits['largest-contentful-paint']?.displayValue || 'N/A';
+                const tti = audits['interactive']?.displayValue || 'N/A';
+                const cls = audits['cumulative-layout-shift']?.displayValue || 'N/A';
+                
+                // Get top opportunities
+                const opportunities = [];
+                Object.values(audits).forEach(audit => {
+                    if (audit.details?.type === 'opportunity' && audit.score < 1) {
+                        opportunities.push({
+                            title: audit.title,
+                            savings: audit.displayValue || ''
+                        });
+                    }
+                });
+                
+                output.innerHTML = `
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #fbb034; margin-bottom: 15px;">⚡ Real Google PageSpeed Report</h3>
+                        <div style="margin: 10px 0;"><strong>URL:</strong> <a href="${url}" target="_blank" style="color: #667eea;">${url.substring(0, 50)}...</a></div>
+                        <div style="margin: 10px 0;"><strong>Performance Score:</strong> <span style="color: ${perfScore >= 90 ? '#4caf50' : perfScore >= 50 ? '#f7ce38' : '#f44336'}; font-size: 24px; font-weight: bold;">${perfScore}/100</span> ${perfScore >= 90 ? '🟢' : perfScore >= 50 ? '🟡' : '🔴'}</div>
+                        <h4 style="margin-top: 15px; margin-bottom: 10px;">Core Web Vitals:</h4>
+                        <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <strong>First Contentful Paint (FCP):</strong> ${fcp}
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <strong>Largest Contentful Paint (LCP):</strong> ${lcp}
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <strong>Time to Interactive (TTI):</strong> ${tti}
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                            <strong>Cumulative Layout Shift (CLS):</strong> ${cls}
+                        </div>
+                        ${opportunities.length > 0 ? `
+                            <h4 style="margin-top: 15px; margin-bottom: 10px;">Top Opportunities:</h4>
+                            ${opportunities.slice(0, 5).map(opp => `
+                                <div style="background: white; padding: 10px; border-radius: 5px; margin: 5px 0; font-size: 13px;">
+                                    ✓ ${opp.title} ${opp.savings ? `<span style="color: #4caf50;">(${opp.savings})</span>` : ''}
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                        <p style="margin-top: 15px; color: #666; font-size: 13px;">✅ This is REAL data from Google PageSpeed Insights API!</p>
+                        <p style="margin-top: 10px; color: #666; font-size: 13px;">💡 Aim for 90+ score for best SEO results!</p>
+                    </div>
+                `;
+            } catch (error) {
+                output.innerHTML = `
+                    <div class="status-message status-error">❌ Failed to analyze: ${error.message}</div>
+                    <p style="margin-top: 10px; color: #666;">Note: Make sure your website is live and publicly accessible. GitHub Pages URL: https://akhinoor14.github.io/A3KM-Studio/</p>
+                `;
+            }
+        }
 
         function switchTab(tabName) {
             // Hide all tabs

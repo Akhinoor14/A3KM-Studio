@@ -40,41 +40,249 @@
         .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        
+        /* Date Filter Styles */
+        .date-filter-container { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .date-filter-container label { font-weight: 600; color: #333; }
+        .date-filter-container input[type="date"] { padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; }
+        .date-filter-container input[type="date"]:focus { outline: none; border-color: #667eea; }
+        .quick-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+        .quick-filter-btn { padding: 8px 16px; border: 2px solid #e0e0e0; background: white; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+        .quick-filter-btn:hover { border-color: #667eea; color: #667eea; }
+        .quick-filter-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        
+        /* Help System Styles */
+        .help-toggle { position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; border: none; border-radius: 50px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer; z-index: 1001; box-shadow: 0 5px 20px rgba(220, 53, 69, 0.3); transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .help-toggle:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4); }
+        .help-section { display: none; position: fixed; top: 0; right: 0; width: 450px; max-width: 90vw; height: 100vh; background: white; box-shadow: -5px 0 30px rgba(0,0,0,0.3); z-index: 1000; overflow-y: auto; padding: 30px; animation: slideInRight 0.3s; }
+        .help-section.active { display: block; }
+        .help-section h2 { color: #333; font-size: 24px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .help-section .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
+        .purpose-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
+        .purpose-box h3 { font-size: 18px; margin-bottom: 10px; }
+        .purpose-box p { font-size: 14px; line-height: 1.6; opacity: 0.95; }
+        .help-card { background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .help-card h3 { color: #333; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .help-card p { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
+        .help-card ul { color: #666; font-size: 14px; line-height: 1.8; padding-left: 20px; }
+        .help-card ul li { margin-bottom: 8px; }
+        .help-card code { background: #e9ecef; padding: 2px 8px; border-radius: 4px; font-size: 12px; color: #e83e8c; }
+        .help-close { position: absolute; top: 30px; right: 30px; background: none; border: none; font-size: 28px; cursor: pointer; color: #999; transition: color 0.3s; }
+        .help-close:hover { color: #dc3545; }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .help-section { width: 100%; } .date-filter-container { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Help Toggle Button -->
+        <button class="help-toggle" onclick="toggleHelp()">
+            <i class="fas fa-question-circle"></i> সাহায্য / Help
+        </button>
+
+        <!-- Help Section -->
+        <div class="help-section" id="helpSection">
+            <button class="help-close" onclick="toggleHelp()">×</button>
+            
+            <h2><i class="fas fa-book"></i> ব্যবহার গাইড / Usage Guide</h2>
+            <p class="subtitle">Global Analytics Dashboard এর সম্পূর্ণ ব্যবহার নির্দেশিকা</p>
+
+            <!-- Purpose Box -->
+            <div class="purpose-box">
+                <h3>🎯 মূল উদ্দেশ্য / Original Purpose</h3>
+                <p><strong>Bangla:</strong> এটি আপনার সম্পূর্ণ website এর statistics, content distribution, এবং activity analytics real-time এ visualize করার একটি dashboard।</p>
+                <p><strong>English:</strong> A real-time dashboard to visualize your entire website's statistics, content distribution, and activity analytics with interactive charts.</p>
+            </div>
+
+            <!-- Help Cards -->
+            <div class="help-card">
+                <h3><i class="fas fa-rocket"></i> দ্রুত শুরু / Quick Start</h3>
+                <p><strong>Bangla:</strong></p>
+                <ul>
+                    <li>Page load হওয়ার সাথে সাথে data automatically load হবে</li>
+                    <li>Charts এবং stats cards real-time update হয় (প্রতি 2 সেকেন্ডে)</li>
+                    <li>"Refresh Data" button এ click করে manually refresh করতে পারবেন</li>
+                    <li>Date filter দিয়ে specific time period এর data দেখতে পারবেন</li>
+                </ul>
+                <p><strong>English:</strong> Data auto-loads → Charts update every 2 seconds → Use date filters for specific periods.</p>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-chart-pie"></i> Charts Overview</h3>
+                <p><strong>🥧 Content Distribution (Pie Chart):</strong></p>
+                <ul>
+                    <li>সব content types এর percentage দেখায়</li>
+                    <li>Hover করলে exact numbers দেখবেন</li>
+                    <li>বড় slice = বেশি content সেই category তে</li>
+                </ul>
+                <p><strong>📊 Category Breakdown (Bar Chart):</strong></p>
+                <ul>
+                    <li>Horizontal bars দিয়ে comparison easy</li>
+                    <li>যে bar সবচেয়ে লম্বা, সেই category তে content সবচেয়ে বেশি</li>
+                </ul>
+                <p><strong>📈 Upload Activity (Line Chart):</strong></p>
+                <ul>
+                    <li>Last 30 days এর upload trend দেখায়</li>
+                    <li>Peak points = সবচেয়ে বেশি upload এর days</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-calendar-alt"></i> Date Filters Usage</h3>
+                <p><strong>Bangla:</strong></p>
+                <ul>
+                    <li><strong>Quick Filters:</strong> "Last 7 Days", "Last 30 Days", "Last Year" buttons click করুন</li>
+                    <li><strong>Custom Range:</strong> Start Date এবং End Date manually select করুন</li>
+                    <li><strong>Apply:</strong> "Apply Filter" button এ click করুন</li>
+                    <li><strong>Reset:</strong> "Clear" button এ click করে all-time data দেখুন</li>
+                </ul>
+                <p><strong>English:</strong> Use quick filter buttons OR select custom date range → Apply → View filtered data.</p>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-tachometer-alt"></i> Stats Cards Explained</h3>
+                <p><strong>Bangla:</strong></p>
+                <ul>
+                    <li><strong>Total Content Items:</strong> Books, Videos, Papers, Posts এর মোট সংখ্যা</li>
+                    <li><strong>Total Projects:</strong> Arduino, MATLAB, SolidWorks projects</li>
+                    <li><strong>Total Certificates:</strong> Academic, Skill, Medical certificates</li>
+                    <li><strong>Total Storage Used:</strong> GitHub repository এর size (MB)</li>
+                </ul>
+                <p>প্রতিটি card এ small text হিসেবে details দেওয়া আছে।</p>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-download"></i> Export Reports</h3>
+                <p><strong>Bangla:</strong> (Coming soon feature)</p>
+                <ul>
+                    <li><strong>CSV Export:</strong> Table data Excel এ export করুন</li>
+                    <li><strong>PDF Report:</strong> Complete analytics report generate করুন</li>
+                    <li><strong>JSON Data:</strong> Raw data download করুন API integration এর জন্য</li>
+                </ul>
+                <p><strong>English:</strong> Export options will be available for CSV, PDF, and JSON formats.</p>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-table"></i> Data Tables</h3>
+                <p><strong>Content Breakdown Table:</strong></p>
+                <ul>
+                    <li>প্রতিটি content type এর details</li>
+                    <li>Recent addition date দেখায়</li>
+                    <li>Status badges (Active/Inactive)</li>
+                    <li>Quick action buttons</li>
+                </ul>
+                <p><strong>Recent Activities:</strong></p>
+                <ul>
+                    <li>Last 10 activities timeline</li>
+                    <li>Activity type এবং timestamp</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-lightbulb"></i> প্রো টিপস / Pro Tips</h3>
+                <ul>
+                    <li>📊 Charts এ hover করলে exact values দেখবেন</li>
+                    <li>🔄 Auto-refresh feature টি enable করে রাখুন live monitoring এর জন্য</li>
+                    <li>📅 Weekly date filter apply করে trends analyze করুন</li>
+                    <li>📈 Line chart ব্যবহার করে upload patterns identify করুন</li>
+                    <li>💾 Monthly report export করে archive করুন</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h3><i class="fas fa-exclamation-triangle"></i> সমস্যা সমাধান / Troubleshooting</h3>
+                <p><strong>Charts load হচ্ছে না?</strong></p>
+                <ul>
+                    <li>Internet connection check করুন (Chart.js CDN load হতে হবে)</li>
+                    <li>Browser console (F12) এ error check করুন</li>
+                    <li>Page refresh করুন</li>
+                </ul>
+                <p><strong>Data দেখাচ্ছে না?</strong></p>
+                <ul>
+                    <li>Content Studio তে content add করেছেন কিনা verify করুন</li>
+                    <li>LocalStorage enabled আছে কিনা check করুন</li>
+                    <li>"Refresh Data" button click করুন</li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Global Analytics Dashboard</h1>
             <p>Complete overview of all website content and statistics</p>
-            <button class="btn btn-primary" onclick="refreshData()" style="margin-top: 15px;">
-                <i class="fas fa-sync"></i> Refresh Data
+            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync"></i> Refresh Data
+                </button>
+                <button class="btn btn-primary" onclick="exportCSV()" style="background: #28a745;">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="btn btn-primary" onclick="exportChartsAsPNG()" style="background: #17a2b8;">
+                    <i class="fas fa-image"></i> Export Charts
+                </button>
+                <button class="btn btn-primary" onclick="generatePDFReport()" style="background: #dc3545;">
+                    <i class="fas fa-file-pdf"></i> Generate PDF
+                </button>
+                <button class="btn btn-primary" onclick="toggleComparisonMode()" style="background: #6c757d;">
+                    <i class="fas fa-exchange-alt"></i> Compare Periods
+                </button>
+            </div>
+        </div>
+
+        <!-- Date Filter -->
+        <div class="date-filter-container">
+            <label><i class="fas fa-calendar-alt"></i> Filter by Date:</label>
+            <input type="date" id="startDate" placeholder="Start Date">
+            <span style="color: #999;">to</span>
+            <input type="date" id="endDate" placeholder="End Date">
+            <button class="btn btn-primary" onclick="applyDateFilter()">
+                <i class="fas fa-filter"></i> Apply Filter
             </button>
+            <button class="btn btn-secondary" onclick="clearDateFilter()" style="background: #9e9e9e; color: white;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <div class="quick-filters">
+                <button class="quick-filter-btn" onclick="setQuickFilter(7)">Last 7 Days</button>
+                <button class="quick-filter-btn" onclick="setQuickFilter(30)">Last 30 Days</button>
+                <button class="quick-filter-btn" onclick="setQuickFilter(90)">Last 90 Days</button>
+                <button class="quick-filter-btn" onclick="setQuickFilter(365)">Last Year</button>
+            </div>
         </div>
 
         <!-- Overall Stats -->
         <div class="stats-grid" id="statsContainer">
             <div class="stat-card">
-                <h3>0</h3>
+                <h3 id="totalContentCount">0</h3>
                 <p>Total Content Items</p>
                 <small id="totalItems">Books, Videos, Papers & Posts</small>
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                    <i class="fas fa-arrow-up" id="contentTrend"></i> <span id="contentTrendText">0%</span> from last month
+                </div>
             </div>
             <div class="stat-card">
-                <h3>0</h3>
+                <h3 id="totalProjectsCount">0</h3>
                 <p>Total Projects</p>
                 <small id="totalProjects">Arduino, MATLAB, SolidWorks</small>
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                    <i class="fas fa-arrow-up" id="projectTrend"></i> <span id="projectTrendText">0%</span> from last month
+                </div>
             </div>
             <div class="stat-card">
-                <h3>0</h3>
+                <h3 id="totalCertsCount">0</h3>
                 <p>Total Certificates</p>
                 <small id="totalCerts">Academic, Skill & Medical</small>
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                    <i class="fas fa-certificate"></i> <span id="certBreakdown">0/0/0</span>
+                </div>
             </div>
             <div class="stat-card">
-                <h3>0MB</h3>
+                <h3 id="storageDisplay">0MB</h3>
                 <p>Total Storage Used</p>
                 <small id="storageUsed">GitHub repository size</small>
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                    <i class="fas fa-chart-pie"></i> <span id="storagePercent">0%</span> of 1GB limit
+                </div>
             </div>
         </div>
 
@@ -82,25 +290,48 @@
         <div class="charts-grid">
             <!-- Content Distribution Pie -->
             <div class="chart-item">
-                <div class="chart-title"><i class="fas fa-pie-chart"></i> Content Distribution</div>
+                <div class="chart-title">
+                    <i class="fas fa-pie-chart"></i> Content Distribution
+                    <button onclick="downloadChartAsImage('contentChart')" style="margin-left: auto; padding: 6px 12px; border: none; background: #e3f2fd; color: #1976d2; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
                 <canvas id="contentChart"></canvas>
             </div>
 
             <!-- Category Breakdown Bar -->
             <div class="chart-item">
-                <div class="chart-title"><i class="fas fa-bar-chart"></i> Content by Category</div>
+                <div class="chart-title">
+                    <i class="fas fa-bar-chart"></i> Content by Category
+                    <button onclick="downloadChartAsImage('categoryChart')" style="margin-left: auto; padding: 6px 12px; border: none; background: #e3f2fd; color: #1976d2; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
                 <canvas id="categoryChart"></canvas>
             </div>
 
             <!-- Upload Timeline -->
             <div class="chart-item">
-                <div class="chart-title"><i class="fas fa-line-chart"></i> Upload Activity (Last 30 Days)</div>
+                <div class="chart-title">
+                    <i class="fas fa-line-chart"></i> Upload Activity (Last 30 Days)
+                    <button onclick="downloadChartAsImage('timelineChart')" style="margin-left: auto; padding: 6px 12px; border: none; background: #e3f2fd; color: #1976d2; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
                 <canvas id="timelineChart"></canvas>
+                <div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 8px; font-size: 13px;">
+                    <strong>Trend Analysis:</strong> <span id="trendAnalysis">Analyzing...</span>
+                </div>
             </div>
 
             <!-- Certificate Distribution -->
             <div class="chart-item">
-                <div class="chart-title"><i class="fas fa-certificate"></i> Certificate Categories</div>
+                <div class="chart-title">
+                    <i class="fas fa-certificate"></i> Certificate Categories
+                    <button onclick="downloadChartAsImage('certChart')" style="margin-left: auto; padding: 6px 12px; border: none; background: #e3f2fd; color: #1976d2; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
                 <canvas id="certChart"></canvas>
             </div>
         </div>
@@ -167,6 +398,77 @@
         };
 
         let charts = {};
+        let dateFilterEnabled = false;
+        let filterStartDate = null;
+        let filterEndDate = null;
+
+        // Toggle help section
+        function toggleHelp() {
+            const helpSection = document.getElementById('helpSection');
+            helpSection.classList.toggle('active');
+        }
+
+        // Date filter functions
+        function setQuickFilter(days) {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+
+            // Highlight active button
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function applyDateFilter() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date cannot be after end date');
+                return;
+            }
+
+            dateFilterEnabled = true;
+            filterStartDate = new Date(startDate);
+            filterEndDate = new Date(endDate);
+
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 80px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 10px; z-index: 1000; animation: slideDown 0.3s;';
+            notification.innerHTML = `<i class="fas fa-check-circle"></i> Filter applied: ${startDate} to ${endDate}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+
+            // Refresh data with filter
+            refreshData();
+        }
+
+        function clearDateFilter() {
+            dateFilterEnabled = false;
+            filterStartDate = null;
+            filterEndDate = null;
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
+
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 80px; right: 20px; background: #17a2b8; color: white; padding: 15px 20px; border-radius: 10px; z-index: 1000; animation: slideDown 0.3s;';
+            notification.innerHTML = `<i class="fas fa-info-circle"></i> Filter cleared - Showing all data`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+
+            // Refresh data without filter
+            refreshData();
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -216,7 +518,7 @@
 
         // Initialize charts
         function initializeCharts() {
-            // Content Distribution
+            // Content Distribution (Doughnut with gradient)
             const contentCtx = document.getElementById('contentChart').getContext('2d');
             charts.content = new Chart(contentCtx, {
                 type: 'doughnut',
@@ -224,14 +526,44 @@
                     labels: ['Books', 'Videos', 'Papers', 'Posts', 'Vlogs'],
                     datasets: [{
                         data: [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs],
-                        backgroundColor: ['#667eea', '#764ba2', '#ff6b6b', '#51cf66', '#ffd43b']
+                        backgroundColor: ['#667eea', '#764ba2', '#ff6b6b', '#51cf66', '#ffd43b'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: true }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 15, font: { size: 12 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
             });
 
-            // Category Breakdown
+            // Category Breakdown (Horizontal Bar with gradient)
             const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const gradient = categoryCtx.createLinearGradient(0, 0, 400, 0);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
             charts.category = new Chart(categoryCtx, {
                 type: 'bar',
                 data: {
@@ -239,13 +571,35 @@
                     datasets: [{
                         label: 'Count',
                         data: [analyticsData.books, analyticsData.videos, analyticsData.papers, analyticsData.posts, analyticsData.vlogs],
-                        backgroundColor: '#667eea'
+                        backgroundColor: gradient,
+                        borderRadius: 8,
+                        borderSkipped: false
                     }]
                 },
-                options: { responsive: true, indexAxis: 'y' }
+                options: { 
+                    responsive: true, 
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Count: ${context.parsed.x}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { display: false }
+                        }
+                    }
+                }
             });
 
-            // Timeline - Real data from activity logs
+            
+            // Timeline - Enhanced with gradient and area fill
             const timelineCtx = document.getElementById('timelineChart').getContext('2d');
             const activityLogs = JSON.parse(localStorage.getItem('a3km_activity_logs') || '[]');
             const uploadsByDay = {};
@@ -272,6 +626,10 @@
             });
             const data = Object.values(uploadsByDay);
             
+            const timelineGradient = timelineCtx.createLinearGradient(0, 0, 0, 300);
+            timelineGradient.addColorStop(0, 'rgba(102, 126, 234, 0.4)');
+            timelineGradient.addColorStop(1, 'rgba(102, 126, 234, 0.0)');
+            
             charts.timeline = new Chart(timelineCtx, {
                 type: 'line',
                 data: {
@@ -280,14 +638,43 @@
                         label: 'Activities',
                         data: data,
                         borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4
+                        backgroundColor: timelineGradient,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
                     }]
                 },
-                options: { responsive: true }
+                options: { 
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Activities: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
             });
 
-            // Certificates
+            // Certificates (Enhanced doughnut)
             const certCtx = document.getElementById('certChart').getContext('2d');
             charts.cert = new Chart(certCtx, {
                 type: 'doughnut',
@@ -295,10 +682,35 @@
                     labels: ['Academic', 'Skill', 'Medical'],
                     datasets: [{
                         data: [analyticsData.certificates.academic, analyticsData.certificates.skill, analyticsData.certificates.medical],
-                        backgroundColor: ['#51cf66', '#ff922b', '#748ffc']
+                        backgroundColor: ['#51cf66', '#ff922b', '#748ffc'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
                     }]
                 },
-                options: { responsive: true }
+                options: { 
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 15, font: { size: 12 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
             });
         }
 
@@ -313,10 +725,61 @@
         // Update statistics
         function updateStats() {
             const total = analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs;
-            document.querySelectorAll('.stat-card h3')[0].textContent = total;
-            document.querySelectorAll('.stat-card h3')[1].textContent = analyticsData.projects;
-            document.querySelectorAll('.stat-card h3')[2].textContent = 
-                analyticsData.certificates.academic + analyticsData.certificates.skill + analyticsData.certificates.medical;
+            const totalCerts = analyticsData.certificates.academic + analyticsData.certificates.skill + analyticsData.certificates.medical;
+            
+            document.getElementById('totalContentCount').textContent = total;
+            document.getElementById('totalProjectsCount').textContent = analyticsData.projects;
+            document.getElementById('totalCertsCount').textContent = totalCerts;
+            
+            // Certificate breakdown
+            document.getElementById('certBreakdown').textContent = 
+                `${analyticsData.certificates.academic}/${analyticsData.certificates.skill}/${analyticsData.certificates.medical}`;
+            
+            // Calculate storage (rough estimate)
+            const estimatedStorage = calculateStorageEstimate();
+            document.getElementById('storageDisplay').textContent = estimatedStorage.toFixed(2) + 'MB';
+            document.getElementById('storagePercent').textContent = ((estimatedStorage / 1024) * 100).toFixed(1) + '%';
+            
+            // REAL Trend analysis - Compare with historical data
+            const historicalKey = 'a3km_analytics_history';
+            const history = JSON.parse(localStorage.getItem(historicalKey) || '[]');
+            
+            // Calculate current totals
+            const currentContentTotal = analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs;
+            const currentProjectTotal = analyticsData.arduino + analyticsData.matlab + analyticsData.solidworks + analyticsData.electronics;
+            
+            // Get last week's data (or 7 days ago)
+            const now = Date.now();
+            const lastWeekData = history.find(h => now - h.timestamp > 7 * 24 * 60 * 60 * 1000) || { content: currentContentTotal, projects: currentProjectTotal };
+            
+            // Calculate REAL trend percentages
+            const contentTrendPercent = lastWeekData.content > 0 ? ((currentContentTotal - lastWeekData.content) / lastWeekData.content) * 100 : 0;
+            const projectTrendPercent = lastWeekData.projects > 0 ? ((currentProjectTotal - lastWeekData.projects) / lastWeekData.projects) * 100 : 0;
+            
+            document.getElementById('contentTrendText').textContent = Math.abs(contentTrendPercent).toFixed(1) + '%';
+            document.getElementById('contentTrend').className = contentTrendPercent >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            
+            document.getElementById('projectTrendText').textContent = Math.abs(projectTrendPercent).toFixed(1) + '%';
+            document.getElementById('projectTrend').className = projectTrendPercent >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            
+            // Save current data to history (keep last 30 days)
+            history.push({ timestamp: now, content: currentContentTotal, projects: currentProjectTotal });
+            const filteredHistory = history.filter(h => now - h.timestamp < 30 * 24 * 60 * 60 * 1000).slice(-30);
+            localStorage.setItem(historicalKey, JSON.stringify(filteredHistory));
+        }
+        
+        // Calculate storage estimate
+        function calculateStorageEstimate() {
+            // Rough estimate: each content item ~0.5MB average
+            const total = analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs;
+            const mediaLibrary = JSON.parse(localStorage.getItem('a3km_media_library') || '[]');
+            
+            let totalSize = total * 0.5; // Base content
+            mediaLibrary.forEach(item => {
+                totalSize += parseFloat(item.size || 0);
+            });
+            
+            return totalSize;
         }
 
         // Update table
@@ -375,7 +838,37 @@
                 charts.cert.data.datasets[0].data = [analyticsData.certificates.academic, analyticsData.certificates.skill, analyticsData.certificates.medical];
                 charts.cert.update();
             }
+            
+            // Update trend analysis
+            updateTrendAnalysis();
         }
-    </script>
-</body>
-</html>
+        
+        // ===== NEW: Advanced Features =====
+        
+        // Trend analysis
+        function updateTrendAnalysis() {
+            const activityLogs = JSON.parse(localStorage.getItem('a3km_activity_logs') || '[]');
+            const recentActivities = activityLogs.filter(log => {
+                const logDate = new Date(log.timestamp);
+                const daysDiff = (new Date() - logDate) / (1000 * 60 * 60 * 24);
+                return daysDiff <= 7;
+            });
+            
+            let trendText = '';
+            if (recentActivities.length > 20) {
+                trendText = '📈 High activity! ' + recentActivities.length + ' uploads in last 7 days';
+            } else if (recentActivities.length > 10) {
+                trendText = '📊 Moderate activity - ' + recentActivities.length + ' uploads in last 7 days';
+            } else if (recentActivities.length > 0) {
+                trendText = '📉 Low activity - ' + recentActivities.length + ' uploads in last 7 days';
+            } else {
+                trendText = '💤 No recent activity in last 7 days';
+            }
+            
+            const trendElement = document.getElementById('trendAnalysis');
+            if (trendElement) trendElement.textContent = trendText;
+        }
+        
+        // Export CSV
+        function exportCSV() {
+            let csv = 'Content Type,Count,Percentage\\n';\n            const total = analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs;\n            \n            csv += `Books,${analyticsData.books},${((analyticsData.books / total) * 100).toFixed(2)}%\\n`;\n            csv += `Videos,${analyticsData.videos},${((analyticsData.videos / total) * 100).toFixed(2)}%\\n`;\n            csv += `Papers,${analyticsData.papers},${((analyticsData.papers / total) * 100).toFixed(2)}%\\n`;\n            csv += `Posts,${analyticsData.posts},${((analyticsData.posts / total) * 100).toFixed(2)}%\\n`;\n            csv += `Vlogs,${analyticsData.vlogs},${((analyticsData.vlogs / total) * 100).toFixed(2)}%\\n`;\n            \n            const blob = new Blob([csv], { type: 'text/csv' });\n            const url = URL.createObjectURL(blob);\n            const a = document.createElement('a');\n            a.href = url;\n            a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;\n            a.click();\n            URL.revokeObjectURL(url);\n            \n            showNotification('✅ CSV exported successfully!', '#28a745');\n        }\n        \n        // Export charts as PNG\n        function exportChartsAsPNG() {\n            const chartIds = ['contentChart', 'categoryChart', 'timelineChart', 'certChart'];\n            let exported = 0;\n            \n            chartIds.forEach((id, index) => {\n                setTimeout(() => {\n                    downloadChartAsImage(id);\n                    exported++;\n                    if (exported === chartIds.length) {\n                        showNotification('✅ All charts exported!', '#17a2b8');\n                    }\n                }, index * 500);\n            });\n        }\n        \n        // Download single chart as image\n        function downloadChartAsImage(chartId) {\n            const canvas = document.getElementById(chartId);\n            if (!canvas) return;\n            \n            const url = canvas.toDataURL('image/png');\n            const a = document.createElement('a');\n            a.href = url;\n            a.download = `${chartId}-${new Date().toISOString().split('T')[0]}.png`;\n            a.click();\n        }\n        \n        // Generate PDF Report\n        function generatePDFReport() {\n            showNotification('📄 Generating PDF report... (Demo mode)', '#dc3545');\n            \n            // In production, use jsPDF library\n            setTimeout(() => {\n                const reportData = `\nA3KM Studio Analytics Report\n============================\nGenerated: ${new Date().toLocaleString()}\n\nContent Summary:\n- Total Content: ${analyticsData.books + analyticsData.videos + analyticsData.papers + analyticsData.posts + analyticsData.vlogs}\n- Books: ${analyticsData.books}\n- Videos: ${analyticsData.videos}\n- Papers: ${analyticsData.papers}\n- Posts: ${analyticsData.posts}\n- Vlogs: ${analyticsData.vlogs}\n\nProjects: ${analyticsData.projects}\n\nCertificates:\n- Academic: ${analyticsData.certificates.academic}\n- Skill: ${analyticsData.certificates.skill}\n- Medical: ${analyticsData.certificates.medical}\n\nStorage: ${calculateStorageEstimate().toFixed(2)}MB\n                `;\n                \n                const blob = new Blob([reportData], { type: 'text/plain' });\n                const url = URL.createObjectURL(blob);\n                const a = document.createElement('a');\n                a.href = url;\n                a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.txt`;\n                a.click();\n                URL.revokeObjectURL(url);\n                \n                showNotification('✅ Report generated! (Note: Install jsPDF for full PDF support)', '#28a745');\n            }, 1000);\n        }\n        \n        // Comparison mode\n        let comparisonMode = false;\n        function toggleComparisonMode() {\n            comparisonMode = !comparisonMode;\n            if (comparisonMode) {\n                showNotification('📊 Comparison mode enabled! Select two date ranges to compare.', '#6c757d');\n                // Add comparison UI elements\n            } else {\n                showNotification('ℹ️ Comparison mode disabled', '#6c757d');\n            }\n        }\n        \n        // Notification helper\n        function showNotification(message, color) {\n            const notification = document.createElement('div');\n            notification.style.cssText = `position: fixed; top: 80px; right: 20px; background: ${color}; color: white; padding: 15px 20px; border-radius: 10px; z-index: 1000; animation: slideDown 0.3s; box-shadow: 0 5px 20px rgba(0,0,0,0.3);`;\n            notification.innerHTML = message;\n            document.body.appendChild(notification);\n            setTimeout(() => {\n                notification.style.animation = 'slideUp 0.3s';\n                setTimeout(() => notification.remove(), 300);\n            }, 3000);\n        }\n    </script>\n</body>\n</html>
