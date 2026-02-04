@@ -357,28 +357,28 @@
 
     <!-- Quick Actions -->
     <div class="quick-actions">
-      <a href="upload-interface-new.html" class="quick-btn">📤 Universal Upload</a>
+      <button onclick="showQuickUpload()" class="quick-btn">📤 Quick Upload</button>
       <button onclick="refreshAllStats()" class="quick-btn">🔄 Refresh Stats</button>
-      <button onclick="viewAllHistory()" class="quick-btn">🕐 View All History</button>
+      <button onclick="clearCache()" class="quick-btn">🗑️ Clear Cache</button>
     </div>
 
     <!-- Statistics Overview -->
     <div class="stats-overview" id="statsOverview">
       <div class="stat-card">
-        <h2 id="totalContent">-</h2>
+        <h2 id="totalContent">0</h2>
         <p>Total Content</p>
       </div>
       <div class="stat-card">
-        <h2 id="totalCategories">-</h2>
-        <p>Categories</p>
+        <h2 id="totalCategories">6</h2>
+        <p>Content Types</p>
       </div>
       <div class="stat-card">
-        <h2 id="totalSize">-</h2>
-        <p>Total Storage</p>
+        <h2 id="totalSize">0 MB</h2>
+        <p>Estimated Size</p>
       </div>
       <div class="stat-card">
-        <h2 id="recentUploads">-</h2>
-        <p>Last 7 Days</p>
+        <h2 id="recentUploads">0</h2>
+        <p>This Week</p>
       </div>
     </div>
 
@@ -456,86 +456,81 @@
     </div>
   </div>
 
-  <script src="github-content-uploader.js"></script>
-  <script src="content-manager.js"></script>
   <script>
-    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
-    
-    const githubUploader = new GitHubContentUploader({
-      token: GITHUB_TOKEN,
-      owner: 'Akhinoor14',
-      repo: 'A3KM-Studio'
-    });
-    
-    const contentManager = new ContentManager(githubUploader);
+    // Simple counter system without GitHub API dependency
+    let contentCounts = {
+      books: parseInt(localStorage.getItem('books_count') || '0'),
+      videos: parseInt(localStorage.getItem('videos_count') || '0'),
+      papers: parseInt(localStorage.getItem('papers_count') || '0'),
+      vlogs: parseInt(localStorage.getItem('vlogs_count') || '0'),
+      posts: parseInt(localStorage.getItem('posts_count') || '0')
+    };
 
-    // Load all statistics
-    async function loadHubStats() {
+    // Load statistics from localStorage
+    function loadHubStats() {
       try {
-        const stats = await contentManager.getStatistics();
+        // Update manager counts
+        document.getElementById('booksCount').textContent = `${contentCounts.books} items`;
+        document.getElementById('videosCount').textContent = `${contentCounts.videos} items`;
+        document.getElementById('papersCount').textContent = `${contentCounts.papers} items`;
+        document.getElementById('vlogsCount').textContent = `${contentCounts.vlogs} items`;
+        document.getElementById('postsCount').textContent = `${contentCounts.posts} items`;
         
-        // Update overview cards
-        document.getElementById('totalContent').textContent = stats.totalContent;
-        document.getElementById('totalCategories').textContent = Object.keys(stats.byCategory).length;
-        document.getElementById('totalSize').textContent = contentManager.formatFileSize(stats.totalSize);
+        // Calculate totals
+        const total = Object.values(contentCounts).reduce((sum, val) => sum + val, 0);
+        document.getElementById('totalContent').textContent = total;
         
-        // Calculate recent uploads (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const recent = stats.recentUploads.filter(item => 
-          new Date(item.dateAdded) >= sevenDaysAgo
-        );
-        document.getElementById('recentUploads').textContent = recent.length;
-        
-        // Update individual counts
-        document.getElementById('booksCount').textContent = `${stats.byType['books-pdfs'] || 0} items`;
-        document.getElementById('videosCount').textContent = `${stats.byType['educational-videos'] || 0} items`;
-        document.getElementById('papersCount').textContent = `${stats.byType['research-papers'] || 0} items`;
-        document.getElementById('vlogsCount').textContent = `${stats.byType['video-content'] || 0} items`;
-        document.getElementById('postsCount').textContent = `${stats.byType['written-posts'] || 0} items`;
-        
-        // Load recent activity
-        loadRecentActivity(stats.recentUploads);
+        // Load recent activity from localStorage
+        loadRecentActivity();
         
       } catch (error) {
         console.error('Failed to load stats:', error);
+        showOfflineMessage();
       }
     }
 
-    // Load recent activity
-    function loadRecentActivity(recentUploads) {
+    // Load recent activity from localStorage
+    function loadRecentActivity() {
       const container = document.getElementById('recentActivity');
+      const recentData = JSON.parse(localStorage.getItem('recent_activity') || '[]');
       
-      if (recentUploads.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No recent activity</div>';
+      if (recentData.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #999;">
+            <p style="margin-bottom: 10px;">📝 No recent activity yet</p>
+            <p style="font-size: 14px;">Upload content through the managers to see activity here</p>
+          </div>`;
         return;
       }
       
       container.innerHTML = '';
       
-      recentUploads.slice(0, 10).forEach(item => {
+      recentData.slice(0, 10).forEach(item => {
         const div = document.createElement('div');
         div.className = 'recent-item';
         
         const typeIcons = {
-          'books-pdfs': '📚',
-          'educational-videos': '🎓',
-          'research-papers': '📄',
-          'video-content': '🎬',
-          'written-posts': '✍️'
+          'books': '📚',
+          'videos': '🎓',
+          'papers': '📄',
+          'vlogs': '🎬',
+          'posts': '✍️'
         };
+        
+        const date = new Date(item.timestamp);
+        const timeAgo = getTimeAgo(date);
         
         div.innerHTML = `
           <div class="recent-item-info">
             <div class="recent-item-title">
-              ${typeIcons[item.contentType] || '📄'} ${item.title}
+              ${typeIcons[item.type] || '📄'} ${item.title || 'Untitled'}
             </div>
             <div class="recent-item-meta">
-              ${item.category} · ${item.author || 'Unknown'}
+              ${item.action || 'Added'} · ${item.category || 'Uncategorized'}
             </div>
           </div>
           <div class="recent-item-time">
-            ${contentManager.formatDate(item.dateAdded)}
+            ${timeAgo}
           </div>
         `;
         
@@ -543,32 +538,82 @@
       });
     }
 
-    // Refresh all stats
-    async function refreshAllStats() {
-      document.getElementById('totalContent').textContent = '...';
-      document.getElementById('recentActivity').innerHTML = '<div class="loading">Refreshing</div>';
-      await loadHubStats();
+    // Get time ago string
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+      if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+      
+      return date.toLocaleDateString();
     }
 
-    // View all history
-    function viewAllHistory() {
-      const history = contentManager.getHistory(100);
+    // Refresh statistics
+    function refreshAllStats() {
+      document.getElementById('totalContent').textContent = '...';
+      document.getElementById('recentActivity').innerHTML = '<div class="loading">Refreshing</div>';
       
-      if (history.length === 0) {
-        alert('📝 No history available');
-        return;
+      setTimeout(() => {
+        loadHubStats();
+      }, 500);
+    }
+
+    // Clear cache
+    function clearCache() {
+      if (confirm('🗑️ Clear all cached data? This will reset counters to 0.')) {
+        Object.keys(contentCounts).forEach(key => {
+          contentCounts[key] = 0;
+          localStorage.setItem(`${key}_count`, '0');
+        });
+        localStorage.removeItem('recent_activity');
+        loadHubStats();
+        alert('✅ Cache cleared successfully!');
       }
+    }
+
+    // Show quick upload guide
+    function showQuickUpload() {
+      const message = `📤 Quick Upload Guide:
+
+Choose a manager to upload content:
+
+📚 Books Manager - Upload PDFs, EPUBs, MOBIs
+🎓 Educational Videos - Create playlists & courses
+📄 Research Papers - Upload academic papers
+🎬 Video Blogs - Add YouTube vlogs
+✍️ Written Posts - Write blog posts
+
+Click on any manager card below to get started!`;
       
-      let historyHTML = '📜 Upload History (Last 100):\n\n';
-      history.forEach((entry, i) => {
-        historyHTML += `${i + 1}. ${entry.action.toUpperCase()}: ${entry.title}\n   ${contentManager.formatDate(entry.timestamp)}\n\n`;
-      });
-      
-      alert(historyHTML);
+      alert(message);
+    }
+
+    // Show offline message
+    function showOfflineMessage() {
+      document.getElementById('recentActivity').innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #999;">
+          <p style="margin-bottom: 10px;">⚠️ Working in offline mode</p>
+          <p style="font-size: 14px;">Statistics are stored locally</p>
+        </div>`;
     }
 
     // Load on page load
     window.addEventListener('DOMContentLoaded', loadHubStats);
+    
+    // Update counts when returning from managers
+    window.addEventListener('focus', () => {
+      // Reload counts from localStorage when window gets focus
+      contentCounts = {
+        books: parseInt(localStorage.getItem('books_count') || '0'),
+        videos: parseInt(localStorage.getItem('videos_count') || '0'),
+        papers: parseInt(localStorage.getItem('papers_count') || '0'),
+        vlogs: parseInt(localStorage.getItem('vlogs_count') || '0'),
+        posts: parseInt(localStorage.getItem('posts_count') || '0')
+      };
+      loadHubStats();
+    });
   </script>
   <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
