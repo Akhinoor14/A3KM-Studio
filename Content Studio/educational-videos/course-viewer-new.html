@@ -611,6 +611,74 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* PDF Section Styles */
+        .pdf-section {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(0, 137, 123, 0.1) 0%, rgba(0, 137, 123, 0.05) 100%);
+            border-radius: 8px;
+            border: 2px solid #00897B;
+        }
+
+        .pdf-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #00CC88;
+        }
+
+        .pdf-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .pdf-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background-color: #00897B;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-btn:hover {
+            background-color: #00695C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 137, 123, 0.3);
+        }
+
+        .pdf-btn.download {
+            background-color: #2196F3;
+        }
+
+        .pdf-btn.download:hover {
+            background-color: #1976D2;
+        }
+
+        .pdf-info {
+            margin-top: 0.5rem;
+            color: #00CC88;
+            font-size: 0.9rem;
+        }
+
+        .episode-pdf {
+            margin-top: 0.3rem;
+            padding: 0.3rem 0.6rem;
+            background: rgba(0, 137, 123, 0.2);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #00CC88;
+            display: inline-block;
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .main-content {
@@ -726,9 +794,17 @@
             }
 
             try {
-                const response = await fetch('../educational-videos/courses.json');
+                const response = await fetch('courses.json');
                 const data = await response.json();
                 allCourses = data.courses || [];
+                
+                // Map playlist to episodes for compatibility
+                allCourses = allCourses.map(course => ({
+                    ...course,
+                    episodes: course.playlist || course.episodes || [],
+                    instructor: course.institution || 'Md Akhinoor Islam',
+                    description: course.summary || course.description || ''
+                }));
                 
                 currentCourse = allCourses.find(course => course.id === courseId);
                 
@@ -872,9 +948,10 @@
                 return `
                     <div class="episode-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
                          onclick="loadVideo(${index})">
-                        <div class="episode-number">${index + 1}</div>
+                        <div class="episode-number">${episode.episodeNo || (index + 1)}</div>
                         <div class="episode-title">${episode.title}</div>
                         <div class="episode-duration">⏱️ ${episode.duration}</div>
+                        ${episode.lecturePdf && episode.lecturePdf.downloadUrl ? '<div class="episode-pdf">📝 PDF Available</div>' : ''}
                     </div>
                 `;
             }).join('');
@@ -891,7 +968,7 @@
             episodeTitle.textContent = `Episode ${index + 1}: ${episode.title}`;
             
             // Extract YouTube video ID
-            const videoId = extractYouTubeId(episode.videoUrl);
+            const videoId = extractYouTubeId(episode.videoUrl || episode.youtubeUrl || '');
             
             if (videoId) {
                 videoContainer.innerHTML = `
@@ -918,6 +995,45 @@
 
             renderPlaylist();
             scrollToCurrentEpisode();
+            renderPdfSection(episode);
+        }
+
+        // Render PDF section if available
+        function renderPdfSection(episode) {
+            // Check if PDF section already exists
+            let pdfSection = document.getElementById('pdf-section');
+            
+            if (episode.lecturePdf && episode.lecturePdf.downloadUrl) {
+                const pdfHtml = `
+                    <div class="pdf-section" id="pdf-section">
+                        <h3>📝 Lecture Materials</h3>
+                        <div class="pdf-info">📄 ${episode.lecturePdf.fileName} (${(episode.lecturePdf.size / 1024).toFixed(0)} KB)</div>
+                        <div class="pdf-buttons">
+                            <a href="${episode.lecturePdf.downloadUrl}" target="_blank" class="pdf-btn" title="View PDF in new tab">
+                                👁️ View PDF
+                            </a>
+                            <a href="${episode.lecturePdf.downloadUrl}" download class="pdf-btn download" title="Download PDF to device">
+                                ⬇️ Download PDF
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                if (pdfSection) {
+                    pdfSection.outerHTML = pdfHtml;
+                } else {
+                    // Insert after video actions
+                    const videoActions = document.querySelector('.video-actions');
+                    if (videoActions) {
+                        videoActions.insertAdjacentHTML('afterend', pdfHtml);
+                    }
+                }
+            } else {
+                // Remove PDF section if no PDF available
+                if (pdfSection) {
+                    pdfSection.remove();
+                }
+            }
         }
 
         // Extract YouTube video ID from URL

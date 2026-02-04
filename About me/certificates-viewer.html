@@ -764,27 +764,44 @@
     // Load certificates data
     async function loadCertificates() {
       try {
+        console.log('Loading certificates data...');
         const response = await fetch('certificates-data.json');
-        certificatesData = await response.json();
         
-        // Update stats
-        document.getElementById('totalCount').textContent = certificatesData.stats.totalCertificates;
-        document.getElementById('academicCount').textContent = certificatesData.stats.academicCount;
-        document.getElementById('skillCount').textContent = certificatesData.stats.skillCount;
-        document.getElementById('medicalCount').textContent = certificatesData.stats.medicalCount;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        certificatesData = await response.json();
+        console.log('Certificates data loaded:', certificatesData);
+        
+        // Validate data structure
+        if (!certificatesData.stats || !certificatesData.categories) {
+          throw new Error('Invalid data structure');
+        }
+        
+        // Update stats with actual data
+        document.getElementById('totalCount').textContent = certificatesData.stats.totalCertificates || 0;
+        document.getElementById('academicCount').textContent = certificatesData.stats.academicCount || 0;
+        document.getElementById('skillCount').textContent = certificatesData.stats.skillCount || 0;
+        document.getElementById('medicalCount').textContent = certificatesData.stats.medicalCount || 0;
 
         // Hide loading
         document.getElementById('loadingState').style.display = 'none';
         
-        // Render certificates
+        // Render certificates with initial filter
+        console.log('Rendering certificates...');
         renderCertificates();
+        console.log('Certificates rendered successfully');
       } catch (error) {
         console.error('Error loading certificates:', error);
         document.getElementById('loadingState').innerHTML = `
           <div class="empty-state">
             <i class="fas fa-exclamation-triangle"></i>
             <h3>Error Loading Certificates</h3>
-            <p>Please try again later</p>
+            <p>${error.message || 'Please try again later'}</p>
+            <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px; background: #CC0000; color: white; border: none; border-radius: 6px; cursor: pointer;">
+              <i class="fas fa-redo"></i> Retry
+            </button>
           </div>
         `;
       }
@@ -792,6 +809,13 @@
 
     // Render certificates
     function renderCertificates(filter = 'all', searchTerm = '') {
+      console.log('Rendering with filter:', filter, 'search:', searchTerm);
+      
+      if (!certificatesData || !certificatesData.categories) {
+        console.error('No certificates data available');
+        return;
+      }
+      
       const container = document.getElementById('certificatesContainer');
       container.innerHTML = '';
 
@@ -801,9 +825,17 @@
       const categoryOrder = ['Academic', 'Skill', 'Medical'];
       
       categoryOrder.forEach(categoryKey => {
-        if (!certificatesData.categories[categoryKey]) return;
+        if (!certificatesData.categories[categoryKey]) {
+          console.warn(`Category ${categoryKey} not found in data`);
+          return;
+        }
         
         const category = certificatesData.categories[categoryKey];
+        
+        if (!category.certificates || !Array.isArray(category.certificates)) {
+          console.warn(`No certificates array in category ${categoryKey}`);
+          return;
+        }
         
         // Filter certificates
         let certificates = category.certificates.filter(cert => {
@@ -813,9 +845,11 @@
           const matchesSearch = searchTerm === '' || 
                                cert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                cert.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                               cert.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                               (cert.tags && cert.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
           return matchesFilter && matchesSearch;
         });
+
+        console.log(`Category ${categoryKey}: ${certificates.length} certificates after filter`);
 
         if (certificates.length === 0) return;
         hasResults = true;
@@ -1083,17 +1117,34 @@
 
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Filter button clicked:', this.dataset.filter);
+        
+        // Remove active class from all buttons
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        renderCertificates(currentFilter, document.getElementById('searchInput').value);
+        
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Get filter value
+        const filterValue = this.dataset.filter;
+        currentFilter = filterValue;
+        
+        // Get search term
+        const searchTerm = document.getElementById('searchInput').value;
+        
+        // Render with new filter
+        console.log('Applying filter:', filterValue);
+        renderCertificates(filterValue, searchTerm);
       });
     });
 
     // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
-      renderCertificates(currentFilter, e.target.value);
+      const searchValue = e.target.value;
+      console.log('Search input:', searchValue);
+      renderCertificates(currentFilter, searchValue);
     });
 
     // Back button

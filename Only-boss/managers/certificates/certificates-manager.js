@@ -458,11 +458,30 @@ function updateStatsData() {
  * Switch tabs
  */
 function switchTab(tabName) {
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  console.log('Switching to tab:', tabName);
   
-  document.getElementById(`${tabName}-tab`).classList.add('active');
-  event.target.closest('.tab-btn').classList.add('active');
+  // Remove active class from all tabs and buttons
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+  
+  // Add active class to selected tab (capitalize first letter for ID)
+  const tabId = tabName.charAt(0).toLowerCase() + tabName.slice(1) + 'Tab';
+  const tabElement = document.getElementById(tabId);
+  
+  if (tabElement) {
+    tabElement.classList.add('active');
+    console.log('Tab activated:', tabId);
+  } else {
+    console.error('Tab not found:', tabId);
+  }
+  
+  // Add active class to clicked button
+  event?.target?.classList.add('active');
+  
+  // Load content for specific tabs
+  if (typeof loadTabContent === 'function') {
+    loadTabContent(tabName);
+  }
 }
 
 /**
@@ -563,9 +582,12 @@ function editCertificate(id, category) {
   
   // Switch to upload tab
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('upload-tab').classList.add('active');
-  document.querySelector('.tab-btn').classList.add('active');
+  document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('uploadTab').classList.add('active');
+  
+  // Activate upload tab button
+  const uploadTabButton = document.querySelector('.tab-item[onclick*="upload"]');
+  if (uploadTabButton) uploadTabButton.classList.add('active');
   
   // Populate form
   document.getElementById('certTitle').value = cert.title;
@@ -636,12 +658,45 @@ async function deleteCertificate(id, category) {
  * Update stats display
  */
 function updateStats() {
-  if (!certificatesData || !certificatesData.stats) return;
+  if (!certificatesData || !certificatesData.stats) {
+    console.log('No stats data available');
+    return;
+  }
   
-  document.getElementById('statTotal').textContent = certificatesData.stats.totalCertificates || 0;
-  document.getElementById('statAcademic').textContent = certificatesData.stats.academicCount || 0;
-  document.getElementById('statSkill').textContent = certificatesData.stats.skillCount || 0;
-  document.getElementById('statMedical').textContent = certificatesData.stats.medicalCount || 0;
+  console.log('Updating stats with data:', certificatesData.stats);
+  
+  // Update main dashboard stats
+  const dashTotal = document.getElementById('dashTotal');
+  const dashAcademic = document.getElementById('dashAcademic');
+  const dashSkill = document.getElementById('dashSkill');
+  const dashMedical = document.getElementById('dashMedical');
+  
+  if (dashTotal) dashTotal.textContent = certificatesData.stats.totalCertificates || 0;
+  if (dashAcademic) dashAcademic.textContent = certificatesData.stats.academicCount || 0;
+  if (dashSkill) dashSkill.textContent = certificatesData.stats.skillCount || 0;
+  if (dashMedical) dashMedical.textContent = certificatesData.stats.medicalCount || 0;
+  
+  // Update quick stats in sidebar
+  const quickTotal = document.getElementById('quickTotal');
+  const quickAcademic = document.getElementById('quickAcademic');
+  const quickSkill = document.getElementById('quickSkill');
+  const quickMedical = document.getElementById('quickMedical');
+  
+  if (quickTotal) quickTotal.textContent = certificatesData.stats.totalCertificates || 0;
+  if (quickAcademic) quickAcademic.textContent = certificatesData.stats.academicCount || 0;
+  if (quickSkill) quickSkill.textContent = certificatesData.stats.skillCount || 0;
+  if (quickMedical) quickMedical.textContent = certificatesData.stats.medicalCount || 0;
+  
+  // Update statistics tab stats
+  const statTotal = document.getElementById('statTotal');
+  const statAcademic = document.getElementById('statAcademic');
+  const statSkill = document.getElementById('statSkill');
+  const statMedical = document.getElementById('statMedical');
+  
+  if (statTotal) statTotal.textContent = certificatesData.stats.totalCertificates || 0;
+  if (statAcademic) statAcademic.textContent = certificatesData.stats.academicCount || 0;
+  if (statSkill) statSkill.textContent = certificatesData.stats.skillCount || 0;
+  if (statMedical) statMedical.textContent = certificatesData.stats.medicalCount || 0;
   
   // Count featured and verified
   let featured = 0;
@@ -655,8 +710,13 @@ function updateStats() {
     }
   });
   
-  document.getElementById('statFeatured').textContent = featured;
-  document.getElementById('statVerified').textContent = verified;
+  const statFeatured = document.getElementById('statFeatured');
+  const statVerified = document.getElementById('statVerified');
+  
+  if (statFeatured) statFeatured.textContent = featured;
+  if (statVerified) statVerified.textContent = verified;
+  
+  console.log('Stats updated successfully');
 }
 
 /**
@@ -813,4 +873,186 @@ function showStatus(elementId, message, type) {
       element.style.display = 'none';
     }, 5000);
   }
+}
+
+// ==================== MISSING FUNCTIONS FOR UI ====================
+
+/**
+ * Apply filters to certificate list
+ */
+function applyFilters() {
+  console.log('Applying filters...');
+  if (typeof loadManageContent === 'function') {
+    loadManageContent();
+  }
+}
+
+/**
+ * Reset all filters
+ */
+function resetFilters() {
+  document.getElementById('searchManage').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterSubcategory').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value = '';
+  document.getElementById('sortBy').value = 'date-desc';
+  applyFilters();
+}
+
+/**
+ * Select all certificates
+ */
+function selectAll() {
+  document.querySelectorAll('.cert-card input[type="checkbox"]').forEach(cb => {
+    cb.checked = true;
+  });
+  updateSelectedCount();
+}
+
+/**
+ * Deselect all certificates
+ */
+function deselectAll() {
+  document.querySelectorAll('.cert-card input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+  });
+  updateSelectedCount();
+}
+
+/**
+ * Update selected count
+ */
+function updateSelectedCount() {
+  const count = document.querySelectorAll('.cert-card input[type="checkbox"]:checked').length;
+  const countElement = document.getElementById('selectedCount');
+  if (countElement) countElement.textContent = count;
+}
+
+/**
+ * Bulk delete certificates
+ */
+function bulkDelete() {
+  const selected = Array.from(document.querySelectorAll('.cert-card input[type="checkbox"]:checked'));
+  if (selected.length === 0) {
+    alert('⚠️ Please select certificates to delete');
+    return;
+  }
+  
+  if (!confirm(`Are you sure you want to delete ${selected.length} certificate(s)?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+  
+  alert('⚠️ Bulk delete feature requires GitHub token. Please use individual delete for now.');
+}
+
+/**
+ * Pagination - Previous page
+ */
+function prevPage() {
+  if (typeof currentPage !== 'undefined' && currentPage > 1) {
+    currentPage--;
+    if (typeof displayPage === 'function') {
+      displayPage(currentPage);
+    }
+  }
+}
+
+/**
+ * Pagination - Next page
+ */
+function nextPage() {
+  const totalPages = document.getElementById('totalPages');
+  const maxPages = totalPages ? parseInt(totalPages.textContent) : 1;
+  
+  if (typeof currentPage !== 'undefined' && currentPage < maxPages) {
+    currentPage++;
+    if (typeof displayPage === 'function') {
+      displayPage(currentPage);
+    }
+  }
+}
+
+/**
+ * Validate JSON in editor
+ */
+function validateJSON() {
+  const editor = document.getElementById('jsonEditor');
+  if (!editor) return;
+  
+  try {
+    const data = JSON.parse(editor.value);
+    alert('✅ JSON is valid!');
+    console.log('Validated JSON:', data);
+  } catch (error) {
+    alert('❌ Invalid JSON!\n\n' + error.message);
+    console.error('JSON validation error:', error);
+  }
+}
+
+/**
+ * Format JSON in editor
+ */
+function formatJSON() {
+  const editor = document.getElementById('jsonEditor');
+  if (!editor) return;
+  
+  try {
+    const data = JSON.parse(editor.value);
+    editor.value = JSON.stringify(data, null, 2);
+    alert('✅ JSON formatted successfully!');
+  } catch (error) {
+    alert('❌ Cannot format invalid JSON!\n\n' + error.message);
+  }
+}
+
+/**
+ * Save JSON changes
+ */
+async function saveJSON() {
+  const editor = document.getElementById('jsonEditor');
+  if (!editor) return;
+  
+  try {
+    const data = JSON.parse(editor.value);
+    
+    // Validate structure
+    if (!data.categories || !data.stats) {
+      throw new Error('Invalid certificate data structure');
+    }
+    
+    const token = prompt('Enter your GitHub token to save changes:');
+    if (!token) return;
+    
+    const uploader = initializeGitHub(token);
+    
+    certificatesData = data;
+    await saveCertificatesToGitHub(uploader);
+    
+    alert('✅ Changes saved to GitHub successfully!');
+    
+    // Refresh all views
+    loadCertificatesList();
+    updateStats();
+    loadFolderStructure();
+  } catch (error) {
+    alert('❌ Error saving JSON:\n\n' + error.message);
+    console.error('Save JSON error:', error);
+  }
+}
+
+/**
+ * Close preview modal
+ */
+function closePreview(event) {
+  if (event.target.id === 'previewModal' || event.target.classList.contains('preview-close')) {
+    document.getElementById('previewModal').classList.remove('active');
+  }
+}
+
+/**
+ * Close edit modal
+ */
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('active');
 }

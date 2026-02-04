@@ -228,6 +228,15 @@ class ContentManager {
                 }
             }
             
+            // Delete markdown file if exists (for written posts)
+            if (item.markdownFile || item.contentPath) {
+                try {
+                    await this.githubUploader.deleteFile(item.markdownFile || item.contentPath, 'Delete markdown file');
+                } catch (error) {
+                    console.warn('Markdown file delete failed:', error);
+                }
+            }
+            
             // Remove from items array
             const updatedItems = items.filter(i => i.id !== contentId);
             this.setItemsToData(data, contentType, updatedItems);

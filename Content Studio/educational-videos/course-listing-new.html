@@ -318,6 +318,19 @@
       background: var(--advanced);
     }
 
+    .pdf-badge {
+      position: absolute;
+      top: 46px;
+      right: 8px;
+      background: linear-gradient(135deg, #00897B 0%, #00695C 100%);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 137, 123, 0.3);
+    }
+
     .course-content {
       padding: 16px;
     }
@@ -583,6 +596,16 @@
         const response = await fetch('courses.json');
         const data = await response.json();
         allCourses = data.courses || [];
+        
+        // Map playlist to episodes for compatibility with manager uploads
+        allCourses = allCourses.map(course => ({
+          ...course,
+          episodes: course.episodes || (course.playlist ? course.playlist.length : 0),
+          instructor: course.institution || 'Md Akhinoor Islam',
+          // Keep playlist for PDF counting
+          playlist: course.playlist || []
+        }));
+        
         renderCourses();
       } catch (error) {
         console.error('Error loading courses:', error);
@@ -656,6 +679,10 @@
       const difficulty = (course.difficulty || 'beginner').toLowerCase();
       const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
       
+      // Count episodes with PDF (check if PDF downloadUrl exists)
+      const pdfCount = course.playlist && Array.isArray(course.playlist) ? 
+        course.playlist.filter(ep => ep.lecturePdf && ep.lecturePdf.downloadUrl).length : 0;
+      
       return `
         <div class="course-card" onclick="openCourse('${course.id}')">
           <div class="course-thumbnail">
@@ -664,6 +691,7 @@
               <i class="fas fa-play"></i>
             </div>
             <div class="difficulty-badge ${difficulty}">${difficultyLabel}</div>
+            ${pdfCount > 0 ? `<div class="pdf-badge" title="${pdfCount} episodes with PDF materials">📝 ${pdfCount} PDF</div>` : ''}
           </div>
           <div class="course-content">
             <h3 class="course-title">${course.title}</h3>

@@ -99,6 +99,36 @@
     // Update page title
     document.title = `${currentPost.title} - Md Akhinoor Islam`;
 
+    // Load actual markdown content from file
+    try {
+      const mdPath = currentPost.markdownFile || currentPost.contentPath || `Content Studio/written-posts/${currentPost.id}.md`;
+      const response = await fetch(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${mdPath}`);
+      
+      if (response.ok) {
+        const markdownContent = await response.text();
+        
+        // Remove frontmatter if exists
+        let content = markdownContent;
+        if (content.startsWith('---')) {
+          const parts = content.split('---');
+          if (parts.length >= 3) {
+            content = parts.slice(2).join('---').trim();
+          }
+        }
+        
+        // Convert markdown to HTML (basic conversion - you can use a markdown library)
+        const htmlContent = convertMarkdownToHTML(content);
+        elements.content.innerHTML = htmlContent;
+      } else {
+        // Fallback to stored content
+        elements.content.innerHTML = convertMarkdownToHTML(currentPost.content || 'Content not available');
+      }
+    } catch (error) {
+      console.error('Error loading markdown file:', error);
+      // Fallback to stored content
+      elements.content.innerHTML = convertMarkdownToHTML(currentPost.content || 'Content not available');
+    }
+
     // Render tags
     if (currentPost.tags && currentPost.tags.length > 0) {
       elements.tags.innerHTML = currentPost.tags.map(tag => 
@@ -623,6 +653,50 @@
         btn.innerHTML = '<i class="fas fa-expand"></i><span>Fullscreen</span>';
       }
     }
+  }
+
+  /* ============================================
+     MARKDOWN TO HTML CONVERTER
+     ============================================ */
+  function convertMarkdownToHTML(markdown) {
+    if (!markdown) return '';
+    
+    let html = markdown
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/_(.+?)_/g, '<em>$1</em>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      // Images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0;">')
+      // Code blocks
+      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Blockquotes
+      .replace(/^> (.+)$/gim, '<blockquote>$1</blockquote>')
+      // Lists
+      .replace(/^\* (.+)$/gim, '<li>$1</li>')
+      .replace(/^- (.+)$/gim, '<li>$1</li>')
+      .replace(/^\d+\. (.+)$/gim, '<li>$1</li>')
+      // Line breaks
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+    
+    // Wrap in paragraphs
+    html = '<p>' + html + '</p>';
+    
+    // Wrap consecutive list items in ul
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    
+    return html;
   }
 
   // Event Listeners for Reading Features

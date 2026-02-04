@@ -5,126 +5,973 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Educational Videos Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
+    :root {
+      --primary-color: #00897B;
+      --primary-dark: #00695C;
+      --primary-light: #26A69A;
+      --bg-dark: rgba(10, 10, 10, 0.98);
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(200, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
-    .container { display: flex; min-height: 100vh; background: white; }
-    .sidebar { width: 280px; background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 4px solid #8B0000; }
-    .sidebar-header { background: linear-gradient(135deg, #8B0000, #C80000); padding: 30px 20px; color: white; }
-    .sidebar-header h1 { font-size: 22px; margin-bottom: 5px; }
-    .sidebar-header p { font-size: 12px; opacity: 0.9; }
-    .sidebar-nav { padding: 20px 0; }
-    .tab-item { display: flex; align-items: center; gap: 12px; padding: 15px 25px; color: #ccc; cursor: pointer; transition: all 0.3s; border-left: 4px solid transparent; font-weight: 600; font-size: 14px; }
-    .tab-item:hover { background: rgba(139, 0, 0, 0.1); color: white; }
-    .tab-item.active { background: rgba(139, 0, 0, 0.2); color: white; border-left-color: #8B0000; }
-    .quick-stats { padding: 20px; background: rgba(139, 0, 0, 0.1); margin: 20px; border-radius: 10px; }
-    .quick-stats h3 { color: #ccc; font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
-    .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; color: #fff; }
-    .stat-value { font-weight: 700; color: #8B0000; font-size: 18px; }
-    .main-content { flex: 1; background: #f8f9fa; padding: 40px; overflow-y: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 25px 30px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .back-btn { background: rgba(139, 0, 0, 0.1); border: 2px solid #8B0000; padding: 10px 20px; border-radius: 10px; color: #8B0000; font-weight: 600; cursor: pointer; text-decoration: none; }
-    .back-btn:hover { background: #8B0000; color: white; }
-    h1 { color: #8B0000; font-size: 32px; margin-bottom: 10px; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: #8B0000; }
-    textarea { resize: vertical; min-height: 100px; }
-    .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B0000, #C80000); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
-    .btn-primary:hover { opacity: 0.9; }
-    .bulk-actions { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; padding: 15px; background: white; border-radius: 10px; }
-    .bulk-actions button { padding: 10px 20px; border: 2px solid #8B0000; background: white; color: #8B0000; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .bulk-actions button:hover { background: #8B0000; color: white; }
-    .bulk-actions .selected-count { color: #8B0000; font-weight: 700; margin-left: auto; }
-    .content-card { position: relative; border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; transition: all 0.3s; background: white; }
-    .content-card:hover { border-color: #8B0000; box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2); }
-    .content-card input[type="checkbox"] { position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; cursor: pointer; z-index: 10; }
-    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card-thumbnail { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, #8B0000, #C80000); }
-    .card-body { padding: 15px; }
-    .card-title { font-weight: 600; color: #333; margin-bottom: 8px; font-size: 16px; }
-    .card-meta { font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.6; }
-    .card-actions { display: flex; gap: 8px; }
-    .card-actions button { flex: 1; padding: 8px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
-    .card-actions button:hover { background: #8B0000; color: white; border-color: #8B0000; }
-    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; }
-    .pagination button { padding: 10px 20px; border: 2px solid #8B0000; background: white; color: #8B0000; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .pagination button:hover:not(:disabled) { background: #8B0000; color: white; }
-    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
-    .pagination .page-info { color: #666; font-weight: 600; }
-    .course-badge { display: inline-block; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 5px; }
-    .badge-episodes { background: #2196f3; color: white; }
-    .badge-duration { background: #ff9800; color: white; }
-    .badge-enrolled { background: #4caf50; color: white; }
-    .badge-views { background: #9c27b0; color: white; }
-    .badge-beginner { background: #4caf50; color: white; }
-    .badge-intermediate { background: #ff9800; color: white; }
-    .badge-advanced { background: #f44336; color: white; }
-    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; }
-    .filter-group select, .filter-group input { padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; flex: 1; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; overflow-y: auto; }
-    .modal.active { display: block; }
-    .modal-content { max-width: 900px; margin: 40px auto; background: white; border-radius: 20px; padding: 40px; position: relative; }
-    .modal-close { position: absolute; top: 20px; right: 20px; background: #f44336; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; }
-    .modal-close:hover { background: #d32f2f; }
-    .playlist-section { margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 10px; }
-    .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .episode-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 2px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-    .episode-actions { display: flex; gap: 8px; }
-    .episode-actions button { padding: 6px 12px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .episode-actions button:hover { background: #8B0000; color: white; }
-    .episode-serial {
+
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Engineering Grid Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(0, 137, 123, 0.03) 0 1px, transparent 1px 30px),
+        repeating-linear-gradient(90deg, rgba(0, 137, 123, 0.03) 0 1px, transparent 1px 30px),
+        repeating-linear-gradient(45deg, rgba(0, 137, 123, 0.05) 0 2px, transparent 2px 40px);
+      background-size: 30px 30px, 30px 30px, 80px 80px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* Header */
+    .header {
+      position: relative;
+      z-index: 100;
+      background: linear-gradient(135deg, rgba(0, 105, 92, 0.98), rgba(0, 137, 123, 0.99));
+      border-bottom: 3px solid var(--primary-color);
+      box-shadow: 0 6px 25px rgba(0, 137, 123, 0.4);
+      padding: 20px 40px;
+    }
+
+    .header-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 0 40px rgba(0, 137, 123, 0.7);
+      animation: iconGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes iconGlow {
+      0%, 100% { box-shadow: 0 0 40px rgba(0, 137, 123, 0.7); }
+      50% { box-shadow: 0 0 60px rgba(38, 166, 154, 0.9); }
+    }
+
+    .header-title h1 {
+      font-size: 2rem;
+      color: white;
+      margin-bottom: 5px;
+      font-weight: 800;
+      text-shadow: 0 0 20px rgba(0, 137, 123, 0.5);
+    }
+
+    .header-title p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn, .back-btn, .btn-save {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: white;
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .btn-save:hover {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.5);
+    }
+
+    /* Main Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1600px;
+      margin: 40px auto;
+      padding: 0 40px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 30px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(135deg, rgba(0, 105, 92, 0.7), rgba(26, 0, 0, 0.9));
+      border: 2px solid rgba(0, 137, 123, 0.3);
+      border-radius: 18px;
+      padding: 0;
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      padding: 25px 20px;
+      border-bottom: 2px solid rgba(0, 137, 123, 0.5);
+    }
+
+    .sidebar-header h1 {
+      color: white;
+      font-size: 1.4rem;
+      margin-bottom: 5px;
+      font-weight: 800;
+    }
+
+    .sidebar-header p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+    }
+
+    .sidebar-nav {
+      padding: 20px 0;
+    }
+
+    .tab-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 15px;
+    }
+
+    .tab-item {
+      padding: 12px 15px;
+      background: rgba(0, 137, 123, 0.05);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+      color: var(--primary-color);
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      padding: 0 20px;
+    }
+
+    .quick-stats {
+      padding: 20px;
+      margin: 20px;
+      background: rgba(0, 137, 123, 0.1);
+      border-radius: 12px;
+      border-top: 2px solid rgba(0, 137, 123, 0.3);
+    }
+
+    .quick-stats h3 {
+      color: var(--primary-color);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .stat-value {
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+
+    .tab-item:hover {
+      background: rgba(0, 137, 123, 0.15);
+      border-color: rgba(0, 137, 123, 0.3);
+      color: var(--text-primary);
+      transform: translateX(5px);
+    }
+
+    .tab-item.active {
+      background: rgba(0, 137, 123, 0.25);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 700;
+      box-shadow: 0 0 20px rgba(0, 137, 123, 0.3);
+    }
+
+    .tab-item i {
+      font-size: 1.1rem;
+    }
+
+    /* Stats Panel */
+    .stats-panel {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px solid rgba(0, 137, 123, 0.3);
+    }
+
+    .stats-panel h3 {
+      color: var(--primary-color);
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .stat-item-sidebar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--primary-color);
+    }
+
+    .stat-item-sidebar span:first-child {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .stat-item-sidebar span:last-child {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    /* Content Area */
+    .content-area {
+      background: linear-gradient(135deg, rgba(26, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
+      border: 2px solid rgba(0, 137, 123, 0.25);
+      border-radius: 18px;
+      padding: 35px;
+      min-height: 600px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Content Header */
+    .content-header {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(0, 137, 123, 0.3);
+    }
+
+    .content-header h2 {
+      color: var(--primary-color);
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .content-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    /* Dashboard Cards */
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .dashboard-card {
+      padding: 30px;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--primary-light);
+    }
+
+    .dashboard-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0, 137, 123, 0.6);
+    }
+
+    .dashboard-card h3 {
+      font-size: 3rem;
+      margin-bottom: 8px;
+      font-weight: 800;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dashboard-card p {
+      font-size: 1rem;
+      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-10%, -10%) scale(1.1); }
+    }
+
+    /* Forms */
+    .upload-form, .edit-form {
+      display: grid;
+      gap: 25px;
+    }
+
+    .form-row, .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(0, 137, 123, 0.3);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 15px rgba(0, 137, 123, 0.3);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .form-group textarea {
+      min-height: 200px;
+      resize: vertical;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    .form-group small {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* File Upload */
+    .file-upload-label {
+      padding: 40px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px dashed var(--primary-color);
+      border-radius: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-secondary);
+    }
+
+    .file-upload-label:hover {
+      border-color: var(--primary-light);
+      background: rgba(0, 137, 123, 0.1);
+      box-shadow: 0 0 20px rgba(0, 137, 123, 0.3);
+    }
+
+    /* Buttons */
+    .btn-primary, .preview-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: white;
+      border: 2px solid var(--primary-color);
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+      font-size: 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #8B0000, #DC143C);
-      color: white;
-      border-radius: 50%;
-      font-weight: bold;
-      font-size: 14px;
-      margin-right: 12px;
-      box-shadow: 0 2px 5px rgba(139, 0, 0, 0.2);
+      gap: 10px;
     }
-    .btn-fetch {
-      transition: all 0.3s ease;
-    }
-    .btn-fetch:hover {
-      background: #cc0000 !important;
+
+    .btn-primary:hover, .preview-btn:hover {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.5);
     }
-    .btn-fetch:disabled {
-      background: #999 !important;
+
+    .preview-btn {
+      background: rgba(0, 0, 0, 0.5);
+      color: var(--primary-color);
+    }
+
+    .preview-btn:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* Search & Filters */
+    .search-bar, .filters-bar, .filters-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      border: 2px solid rgba(0, 137, 123, 0.3);
+    }
+
+    .search-bar input,
+    .filters-bar input,
+    .filters-bar select {
+      flex: 1;
+      min-width: 150px;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(0, 137, 123, 0.3);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .search-bar input:focus,
+    .filters-bar input:focus,
+    .filters-bar select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 10px rgba(0, 137, 123, 0.3);
+    }
+
+    /* Content Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .content-card {
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(0, 137, 123, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .content-card:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 8px 25px rgba(0, 137, 123, 0.5);
+      transform: translateY(-5px);
+    }
+
+    .card-thumbnail {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    }
+
+    .card-body {
+      padding: 15px;
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .card-actions button {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--primary-color);
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      color: var(--primary-color);
+    }
+
+    .card-actions button:hover {
+      background: var(--primary-color);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .btn-delete, .btn-danger {
+      border-color: #f44336 !important;
+      color: #f44336 !important;
+    }
+
+    .btn-delete:hover, .btn-danger:hover {
+      background: #f44336 !important;
+      color: white !important;
+    }
+
+    /* Bulk Toolbar */
+    .bulk-toolbar {
+      display: none;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--primary-color);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-toolbar.active {
+      display: flex;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bulk-toolbar strong {
+      color: var(--primary-color);
+      font-size: 1.1rem;
+    }
+
+    .bulk-toolbar .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bulk-toolbar .btn-select-all {
+      background: rgba(33, 150, 243, 0.2);
+      border: 2px solid #2196F3;
+      color: #2196F3;
+    }
+
+    .bulk-toolbar .btn-select-all:hover {
+      background: #2196F3;
+      color: white;
+    }
+
+    .bulk-toolbar .btn-bulk-delete {
+      background: rgba(244, 67, 54, 0.2);
+      border: 2px solid #f44336;
+      color: #f44336;
+    }
+
+    .bulk-toolbar .btn-bulk-delete:hover {
+      background: #f44336;
+      color: white;
+    }
+
+    /* Pagination */
+    .pagination-controls {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(0, 137, 123, 0.3);
+      border-radius: 12px;
+    }
+
+    .pagination-controls.active {
+      display: flex;
+    }
+
+    .pagination-controls button {
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pagination-controls button:hover:not(:disabled) {
+      background: var(--primary-color);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .pagination-controls button:disabled {
+      opacity: 0.3;
       cursor: not-allowed;
-      transform: none;
     }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-    .stat-card { background: linear-gradient(135deg, #8B0000, #C80000); color: white; padding: 20px; border-radius: 12px; text-align: center; }
-    .stat-card h3 { font-size: 32px; margin-bottom: 5px; }
-    .stat-card p { font-size: 14px; opacity: 0.9; }
-    .progress { margin-top: 20px; display: none; }
-    .progress.active { display: block; }
-    .progress-bar { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #8B0000, #C80000); width: 0%; transition: width 0.3s; }
-    .progress-text { text-align: center; color: #8B0000; font-size: 14px; font-weight: 600; }
-    
+
+    .pagination-controls span {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    /* Progress & Messages */
+    .progress {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .progress.active {
+      display: block;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--primary-color);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      color: var(--primary-color);
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #4caf50, #66bb6a);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      display: none;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .success-message.active {
+      display: block;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal-content {
+      max-width: 900px;
+      margin: 40px auto;
+      background: linear-gradient(135deg, rgba(26, 0, 0, 0.98), rgba(0, 0, 0, 0.99));
+      border: 2px solid var(--primary-color);
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #f44336;
+      color: white;
+      border: 2px solid #f44336;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: #d32f2f;
+      transform: rotate(90deg);
+    }
+
     /* JSON Editor */
-    .json-editor-container { display: flex; flex-direction: column; gap: 15px; }
-    .json-actions { display: flex; gap: 10px; }
-    .json-actions button { padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: 2px solid; }
-    .btn-validate { background: rgba(33, 150, 243, 0.1); border-color: #2196F3; color: #2196F3; }
-    .btn-validate:hover { background: #2196F3; color: white; }
-    .btn-format { background: rgba(255, 152, 0, 0.1); border-color: #FF9800; color: #FF9800; }
-    .btn-format:hover { background: #FF9800; color: white; }
-    .btn-save-json { background: rgba(76, 175, 80, 0.1); border-color: #4CAF50; color: #4CAF50; }
-    .btn-save-json:hover { background: #4CAF50; color: white; }
-    #jsonEditor { min-height: 500px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.6; }
+    .json-editor-area {
+      background: #1e1e1e;
+      border: 2px solid var(--primary-color);
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 500px;
+    }
+
+    .json-editor-area textarea {
+      width: 100%;
+      min-height: 500px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: none;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    .json-editor-area textarea:focus {
+      outline: none;
+    }
+
+    .json-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .json-toolbar button {
+      padding: 12px 20px;
+      border: 2px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .json-toolbar .btn-validate {
+      background: rgba(76, 175, 80, 0.2);
+      border-color: #4CAF50;
+      color: #4CAF50;
+    }
+
+    .json-toolbar .btn-validate:hover {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .json-toolbar .btn-format {
+      background: rgba(33, 150, 243, 0.2);
+      border-color: #2196F3;
+      color: #2196F3;
+    }
+
+    .json-toolbar .btn-format:hover {
+      background: #2196F3;
+      color: white;
+    }
+
+    .json-toolbar .btn-download {
+      background: rgba(255, 193, 7, 0.2);
+      border-color: #FFC107;
+      color: #FFC107;
+    }
+
+    .json-toolbar .btn-download:hover {
+      background: #FFC107;
+      color: #333;
+    }
+
+    .json-toolbar .btn-import {
+      background: rgba(0, 137, 123, 0.2);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .json-toolbar .btn-import:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* Statistics */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+      font-weight: 800;
+    }
+
+    .stat-card p {
+      font-size: 0.95rem;
+      opacity: 0.95;
+    }
+
+    .breakdown-section {
+      margin-top: 30px;
+      padding: 25px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      border: 2px solid rgba(0, 137, 123, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -204,11 +1051,19 @@
       <!-- UPLOAD TAB -->
       <div id="uploadTab" class="tab-content">
         <form id="uploadForm">
-          <div class="form-group">
-            <label>Category</label>
-            <select id="category" required>
-              <option value="">Select category...</option>
-            </select>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label>📂 Category Group/Sector</label>
+              <select id="categoryGroup" required onchange="updateVideoCategoriesFromGroup('category')">
+                <option value="">Select sector first...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>📁 Specific Category</label>
+              <select id="category" required disabled>
+                <option value="">Select sector first...</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -301,8 +1156,19 @@
           <span class="selected-count">Selected: <span id="selectedCount">0</span></span>
         </div>
 
-        <div class="filter-group">
+        <div class="filter-group" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;">
           <input type="text" id="searchInput" placeholder="🔍 Search courses..." onkeyup="filterContent()">
+          <select id="filterCategoryGroup" onchange="updateFilterVideoCategoriesFromGroup(); filterContent();">
+            <option value="">All Sectors</option>
+          </select>
+          <select id="filterCategory" onchange="updateSubcategoriesVideos(); filterContent();">
+            <option value="">All Categories</option>
+          </select>
+          <select id="filterSubcategory" onchange="filterContent()">
+            <option value="">All Subcategories</option>
+          </select>
+          <input type="date" id="filterDateFrom" onchange="filterContent()" placeholder="From Date" style="font-size: 12px;">
+          <input type="date" id="filterDateTo" onchange="filterContent()" placeholder="To Date" style="font-size: 12px;">
           <select id="filterDifficulty" onchange="filterContent()">
             <option value="">All Difficulties</option>
             <option value="Beginner">🟢 Beginner</option>
@@ -313,6 +1179,7 @@
           <select id="sortBy" onchange="filterContent()">
             <option value="date">Newest First</option>
             <option value="title">Title A-Z</option>
+            <option value="category">Category</option>
             <option value="episodes">Most Episodes</option>
             <option value="enrolled">Most Enrolled</option>
             <option value="views">Most Viewed</option>
@@ -349,21 +1216,6 @@
             <h3 id="totalDuration">0h</h3>
             <p>Total Duration</p>
           </div>
-        </div>
-      </div>
-
-      <!-- JSON EDITOR TAB -->
-      <div id="jsonTab" class="tab-content">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">⚙️ JSON Editor</h2>
-        <p style="color: #666; margin-bottom: 20px;">⚠️ <strong>Advanced Users Only:</strong> Direct JSON manipulation. Invalid JSON will break the system!</p>
-        
-        <div class="json-editor-container">
-          <div class="json-actions">
-            <button class="btn-validate" onclick="validateJSON()">✓ Validate JSON</button>
-            <button class="btn-format" onclick="formatJSON()">✨ Format JSON</button>
-            <button class="btn-save-json" onclick="saveJSON()">💾 Save Changes</button>
-          </div>
-          <textarea id="jsonEditor" placeholder="Loading JSON data..."></textarea>
         </div>
       </div>
 
@@ -522,6 +1374,25 @@
         </div>
         
         <div class="form-group">
+          <label>📝 Class Lecture PDF (Optional)</label>
+          <input type="file" id="episodePdfFile" accept=".pdf" onchange="handlePdfSelect(event)">
+          <small style="color: #999; font-size: 12px; display: block; margin-top: 5px;">
+            📁 Upload lecture notes, slides, or study materials in PDF format<br>
+            📋 Storage: Content Storage/educational-videos/[category]/[course-id]/lectures/<br>
+            👁️ Students can view, read & download the PDF<br>
+            🔄 To replace PDF: Select new file | To delete: Click ❌ button
+          </small>
+          <div id="pdfPreview" style="display: none; margin-top: 10px; padding: 10px; background: rgba(0, 137, 123, 0.1); border-radius: 6px; border-left: 3px solid #00897B;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #00897B;">✅ PDF Selected:</strong> <span id="pdfFileName"></span> (<span id="pdfFileSize"></span>)
+              </div>
+              <button type="button" onclick="removePdfFromEpisode()" style="background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Remove</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
           <label>Episode Tags (comma-separated, optional)</label>
           <input type="text" id="episodeTags" placeholder="basics, introduction, setup">
         </div>
@@ -535,6 +1406,16 @@
   <script src="content-manager.js"></script>
   <script src="youtube-integration.js"></script>
   <script>
+    // Hardcoded categories for immediate display
+    const VIDEO_CATEGORIES = {
+      'Technology & Programming': ['Web Development', 'Mobile Apps', 'AI & Machine Learning', 'Data Science', 'Cybersecurity', 'Cloud Computing'],
+      'Engineering': ['Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Arduino & IoT', 'MATLAB', 'SolidWorks', 'Embedded Systems', 'Robotics'],
+      'Science & Mathematics': ['Physics', 'Chemistry', 'Biology', 'Mathematics', 'Statistics', 'Astronomy', 'Environmental Science'],
+      'Business & Career': ['Entrepreneurship', 'Marketing', 'Finance', 'Career Development', 'Productivity', 'Leadership'],
+      'Creative & Design': ['Graphic Design', 'UI/UX', 'Photography', 'Video Editing', 'Content Writing', '3D Modeling'],
+      'Education & Learning': ['Study Tips', 'Online Courses', 'Research Methods', 'Academic Writing', 'Teaching', 'Language Learning']
+    };
+
     const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
     const CONTENT_TYPE = 'educational-videos';
     
@@ -571,34 +1452,113 @@
       updateSelectedCount();
     }
 
+    // Update video categories based on selected group
+    function updateVideoCategoriesFromGroup(targetSelectId, editPrefix = '') {
+      const groupSelect = document.getElementById(editPrefix + 'categoryGroup');
+      const categorySelect = document.getElementById(targetSelectId);
+      const selectedGroup = groupSelect.value;
+      
+      categorySelect.innerHTML = '<option value="">Select category...</option>';
+      
+      if (selectedGroup && VIDEO_CATEGORIES[selectedGroup]) {
+        categorySelect.disabled = false;
+        VIDEO_CATEGORIES[selectedGroup].forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat;
+          categorySelect.appendChild(option);
+        });
+      } else {
+        categorySelect.disabled = true;
+      }
+    }
+
+    function updateFilterVideoCategoriesFromGroup() {
+      const groupSelect = document.getElementById('filterCategoryGroup');
+      const categorySelect = document.getElementById('filterCategory');
+      const selectedGroup = groupSelect.value;
+      
+      categorySelect.innerHTML = '<option value="">All Categories</option>';
+      
+      if (selectedGroup && VIDEO_CATEGORIES[selectedGroup]) {
+        VIDEO_CATEGORIES[selectedGroup].forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat;
+          categorySelect.appendChild(option);
+        });
+      } else {
+        Object.values(VIDEO_CATEGORIES).flat().sort().forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat;
+          categorySelect.appendChild(option);
+        });
+      }
+    }
+
     async function loadCategories() {
+      const categoryGroupSelects = [
+        document.getElementById('categoryGroup'),
+        document.getElementById('editCategoryGroup'),
+        document.getElementById('filterCategoryGroup')
+      ];
+      
+      const categorySelects = [
+        document.getElementById('category'),
+        document.getElementById('editCategory'),
+        document.getElementById('filterCategory')
+      ];
+      
+      // Populate sector dropdowns
+      categoryGroupSelects.forEach((select, index) => {
+        if (!select) return;
+        const isFilter = index === 2;
+        select.innerHTML = isFilter ? '<option value="">All Sectors</option>' : '<option value="">Select sector...</option>';
+        
+        Object.keys(VIDEO_CATEGORIES).forEach(groupName => {
+          const option = document.createElement('option');
+          option.value = groupName;
+          option.textContent = groupName;
+          select.appendChild(option);
+        });
+      });
+      
+      // Initialize category selects
+      categorySelects.forEach((select, index) => {
+        if (!select) return;
+        const isFilter = index === 2;
+        select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select sector first...</option>';
+        if (!isFilter) select.disabled = true;
+      });
+      
+      // Try to load from GitHub (will fail gracefully if no token)
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
-        const categorySelect = document.getElementById('category');
-        const editCategorySelect = document.getElementById('editCategory');
-        
-        categorySelect.innerHTML = '<option value="">Select category...</option>';
-        editCategorySelect.innerHTML = '<option value="">Select category...</option>';
-        
         if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
-          data.categoryGroups.forEach(group => {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = `${group.icon} ${group.name}`;
+          categorySelects.forEach((select, index) => {
+            if (!select) return;
+            const isFilter = index === 2;
+            select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select category...</option>';
             
-            if (group.categories) {
-              group.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                optgroup.appendChild(option);
-              });
-            }
-            categorySelect.appendChild(optgroup.cloneNode(true));
-            editCategorySelect.appendChild(optgroup);
+            data.categoryGroups.forEach(group => {
+              const optgroup = document.createElement('optgroup');
+              optgroup.label = `${group.icon} ${group.name}`;
+              
+              if (group.categories) {
+                group.categories.forEach(cat => {
+                  const option = document.createElement('option');
+                  option.value = cat;
+                  option.textContent = cat;
+                  optgroup.appendChild(option);
+                });
+              }
+              select.appendChild(optgroup);
+            });
           });
         }
       } catch (error) {
-        console.error('Failed to load categories:', error);
+        console.log('Using hardcoded categories (GitHub API unavailable)');
       }
     }
 
@@ -687,6 +1647,10 @@
 
     function filterContent() {
       const query = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('filterCategory')?.value || '';
+      const subcategory = document.getElementById('filterSubcategory')?.value || '';
+      const dateFrom = document.getElementById('filterDateFrom')?.value || '';
+      const dateTo = document.getElementById('filterDateTo')?.value || '';
       const sortBy = document.getElementById('sortBy').value;
       const difficulty = document.getElementById('filterDifficulty').value;
       
@@ -697,14 +1661,25 @@
           item.category.toLowerCase().includes(query) ||
           (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query)));
         
+        const matchCategory = !category || item.category === category;
+        const matchSubcategory = !subcategory || item.subcategory === subcategory;
         const matchDifficulty = !difficulty || item.difficulty === difficulty;
         
-        return matchSearch && matchDifficulty;
+        // Date range filtering
+        let matchDateRange = true;
+        if (dateFrom || dateTo) {
+          const itemDate = item.date || item.dateAdded || item.id;
+          if (dateFrom && itemDate < dateFrom) matchDateRange = false;
+          if (dateTo && itemDate > dateTo) matchDateRange = false;
+        }
+        
+        return matchSearch && matchCategory && matchSubcategory && matchDifficulty && matchDateRange;
       });
       
       filtered.sort((a, b) => {
         if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
         if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === 'category') return (a.category || '').localeCompare(b.category || '');
         if (sortBy === 'episodes') return (b.episodes || 0) - (a.episodes || 0);
         if (sortBy === 'enrolled') return (b.enrolled || 0) - (a.enrolled || 0);
         if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
@@ -713,6 +1688,27 @@
       
       currentPage = 1;
       renderContent(filtered);
+    }
+    
+    // Update subcategories for Educational Videos
+    function updateSubcategoriesVideos() {
+      const categorySelect = document.getElementById('filterCategory');
+      const subcategorySelect = document.getElementById('filterSubcategory');
+      const selectedCategory = categorySelect?.value;
+      
+      subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+      
+      if (selectedCategory && currentContent) {
+        const subcategories = [...new Set(
+          currentContent
+            .filter(item => item.category === selectedCategory && item.subcategory)
+            .map(item => item.subcategory)
+        )].sort();
+        
+        subcategories.forEach(sub => {
+          subcategorySelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+        });
+      }
     }
 
     function toggleSelect(id) {
@@ -912,13 +1908,17 @@
           `<br><small style="color: #666;">${episode.description}</small>` : '';
         const youtubeUrl = episode.youtubeUrl ? 
           `<br><small style="color: #2196f3;">📺 <a href="${episode.youtubeUrl}" target="_blank" style="color: #2196f3;">YouTube Link</a></small>` : '';
+        const pdfInfo = episode.lecturePdf ? 
+          `<br><small style="color: #00897B; font-weight: 600;">📝 PDF: ${episode.lecturePdf.fileName} (${(episode.lecturePdf.size / 1024).toFixed(0)} KB) 
+          <a href="${episode.lecturePdf.downloadUrl}" target="_blank" style="color: #00897B; margin-left: 8px;" title="View PDF">👁️ View</a>
+          <a href="${episode.lecturePdf.downloadUrl}" download style="color: #00897B; margin-left: 5px;" title="Download PDF">⬇️ Download</a></small>` : '';
         
         item.innerHTML = `
           <span class="episode-serial">${episode.episodeNo}</span>
           <div style="flex: 1;">
             <strong>${episode.title}</strong><br>
             <small style="color: #666;">⏱️ ${episode.duration} | 🎬 ${episode.videoId}</small>
-            ${description}${tags}${youtubeUrl}
+            ${description}${tags}${youtubeUrl}${pdfInfo}
           </div>
           <div class="episode-actions">
             ${index > 0 ? `<button onclick="moveEpisode(${index}, -1)" title="Move Up">⬆️</button>` : ''}
@@ -963,9 +1963,84 @@
       renderPlaylist();
     }
 
+    // Initialize upload playlist array
     let uploadPlaylist = [];
+    let selectedPdfFile = null;
+    let pdfToDelete = false; // Track if PDF should be deleted
+
+    // Handle PDF file selection
+    function handlePdfSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        selectedPdfFile = file;
+        pdfToDelete = false;
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+        document.getElementById('pdfFileName').textContent = file.name;
+        document.getElementById('pdfFileSize').textContent = sizeInMB + ' MB';
+        document.getElementById('pdfPreview').style.display = 'block';
+      } else {
+        selectedPdfFile = null;
+        document.getElementById('pdfPreview').style.display = 'none';
+      }
+    }
     
-    // UPLOAD FORM HANDLER
+    // Remove PDF from episode
+    function removePdfFromEpisode() {
+      if (confirm('🗑️ Remove PDF from this episode?')) {
+        selectedPdfFile = null;
+        pdfToDelete = true;
+        document.getElementById('episodePdfFile').value = '';
+        document.getElementById('pdfPreview').style.display = 'none';
+        alert('✅ PDF will be removed when you save the episode.');
+      }
+    }
+
+    // Upload PDF to GitHub
+    async function uploadLecturePdf(courseId, category, episodeNo, pdfFile) {
+      if (!pdfFile) return null;
+      
+      try {
+        const fileName = `lecture-${episodeNo}-${pdfFile.name.replace(/\s+/g, '-')}`;
+        const path = `Content Storage/educational-videos/${category}/${courseId}/lectures/${fileName}`;
+        
+        // Read file as base64
+        const reader = new FileReader();
+        const base64Content = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfFile);
+        });
+        
+        // Upload to GitHub
+        const response = await fetch(`https://api.github.com/repos/${githubUploader.config.owner}/${githubUploader.config.repo}/contents/${path}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Upload lecture PDF for episode ${episodeNo}`,
+            content: base64Content
+          })
+        });
+        
+        if (!response.ok) throw new Error('PDF upload failed');
+        
+        const data = await response.json();
+        return {
+          fileName: fileName,
+          path: path,
+          downloadUrl: data.content.download_url,
+          size: pdfFile.size,
+          uploadDate: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error('PDF upload error:', error);
+        return null;
+      }
+    }
+
+    // UPLOAD FORM HANDLER (using the already declared uploadPlaylist variable)
     const uploadFormElement = document.getElementById('uploadForm');
     if (uploadFormElement) {
       uploadFormElement.addEventListener('submit', async (e) => {
@@ -976,9 +2051,29 @@
           return;
         }
         
+        const courseId = `course-${Date.now()}`;
+        const category = document.getElementById('category').value;
+        
+        // Upload PDFs first if any episodes have pending PDFs
+        alert('⏳ Uploading course and lecture PDFs...');
+        
+        for (let i = 0; i < uploadPlaylist.length; i++) {
+          const episode = uploadPlaylist[i];
+          if (episode.lecturePdf && episode.lecturePdf.pendingUpload && episode.lecturePdf.file) {
+            const pdfData = await uploadLecturePdf(courseId, category, episode.episodeNo, episode.lecturePdf.file);
+            if (pdfData) {
+              // Replace pending PDF with uploaded PDF info
+              uploadPlaylist[i].lecturePdf = pdfData;
+            } else {
+              alert(`⚠️ Failed to upload PDF for Episode ${episode.episodeNo}. Continuing...`);
+              delete uploadPlaylist[i].lecturePdf;
+            }
+          }
+        }
+        
         const course = {
-          id: `course-${Date.now()}`,
-          category: document.getElementById('category').value,
+          id: courseId,
+          category: category,
           type: 'educational',
           title: document.getElementById('title').value,
           summary: document.getElementById('summary').value,
@@ -1000,6 +2095,7 @@
           alert('✅ Course uploaded successfully!');
           uploadFormElement.reset();
           uploadPlaylist = [];
+          selectedPdfFile = null;
           renderUploadPlaylist();
         } catch (error) {
           alert('❌ Upload failed: ' + error.message);
@@ -1014,6 +2110,9 @@
       document.getElementById('episodeIndex').value = '';
       document.getElementById('episodeForm').reset();
       document.getElementById('episodeNo').value = uploadPlaylist.length + 1;
+      document.getElementById('pdfPreview').style.display = 'none';
+      selectedPdfFile = null;
+      pdfToDelete = false;
       document.getElementById('episodeModal').classList.add('active');
       
       window.currentEditMode = 'upload';
@@ -1024,6 +2123,9 @@
       document.getElementById('episodeIndex').value = '';
       document.getElementById('episodeForm').reset();
       document.getElementById('episodeNo').value = currentPlaylist.length + 1;
+      document.getElementById('pdfPreview').style.display = 'none';
+      selectedPdfFile = null;
+      pdfToDelete = false;
       document.getElementById('episodeModal').classList.add('active');
       
       window.currentEditMode = 'edit';
@@ -1049,13 +2151,17 @@
           `<br><small style="color: #666;">${episode.description}</small>` : '';
         const youtubeUrl = episode.youtubeUrl ? 
           `<br><small style="color: #2196f3;">📺 YouTube</small>` : '';
+        const pdfInfo = episode.lecturePdf ? 
+          (episode.lecturePdf.pendingUpload ? 
+            `<br><small style="color: #FFA726; font-weight: 600;">📝 PDF: ${episode.lecturePdf.fileName} (${(episode.lecturePdf.size / 1024).toFixed(0)} KB) - ⏳ Pending Upload</small>` :
+            `<br><small style="color: #00897B; font-weight: 600;">📝 PDF: ${episode.lecturePdf.fileName} (${(episode.lecturePdf.size / 1024).toFixed(0)} KB) - ✅ Ready</small>`) : '';
         
         item.innerHTML = `
           <span class="episode-serial">${episode.episodeNo}</span>
           <div style="flex: 1;">
             <strong>${episode.title}</strong><br>
             <small style="color: #666;">⏱️ ${episode.duration} | 🎬 ${episode.videoId}</small>
-            ${description}${tags}${youtubeUrl}
+            ${description}${tags}${youtubeUrl}${pdfInfo}
           </div>
           <div class="episode-actions">
             ${index > 0 ? `<button type="button" onclick="moveUploadEpisode(${index}, -1)">⬆️</button>` : ''}
@@ -1111,6 +2217,21 @@
       document.getElementById('episodeYoutubeUrl').value = episode.youtubeUrl || '';
       document.getElementById('episodeVideoId').value = episode.videoId;
       document.getElementById('episodeTags').value = (episode.tags || []).join(', ');
+      
+      // Reset PDF state
+      selectedPdfFile = null;
+      pdfToDelete = false;
+      document.getElementById('episodePdfFile').value = '';
+      
+      // Show existing PDF if any
+      if (episode.lecturePdf) {
+        document.getElementById('pdfPreview').style.display = 'block';
+        document.getElementById('pdfFileName').textContent = episode.lecturePdf.fileName;
+        document.getElementById('pdfFileSize').textContent = (episode.lecturePdf.size / 1024).toFixed(0) + ' KB';
+      } else {
+        document.getElementById('pdfPreview').style.display = 'none';
+      }
+      
       document.getElementById('episodeModal').classList.add('active');
       
       window.currentEditMode = 'upload';
@@ -1135,6 +2256,21 @@
       document.getElementById('episodeYoutubeUrl').value = episode.youtubeUrl || '';
       document.getElementById('episodeVideoId').value = episode.videoId;
       document.getElementById('episodeTags').value = (episode.tags || []).join(', ');
+      
+      // Reset PDF state
+      selectedPdfFile = null;
+      pdfToDelete = false;
+      document.getElementById('episodePdfFile').value = '';
+      
+      // Show existing PDF if any
+      if (episode.lecturePdf) {
+        document.getElementById('pdfPreview').style.display = 'block';
+        document.getElementById('pdfFileName').textContent = episode.lecturePdf.fileName;
+        document.getElementById('pdfFileSize').textContent = (episode.lecturePdf.size / 1024).toFixed(0) + ' KB';
+      } else {
+        document.getElementById('pdfPreview').style.display = 'none';
+      }
+      
       document.getElementById('episodeModal').classList.add('active');
       
       window.currentEditMode = 'edit';
@@ -1149,12 +2285,16 @@
 
     function closeEpisodeModal() {
       document.getElementById('episodeModal').classList.remove('active');
+      selectedPdfFile = null;
+      pdfToDelete = false;
+      document.getElementById('episodePdfFile').value = '';
+      document.getElementById('pdfPreview').style.display = 'none';
     }
 
-    document.getElementById('episodeForm').addEventListener('submit', (e) => {
+    document.getElementById('episodeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const episode = {
+      const episodeData = {
         episodeNo: parseInt(document.getElementById('episodeNo').value),
         title: document.getElementById('episodeTitle').value,
         description: document.getElementById('episodeDescription').value || '',
@@ -1167,24 +2307,46 @@
       const index = document.getElementById('episodeIndex').value;
       const mode = window.currentEditMode || 'edit';
       
+      // Handle PDF - New, Replace, Delete, or Keep existing
+      if (pdfToDelete) {
+        // User clicked remove - don't include lecturePdf
+        delete episodeData.lecturePdf;
+      } else if (selectedPdfFile) {
+        // New PDF selected (either new episode or replacing existing)
+        episodeData.lecturePdf = {
+          fileName: selectedPdfFile.name,
+          size: selectedPdfFile.size,
+          pendingUpload: true,
+          file: selectedPdfFile
+        };
+      } else if (index !== '') {
+        // Editing existing episode - keep existing PDF if any
+        const existingPlaylist = mode === 'upload' ? uploadPlaylist : currentPlaylist;
+        const existingEpisode = existingPlaylist[parseInt(index)];
+        if (existingEpisode && existingEpisode.lecturePdf) {
+          episodeData.lecturePdf = existingEpisode.lecturePdf;
+        }
+      }
+      
       if (mode === 'upload') {
         if (index === '') {
-          uploadPlaylist.push(episode);
+          uploadPlaylist.push(episodeData);
         } else {
-          uploadPlaylist[parseInt(index)] = episode;
+          uploadPlaylist[parseInt(index)] = episodeData;
         }
         uploadPlaylist.sort((a, b) => a.episodeNo - b.episodeNo);
         renderUploadPlaylist();
       } else {
         if (index === '') {
-          currentPlaylist.push(episode);
+          currentPlaylist.push(episodeData);
         } else {
-          currentPlaylist[parseInt(index)] = episode;
+          currentPlaylist[parseInt(index)] = episodeData;
         }
         currentPlaylist.sort((a, b) => a.episodeNo - b.episodeNo);
         renderPlaylist();
       }
       
+      selectedPdfFile = null;
       closeEpisodeModal();
     });
 
@@ -1192,11 +2354,38 @@
       e.preventDefault();
       const id = document.getElementById('editCourseId').value;
       const originalCourse = currentContent.find(c => c.id === id);
+      const category = document.getElementById('editCategory').value;
+      
+      // Upload any pending PDFs first (for new/replaced PDFs in edited episodes)
+      let hasPendingPdfs = false;
+      for (let i = 0; i < currentPlaylist.length; i++) {
+        const episode = currentPlaylist[i];
+        if (episode.lecturePdf && episode.lecturePdf.pendingUpload && episode.lecturePdf.file) {
+          hasPendingPdfs = true;
+          break;
+        }
+      }
+      
+      if (hasPendingPdfs) {
+        alert('⏳ Uploading new/updated lecture PDFs...');
+        for (let i = 0; i < currentPlaylist.length; i++) {
+          const episode = currentPlaylist[i];
+          if (episode.lecturePdf && episode.lecturePdf.pendingUpload && episode.lecturePdf.file) {
+            const pdfData = await uploadLecturePdf(id, category, episode.episodeNo, episode.lecturePdf.file);
+            if (pdfData) {
+              currentPlaylist[i].lecturePdf = pdfData;
+            } else {
+              alert(`⚠️ Failed to upload PDF for Episode ${episode.episodeNo}. Continuing...`);
+              delete currentPlaylist[i].lecturePdf;
+            }
+          }
+        }
+      }
       
       const updatedCourse = {
         ...originalCourse,
         id: id,
-        category: document.getElementById('editCategory').value,
+        category: category,
         title: document.getElementById('editTitle').value,
         summary: document.getElementById('editSummary').value,
         episodes: parseInt(document.getElementById('editEpisodes').value),
