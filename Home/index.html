@@ -407,19 +407,37 @@
     let deferredPrompt;
     const heroInstallBtn = document.getElementById('hero-install-btn');
     
+    console.log('🔍 PWA Debug Info:');
+    console.log('- Service Worker support:', 'serviceWorker' in navigator);
+    console.log('- Already installed:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('- Hero button found:', !!heroInstallBtn);
+    
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('✅ beforeinstallprompt event fired!');
         e.preventDefault();
         deferredPrompt = e;
         
         // Show hero install button if not already installed
         if (heroInstallBtn && !localStorage.getItem('a3km_pwa_installed')) {
             heroInstallBtn.style.display = 'inline-flex';
-            
-            // Add pulse animation
             heroInstallBtn.style.animation = 'pulse 2s infinite';
+            console.log('✅ Install button shown!');
         }
     });
+    
+    // Debug: Log if event doesn't fire within 3 seconds
+    setTimeout(() => {
+        if (!deferredPrompt) {
+            console.warn('⚠️ PWA install prompt NOT available. Reasons could be:');
+            console.warn('  1. Not on HTTPS (or localhost)');
+            console.warn('  2. Missing manifest.json or service worker');
+            console.warn('  3. Already installed');
+            console.warn('  4. Browser doesn\'t support PWA (use Chrome/Edge)');
+            console.warn('  5. PWA criteria not met');
+            console.log('→ Check Chrome DevTools: Application > Manifest & Service Workers');
+        }
+    }, 3000);
     
     // Handle hero button click
     if (heroInstallBtn) {

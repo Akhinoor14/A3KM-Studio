@@ -6,14 +6,10 @@ const HTML_CACHE = `${CACHE_PREFIX}-html-${VERSION}`;
 
 // Core assets to precache (adjust as needed)
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/projects.html',
-  '/styles.css',
-  '/shared/model-viewer.js',
-  '/shared/model-viewer.css',
-  '/favicon.svg',
-  '/manifest.json'
+  '/Home/index.html',
+  '/Optimization/styles.css',
+  '/images/favicon.svg',
+  '/Optimization/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
