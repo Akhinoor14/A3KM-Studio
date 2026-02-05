@@ -29,6 +29,9 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <!-- PWA Universal Initializer (Auto-loads manifest, service worker, install prompt, splash screen) -->
+    <script src="../Optimization/pwa-init.js" defer></script>
 </head>
 <body>
     <!-- CENTRALIZED BACKGROUND SYSTEM -->
@@ -221,6 +224,12 @@
                                 <span class="btn-icon" aria-hidden="true">📚</span>
                                 <div class="btn-hover-effect"></div>
                             </a>
+                            <!-- PWA Install Button (Hidden by default, shown when installable) -->
+                            <button id="hero-install-btn" class="btn btn-secondary btn-modern" style="display: none;" aria-label="Install A3KM Studio App">
+                                <span class="btn-text">📱 Install App</span>
+                                <span class="btn-icon" aria-hidden="true">⬇️</span>
+                                <div class="btn-ripple"></div>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -391,6 +400,54 @@
             }
         }
     });
+})();
+
+// PWA Hero Install Button Handler
+(function() {
+    let deferredPrompt;
+    const heroInstallBtn = document.getElementById('hero-install-btn');
+    
+    // Listen for beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show hero install button if not already installed
+        if (heroInstallBtn && !localStorage.getItem('a3km_pwa_installed')) {
+            heroInstallBtn.style.display = 'inline-flex';
+            
+            // Add pulse animation
+            heroInstallBtn.style.animation = 'pulse 2s infinite';
+        }
+    });
+    
+    // Handle hero button click
+    if (heroInstallBtn) {
+        heroInstallBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                alert('App installation is not available in this browser. Try Chrome or Edge!');
+                return;
+            }
+            
+            // Show the install prompt
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('✅ User accepted the install prompt');
+                localStorage.setItem('a3km_pwa_installed', 'true');
+                heroInstallBtn.style.display = 'none';
+            }
+            
+            deferredPrompt = null;
+        });
+    }
+    
+    // Hide button if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        localStorage.setItem('a3km_pwa_installed', 'true');
+        if (heroInstallBtn) heroInstallBtn.style.display = 'none';
+    }
 })();
 </script>
 
