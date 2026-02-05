@@ -20,7 +20,7 @@ class GitHubAPIHandler {
      */
     setToken(token) {
         this.token = token;
-        localStorage.setItem('github_pat', token);
+        localStorage.setItem('github_token', token);
     }
 
     /**
@@ -28,7 +28,7 @@ class GitHubAPIHandler {
      * @returns {boolean} - true if token exists
      */
     loadToken() {
-        this.token = localStorage.getItem('github_pat');
+        this.token = localStorage.getItem('github_token');
         return !!this.token;
     }
 
@@ -37,7 +37,7 @@ class GitHubAPIHandler {
      */
     clearToken() {
         this.token = null;
-        localStorage.removeItem('github_pat');
+        localStorage.removeItem('github_token');
     }
 
     /**

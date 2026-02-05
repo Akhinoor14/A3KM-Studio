@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+  
   <title>Video Blogs Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1221,6 +1225,7 @@
   <script src="svg-generator.js"></script>
   <script src="github-content-uploader.js"></script>
   <script src="content-manager.js"></script>
+  <script src="content-hub-sync.js"></script>
   <script>
     // Hardcoded categories for immediate display
     const VLOG_CATEGORIES = {
@@ -1232,7 +1237,23 @@
       'Business & Career': ['Entrepreneurship', 'Marketing', 'Finance', 'Career Tips', 'Productivity', 'Motivation']
     };
 
-    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    // GitHub token must be set via API Config Manager - no default token for security
+    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    
+    // Token validation on page load
+    if (!GITHUB_TOKEN) {
+      const userChoice = confirm(
+        '⚠️ GitHub Token Not Found!\n\n' +
+        'This manager requires a GitHub token to function.\n\n' +
+        'Click OK to go to API Config Manager and set your token.\n' +
+        'Click Cancel to continue anyway (features will not work).'
+      );
+      if (userChoice) {
+        window.location.href = '../../shared/api-config-manager.html';
+      } else {
+        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+      }
+    }
     const CONTENT_TYPE = 'video-content';
     const ITEMS_PER_PAGE = 12;
     
@@ -1362,8 +1383,9 @@
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      if (GITHUB_TOKEN === 'YOUR_GITHUB_TOKEN_HERE' || !GITHUB_TOKEN) {
-        alert('❌ Please configure your GitHub token first!');
+      // Token validation (now permanently set with fallback)
+      if (!GITHUB_TOKEN || GITHUB_TOKEN.length < 20) {
+        alert('❌ GitHub token invalid. Please check api-config-manager.');
         return;
       }
       
@@ -1435,6 +1457,15 @@
         setTimeout(() => progress.classList.remove('active'), 1500);
         successMessage.classList.add('active');
         
+        // Update Content Hub statistics using helper
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.updateCount('vlogs', {
+            title: title,
+            category: category,
+            action: 'Uploaded'
+          });
+        }
+        
         setTimeout(() => {
           this.reset();
           successMessage.classList.remove('active');
@@ -1452,7 +1483,14 @@
     async function loadDashboard() {
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
-        const vlogs = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        const vlogs = contentManager.getItemsFromData(data, CONTENT_TYPE) || [];
+        
+        console.log('Vlogs Dashboard - Loaded videos:', vlogs.length, 'items');
+        
+        // Sync with Content Hub
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.syncFromData('vlogs', vlogs.length);
+        }
         
         const categories = new Set(vlogs.map(v => v.category));
         const series = new Set(vlogs.filter(v => v.series).map(v => v.series));

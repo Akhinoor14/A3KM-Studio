@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+  
   <title>Research Papers Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1495,6 +1499,30 @@
       'Social Sciences': ['Psychology', 'Sociology', 'Education', 'Political Science', 'Anthropology']
     };
 
+    // GitHub Token and Setup
+    // GitHub token must be set via API Config Manager - no default token for security
+    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    
+    // Token validation on page load
+    if (!GITHUB_TOKEN) {
+      const userChoice = confirm(
+        '⚠️ GitHub Token Not Found!\n\n' +
+        'This manager requires a GitHub token to function.\n\n' +
+        'Click OK to go to API Config Manager and set your token.\n' +
+        'Click Cancel to continue anyway (features will not work).'
+      );
+      if (userChoice) {
+        window.location.href = '../../shared/api-config-manager.html';
+      } else {
+        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+      }
+    }
+    const githubUploader = new GitHubContentUploader({
+      token: GITHUB_TOKEN,
+      owner: 'Akhinoor14',
+      repo: 'A3KM-Studio'
+    });
+
     // Global variables
     let papersData = { categoryGroups: [], papers: [] };
     let contentManager;
@@ -1505,7 +1533,7 @@
     
     // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
-      contentManager = new ContentManager();
+      contentManager = new ContentManager(githubUploader);
       await loadPapers();
       loadCategories();
       loadFilterCategories();
@@ -1517,10 +1545,11 @@
     // Load papers from JSON
     async function loadPapers() {
       try {
-        papersData = await contentManager.loadJSON('Content Studio/research-papers/papers.json');
+        papersData = await contentManager.loadContent('research-papers');
         if (!papersData.papers) papersData.papers = [];
         if (!papersData.categoryGroups) papersData.categoryGroups = [];
         filteredPapers = [...papersData.papers];
+        console.log('Papers Manager - Loaded papers from JSON:', papersData.papers.length, 'items');
       } catch (error) {
         console.error('Error loading papers:', error);
         papersData = { categoryGroups: [], papers: [] };
@@ -1721,7 +1750,9 @@
     
     // Update dashboard stats
     function updateDashboard() {
-      const totalPapers = papersData.papers.length;
+      const totalPapers = (papersData.papers || []).length;
+      
+      console.log('Papers Dashboard - Loaded papers:', totalPapers, 'items');
       const uniqueAuthors = new Set();
       papersData.papers.forEach(p => {
         if (p.authors && Array.isArray(p.authors)) {
@@ -1730,6 +1761,11 @@
       });
       const totalCitations = papersData.papers.reduce((sum, paper) => sum + (paper.citations || 0), 0);
       const totalDownloads = papersData.papers.reduce((sum, paper) => sum + (paper.downloads || 0), 0);
+      
+      // Sync with Content Hub
+      if (typeof ContentHubSync !== 'undefined') {
+        ContentHubSync.syncFromData('papers', totalPapers);
+      }
       
       // Sidebar stats
       document.getElementById('sidebar-total').textContent = totalPapers;
@@ -1810,6 +1846,15 @@
         await contentManager.saveJSON('Content Studio/research-papers/papers.json', papersData);
         document.getElementById('upload-success').classList.add('active');
         document.getElementById('upload-form').reset();
+        
+        // Update Content Hub
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.updateCount('papers', {
+            title: title,
+            category: category,
+            action: 'Uploaded'
+          });
+        }
         
         setTimeout(() => {
           document.getElementById('upload-success').classList.remove('active');
@@ -2332,5 +2377,7 @@
       }
     }
   </script>
+  <script src="content-hub-sync.js"></script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@ class GitHubSyncManager {
         this.branch = 'main';
         this.token = null;
         this.apiBase = 'https://api.github.com';
-        this.tokenStorageKey = 'a3km_github_token_v2'; // Persistent key
+        this.tokenStorageKey = 'github_token'; // Unified key
         this.deviceId = this._getDeviceId();
     }
 
@@ -25,10 +25,8 @@ class GitHubSyncManager {
     // Set GitHub Personal Access Token with persistent storage
     setToken(token) {
         this.token = token;
-        // Save in multiple places for redundancy
+        // Save with unified key
         localStorage.setItem(this.tokenStorageKey, token);
-        localStorage.setItem('github_token', token); // Legacy key
-        localStorage.setItem(`${this.tokenStorageKey}_${this.deviceId}`, token); // Device-specific
         localStorage.setItem('github_token_saved_at', new Date().toISOString());
         console.log('✅ Token saved successfully');
     }
@@ -36,11 +34,8 @@ class GitHubSyncManager {
     // Get stored token with fallback
     getToken() {
         if (!this.token) {
-            // Try multiple storage keys
-            this.token = 
-                localStorage.getItem(this.tokenStorageKey) ||
-                localStorage.getItem(`${this.tokenStorageKey}_${this.deviceId}`) ||
-                localStorage.getItem('github_token');
+            // Use unified storage key
+            this.token = localStorage.getItem(this.tokenStorageKey);
         }
         return this.token;
     }

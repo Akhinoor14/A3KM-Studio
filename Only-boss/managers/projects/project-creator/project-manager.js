@@ -33,7 +33,7 @@ function init(){
 function initGitHubUploader(){
   try{
     if(typeof GitHubUploader !== 'undefined'){
-      const token = localStorage.getItem('dashboard_github_token') || '';
+      const token = localStorage.getItem('github_token') || '';
       if(token){
         githubUploader = new GitHubUploader(PROJECTS_REPO_OWNER, PROJECTS_REPO_NAME, token);
         console.log('✅ GitHubUploader ready for Projects repo');

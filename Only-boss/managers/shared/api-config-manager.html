@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    
     <title>API Configuration Manager - A3KM Studio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Load Unified Token Manager -->
+    <script src="unified-token-manager.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -647,6 +653,10 @@
                         <i class="fas fa-check-circle"></i>
                         Test Connection
                     </button>
+                    <button class="btn btn-secondary" onclick="checkTokenStatus()" style="background: rgba(100, 100, 100, 0.2); border-color: #666;">
+                        <i class="fas fa-info-circle"></i>
+                        Check Status
+                    </button>
                     <button class="btn btn-clear" onclick="clearAPI('github')">
                         <i class="fas fa-trash"></i>
                         Clear
@@ -742,17 +752,26 @@
     <script>
         // Load existing API keys
         function loadAPIs() {
-            const githubToken = localStorage.getItem('github_token');
+            console.log('🔍 Loading API tokens from localStorage...');
+            
+            let githubToken = localStorage.getItem('github_token');
             const youtubeKey = localStorage.getItem('youtube_api_key');
+
+            console.log('GitHub Token found:', githubToken ? '✅ Yes (' + githubToken.length + ' chars)' : '❌ No');
+            console.log('YouTube Key found:', youtubeKey ? '✅ Yes' : '❌ No');
 
             if (githubToken) {
                 document.getElementById('githubToken').value = githubToken;
                 updateStatus('github', true);
+                console.log('✅ GitHub token loaded into input field');
+            } else {
+                console.warn('⚠️ No GitHub token in localStorage');
             }
 
             if (youtubeKey) {
                 document.getElementById('youtubeApiKey').value = youtubeKey;
                 updateStatus('youtube', true);
+                console.log('✅ YouTube key loaded into input field');
             }
         }
 
@@ -784,14 +803,62 @@
 
             if (!key) {
                 showMessage(type, 'error', 'Please enter a valid API key');
+                console.error('❌ No key entered for ' + type);
                 return;
             }
 
             try {
+                // ALWAYS save to localStorage first (primary storage)
                 localStorage.setItem(storageKey, key);
-                updateStatus(type, true);
-                showMessage(type, 'success', `✓ ${type === 'github' ? 'GitHub token' : 'YouTube API key'} saved successfully!`);
+                console.log('✅ Token saved to localStorage:', storageKey);
+                console.log('📊 Token length:', key.length, 'characters');
+                console.log('🔍 Verification - Reading back:', localStorage.getItem(storageKey) ? 'SUCCESS ✅' : 'FAILED ❌');
+                
+                // For GitHub tokens, also use Unified Token Manager if available
+                if (type === 'github' && window.tokenManager) {
+                    try {
+                        window.tokenManager.saveToken(key);
+                        console.log('✅ Token also saved via Unified Token Manager');
+                        
+                        // Validate token health
+                        setTimeout(() => {
+                            window.tokenManager.getHealthStatus().then(health => {
+                                console.log('🏥 Token Health:', health.status, '-', health.message);
+                                if (health.status === 'healthy') {
+                                    showMessage(type, 'success', `✓ GitHub token saved and validated! (${health.details.user})`);
+                                } else if (health.status === 'warning') {
+                                    showMessage(type, 'success', `✓ Token saved but: ${health.message}`);
+                                } else {
+                                    showMessage(type, 'error', `⚠️ Token saved but validation failed: ${health.message}`);
+                                }
+                            });
+                        }, 500);
+                    } catch (error) {
+                        console.warn('⚠️ Unified Token Manager error:', error);
+                        // Still continue - localStorage save succeeded
+                        showMessage(type, 'success', `✓ GitHub token saved to localStorage`);
+                    }
+                } else {
+                    // Non-GitHub or no token manager
+                    updateStatus(type, true);
+                    showMessage(type, 'success', `✓ ${type === 'github' ? 'GitHub token' : 'YouTube API key'} saved successfully!`);
+                }
+                
+                // Show token distribution status
+                if (type === 'github') {
+                    console.log('📢 GitHub token is now available for ALL 16 systems');
+                    console.log('💡 Systems using this token:');
+                    console.log('   ✅ Content Studio (5 managers)');
+                    console.log('   ✅ Certificate Manager');
+                    console.log('   ✅ Project Managers (3)');
+                    console.log('   ✅ Settings Managers (2)');
+                    console.log('   ✅ Content Editor');
+                    console.log('   ✅ Project Creator');
+                    console.log('   ✅ System Integration Hub');
+                    console.log('   ✅ API Config Manager');
+                }
             } catch (error) {
+                console.error('❌ Save failed:', error);
                 showMessage(type, 'error', 'Failed to save: ' + error.message);
             }
         }
@@ -805,21 +872,39 @@
                     return;
                 }
 
-                try {
-                    const response = await fetch('https://api.github.com/user', {
-                        headers: {
-                            'Authorization': `token ${token}`
+                // Use Unified Token Manager validation
+                if (window.tokenManager) {
+                    showMessage('github', 'success', '⏳ Validating token with GitHub API...');
+                    
+                    const validation = await window.tokenManager.validateToken(token);
+                    
+                    if (validation.valid) {
+                        let message = `✓ Connected as: ${validation.user}`;
+                        if (validation.rateLimit) {
+                            message += `<br>📊 Rate Limit: ${validation.rateLimit.remaining}/${validation.rateLimit.limit} (${validation.rateLimit.percentage}% available)`;
                         }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        showMessage('github', 'success', `✓ Connected as: ${data.login}`);
+                        showMessage('github', 'success', message);
                     } else {
-                        showMessage('github', 'error', '✗ Invalid token or no permissions');
+                        showMessage('github', 'error', `✗ ${validation.error || 'Validation failed'}`);
                     }
-                } catch (error) {
-                    showMessage('github', 'error', '✗ Connection failed: ' + error.message);
+                } else {
+                    // Fallback to basic validation
+                    try {
+                        const response = await fetch('https://api.github.com/user', {
+                            headers: {
+                                'Authorization': `token ${token}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            showMessage('github', 'success', `✓ Connected as: ${data.login}`);
+                        } else {
+                            showMessage('github', 'error', '✗ Invalid token or no permissions');
+                        }
+                    } catch (error) {
+                        showMessage('github', 'error', '✗ Connection failed: ' + error.message);
+                    }
                 }
             } else if (type === 'youtube') {
                 const key = document.getElementById('youtubeApiKey').value.trim();
@@ -851,6 +936,7 @@
                     document.getElementById('githubToken').value = '';
                     updateStatus('github', false);
                     showMessage('github', 'success', 'GitHub token removed');
+                    console.log('🗑️ GitHub token removed from localStorage');
                 } else if (type === 'youtube') {
                     localStorage.removeItem('youtube_api_key');
                     document.getElementById('youtubeApiKey').value = '';
@@ -858,6 +944,83 @@
                     showMessage('youtube', 'success', 'YouTube API key removed');
                 }
             }
+        }
+
+        // Check token status (debugging tool)
+        async function checkTokenStatus() {
+            // Use Unified Token Manager if available
+            if (window.tokenManager) {
+                const health = await window.tokenManager.getHealthStatus();
+                
+                let message = '📊 GitHub Token Status:\n\n';
+                message += `Status: ${health.icon} ${health.message}\n\n`;
+                
+                if (health.details) {
+                    if (health.details.user) {
+                        message += `👤 User: ${health.details.user}\n`;
+                        message += `📧 Name: ${health.details.name || 'N/A'}\n\n`;
+                    }
+                    
+                    if (health.details.rateLimit) {
+                        message += `📊 Rate Limit:\n`;
+                        message += `   • Remaining: ${health.details.rateLimit.remaining}/${health.details.rateLimit.limit}\n`;
+                        message += `   • Available: ${health.details.rateLimit.percentage}%\n`;
+                        message += `   • Reset: ${health.details.rateLimit.reset.toLocaleTimeString()}\n\n`;
+                    }
+                    
+                    if (health.details.expiryInfo) {
+                        message += `📅 Expiry:\n`;
+                        message += `   • ${health.details.expiryInfo.message}\n\n`;
+                    }
+                }
+                
+                message += `📢 Token is unified across ALL 16 systems:\n\n`;
+                message += `✅ Content Studio (5 managers)\n`;
+                message += `   • Posts Manager\n`;
+                message += `   • Books Manager\n`;
+                message += `   • Papers Manager\n`;
+                message += `   • Educational Videos Manager\n`;
+                message += `   • Vlogs Manager\n\n`;
+                message += `✅ Certificate Manager\n\n`;
+                message += `✅ Project Managers (3)\n`;
+                message += `   • Arduino Manager\n`;
+                message += `   • MATLAB Manager\n`;
+                message += `   • SolidWorks Manager\n\n`;
+                message += `✅ Settings Managers (2)\n`;
+                message += `   • Navigation Editor\n`;
+                message += `   • SEO Manager\n\n`;
+                message += `✅ Content Editor\n`;
+                message += `✅ Project Creator\n`;
+                message += `✅ System Integration Hub\n`;
+                message += `✅ API Config Manager\n\n`;
+                message += `💡 One token for everything!`;
+                
+                alert(message);
+            } else {
+                // Fallback to basic status check
+                const token = localStorage.getItem('github_token');
+                const inputValue = document.getElementById('githubToken').value;
+                
+                let message = '📊 GitHub Token Status:\n\n';
+                message += `✅ Token in localStorage: ${token ? 'YES (' + token.length + ' chars)' : 'NO'}\n`;
+                message += `✅ Token in input field: ${inputValue ? 'YES (' + inputValue.length + ' chars)' : 'NO'}\n`;
+                message += `✅ Tokens match: ${token === inputValue ? 'YES' : 'NO'}\n\n`;
+                
+                if (token) {
+                    message += `🔍 Token preview: ${token.substring(0, 20)}...\n\n`;
+                    message += `📢 This token is available to all managers`;
+                } else {
+                    message += `⚠️ No token found! Managers will show setup prompt.`;
+                }
+                
+                alert(message);
+            }
+            
+            console.log('=== TOKEN STATUS CHECK ===');
+            console.log('Unified Token Manager:', window.tokenManager ? 'LOADED ✅' : 'NOT LOADED ⚠️');
+            console.log('localStorage token:', localStorage.getItem('github_token'));
+            console.log('Input field token:', document.getElementById('githubToken').value);
+            console.log('==========================');
         }
 
         // Update status badge
@@ -894,6 +1057,28 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadAPIs();
+            
+            // Initialize Unified Token Manager
+            if (window.UnifiedTokenManager) {
+                window.tokenManager = new window.UnifiedTokenManager();
+                console.log('✅ Unified Token Manager initialized');
+                
+                // Perform initial health check
+                window.tokenManager.getHealthStatus().then(health => {
+                    console.log('🏥 Initial Token Health:', health.message);
+                    
+                    // Update UI based on health
+                    if (health.status === 'healthy') {
+                        document.getElementById('githubStatus').textContent = 'Healthy';
+                        document.getElementById('githubStatus').className = 'api-status status-active';
+                    } else if (health.status === 'warning') {
+                        document.getElementById('githubStatus').textContent = 'Warning';
+                        document.getElementById('githubStatus').className = 'api-status status-active';
+                    }
+                });
+            } else {
+                console.warn('⚠️ Unified Token Manager not loaded');
+            }
             
             // Log activity
             if (typeof ActivityLogger !== 'undefined') {

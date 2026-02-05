@@ -19,9 +19,9 @@
 
 class GitHubTokenManager {
     constructor() {
-        this.STORAGE_KEY = 'a3km_github_token';
-        this.TIMESTAMP_KEY = 'a3km_token_timestamp';
-        this.VALIDATION_KEY = 'a3km_token_valid';
+        this.STORAGE_KEY = 'github_token';
+        this.TIMESTAMP_KEY = 'github_token_timestamp';
+        this.VALIDATION_KEY = 'github_token_valid';
         
         // Token expiry: 90 days (GitHub default)
         this.TOKEN_EXPIRY_DAYS = 90;

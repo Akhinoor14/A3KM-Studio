@@ -13,30 +13,68 @@ class A3KMMobileSystem {
     }
 
     /**
-     * Detect if device is mobile
+     * Detect if device is mobile (FIXED - Desktop resize protected)
+     * Uses physical screen size + User Agent for accurate detection
      */
     detectMobile() {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const screenWidth = window.innerWidth;
         
-        // Check user agent and screen width
-        return (
-            /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase()) ||
-            screenWidth <= 768
-        );
+        // Priority 1: Check User Agent for actual mobile devices
+        const isMobileUA = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+        
+        // Priority 2: Check PHYSICAL screen size (not window size)
+        const physicalWidth = window.screen.width;
+        const physicalHeight = window.screen.height;
+        const smallPhysicalScreen = Math.min(physicalWidth, physicalHeight) <= 768;
+        
+        // Priority 3: Touch capability (mobile devices have touch)
+        const hasTouch = ('ontouchstart' in window) || 
+                        (navigator.maxTouchPoints > 0) || 
+                        (navigator.msMaxTouchPoints > 0);
+        
+        // Priority 4: Check for mobile-specific APIs
+        const hasMobileFeatures = 'orientation' in window || 'DeviceOrientationEvent' in window;
+        
+        // Decision Logic:
+        // 1. If User Agent says mobile → TRUE (most reliable)
+        // 2. If physical screen small + touch support → TRUE (real mobile)
+        // 3. If just window resized but large physical screen → FALSE (desktop resize)
+        if (isMobileUA) {
+            return true; // User Agent confirms mobile
+        }
+        
+        if (smallPhysicalScreen && hasTouch && hasMobileFeatures) {
+            return true; // Physical device is mobile
+        }
+        
+        // Desktop browser resized - NOT mobile
+        return false;
     }
 
     /**
-     * Detect if device is tablet
+     * Detect if device is tablet (FIXED - Desktop resize protected)
      */
     detectTablet() {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const screenWidth = window.innerWidth;
         
-        return (
-            /ipad|android(?!.*mobile)|tablet/i.test(userAgent.toLowerCase()) ||
-            (screenWidth > 768 && screenWidth <= 1024)
-        );
+        // Check User Agent for tablets
+        const isTabletUA = /ipad|android(?!.*mobile)|tablet/i.test(userAgent.toLowerCase());
+        
+        // Check PHYSICAL screen size for tablets
+        const physicalWidth = window.screen.width;
+        const physicalHeight = window.screen.height;
+        const smallerDimension = Math.min(physicalWidth, physicalHeight);
+        const largerDimension = Math.max(physicalWidth, physicalHeight);
+        
+        const isTabletSize = (smallerDimension > 768 && smallerDimension <= 1024) ||
+                            (largerDimension >= 1024 && largerDimension <= 1366);
+        
+        // Touch capability
+        const hasTouch = ('ontouchstart' in window) || 
+                        (navigator.maxTouchPoints > 0) || 
+                        (navigator.msMaxTouchPoints > 0);
+        
+        return isTabletUA || (isTabletSize && hasTouch);
     }
 
     /**
@@ -360,16 +398,27 @@ class A3KMMobileSystem {
     }
 
     /**
-     * Get device info
+     * Get device info (FIXED - Uses actual mobile detection)
      */
     static getDeviceInfo() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobileUA = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+        const physicalWidth = window.screen.width;
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        
+        // Use proper mobile detection logic
+        const actuallyMobile = isMobileUA || (physicalWidth <= 768 && hasTouch);
+        
         return {
-            isMobile: window.innerWidth <= 768,
-            isTablet: window.innerWidth > 768 && window.innerWidth <= 1024,
-            isDesktop: window.innerWidth > 1024,
-            width: window.innerWidth,
-            height: window.innerHeight,
+            isMobile: actuallyMobile,
+            isTablet: /ipad|android(?!.*mobile)|tablet/i.test(userAgent.toLowerCase()),
+            isDesktop: !actuallyMobile,
+            windowWidth: window.innerWidth,
+            windowHeight: window.innerHeight,
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height,
             orientation: window.innerHeight > window.innerWidth ? 'portrait' : 'landscape',
+            hasTouch: hasTouch,
             userAgent: navigator.userAgent
         };
     }

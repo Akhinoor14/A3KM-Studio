@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+  
   <title>Written Posts Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="../../../Optimization/mobile-universal.js" defer></script>
+  <!-- Load Unified Token Manager -->
+  <script src="../shared/unified-token-manager.js"></script>
   <style>
     :root {
       --primary-color: #8B0000;
@@ -1731,7 +1737,24 @@
   <script src="github-content-uploader.js"></script>
   <script src="content-manager.js"></script>
   <script>
-    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    // GitHub token must be set via API Config Manager - no default token for security
+    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    
+    // Token validation on page load
+    if (!GITHUB_TOKEN) {
+      const userChoice = confirm(
+        '⚠️ GitHub Token Not Found!\n\n' +
+        'This manager requires a GitHub token to function.\n\n' +
+        'Click OK to go to API Config Manager and set your token.\n' +
+        'Click Cancel to continue anyway (features will not work).'
+      );
+      if (userChoice) {
+        window.location.href = '../../shared/api-config-manager.html';
+      } else {
+        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+      }
+    }
+    
     const CONTENT_TYPE = 'written-posts';
     const svgGenerator = new SVGCoverGenerator();
     const githubUploader = new GitHubContentUploader({ token: GITHUB_TOKEN, owner: 'Akhinoor14', repo: 'A3KM-Studio' });
@@ -2202,6 +2225,15 @@ ${content}`;
         progressFill.style.width = '100%';
         progressText.textContent = 'Complete!';
         
+        // Update Content Hub counter
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.updateCount('posts', {
+            title: title,
+            category: category,
+            action: 'Uploaded'
+          });
+        }
+        
         // Enhanced success message
         const audienceText = audiences.length > 0 ? audiences.join(', ') : 'General';
         alert(`✅ Post Published Successfully!\n\n📊 Post Details:\n` +
@@ -2240,7 +2272,9 @@ ${content}`;
     async function loadDashboardStats() {
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
-        const items = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        const items = contentManager.getItemsFromData(data, CONTENT_TYPE) || [];
+        
+        console.log('Posts Dashboard - Loaded posts:', items.length, 'items');
         
         const total = items.length;
         const published = items.filter(i => i.status === 'published').length;
@@ -2908,7 +2942,25 @@ ${content}`;
         }
       });
     });
+    
+    // Override loadDashboardStats to add Content Hub sync
+    const originalLoadDashboardStats = loadDashboardStats;
+    loadDashboardStats = async function() {
+      await originalLoadDashboardStats();
+      
+      // Sync with Content Hub after loading stats
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const posts = data.posts || [];
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.syncFromData('posts', posts.length);
+        }
+      } catch (error) {
+        console.error('Failed to sync with Content Hub:', error);
+      }
+    };
   </script>
+  <script src="content-hub-sync.js"></script>
   <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
 </html>

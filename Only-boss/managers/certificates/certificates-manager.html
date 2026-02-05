@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+  
   <title>Certificates Manager - A3KM Studio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
@@ -231,10 +235,12 @@
         <form id="uploadForm">
           <div class="form-group">
             <label>GitHub Personal Access Token *</label>
-            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" required>
+            <input type="password" id="githubToken" placeholder="Token will be auto-loaded from API Config Manager" required>
             <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">
-              Get your token from: <a href="https://github.com/settings/tokens" target="_blank" style="color: #8B0000;">github.com/settings/tokens</a>
+              Token loaded from: <a href="../shared/api-config-manager.html" target="_blank" style="color: #8B0000;">API Config Manager</a> | 
+              <a href="https://github.com/settings/tokens" target="_blank" style="color: #8B0000;">Generate new token</a>
             </p>
+            <p id="tokenStatus" style="font-size: 0.85rem; margin-top: 5px;"></p>
           </div>
 
           <div class="form-group">
@@ -529,6 +535,35 @@
   <script src="../Content-studio/github-content-uploader.js"></script>
   <script src="certificates-manager.js"></script>
   <script>
+    // Load GitHub token from localStorage on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const githubToken = localStorage.getItem('github_token') || '';
+      const tokenInput = document.getElementById('githubToken');
+      const tokenStatus = document.getElementById('tokenStatus');
+      
+      if (githubToken) {
+        tokenInput.value = githubToken;
+        tokenStatus.innerHTML = '✅ <span style="color: #28a745;">Token loaded successfully (' + githubToken.length + ' chars)</span>';
+        console.log('✅ Certificate Manager: GitHub token loaded from localStorage');
+      } else {
+        tokenStatus.innerHTML = '⚠️ <span style="color: #dc3545;">No token found - <a href="../shared/api-config-manager.html" style="color: #8B0000;">Set token here</a></span>';
+        console.warn('⚠️ Certificate Manager: No GitHub token in localStorage');
+        
+        // Show prompt to user
+        setTimeout(() => {
+          const userChoice = confirm(
+            '⚠️ GitHub Token Not Found!\n\n' +
+            'Certificate Manager requires a GitHub token to upload files.\n\n' +
+            'Click OK to go to API Config Manager and set your token.\n' +
+            'Click Cancel to enter token manually.'
+          );
+          if (userChoice) {
+            window.location.href = '../shared/api-config-manager.html';
+          }
+        }, 1000);
+      }
+    });
+    
     // Additional UI Functions
     const ITEMS_PER_PAGE = 12;
     let currentPage = 1;

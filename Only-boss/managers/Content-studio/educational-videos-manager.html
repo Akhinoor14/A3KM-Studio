@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+  
   <title>Educational Videos Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1416,7 +1420,23 @@
       'Education & Learning': ['Study Tips', 'Online Courses', 'Research Methods', 'Academic Writing', 'Teaching', 'Language Learning']
     };
 
-    const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN_HERE';
+    // GitHub token must be set via API Config Manager - no default token for security
+    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    
+    // Token validation on page load
+    if (!GITHUB_TOKEN) {
+      const userChoice = confirm(
+        '⚠️ GitHub Token Not Found!\n\n' +
+        'This manager requires a GitHub token to function.\n\n' +
+        'Click OK to go to API Config Manager and set your token.\n' +
+        'Click Cancel to continue anyway (features will not work).'
+      );
+      if (userChoice) {
+        window.location.href = '../../shared/api-config-manager.html';
+      } else {
+        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+      }
+    }
     const CONTENT_TYPE = 'educational-videos';
     
     const githubUploader = new GitHubContentUploader({
@@ -1568,8 +1588,10 @@
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
         currentContent = data.courses || [];
+        console.log('Educational Videos Manage - Loaded courses:', currentContent.length, 'items');
         filterContent();
       } catch (error) {
+        console.error('Load manage content error:', error);
         grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load</p>';
       }
     }
@@ -2093,6 +2115,16 @@
         try {
           await contentManager.uploadContent(CONTENT_TYPE, course);
           alert('✅ Course uploaded successfully!');
+          
+          // Update Content Hub counter
+          if (typeof ContentHubSync !== 'undefined') {
+            ContentHubSync.updateCount('videos', {
+              title: course.title,
+              category: course.category,
+              action: 'Uploaded'
+            });
+          }
+          
           uploadFormElement.reset();
           uploadPlaylist = [];
           selectedPdfFile = null;
@@ -2415,6 +2447,8 @@
         const data = await contentManager.loadContent(CONTENT_TYPE);
         const courses = data.courses || [];
         
+        console.log('Educational Videos Dashboard - Loaded courses:', courses.length, 'items');
+        
         const totalEpisodes = courses.reduce((sum, c) => sum + (c.episodes || 0), 0);
         const totalEnrolled = courses.reduce((sum, c) => sum + (c.enrolled || 0), 0);
         const totalViews = courses.reduce((sum, c) => sum + (c.views || 0), 0);
@@ -2427,6 +2461,11 @@
         document.getElementById('quickTotalCourses').textContent = courses.length;
         document.getElementById('quickTotalEpisodes').textContent = totalEpisodes;
         document.getElementById('quickTotalEnrolled').textContent = totalEnrolled;
+        
+        // Sync with Content Hub
+        if (typeof ContentHubSync !== 'undefined') {
+          ContentHubSync.syncFromData('videos', courses.length);
+        }
       } catch (error) {
         console.error('Failed to load dashboard:', error);
       }
@@ -2508,5 +2547,7 @@
       loadDashboard();
     });
   </script>
+  <script src="content-hub-sync.js"></script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
 </body>
 </html>
