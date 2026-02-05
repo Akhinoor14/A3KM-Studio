@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Arduino Project Viewer - Mobile</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-grid-background.css">
+    
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        .viewer-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(26,0,0,0.95));
+            border-bottom: 2px solid var(--primary-red);
+            padding: 15px 20px;
+            z-index: 100;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            padding: 10px 16px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 2px solid var(--primary-red);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 2px solid var(--primary-red);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+            background: rgba(204, 0, 0, 0.4);
+        }
+        
+        .project-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 5px;
+        }
+        
+        .project-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .content-wrapper {
+            margin-top: 120px;
+            padding: 0 20px 100px;
+        }
+        
+        .project-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(0, 0, 0, 0.6));
+            border: 2px solid var(--primary-red);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: var(--primary-red);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(204,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(204,0,0,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary-red);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+        
+        .section {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(15, 5, 5, 0.98));
+            border: 2px solid var(--primary-red);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-content {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+        
+        .section-content h1, .section-content h2, .section-content h3 {
+            color: var(--primary-red);
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .section-content h1 { font-size: 22px; }
+        .section-content h2 { font-size: 18px; }
+        .section-content h3 { font-size: 16px; }
+        
+        .section-content ul, .section-content ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .section-content li {
+            margin: 8px 0;
+        }
+        
+        .section-content code {
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid var(--primary-red);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #FF6666;
+        }
+        
+        .section-content pre {
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .section-content pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: #FF9999;
+        }
+        
+        .components-list {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .component-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid var(--primary-red);
+            border-radius: 10px;
+        }
+        
+        .component-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(204, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--primary-red);
+            flex-shrink: 0;
+        }
+        
+        .component-info {
+            flex: 1;
+        }
+        
+        .component-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+        }
+        
+        .component-quantity {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .download-section {
+            position: fixed;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: linear-gradient(0deg, rgba(10,10,10,0.98), transparent);
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+        }
+        
+        .download-btn {
+            flex: 1;
+            padding: 14px;
+            background: var(--primary-red);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .download-btn:active {
+            transform: scale(0.97);
+            background: #990000;
+        }
+        
+        .download-btn.secondary {
+            background: rgba(204, 0, 0, 0.3);
+            border: 2px solid var(--primary-red);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-overlay.hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            font-size: 50px;
+            color: var(--primary-red);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-grid-background"></div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <i class="fas fa-spinner loading-spinner"></i>
+        <p class="loading-text">Loading project...</p>
+    </div>
+    
+    <!-- Header -->
+    <div class="viewer-header">
+        <div class="header-top">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            
+            <div class="header-actions">
+                <button class="action-btn" onclick="shareProject()" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="action-btn" onclick="favoriteProject()" title="Favorite">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+        </div>
+        
+        <h1 class="project-title" id="projectTitle">Loading...</h1>
+        <div class="project-meta">
+            <span class="meta-item">
+                <i class="fas fa-calendar"></i>
+                <span id="projectDate">2024</span>
+            </span>
+            <span class="meta-item">
+                <i class="fas fa-tag"></i>
+                <span id="projectDifficulty">Intermediate</span>
+            </span>
+            <span class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span id="projectDuration">2 hours</span>
+            </span>
+        </div>
+    </div>
+    
+    <!-- Content -->
+    <div class="content-wrapper">
+        <!-- Project Image -->
+        <div class="project-image">
+            <i class="fas fa-microchip"></i>
+        </div>
+        
+        <!-- Stats -->
+        <div class="project-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="componentsCount">8</div>
+                <div class="stat-label">Components</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="codeLines">150</div>
+                <div class="stat-label">Lines Code</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="circuitPins">6</div>
+                <div class="stat-label">Pins Used</div>
+            </div>
+        </div>
+        
+        <!-- Description -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Project Description
+            </h2>
+            <div class="section-content" id="descriptionContent">
+                Loading project description...
+            </div>
+        </div>
+        
+        <!-- Components -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-box"></i>
+                Required Components
+            </h2>
+            <div class="components-list" id="componentsList">
+                <div class="component-item">
+                    <div class="component-icon"><i class="fas fa-microchip"></i></div>
+                    <div class="component-info">
+                        <div class="component-name">Arduino Uno R3</div>
+                        <div class="component-quantity">Quantity: 1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Circuit Diagram -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-project-diagram"></i>
+                Circuit Diagram
+            </h2>
+            <div class="section-content">
+                <p>Circuit diagram and wiring instructions will be shown here.</p>
+            </div>
+        </div>
+        
+        <!-- Code -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-code"></i>
+                Arduino Code
+            </h2>
+            <div class="section-content" id="codeContent">
+                <pre><code>// Arduino code will be loaded here
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Main code
+}</code></pre>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-list-ol"></i>
+                Step-by-Step Instructions
+            </h2>
+            <div class="section-content" id="instructionsContent">
+                Loading instructions...
+            </div>
+        </div>
+    </div>
+    
+    <!-- Download Section -->
+    <div class="download-section">
+        <button class="download-btn" onclick="downloadPDF()">
+            <i class="fas fa-file-pdf"></i>
+            PDF
+        </button>
+        <button class="download-btn secondary" onclick="downloadCode()">
+            <i class="fas fa-file-code"></i>
+            Code
+        </button>
+        <button class="download-btn secondary" onclick="downloadCircuit()">
+            <i class="fas fa-image"></i>
+            Circuit
+        </button>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="../../Home/mobile/index-mobile.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="../../About me/mobile/about-mobile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>About</span>
+        </a>
+        <a href="../mobile/projects-mobile.html" class="nav-item active">
+            <i class="fas fa-code"></i>
+            <span>Projects</span>
+        </a>
+        <a href="../../Content Studio/mobile/hub-mobile.html" class="nav-item">
+            <i class="fas fa-book"></i>
+            <span>Studio</span>
+        </a>
+        <a href="../../Contact/mobile/contact-mobile.html" class="nav-item">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+    
+    <script>
+        // Get project ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id') || 'sample-project';
+        
+        // Sample project data
+        const projectData = {
+            title: 'LED Blink Controller',
+            date: '2024',
+            difficulty: 'Beginner',
+            duration: '30 mins',
+            components: 5,
+            codeLines: 45,
+            pins: 3,
+            description: `
+# LED Blink Controller
+
+This project demonstrates basic Arduino programming by controlling an LED with different blink patterns.
+
+## Features
+- Multiple blink patterns
+- Adjustable blink speed
+- Serial monitor output
+- Low power consumption
+
+## Learning Objectives
+- Digital output pins
+- Timing functions (delay, millis)
+- Serial communication
+- Basic circuit design
+            `,
+            components: [
+                { name: 'Arduino Uno R3', quantity: 1, icon: 'microchip' },
+                { name: 'LED (Red)', quantity: 3, icon: 'lightbulb' },
+                { name: 'Resistor 220Ω', quantity: 3, icon: 'minus' },
+                { name: 'Breadboard', quantity: 1, icon: 'th' },
+                { name: 'Jumper Wires', quantity: 10, icon: 'plug' }
+            ],
+            code: `// LED Blink Controller
+// Simple LED control with multiple patterns
+
+const int ledPin = 13;
+int blinkDelay = 1000;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("LED Controller Started");
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);
+  Serial.println("LED ON");
+  delay(blinkDelay);
+  
+  digitalWrite(ledPin, LOW);
+  Serial.println("LED OFF");
+  delay(blinkDelay);
+}`,
+            instructions: `
+## Assembly Instructions
+
+### Step 1: Prepare Components
+Gather all required components listed above.
+
+### Step 2: Wire the Circuit
+1. Connect LED anode (long leg) to digital pin 13
+2. Connect 220Ω resistor to LED cathode
+3. Connect resistor to GND
+
+### Step 3: Upload Code
+1. Open Arduino IDE
+2. Copy the code above
+3. Select correct board and port
+4. Click Upload
+
+### Step 4: Test
+Watch the LED blink and check Serial Monitor for output.
+            `
+        };
+        
+        // Load project
+        function loadProject() {
+            document.getElementById('projectTitle').textContent = projectData.title;
+            document.getElementById('projectDate').textContent = projectData.date;
+            document.getElementById('projectDifficulty').textContent = projectData.difficulty;
+            document.getElementById('projectDuration').textContent = projectData.duration;
+            
+            document.getElementById('componentsCount').textContent = projectData.components;
+            document.getElementById('codeLines').textContent = projectData.codeLines;
+            document.getElementById('circuitPins').textContent = projectData.pins;
+            
+            // Render markdown description
+            document.getElementById('descriptionContent').innerHTML = marked.parse(projectData.description);
+            
+            // Render components
+            const componentsList = document.getElementById('componentsList');
+            componentsList.innerHTML = projectData.components.map(comp => `
+                <div class="component-item">
+                    <div class="component-icon"><i class="fas fa-${comp.icon}"></i></div>
+                    <div class="component-info">
+                        <div class="component-name">${comp.name}</div>
+                        <div class="component-quantity">Quantity: ${comp.quantity}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Render code
+            document.getElementById('codeContent').innerHTML = `<pre><code>${projectData.code}</code></pre>`;
+            
+            // Render instructions
+            document.getElementById('instructionsContent').innerHTML = marked.parse(projectData.instructions);
+            
+            // Hide loading
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 500);
+        }
+        
+        function shareProject() {
+            if (navigator.vibrate) navigator.vibrate(10);
+            if (navigator.share) {
+                navigator.share({
+                    title: projectData.title,
+                    text: 'Check out this Arduino project!',
+                    url: window.location.href
+                });
+            } else {
+                alert('Share URL copied to clipboard!');
+            }
+        }
+        
+        function favoriteProject() {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('Project added to favorites!');
+        }
+        
+        function downloadPDF() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            const element = document.querySelector('.content-wrapper');
+            const opt = {
+                margin: 10,
+                filename: `${projectData.title.replace(/\s+/g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        function downloadCode() {
+            if (navigator.vibrate) navigator.vibrate(10);
+            const blob = new Blob([projectData.code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${projectData.title.replace(/\s+/g, '_')}.ino`;
+            a.click();
+        }
+        
+        function downloadCircuit() {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('Circuit diagram download will be available soon!');
+        }
+        
+        // Initialize
+        loadProject();
+    </script>
+</body>
+</html>

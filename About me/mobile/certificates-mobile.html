@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#CC0000">
+    <title>Certificates - A3KM Studio</title>
+    <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-grid-background.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-navbar.css">
+    <style>
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; color: #CC0000; text-decoration: none; margin-bottom: 20px; }
+        .cert-card { background: linear-gradient(135deg, rgba(26,0,0,0.95), rgba(10,10,10,0.95)); border: 1px solid rgba(204,0,0,0.3); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
+        .cert-card:active { transform: scale(0.98); }
+        .cert-icon { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(255,215,0,0.2); border-radius: 10px; font-size: 24px; color: #FFD700; margin-bottom: 12px; }
+        .cert-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+        .cert-org { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+        .cert-date { font-size: 11px; color: rgba(255,255,255,0.5); }
+        .view-cert-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 6px; font-size: 12px; color: #FFD700; margin-top: 8px; }
+    </style>
+</head>
+<body class="mobile-view">
+    <div class="mobile-grid-background"><div class="mobile-vignette"></div></div>
+    <main class="mobile-container">
+        <a href="../../Home/mobile/index-mobile.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        <section class="mobile-hero">
+            <h1 class="mobile-hero-title"><i class="fas fa-certificate"></i> Certificates</h1>
+            <p class="mobile-hero-subtitle">Achievements & Credentials</p>
+        </section>
+        <div id="certsList"><div class="mobile-spinner"></div></div>
+    </main>
+    <nav class="mobile-bottom-navbar">
+        <a href="../../Home/mobile/index-mobile.html" class="mobile-nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="about-mobile.html" class="mobile-nav-item active"><i class="fas fa-user-circle"></i><span>About</span></a>
+        <a href="../../Projects Code/mobile/projects-mobile.html" class="mobile-nav-item"><i class="fas fa-folder-open"></i><span>Projects</span></a>
+        <a href="../../Content Studio/mobile/hub-mobile.html" class="mobile-nav-item"><i class="fas fa-layer-group"></i><span>Studio</span></a>
+        <a href="../../Contact/mobile/contact-mobile.html" class="mobile-nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+    </nav>
+    <script>
+        async function loadCertificates() {
+            try {
+                const response = await fetch('../certificates-data.json');
+                const certs = await response.json();
+                document.getElementById('certsList').innerHTML = certs.map(cert => `
+                    <div class="cert-card" onclick="window.open('${cert.image || cert.url}', '_blank')">
+                        <div class="cert-icon"><i class="fas fa-award"></i></div>
+                        <h3 class="cert-title">${cert.title || cert.name}</h3>
+                        <p class="cert-org">${cert.organization || cert.issuer}</p>
+                        <div class="cert-date"><i class="fas fa-calendar"></i> ${cert.date || cert.year}</div>
+                        <span class="view-cert-btn">View Certificate <i class="fas fa-external-link-alt"></i></span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('certsList').innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.6);">Certificates loading...</p>';
+            }
+        }
+        loadCertificates();
+    </script>
+</body>
+</html>

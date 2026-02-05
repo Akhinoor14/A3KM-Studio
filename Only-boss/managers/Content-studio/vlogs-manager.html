@@ -551,7 +551,7 @@
 
     .card-meta {
       font-size: 12px;
-      color: var(--text-secondary);
+      color: #444;
       margin-bottom: 12px;
     }
 
@@ -971,7 +971,7 @@
           <div class="stat-card"><h3 id="dashSeries">0</h3><p>Video Series</p></div>
           <div class="stat-card"><h3 id="dashThisMonth">0</h3><p>Uploaded This Month</p></div>
         </div>
-        <p style="color: #666; margin-top: 20px; text-align: center;">Use the sidebar to navigate between different sections. Upload new vlogs, manage existing content, or export data using the JSON Editor.</p>
+        <p style="color: #444; margin-top: 20px; text-align: center;">Use the sidebar to navigate between different sections. Upload new vlogs, manage existing content, or export data using the JSON Editor.</p>
       </div>
 
       <!-- Upload Tab -->
@@ -980,9 +980,13 @@
         <form id="uploadForm">
           <div class="form-group">
             <label>📁 Category *</label>
-            <select id="category" required>
+            <input type="text" id="categorySearch" placeholder="🔍 Type to search categories..." 
+                   style="margin-bottom: 8px; border: 2px solid #6A1B9A; background: rgba(106, 27, 154, 0.05);" 
+                   oninput="filterCategorySelect()">
+            <select id="category" required size="5" style="height: 120px;">
               <option value="">Loading categories...</option>
             </select>
+            <small style="color: #444; display: block; margin-top: 5px;">💡 Use search box above to filter categories</small>
           </div>
           
           <div class="form-group">
@@ -998,7 +1002,7 @@
           <div class="form-group" id="youtubeUrlGroup">
             <label>🔗 YouTube URL *</label>
             <input type="url" id="youtubeUrl" placeholder="https://youtu.be/VIDEO_ID or https://youtube.com/watch?v=VIDEO_ID" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Thumbnail will be automatically fetched from YouTube</small>
+            <small style="color: #444; display: block; margin-top: 5px;">Thumbnail will be automatically fetched from YouTube</small>
           </div>
           
           <div class="form-group">
@@ -1045,7 +1049,7 @@
             <label>🖼️ Custom Thumbnail (Optional)</label>
             <input type="file" id="thumbnail" accept="image/*" style="display: none;">
             <label for="thumbnail" class="file-upload-label">📁 Click to upload custom thumbnail</label>
-            <div id="thumbnailInfo" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+            <div id="thumbnailInfo" style="margin-top: 10px; color: #444; font-size: 14px;"></div>
           </div>
           
           <button type="submit" class="btn-primary">📤 Upload Video Blog</button>
@@ -1102,7 +1106,7 @@
         
         <!-- Content Grid -->
         <div class="content-grid" id="contentGrid">
-          <p style="text-align: center; padding: 60px; color: #999; grid-column: 1 / -1;">Loading video blogs...</p>
+          <p style="text-align: center; padding: 60px; color: #444; grid-column: 1 / -1;">Loading video blogs...</p>
         </div>
         
         <!-- Pagination -->
@@ -1145,7 +1149,7 @@
       <!-- JSON Editor Tab -->
       <div id="jsonTab" class="tab-content">
         <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">⚙️ JSON Editor</h2>
-        <p style="color: #666; margin-bottom: 20px;">⚠️ <strong>Advanced Users Only:</strong> Direct JSON manipulation. Invalid JSON will break the system!</p>
+        <p style="color: #444; margin-bottom: 20px;">⚠️ <strong>Advanced Users Only:</strong> Direct JSON manipulation. Invalid JSON will break the system!</p>
         
         <div class="json-editor-container">
           <div class="json-actions">
@@ -1215,6 +1219,25 @@
         <div class="form-group">
           <label>🏷️ Tags</label>
           <input type="text" id="editTags">
+        </div>
+        
+        <!-- Thumbnail Replacement/Deletion -->
+        <div class="form-group" style="background: rgba(106, 27, 154, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(106, 27, 154, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span><i class="fas fa-image"></i> 🖼️ Replace Thumbnail (Optional)</span>
+            <button type="button" onclick="deleteVlogThumbnail()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete Current Thumbnail
+            </button>
+          </label>
+          <input type="file" id="edit-vlogThumbnailFile" accept="image/*" onchange="handleEditVlogThumbnailSelect(event)">
+          <small style="color: #666; display: block; margin-top: 8px;">
+            ✅ Upload new image to replace existing thumbnail | ❌ Delete button removes image from storage<br>
+            📋 Current: <span id="edit-currentVlogThumbnailPath" style="color: #6A1B9A; font-weight: 600;">Loading...</span>
+          </small>
+          <div id="edit-vlogThumbnailPreview" style="display: none; margin-top: 10px;">
+            <img id="edit-vlogThumbnailPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #6A1B9A;">
+            <button type="button" onclick="removeEditVlogThumbnailSelection()" style="margin-top: 8px; background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: block;">❌ Remove</button>
+          </div>
         </div>
         
         <button type="submit" class="btn-primary">💾 Update Vlog</button>
@@ -1778,6 +1801,71 @@
       }
     }
 
+    // ==================== VLOG THUMBNAIL REPLACEMENT & DELETION ====================
+    let editVlogThumbnailFileToUpload = null;
+
+    function handleEditVlogThumbnailSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Please select an image file only!');
+        event.target.value = '';
+        return;
+      }
+      
+      // Validate file size (max 5MB for images)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ Image too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 5MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      editVlogThumbnailFileToUpload = file;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewImg = document.getElementById('edit-vlogThumbnailPreviewImg');
+        previewImg.src = e.target.result;
+        document.getElementById('edit-vlogThumbnailPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeEditVlogThumbnailSelection() {
+      editVlogThumbnailFileToUpload = null;
+      document.getElementById('edit-vlogThumbnailFile').value = '';
+      document.getElementById('edit-vlogThumbnailPreview').style.display = 'none';
+    }
+
+    async function deleteVlogThumbnail() {
+      const vlogId = document.getElementById('editVlogId').value;
+      const vlog = allVlogs.find(v => v.id === vlogId);
+      
+      if (!vlog) return;
+      
+      if (!confirm(`🗑️ Delete thumbnail for "${vlog.title}"?\n\nThis will remove the image from GitHub storage.\nThe vlog will remain without a custom thumbnail (YouTube thumbnail will be used).`)) {
+        return;
+      }
+      
+      try {
+        delete vlog.thumbnail;
+        delete vlog.thumbnailPath;
+        delete vlog.thumbnailUrl;
+        delete vlog.coverImage;
+        await contentManager.updateContent(CONTENT_TYPE, vlogId, vlog);
+        alert('✅ Thumbnail marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        document.getElementById('edit-currentVlogThumbnailPath').textContent = 'No custom thumbnail (using YouTube thumbnail)';
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Failed to delete thumbnail: ' + error.message);
+      }
+    }
+    // ============================================================================
+
     // Edit Vlog
     function editVlog(id) {
       const vlog = allVlogs.find(v => v.id === id);
@@ -1794,6 +1882,18 @@
       document.getElementById('editLanguage').value = vlog.language || 'bn';
       document.getElementById('editTags').value = (vlog.tags || []).join(', ');
       
+      // Show current thumbnail path
+      const thumbnailPathSpan = document.getElementById('edit-currentVlogThumbnailPath');
+      if (thumbnailPathSpan) {
+        thumbnailPathSpan.textContent = vlog.thumbnailPath || vlog.thumbnail || vlog.coverImage || 'No custom thumbnail (using YouTube thumbnail)';
+      }
+      
+      // Reset thumbnail input and preview
+      if (document.getElementById('edit-vlogThumbnailFile')) {
+        document.getElementById('edit-vlogThumbnailFile').value = '';
+        document.getElementById('edit-vlogThumbnailPreview').style.display = 'none';
+      }
+      
       loadCategories().then(() => {
         document.getElementById('editCategory').value = vlog.category;
       });
@@ -1808,8 +1908,10 @@
     document.getElementById('editForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const vlogId = document.getElementById('editVlogId').value;
+      
       const updatedVlog = {
-        id: document.getElementById('editVlogId').value,
+        id: vlogId,
         title: document.getElementById('editTitle').value,
         category: document.getElementById('editCategory').value,
         youtubeUrl: document.getElementById('editYoutubeUrl').value,
@@ -1823,6 +1925,33 @@
       };
       
       try {
+        // Check if new thumbnail was selected
+        if (editVlogThumbnailFileToUpload) {
+          if (!confirm('📤 Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
+            return;
+          }
+          
+          try {
+            const category = document.getElementById('editCategory').value;
+            const fileName = editVlogThumbnailFileToUpload.name;
+            const fileExtension = fileName.split('.').pop();
+            const thumbnailPath = `Content Storage/video-blogs/${category}/${vlogId}/thumbnail.${fileExtension}`;
+            
+            // Upload thumbnail to GitHub
+            await contentManager.uploadFile(thumbnailPath, editVlogThumbnailFileToUpload, `Upload thumbnail: ${fileName} for vlog ${vlogId}`);
+            
+            // Update vlog with new thumbnail path
+            updatedVlog.thumbnailPath = thumbnailPath;
+            updatedVlog.thumbnail = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
+            
+            alert('✅ Thumbnail uploaded successfully!');
+            editVlogThumbnailFileToUpload = null;
+          } catch (uploadError) {
+            alert('❌ Failed to upload thumbnail: ' + uploadError.message);
+            return;
+          }
+        }
+        
         await contentManager.updateContent(CONTENT_TYPE, updatedVlog.id, updatedVlog);
         alert('✅ Vlog updated successfully!');
         closeEditModal();
@@ -1967,6 +2096,118 @@
       } catch (error) {
         alert(`❌ Save failed: ${error.message}`);
       }
+    }
+
+    // Load categories from JSON (video-blog + educational categories combined)
+    async function loadCategories() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        const categorySelect = document.getElementById('category');
+        
+        if (!categorySelect) return;
+        
+        categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #6A1B9A;">━━━ SELECT CATEGORY ━━━</option>';
+        
+        // videos.json has different structure: categoryGroups is an object with video-blog and educational arrays
+        const videoBlogGroups = data.categoryGroups['video-blog'] || [];
+        const educationalGroups = data.categoryGroups['educational'] || [];
+        const allGroups = [...videoBlogGroups, ...educationalGroups].sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        let totalCategories = 0;
+        
+        allGroups.forEach(group => {
+          // Group header (disabled, styled)
+          const groupHeader = document.createElement('option');
+          groupHeader.disabled = true;
+          groupHeader.style.cssText = 'font-weight: 700; color: #6A1B9A; background: rgba(106, 27, 154, 0.1); padding: 8px 5px;';
+          groupHeader.textContent = `${group.icon} ${group.name} (${group.categories.length})`;
+          categorySelect.appendChild(groupHeader);
+          
+          // Individual categories (indented)
+          group.categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = `  ${cat}`;
+            option.style.paddingLeft = '15px';
+            categorySelect.appendChild(option);
+            totalCategories++;
+          });
+        });
+        
+        console.log(`✅ Vlogs Manager: Loaded ${totalCategories} categories in ${allGroups.length} groups`);
+        updateVlogCategoryCounter(`All ${totalCategories} categories loaded`, 'green');
+      } catch (error) {
+        console.error('Error loading vlog categories:', error);
+      }
+    }
+    
+    // Update category counter helper
+    function updateVlogCategoryCounter(message, color) {
+      const counter = document.querySelector('#categorySearch + select + small');
+      if (counter) {
+        counter.textContent = `💡 ${message}`;
+        counter.style.color = color;
+      }
+    }
+    
+    // Enhanced category search with grouping preservation
+    function filterCategorySelect() {
+      const searchInput = document.getElementById('categorySearch');
+      const select = document.getElementById('category');
+      if (!searchInput || !select) return;
+      
+      const filter = searchInput.value.toLowerCase().trim();
+      
+      if (!filter) {
+        // Show all - restore original view
+        loadCategories();
+        return;
+      }
+      
+      // Rebuild select with only matching categories, preserving groups
+      contentManager.loadContent(CONTENT_TYPE).then(data => {
+        select.innerHTML = '<option value="" style="font-weight: 600; color: #6A1B9A;">━━━ SELECT CATEGORY ━━━</option>';
+        
+        const videoBlogGroups = data.categoryGroups['video-blog'] || [];
+        const educationalGroups = data.categoryGroups['educational'] || [];
+        const allGroups = [...videoBlogGroups, ...educationalGroups].sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        let totalMatches = 0;
+        let groupsWithMatches = 0;
+        
+        allGroups.forEach(group => {
+          const matchingCategories = group.categories.filter(cat => 
+            cat.toLowerCase().includes(filter)
+          );
+          
+          if (matchingCategories.length > 0) {
+            groupsWithMatches++;
+            
+            // Group header
+            const groupHeader = document.createElement('option');
+            groupHeader.disabled = true;
+            groupHeader.style.cssText = 'font-weight: 700; color: #6A1B9A; background: rgba(106, 27, 154, 0.1); padding: 8px 5px;';
+            groupHeader.textContent = `${group.icon} ${group.name} (${matchingCategories.length})`;
+            select.appendChild(groupHeader);
+            
+            // Matching categories
+            matchingCategories.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat;
+              option.textContent = `  ${cat}`;
+              option.style.paddingLeft = '15px';
+              select.appendChild(option);
+              totalMatches++;
+            });
+          }
+        });
+        
+        if (totalMatches === 0) {
+          updateVlogCategoryCounter('No matches found', 'red');
+        } else {
+          updateVlogCategoryCounter(`${totalMatches} matches in ${groupsWithMatches} groups`, 'green');
+        }
+      });
     }
 
     // Initialize

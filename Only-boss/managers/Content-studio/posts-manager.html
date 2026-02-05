@@ -8,9 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Written Posts Manager - A3KM Studio</title>
-  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="../../../Optimization/mobile-universal.js" defer></script>
   <!-- Load Unified Token Manager -->
   <script src="../shared/unified-token-manager.js"></script>
   <style>
@@ -759,7 +757,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.95);
-      z-index: 9999;
+      z-index: 10000;
       overflow-y: auto;
     }
 
@@ -1728,6 +1726,39 @@
           </div>
         </div>
         
+        <!-- Thumbnail/Cover Image Replacement/Deletion -->
+        <div class="form-group full-width" style="background: rgba(139, 0, 0, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(139, 0, 0, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span><i class="fas fa-image"></i> 🖼️ Replace Thumbnail/Cover Image (Optional)</span>
+            <button type="button" onclick="deletePostThumbnail()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete Current Image
+            </button>
+          </label>
+          <input type="file" id="edit-thumbnailFile" accept="image/*" onchange="handleEditThumbnailSelect(event)">
+          <small style="color: #444; display: block; margin-top: 8px;">
+            ✅ Upload new image to replace existing thumbnail | ❌ Delete button removes image from storage<br>
+            📋 Current: <span id="edit-currentThumbnailPath" style="color: #B71C1C; font-weight: 600;">Loading...</span>
+          </small>
+          <div id="edit-thumbnailPreview" style="display: none; margin-top: 10px;">
+            <img id="edit-thumbnailPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #8B0000;">
+            <button type="button" onclick="removeEditThumbnailSelection()" style="margin-top: 8px; background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: block;">❌ Remove</button>
+          </div>
+        </div>
+        
+        <!-- Markdown File Deletion Option -->
+        <div class="form-group full-width" style="background: rgba(255, 152, 0, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(255, 152, 0, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <span><i class="fas fa-file-code"></i> 📄 Markdown File</span>
+            <button type="button" onclick="deletePostMarkdownFile()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete .md File
+            </button>
+          </label>
+          <small style="color: #444; display: block;">
+            ⚠️ Delete markdown file will remove the .md file from GitHub storage<br>
+            📋 File: <span id="edit-currentMarkdownPath" style="color: #F57C00; font-weight: 600;">Loading...</span>
+          </small>
+        </div>
+        
         <button type="submit" class="btn-primary">💾 Update Post</button>
       </form>
     </div>
@@ -1763,6 +1794,69 @@
     let filteredContent = [];
     let currentPage = 1;
     const postsPerPage = 10;
+
+    // Load category groups from JSON (150+ categories in 9 sectors)
+    async function loadCategories() {
+      try {
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        
+        // Populate category group dropdowns (sector selection)
+        const groupSelects = ['categoryGroup', 'editCategoryGroup', 'filterCategoryGroup'];
+        groupSelects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          if (!select) return;
+          
+          // Clear and add default option
+          const isFilter = selectId === 'filterCategoryGroup';
+          select.innerHTML = isFilter 
+            ? '<option value="">All Sectors</option>' 
+            : '<option value="">Select sector first...</option>';
+          
+          // Sort groups by order and add them
+          const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+          sortedGroups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.id;
+            option.textContent = `${group.icon} ${group.name} (${group.categories.length})`;
+            option.dataset.categories = JSON.stringify(group.categories);
+            select.appendChild(option);
+          });
+        });
+        
+        console.log(`✅ Posts Manager: Loaded ${data.categoryGroups.length} sectors with 150+ categories`);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    }
+    
+    // Update category dropdown based on selected sector
+    function updateCategoriesFromGroup(categorySelectId, mode = 'upload') {
+      const groupSelectId = mode === 'edit' ? 'editCategoryGroup' : 'categoryGroup';
+      const groupSelect = document.getElementById(groupSelectId);
+      const categorySelect = document.getElementById(categorySelectId);
+      
+      if (!groupSelect || !categorySelect) return;
+      
+      const selectedOption = groupSelect.options[groupSelect.selectedIndex];
+      
+      if (!selectedOption || !selectedOption.dataset.categories) {
+        categorySelect.innerHTML = '<option value="">Select sector first...</option>';
+        categorySelect.disabled = true;
+        return;
+      }
+      
+      // Enable and populate category dropdown
+      categorySelect.disabled = false;
+      categorySelect.innerHTML = '<option value="">Select category...</option>';
+      
+      const categories = JSON.parse(selectedOption.dataset.categories);
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+      });
+    }
 
     // Hardcoded categories for immediate display
     const CATEGORIES = {
@@ -2605,6 +2699,96 @@ ${content}`;
       }
     }
 
+    // ==================== THUMBNAIL/IMAGE REPLACEMENT & DELETION ====================
+    let editThumbnailFileToUpload = null;
+
+    function handleEditThumbnailSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Please select an image file only!');
+        event.target.value = '';
+        return;
+      }
+      
+      // Validate file size (max 5MB for images)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ Image too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 5MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      editThumbnailFileToUpload = file;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewImg = document.getElementById('edit-thumbnailPreviewImg');
+        previewImg.src = e.target.result;
+        document.getElementById('edit-thumbnailPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeEditThumbnailSelection() {
+      editThumbnailFileToUpload = null;
+      document.getElementById('edit-thumbnailFile').value = '';
+      document.getElementById('edit-thumbnailPreview').style.display = 'none';
+    }
+
+    async function deletePostThumbnail() {
+      const postId = document.getElementById('editPostId').value;
+      const post = currentContent.find(p => p.id === postId);
+      
+      if (!post) return;
+      
+      if (!confirm(`🗑️ Delete thumbnail for "${post.title}"?\n\nThis will remove the image from GitHub storage.\nThe post will remain without a thumbnail.`)) {
+        return;
+      }
+      
+      try {
+        delete post.thumbnail;
+        delete post.thumbnailPath;
+        delete post.thumbnailUrl;
+        await contentManager.updateContent(CONTENT_TYPE, postId, post);
+        alert('✅ Thumbnail marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        document.getElementById('edit-currentThumbnailPath').textContent = 'No thumbnail';
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Failed to delete thumbnail: ' + error.message);
+      }
+    }
+
+    async function deletePostMarkdownFile() {
+      const postId = document.getElementById('editPostId').value;
+      const post = currentContent.find(p => p.id === postId);
+      
+      if (!post) return;
+      
+      const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${postId}.md`;
+      
+      if (!confirm(`🗑️ Delete markdown file?\n\nFile: ${mdPath}\n\nThis will remove the .md file from GitHub storage.\nThe post JSON data will remain.`)) {
+        return;
+      }
+      
+      try {
+        await contentManager.deleteMarkdownFile(mdPath);
+        delete post.markdownFile;
+        delete post.contentPath;
+        await contentManager.updateContent(CONTENT_TYPE, postId, post);
+        alert('✅ Markdown file deleted successfully!');
+        document.getElementById('edit-currentMarkdownPath').textContent = 'No .md file';
+        document.getElementById('editContent').value = '';
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Failed to delete markdown file: ' + error.message);
+      }
+    }
+    // ============================================================================
+
     async function editPost(id) {
       const post = currentContent.find(p => p.id === id);
       if (!post) return;
@@ -2671,6 +2855,25 @@ ${content}`;
         if (checkbox) checkbox.checked = audiences.includes(aud);
       });
       
+      // Show current thumbnail path
+      const thumbnailPathSpan = document.getElementById('edit-currentThumbnailPath');
+      if (thumbnailPathSpan) {
+        thumbnailPathSpan.textContent = post.thumbnailPath || post.thumbnail || post.thumbnailUrl || 'No thumbnail';
+      }
+      
+      // Reset thumbnail input and preview
+      if (document.getElementById('edit-thumbnailFile')) {
+        document.getElementById('edit-thumbnailFile').value = '';
+        document.getElementById('edit-thumbnailPreview').style.display = 'none';
+      }
+      
+      // Show current markdown file path
+      const mdPathSpan = document.getElementById('edit-currentMarkdownPath');
+      if (mdPathSpan) {
+        const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${post.id}.md`;
+        mdPathSpan.textContent = mdPath;
+      }
+      
       loadCategories().then(() => {
         document.getElementById('editCategory').value = post.category;
       });
@@ -2711,6 +2914,33 @@ ${content}`;
       };
       
       try {
+        // Check if new thumbnail was selected
+        if (editThumbnailFileToUpload) {
+          if (!confirm('📤 Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
+            return;
+          }
+          
+          try {
+            const category = document.getElementById('editCategory').value;
+            const fileName = editThumbnailFileToUpload.name;
+            const fileExtension = fileName.split('.').pop();
+            const thumbnailPath = `Content Storage/written-posts/${category}/${id}/thumbnail.${fileExtension}`;
+            
+            // Upload thumbnail to GitHub
+            await contentManager.uploadFile(thumbnailPath, editThumbnailFileToUpload, `Upload thumbnail: ${fileName} for post ${id}`);
+            
+            // Update post with new thumbnail path
+            updatedPost.thumbnailPath = thumbnailPath;
+            updatedPost.thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
+            
+            alert('✅ Thumbnail uploaded successfully!');
+            editThumbnailFileToUpload = null;
+          } catch (uploadError) {
+            alert('❌ Failed to upload thumbnail: ' + uploadError.message);
+            return;
+          }
+        }
+        
         await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
         
         // Also save the markdown file content if it was edited

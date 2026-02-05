@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     
-    <!-- Universal Mobile Optimization System -->
-    <link rel="stylesheet" href="../../Optimization/mobile-universal.css">
-    <script src="../../Optimization/mobile-universal.js" defer></script>
     <meta name="description" content="Interactive 3D SOLIDWORKS CAD model viewer with download and navigation">
     <meta name="keywords" content="3D Viewer, SOLIDWORKS, CAD, GLB, Model Viewer">
     <meta name="author" content="Md Akhinoor Islam">
@@ -230,6 +227,19 @@
             transform: translateY(-2px) scale(1.05);
             box-shadow: var(--glow-red-strong), 0 8px 25px rgba(139, 0, 0, 0.4);
             background: linear-gradient(135deg, var(--primary-red-light), var(--primary-red));
+        }
+
+        /* Green styling for ZIP downloads */
+        .action-btn.zip-download {
+            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+            border-color: #4CAF50 !important;
+            color: #fff !important;
+        }
+
+        .action-btn.zip-download:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.6), 0 0 60px rgba(76, 175, 80, 0.3), 0 8px 25px rgba(76, 175, 80, 0.4) !important;
+            background: linear-gradient(135deg, #66BB6A, #4CAF50) !important;
         }
 
         /* Main Viewer Container */
@@ -1167,6 +1177,27 @@
 
             // Update page title
             document.title = `${model.name} - 3D Viewer - A3KM Studio`;
+
+            // Update download button styling based on file type
+            updateDownloadButton(model);
+        }
+
+        // Function to update download button based on file type (ZIP or standard)
+        function updateDownloadButton(model) {
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (!downloadBtn) return;
+
+            const hasZip = model.files.some(f => f.toLowerCase().endsWith('.zip'));
+            
+            if (hasZip) {
+                // ZIP file - Green styling
+                downloadBtn.classList.add('zip-download');
+                downloadBtn.innerHTML = '<i class="fas fa-file-archive"></i><span>Download ZIP</span>';
+            } else {
+                // Standard file - Red styling  
+                downloadBtn.classList.remove('zip-download');
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+            }
         }
 
         function showError() {

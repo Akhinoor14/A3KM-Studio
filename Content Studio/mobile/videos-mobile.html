@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#CC0000">
+    <title>Video Blogs - A3KM Studio</title>
+    <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-grid-background.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-navbar.css">
+    <style>
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; color: #CC0000; text-decoration: none; margin-bottom: 20px; }
+        .video-card { background: rgba(26,0,0,0.9); border: 1px solid rgba(204,0,0,0.3); border-radius: 12px; overflow: hidden; margin-bottom: 12px; text-decoration: none; color: #fff; display: block; }
+        .video-card:active { opacity: 0.9; }
+        .video-thumbnail { width: 100%; height: 200px; background: linear-gradient(135deg, rgba(204,0,0,0.2), rgba(0,0,0,0.8)); display: flex; align-items: center; justify-content: center; position: relative; }
+        .play-icon { font-size: 48px; color: #FF0000; }
+        .video-info { padding: 12px; }
+        .video-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+        .video-meta { font-size: 12px; color: rgba(255,255,255,0.6); }
+    </style>
+</head>
+<body class="mobile-view">
+    <div class="mobile-grid-background"><div class="mobile-vignette"></div></div>
+    <main class="mobile-container">
+        <a href="hub-mobile.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        <section class="mobile-hero">
+            <h1 class="mobile-hero-title"><i class="fab fa-youtube"></i> Videos</h1>
+            <p class="mobile-hero-subtitle">Tutorial & Vlogs</p>
+        </section>
+        <a href="../video-content/video-gallery.html" class="mobile-btn mobile-btn-primary mb-md">
+            <i class="fab fa-youtube"></i> Open Full Gallery
+        </a>
+        <div id="videosList"><div class="mobile-spinner"></div></div>
+    </main>
+    <nav class="mobile-bottom-navbar">
+        <a href="../../Home/mobile/index-mobile.html" class="mobile-nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="../../About me/mobile/about-mobile.html" class="mobile-nav-item"><i class="fas fa-user-circle"></i><span>About</span></a>
+        <a href="../../Projects Code/mobile/projects-mobile.html" class="mobile-nav-item"><i class="fas fa-folder-open"></i><span>Projects</span></a>
+        <a href="hub-mobile.html" class="mobile-nav-item active"><i class="fas fa-layer-group"></i><span>Studio</span></a>
+        <a href="../../Contact/mobile/contact-mobile.html" class="mobile-nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+    </nav>
+    <script>
+        async function loadVideos() {
+            try {
+                const response = await fetch('../video-content/videos-data.json');
+                const videos = await response.json();
+                document.getElementById('videosList').innerHTML = videos.slice(0, 10).map(video => `
+                    <a href="video-viewer-mobile.html?id=${video.id}" class="video-card">
+                        <div class="video-thumbnail">
+                            <i class="fab fa-youtube play-icon"></i>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-meta"><i class="fas fa-eye"></i> ${video.views || 'New'} • ${video.duration || ''}</div>
+                        </div>
+                    </a>
+                `).join('');
+            } catch (error) {
+                document.getElementById('videosList').innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.6);">Videos loading...</p>';
+            }
+        }
+        loadVideos();
+    </script>
+</body>
+</html>

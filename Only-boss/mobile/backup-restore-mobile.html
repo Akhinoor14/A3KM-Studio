@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Backup & Restore - A3KM Studio Only Boss</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-navbar.css">
+    <link rel="stylesheet" href="../../Optimization/mobile-system/mobile-grid-background.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body { padding-bottom: 80px; }
+        .manager-header { padding: max(20px, env(safe-area-inset-top) + 20px) 20px 20px; background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(56, 142, 60, 0.1)); border-bottom: 2px solid rgba(76, 175, 80, 0.3); margin-bottom: 20px; }
+        .header-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #4CAF50, #388E3C); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+        .header-title { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .header-title h1 { font-size: 24px; color: white; margin: 0; }
+        .header-subtitle { font-size: 14px; color: rgba(255, 255, 255, 0.7); margin-left: 60px; }
+        
+        .stats-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px 20px; }
+        .stat-card { background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #4CAF50; margin-bottom: 4px; }
+        .stat-label { font-size: 12px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; }
+        
+        .action-section { padding: 0 20px 20px; }
+        .section-title { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        
+        .action-card { background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .action-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #4CAF50, #388E3C); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; margin: 0 auto 16px; }
+        .action-title { font-size: 18px; font-weight: 600; color: white; margin-bottom: 8px; text-align: center; }
+        .action-desc { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-bottom: 16px; text-align: center; line-height: 1.5; }
+        .action-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #4CAF50, #388E3C); border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .action-btn:active { transform: scale(0.98); }
+        
+        .backup-list { padding: 0 20px 20px; }
+        .backup-item { background: rgba(76, 175, 80, 0.05); border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .backup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .backup-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #4CAF50, #388E3C); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0; }
+        .backup-info { flex: 1; }
+        .backup-name { font-size: 15px; font-weight: 600; color: white; margin-bottom: 4px; }
+        .backup-date { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+        .backup-size { font-size: 12px; color: #4CAF50; font-weight: 600; margin-top: 4px; }
+        .backup-actions { display: flex; gap: 8px; }
+        .backup-btn { flex: 1; padding: 10px; background: rgba(76, 175, 80, 0.2); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 8px; color: white; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .backup-btn.danger { background: rgba(244, 67, 54, 0.2); border-color: rgba(244, 67, 54, 0.3); color: #F44336; }
+        
+        .nav-buttons { padding: 0 20px 20px; display: flex; gap: 10px; }
+        .nav-btn { flex: 1; padding: 14px; background: rgba(76, 175, 80, 0.2); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="manager-header">
+        <div class="header-title">
+            <div class="header-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h1>Backup & Restore</h1>
+        </div>
+        <div class="header-subtitle">Protect your data</div>
+    </div>
+    
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Total Backups</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">2.3 GB</div>
+            <div class="stat-label">Total Size</div>
+        </div>
+    </div>
+    
+    <div class="action-section">
+        <div class="section-title">Quick Actions</div>
+        
+        <div class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="action-title">Create New Backup</div>
+            <div class="action-desc">Create a full backup of all content, settings, and databases</div>
+            <button class="action-btn" onclick="createBackup()">
+                <i class="fas fa-plus"></i>
+                Create Backup Now
+            </button>
+        </div>
+        
+        <div class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-cloud-download-alt"></i>
+            </div>
+            <div class="action-title">Restore from Backup</div>
+            <div class="action-desc">Select a backup file to restore your site</div>
+            <button class="action-btn" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-upload"></i>
+                Upload Backup File
+            </button>
+            <input type="file" id="fileInput" style="display: none;" accept=".zip,.backup">
+        </div>
+    </div>
+    
+    <div class="backup-list">
+        <div class="section-title">Recent Backups</div>
+        
+        <div class="backup-item">
+            <div class="backup-header">
+                <div class="backup-icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <div class="backup-info">
+                    <div class="backup-name">Full Backup - Feb 5, 2026</div>
+                    <div class="backup-date">Created: Today at 2:30 PM</div>
+                    <div class="backup-size">485 MB</div>
+                </div>
+            </div>
+            <div class="backup-actions">
+                <button class="backup-btn">
+                    <i class="fas fa-download"></i>
+                    Download
+                </button>
+                <button class="backup-btn">
+                    <i class="fas fa-redo"></i>
+                    Restore
+                </button>
+                <button class="backup-btn danger">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+        
+        <div class="backup-item">
+            <div class="backup-header">
+                <div class="backup-icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <div class="backup-info">
+                    <div class="backup-name">Full Backup - Feb 1, 2026</div>
+                    <div class="backup-date">Created: 4 days ago</div>
+                    <div class="backup-size">478 MB</div>
+                </div>
+            </div>
+            <div class="backup-actions">
+                <button class="backup-btn">
+                    <i class="fas fa-download"></i>
+                    Download
+                </button>
+                <button class="backup-btn">
+                    <i class="fas fa-redo"></i>
+                    Restore
+                </button>
+                <button class="backup-btn danger">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+        
+        <div class="backup-item">
+            <div class="backup-header">
+                <div class="backup-icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <div class="backup-info">
+                    <div class="backup-name">Full Backup - Jan 28, 2026</div>
+                    <div class="backup-date">Created: 1 week ago</div>
+                    <div class="backup-size">472 MB</div>
+                </div>
+            </div>
+            <div class="backup-actions">
+                <button class="backup-btn">
+                    <i class="fas fa-download"></i>
+                    Download
+                </button>
+                <button class="backup-btn">
+                    <i class="fas fa-redo"></i>
+                    Restore
+                </button>
+                <button class="backup-btn danger">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button class="nav-btn" onclick="window.location.href='only-boss-dashboard-mobile.html'">
+            <i class="fas fa-arrow-left"></i>
+            Back
+        </button>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="../../Home/mobile/index-mobile.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="../../About me/mobile/about-mobile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>About</span>
+        </a>
+        <a href="../../Projects Code/mobile/projects-mobile.html" class="nav-item">
+            <i class="fas fa-code"></i>
+            <span>Projects</span>
+        </a>
+        <a href="../../Content Studio/mobile/hub-mobile.html" class="nav-item">
+            <i class="fas fa-photo-film"></i>
+            <span>Studio</span>
+        </a>
+        <a href="../../Contact/mobile/contact-mobile.html" class="nav-item">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+    
+    <script>
+        function createBackup() {
+            alert('Backup creation will be initiated via backend API');
+        }
+    </script>
+</body>
+</html>

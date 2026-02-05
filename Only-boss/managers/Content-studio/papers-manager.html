@@ -8,9 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Research Papers Manager - A3KM Studio</title>
-  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
     :root {
       --primary-color: #1565C0;
@@ -1131,9 +1129,13 @@
           <div class="form-row">
             <div class="form-group">
               <label>📁 Category *</label>
-              <select id="category" required>
+              <input type="text" id="categorySearch" placeholder="🔍 Type to search categories..." 
+                     style="margin-bottom: 8px; border: 2px solid #1565C0; background: rgba(21, 101, 192, 0.05);" 
+                     oninput="filterCategorySelect()">
+              <select id="category" required size="5" style="height: 120px;">
                 <option value="">Select category...</option>
               </select>
+              <small style="color: #444; display: block; margin-top: 5px;">💡 Use search box above to filter categories</small>
             </div>
             <div class="form-group">
               <label>📊 Research Field *</label>
@@ -1310,7 +1312,7 @@
         <!-- Pagination -->
         <div id="pagination" class="pagination">
           <button onclick="prevPage()" id="prev-btn">← Previous</button>
-          <span id="page-info">Page 1 of 1</span>
+          <span id="page-info" style="color: #333;">Page 1 of 1</span>
           <button onclick="nextPage()" id="next-btn">Next →</button>
         </div>
 
@@ -1360,7 +1362,7 @@
       <div id="json-editor-tab" class="tab-content">
         <div class="content-header">
           <h2>🔧 JSON Editor</h2>
-          <p>Advanced editing of papers.json file</p>
+          <p style="color: #444;">Advanced editing of papers.json file</p>
         </div>
         
         <div class="json-editor-container">
@@ -1453,6 +1455,29 @@
             <input type="url" id="edit-downloadUrl" required>
           </div>
         </div>
+        
+        <!-- PDF File Replacement/Deletion -->
+        <div class="form-group" style="background: rgba(21, 101, 192, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(21, 101, 192, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span><i class="fas fa-file-pdf"></i> 📄 Replace PDF File (Optional)</span>
+            <button type="button" onclick="deletePaperPdfFile()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete Current PDF
+            </button>
+          </label>
+          <input type="file" id="edit-pdfFile" accept=".pdf" onchange="handleEditPdfSelect(event)">
+          <small style="color: #333; display: block; margin-top: 8px;">
+            ✅ Upload new PDF to replace existing one | ❌ Delete button removes PDF from storage<br>
+            📋 Current: <span id="edit-currentPdfPath" style="color: #0D47A1; font-weight: 600;">Loading...</span>
+          </small>
+          <div id="edit-pdfPreview" style="display: none; margin-top: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 3px solid #4CAF50;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #4CAF50;">✅ New PDF Selected:</strong> <span id="edit-pdfFileName"></span> (<span id="edit-pdfFileSize"></span>)
+              </div>
+              <button type="button" onclick="removeEditPdfSelection()" style="background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Remove</button>
+            </div>
+          </div>
+        </div>
 
         <div class="form-row">
           <div class="form-group">
@@ -1531,11 +1556,112 @@
     const papersPerPage = 12;
     let filteredPapers = [];
     
+    // Load categories from JSON with grouped display (150+ categories in 9 sectors)
+    async function loadCategories() {
+      try {
+        const data = await contentManager.loadContent('research-papers');
+        const categorySelect = document.getElementById('category');
+        
+        categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #1565C0;">━━━ SELECT CATEGORY ━━━</option>';
+        
+        let totalCategories = 0;
+        const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        sortedGroups.forEach(group => {
+          // Group header (disabled, styled)
+          const groupHeader = document.createElement('option');
+          groupHeader.disabled = true;
+          groupHeader.style.cssText = 'font-weight: 700; color: #1565C0; background: rgba(21, 101, 192, 0.1); padding: 8px 5px;';
+          groupHeader.textContent = `${group.icon} ${group.name} (${group.categories.length})`;
+          categorySelect.appendChild(groupHeader);
+          
+          // Individual categories (indented)
+          group.categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = `  ${cat}`;
+            option.style.paddingLeft = '15px';
+            categorySelect.appendChild(option);
+            totalCategories++;
+          });
+        });
+        
+        console.log(`✅ Loaded ${totalCategories} categories in ${sortedGroups.length} sectors`);
+        updateCategoryCounter(`All ${totalCategories} categories loaded`, 'green');
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    }
+    
+    // Update category counter helper
+    function updateCategoryCounter(message, color) {
+      const counter = document.querySelector('#categorySearch + select + small');
+      if (counter) {
+        counter.textContent = `💡 ${message}`;
+        counter.style.color = color;
+      }
+    }
+    
+    // Enhanced category search with grouping preservation
+    function filterCategorySelect() {
+      const searchInput = document.getElementById('categorySearch');
+      const select = document.getElementById('category');
+      const filter = searchInput.value.toLowerCase().trim();
+      
+      if (!filter) {
+        // Show all - restore original view
+        loadCategories();
+        return;
+      }
+      
+      // Rebuild select with only matching categories, preserving groups
+      contentManager.loadContent('research-papers').then(data => {
+        select.innerHTML = '<option value="" style="font-weight: 600; color: #1565C0;">━━━ SELECT CATEGORY ━━━</option>';
+        
+        let totalMatches = 0;
+        let sectorsWithMatches = 0;
+        const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        sortedGroups.forEach(group => {
+          const matchingCategories = group.categories.filter(cat => 
+            cat.toLowerCase().includes(filter)
+          );
+          
+          if (matchingCategories.length > 0) {
+            sectorsWithMatches++;
+            
+            // Group header
+            const groupHeader = document.createElement('option');
+            groupHeader.disabled = true;
+            groupHeader.style.cssText = 'font-weight: 700; color: #1565C0; background: rgba(21, 101, 192, 0.1); padding: 8px 5px;';
+            groupHeader.textContent = `${group.icon} ${group.name} (${matchingCategories.length})`;
+            select.appendChild(groupHeader);
+            
+            // Matching categories
+            matchingCategories.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat;
+              option.textContent = `  ${cat}`;
+              option.style.paddingLeft = '15px';
+              select.appendChild(option);
+              totalMatches++;
+            });
+          }
+        });
+        
+        if (totalMatches === 0) {
+          updateCategoryCounter('No matches found', 'red');
+        } else {
+          updateCategoryCounter(`${totalMatches} matches in ${sectorsWithMatches} sectors`, 'green');
+        }
+      });
+    }
+    
     // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
       contentManager = new ContentManager(githubUploader);
       await loadPapers();
-      loadCategories();
+      await loadCategories();
       loadFilterCategories();
       loadFieldSuggestions();
       updateDashboard();
@@ -2158,7 +2284,85 @@
       document.getElementById('edit-pages').value = paper.pages || '';
       document.getElementById('edit-language').value = paper.language || 'en';
       
+      // Show current PDF path
+      const pdfPathSpan = document.getElementById('edit-currentPdfPath');
+      if (pdfPathSpan) {
+        pdfPathSpan.textContent = paper.pdfPath || paper.downloadUrl || 'No PDF file';
+      }
+      
+      // Reset file input and preview
+      document.getElementById('edit-pdfFile').value = '';
+      document.getElementById('edit-pdfPreview').style.display = 'none';
+      
       document.getElementById('edit-modal').classList.add('active');
+    }
+    
+    // Handle PDF file selection in edit mode
+    let editPdfFileToUpload = null;
+    function handleEditPdfSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        alert('❌ Please select a PDF file only!');
+        event.target.value = '';
+        return;
+      }
+      
+      // Validate file size (max 50MB)
+      const maxSize = 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 50MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      editPdfFileToUpload = file;
+      
+      // Show preview
+      document.getElementById('edit-pdfFileName').textContent = file.name;
+      document.getElementById('edit-pdfFileSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+      document.getElementById('edit-pdfPreview').style.display = 'block';
+    }
+    
+    // Remove PDF file selection
+    function removeEditPdfSelection() {
+      editPdfFileToUpload = null;
+      document.getElementById('edit-pdfFile').value = '';
+      document.getElementById('edit-pdfPreview').style.display = 'none';
+    }
+    
+    // Delete PDF file from paper
+    async function deletePaperPdfFile() {
+      const paperId = document.getElementById('edit-id').value;
+      const paper = papersData.papers.find(p => p.id === paperId);
+      
+      if (!paper) return;
+      
+      if (!confirm(`🗑️ Delete PDF file for "${paper.title}"?\n\nThis will remove the PDF from GitHub storage.\nThe paper entry will remain with just the download URL.`)) {
+        return;
+      }
+      
+      try {
+        // Remove PDF path from paper data
+        delete paper.pdfPath;
+        paper.downloadUrl = ''; // Clear download URL
+        
+        // Save updated data
+        await contentManager.saveJSON('Content Studio/research-papers/papers.json', papersData);
+        
+        alert('✅ PDF file marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        
+        // Update UI
+        document.getElementById('edit-currentPdfPath').textContent = 'No PDF file';
+        
+        // Refresh papers list
+        filteredPapers = [...papersData.papers];
+        renderPapers();
+      } catch (error) {
+        alert('❌ Failed to delete PDF file: ' + error.message);
+      }
     }
     
     function closeEditModal() {
@@ -2176,6 +2380,32 @@
       
       const authorsInput = document.getElementById('edit-authors').value.trim();
       const keywordsInput = document.getElementById('edit-keywords').value.trim();
+      
+      // Check if new PDF file was selected
+      if (editPdfFileToUpload) {
+        if (!confirm('📤 Upload new PDF file?\n\nThis will replace the existing PDF in GitHub storage.\n\nContinue?')) {
+          return;
+        }
+        
+        try {
+          const category = document.getElementById('edit-category').value;
+          const fileName = editPdfFileToUpload.name;
+          const pdfPath = `Content Storage/research-papers/${category}/${id}/${fileName}`;
+          
+          // Upload PDF to GitHub
+          await contentManager.uploadFile(pdfPath, editPdfFileToUpload, `Upload PDF: ${fileName} for paper ${id}`);
+          
+          // Update paper with new PDF path
+          papersData.papers[paperIndex].pdfPath = pdfPath;
+          papersData.papers[paperIndex].downloadUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${pdfPath}`;
+          
+          alert('✅ PDF file uploaded successfully!');
+          editPdfFileToUpload = null;
+        } catch (error) {
+          alert('❌ Failed to upload PDF: ' + error.message);
+          return;
+        }
+      }
       
       papersData.papers[paperIndex] = {
         ...papersData.papers[paperIndex],
@@ -2374,6 +2604,23 @@
         alert('✅ Saved to GitHub successfully!');
       } catch (error) {
         alert('❌ Failed to save to GitHub: ' + error.message);
+      }
+    }
+
+    // Category Search Filter Function
+    function filterCategorySelect() {
+      const searchInput = document.getElementById('categorySearch');
+      const select = document.getElementById('category');
+      const filter = searchInput.value.toLowerCase();
+      const options = select.getElementsByTagName('option');
+      
+      for (let i = 0; i < options.length; i++) {
+        const txtValue = options[i].textContent || options[i].innerText;
+        if (txtValue.toLowerCase().indexOf(filter) > -1 || options[i].value === '') {
+          options[i].style.display = '';
+        } else {
+          options[i].style.display = 'none';
+        }
       }
     }
   </script>

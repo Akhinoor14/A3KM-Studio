@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>3D Model Viewer - SolidWorks Mobile</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-navbar.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-grid-background.css">
+    
+    <!-- Google Model Viewer for 3D -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    
+    <style>
+        body {
+            overflow: hidden;
+        }
+        
+        .viewer-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 60px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
+        }
+        
+        .viewer-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.95), transparent);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            padding: 10px 16px;
+            background: rgba(204, 0, 0, 0.3);
+            border: 2px solid var(--primary-red);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(204, 0, 0, 0.3);
+            border: 2px solid var(--primary-red);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+            background: rgba(204, 0, 0, 0.5);
+        }
+        
+        .model-viewer-wrapper {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            right: 20px;
+            bottom: 200px;
+            border: 3px solid var(--primary-red);
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+        }
+        
+        model-viewer::part(default-progress-bar) {
+            background-color: var(--primary-red);
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+        
+        .loading-overlay.hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            font-size: 40px;
+            color: var(--primary-red);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .model-info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(15, 5, 5, 0.98));
+            border: 2px solid var(--primary-red);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .model-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 8px;
+        }
+        
+        .model-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .model-properties {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .property-item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--primary-red);
+            border-radius: 8px;
+        }
+        
+        .property-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+        
+        .property-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 2px;
+        }
+        
+        .download-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-red);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .download-btn:active {
+            transform: scale(0.97);
+            background: #990000;
+        }
+        
+        .controls-hint {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(204, 0, 0, 0.95);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            z-index: 10;
+            animation: fadeIn 0.5s ease, fadeOut 0.5s ease 3s forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .ar-button {
+            position: absolute;
+            bottom: 220px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary-red), #990000);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(204, 0, 0, 0.5);
+        }
+        
+        .ar-button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-grid-background"></div>
+    
+    <div class="viewer-container">
+        <!-- Header -->
+        <div class="viewer-header">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            
+            <div class="header-actions">
+                <button class="action-btn" onclick="resetView()" title="Reset View">
+                    <i class="fas fa-redo"></i>
+                </button>
+                <button class="action-btn" onclick="toggleInfo()" title="Toggle Info">
+                    <i class="fas fa-info"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Controls Hint -->
+        <div class="controls-hint">
+            👆 Drag to rotate • 🤏 Pinch to zoom
+        </div>
+        
+        <!-- 3D Model Viewer -->
+        <div class="model-viewer-wrapper">
+            <div class="loading-overlay" id="loadingOverlay">
+                <i class="fas fa-spinner loading-spinner"></i>
+                <p class="loading-text">Loading 3D model...</p>
+            </div>
+            
+            <model-viewer
+                id="modelViewer"
+                alt="SolidWorks 3D Model"
+                camera-controls
+                touch-action="pan-y"
+                auto-rotate
+                rotation-per-second="30deg"
+                interaction-prompt="none"
+                shadow-intensity="1"
+                camera-orbit="45deg 55deg 2.5m"
+                min-camera-orbit="auto auto 0.5m"
+                max-camera-orbit="auto auto 10m">
+            </model-viewer>
+        </div>
+        
+        <!-- AR Button -->
+        <button class="ar-button" id="arButton" style="display: none;">
+            <i class="fas fa-cube"></i>
+        </button>
+        
+        <!-- Model Info Panel -->
+        <div class="model-info-panel" id="infoPanel">
+            <h2 class="model-title" id="modelTitle">3D CAD Model</h2>
+            <p class="model-description" id="modelDescription">
+                Interactive 3D model viewer. Use touch gestures to rotate and zoom.
+            </p>
+            
+            <div class="model-properties">
+                <div class="property-item">
+                    <div class="property-value" id="partsCount">1</div>
+                    <div class="property-label">Parts</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-value" id="complexity">Easy</div>
+                    <div class="property-label">Level</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-value" id="fileSize">--</div>
+                    <div class="property-label">Size</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-value">GLB</div>
+                    <div class="property-label">Format</div>
+                </div>
+            </div>
+            
+            <button class="download-btn" id="downloadBtn" onclick="downloadModel()">
+                <i class="fas fa-download"></i>
+                <span id="downloadText">Download Model Files</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="mobile-bottom-navbar">
+        <a href="../../../Home/mobile/index-mobile.html" class="mobile-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="../../../About me/mobile/about-mobile.html" class="mobile-nav-item">
+            <i class="fas fa-user"></i>
+            <span>About</span>
+        </a>
+        <a href="../../mobile/projects-mobile.html" class="mobile-nav-item active">
+            <i class="fas fa-folder"></i>
+            <span>Projects</span>
+        </a>
+        <a href="../../../Content Studio/mobile/hub-mobile.html" class="mobile-nav-item">
+            <i class="fas fa-play-circle"></i>
+            <span>Studio</span>
+        </a>
+        <a href="../../../Contact/mobile/contact-mobile.html" class="mobile-nav-item">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+    
+    <script>
+        const modelViewer = document.getElementById('modelViewer');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const arButton = document.getElementById('arButton');
+        
+        // Get model ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelId = urlParams.get('id') || urlParams.get('model') || urlParams.get('project');
+        
+        // Sample model data
+        const modelData = {
+            'beginner-1': {
+                title: 'Ball Bearing',
+                description: 'Complete ball bearing assembly with inner race, outer race, balls, and cage.',
+                parts: 4,
+                complexity: 'Easy',
+                glbUrl: '../models/ball-bearing.glb',
+                fileSize: '2.3 MB',
+                hasZip: false
+            },
+            'model-08': {
+                title: 'Assembly Model 08',
+                description: 'Multi-part assembly with complete CAD files package.',
+                parts: 6,
+                complexity: 'Medium',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 08/model-08.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 08/Model-08-Assembly.zip',
+                fileSize: '4.2 MB',
+                hasZip: true
+            },
+            'model-10': {
+                title: 'Assembly Model 10',
+                description: 'Complete assembly with all component files.',
+                parts: 8,
+                complexity: 'Medium',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 10/model-10.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 10/Model-10-Assembly.zip',
+                fileSize: '5.1 MB',
+                hasZip: true
+            },
+            'model-11': {
+                title: 'Assembly Model 11',
+                description: 'Assembly package with source files.',
+                parts: 7,
+                complexity: 'Medium',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 11/model-11.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 11/Model-11-Assembly.zip',
+                fileSize: '4.8 MB',
+                hasZip: true
+            },
+            'model-12': {
+                title: 'Assembly Model 12',
+                description: 'Complete assembly with all parts and drawings.',
+                parts: 9,
+                complexity: 'Medium',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 12/model-12.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 12/Model-12-Assembly.zip',
+                fileSize: '5.6 MB',
+                hasZip: true
+            },
+            'model-14': {
+                title: 'Assembly Model 14',
+                description: 'Multi-component assembly with full package.',
+                parts: 10,
+                complexity: 'Medium',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 14/model-14.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 14/Model-14-Assembly.zip',
+                fileSize: '6.2 MB',
+                hasZip: true
+            },
+            'model-22': {
+                title: 'Assembly Model 22',
+                description: 'Complex assembly with source files.',
+                parts: 12,
+                complexity: 'Hard',
+                glbUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22/model-22.glb',
+                zipUrl: '../../../Projects Storage/Solidwork Projects/Basic (Practice) Models/Model 22/Model-22-Assembly.zip',
+                fileSize: '7.4 MB',
+                hasZip: true
+            },
+            'intermediate-1': {
+                title: 'Gearbox Assembly',
+                description: 'Multi-part gearbox with gears, shafts, bearings, and housing.',
+                parts: 12,
+                complexity: 'Medium',
+                glbUrl: '../models/gearbox.glb',
+                fileSize: '5.8 MB',
+                hasZip: false
+            },
+            'commercial-1': {
+                title: 'Custom Machinery',
+                description: 'Industrial packaging machinery design with pneumatic systems.',
+                parts: 45,
+                complexity: 'Hard',
+                glbUrl: '../models/machinery.glb',
+                fileSize: '12.4 MB',
+                hasZip: false
+            }
+        };
+        
+        // Load model
+        function loadModel() {
+            const data = modelData[modelId] || modelData['beginner-1'];
+            
+            // Update UI
+            document.getElementById('modelTitle').textContent = data.title;
+            document.getElementById('modelDescription').textContent = data.description;
+            document.getElementById('partsCount').textContent = data.parts;
+            document.getElementById('complexity').textContent = data.complexity;
+            document.getElementById('fileSize').textContent = data.fileSize;
+            
+            // Update download button based on ZIP availability
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadText = document.getElementById('downloadText');
+            if (data.hasZip) {
+                downloadText.textContent = 'Download Assembly ZIP';
+                downloadBtn.style.background = 'linear-gradient(135deg, #4CAF50, #388E3C)';
+            } else {
+                downloadText.textContent = 'Download CAD Files';
+                downloadBtn.style.background = 'linear-gradient(135deg, var(--primary-red), #B71C1C)';
+            }
+            
+            // Load 3D model
+            modelViewer.src = data.glbUrl;
+            
+            // Handle AR support
+            if (modelViewer.canActivateAR) {
+                arButton.style.display = 'flex';
+                arButton.addEventListener('click', () => {
+                    modelViewer.activateAR();
+                });
+            }
+        }
+        
+        // Model loaded event
+        modelViewer.addEventListener('load', () => {
+            loadingOverlay.classList.add('hidden');
+            if (navigator.vibrate) navigator.vibrate(10);
+        });
+        
+        // Model error event
+        modelViewer.addEventListener('error', (event) => {
+            console.error('Model loading error:', event);
+            loadingOverlay.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: var(--primary-red);"></i>
+                <p class="loading-text">Failed to load 3D model</p>
+                <button class="download-btn" style="margin-top: 20px; max-width: 200px;" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            `;
+        });
+        
+        // Reset view
+        function resetView() {
+            modelViewer.cameraOrbit = '45deg 55deg 2.5m';
+            modelViewer.fieldOfView = '45deg';
+            if (navigator.vibrate) navigator.vibrate(5);
+        }
+        
+        // Toggle info panel
+        function toggleInfo() {
+            const panel = document.getElementById('infoPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            if (navigator.vibrate) navigator.vibrate(5);
+        }
+        
+        // Download model
+        function downloadModel() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            
+            const data = modelData[modelId] || modelData['beginner-1'];
+            
+            if (data.hasZip && data.zipUrl) {
+                // Download ZIP file directly
+                const link = document.createElement('a');
+                link.href = data.zipUrl;
+                link.download = data.zipUrl.split('/').pop();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show success message
+                alert(`Downloading ${data.title} assembly package (ZIP)\nIncludes all CAD files, parts, and assemblies.`);
+            } else {
+                // Show info for models without ZIP
+                alert(`${data.title}\n\nDownload options:\n• GLB 3D Model (for viewing)\n• SLDPRT/SLDASM (CAD source files)\n• STEP format (universal CAD)\n\nZIP package not available for this model.`);
+            }
+        }
+        
+        // Initialize
+        loadModel();
+        
+        // Prevent page scroll while interacting with 3D model
+        document.querySelector('.model-viewer-wrapper').addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+    </script>
+</body>
+</html>

@@ -1,7 +1,6 @@
 /**
- * A3KM Studio - Advanced Engineering Boot Sequence Splash Screen
- * Interactive, animated, with sound effects and particle system
- * Engineering/Tech themed startup experience
+ * A3KM Studio - OPTIMIZED Professional Boot Splash
+ * 2.5s total | Quality sounds | Fast & smooth
  */
 (function() {
     'use strict';
@@ -12,40 +11,151 @@
     if (!isInstalledApp) return;
     if (sessionStorage.getItem('a3km_splash_shown') === 'true') return;
     
-    const SOUNDS_ENABLED = localStorage.getItem('a3km_splash_sound') !== 'false';
+    let SOUNDS_ENABLED = localStorage.getItem('a3km_splash_sound') !== 'false';
     let audioContext;
     
-    function playBeep(freq = 800, dur = 100) {
+    // PREMIUM SMOOTH STARTUP SOUND - Attractive & Cool
+    function playStartupChime() {
         if (!SOUNDS_ENABLED) return;
         try {
             if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            osc.frequency.value = freq;
-            osc.type = 'sine';
-            gain.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + dur/1000);
-            osc.start(audioContext.currentTime);
-            osc.stop(audioContext.currentTime + dur/1000);
+            const now = audioContext.currentTime;
+            
+            // Rich musical chord: C-E-G (C Major) - Very pleasant!
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+            const volumes = [0.12, 0.10, 0.08];
+            
+            notes.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                const reverb = audioContext.createDelay();
+                const reverbGain = audioContext.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                // Warm filter
+                filter.type = 'lowpass';
+                filter.frequency.value = 4000;
+                filter.Q.value = 1;
+                
+                // Subtle reverb for depth
+                reverb.delayTime.value = 0.03;
+                reverbGain.gain.value = 0.3;
+                
+                // Chain: Osc → Filter → [Gain + Reverb] → Output
+                osc.connect(filter);
+                filter.connect(gain);
+                filter.connect(reverb);
+                reverb.connect(reverbGain);
+                gain.connect(audioContext.destination);
+                reverbGain.connect(audioContext.destination);
+                
+                // Smooth attack and long decay
+                const delay = i * 0.08; // Stagger notes for richness
+                gain.gain.setValueAtTime(0, now + delay);
+                gain.gain.linearRampToValueAtTime(volumes[i], now + delay + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.8);
+                
+                osc.start(now + delay);
+                osc.stop(now + delay + 0.8);
+            });
+            
+            // Add subtle "whoosh" for coolness
+            const noise = audioContext.createBufferSource();
+            const noiseGain = audioContext.createGain();
+            const noiseFilter = audioContext.createBiquadFilter();
+            
+            // Create white noise buffer
+            const bufferSize = audioContext.sampleRate * 0.3;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            noise.buffer = buffer;
+            
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = 2000;
+            noiseFilter.Q.value = 0.5;
+            
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            noiseGain.gain.setValueAtTime(0, now);
+            noiseGain.gain.linearRampToValueAtTime(0.03, now + 0.05);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            noise.start(now);
         } catch(e) {}
     }
     
-    function typeText(el, text, speed = 30) {
-        return new Promise(resolve => {
-            let i = 0;
-            const iv = setInterval(() => {
-                if (i < text.length) {
-                    el.textContent += text.charAt(i);
-                    playBeep(600 + Math.random() * 200, 20);
-                    i++;
-                } else {
-                    clearInterval(iv);
-                    resolve();
-                }
-            }, speed);
-        });
+    // PREMIUM SMOOTH COMPLETION SOUND - Satisfying & Attractive
+    function playCompleteChime() {
+        if (!SOUNDS_ENABLED) return;
+        try {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioContext.currentTime;
+            
+            // Beautiful ascending notes: G5-B5-D6 (G Major chord)
+            const notes = [783.99, 987.77, 1174.66];
+            const volumes = [0.10, 0.08, 0.06];
+            
+            notes.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                const delay = audioContext.createDelay();
+                const delayGain = audioContext.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                // Bright, clear filter
+                filter.type = 'lowpass';
+                filter.frequency.value = 5000;
+                filter.Q.value = 1.2;
+                
+                // Echo effect for richness
+                delay.delayTime.value = 0.05;
+                delayGain.gain.value = 0.25;
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                filter.connect(delay);
+                delay.connect(delayGain);
+                gain.connect(audioContext.destination);
+                delayGain.connect(audioContext.destination);
+                
+                // Quick cascade effect
+                const offset = i * 0.06;
+                gain.gain.setValueAtTime(0, now + offset);
+                gain.gain.linearRampToValueAtTime(volumes[i], now + offset + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.5);
+                
+                osc.start(now + offset);
+                osc.stop(now + offset + 0.5);
+            });
+            
+            // Add sparkle effect
+            const sparkle = audioContext.createOscillator();
+            const sparkleGain = audioContext.createGain();
+            
+            sparkle.type = 'sine';
+            sparkle.frequency.value = 2093; // High C
+            
+            sparkle.connect(sparkleGain);
+            sparkleGain.connect(audioContext.destination);
+            
+            sparkleGain.gain.setValueAtTime(0, now + 0.15);
+            sparkleGain.gain.linearRampToValueAtTime(0.04, now + 0.18);
+            sparkleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            
+            sparkle.start(now + 0.15);
+            sparkle.stop(now + 0.35);
+        } catch(e) {}
     }
     
     function showSplash() {
@@ -101,9 +211,12 @@
             background: radial-gradient(circle at 50% 50%, #1a0505 0%, #0a0a0a 100%);
             display: flex; align-items: center; justify-content: center;
             font-family: 'Courier New', monospace;
-            animation: fadeIn 0.3s;
+            opacity: 1; 
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #a3km-splash.out { animation: fadeOut 0.5s forwards; }
+        #a3km-splash.out { 
+            animation: fadeOut 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards; 
+        }
         
         #particles {
             position: absolute; inset: 0; opacity: 0.6;
@@ -118,7 +231,7 @@
         
         .logo-ring svg {
             filter: drop-shadow(0 0 20px #CC0000);
-            animation: float 3s ease-in-out infinite;
+            animation: float 3s ease-in-out infinite, scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .ring {
             fill: none; stroke: #CC0000; stroke-width: 1.5;
@@ -135,6 +248,7 @@
         .text {
             color: #0f0; font-size: 13px; margin: 20px 0;
             min-height: 20px; letter-spacing: 1px;
+            animation: fadeSlideIn 0.5s ease-out 0.3s backwards;
         }
         
         .bar {
@@ -143,8 +257,9 @@
         }
         .fill {
             height: 100%; background: linear-gradient(90deg, #CC0000, #ff0000);
-            width: 0; animation: load 2s ease-out forwards;
-            box-shadow: 0 0 10px #CC0000;
+            width: 0;
+            box-shadow: 0 0 10px #CC0000, 0 0 20px rgba(204,0,0,0.5);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .mods {
@@ -170,14 +285,16 @@
         .cube {
             width: 100%; height: 100%;
             position: relative; transform-style: preserve-3d;
-            animation: spin 4s infinite linear;
+            animation: spin 4s infinite cubic-bezier(0.45, 0, 0.55, 1), cubeEntry 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .f {
             position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            background: rgba(204,0,0,0.2); border: 2px solid #CC0000;
+            background: rgba(204,0,0,0.15); border: 2px solid #CC0000;
             font-size: 32px; font-weight: 700; color: #CC0000;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 20px rgba(204,0,0,0.2);
+            transition: all 0.3s ease;
         }
         .front  { transform: translateZ(75px); }
         .back   { transform: rotateY(180deg) translateZ(75px); }
@@ -190,11 +307,12 @@
             font-size: 36px; font-weight: 700; color: #fff;
             margin: 0 0 10px; letter-spacing: 4px;
             text-shadow: 0 0 20px #CC0000;
-            animation: titleGlow 2s ease-in-out infinite;
+            animation: titleGlow 2.5s ease-in-out infinite, titleEntry 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
         }
         .sub {
             font-size: 13px; color: rgba(255,255,255,0.6);
             margin: 0; letter-spacing: 2px;
+            animation: fadeSlideIn 0.5s ease-out 0.4s backwards;
         }
         
         .snd {
@@ -206,49 +324,118 @@
         }
         .snd:hover { transform: scale(1.1); background: rgba(204,0,0,0.2); }
         
-        @keyframes fadeIn { from { opacity: 0; } }
-        @keyframes fadeOut { to { opacity: 0; transform: scale(1.05); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: scale(0.95) translateY(20px); } 
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fadeOut { 
+            to { opacity: 0; transform: scale(0.92) translateY(10px); filter: blur(5px); } 
+        }
+        @keyframes slideUp { 
+            0% { opacity: 0; transform: translateY(50px) scale(0.9); } 
+            60% { transform: translateY(-5px) scale(1.02); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes float { 
+            0%, 100% { transform: translateY(0px); } 
+            50% { transform: translateY(-20px); } 
+        }
         @keyframes ringPulse {
-            0%, 100% { opacity: 0; stroke-width: 1.5; }
-            50% { opacity: 0.8; stroke-width: 2; }
+            0%, 100% { opacity: 0.2; stroke-width: 1.5; transform: scale(1); }
+            50% { opacity: 0.8; stroke-width: 2.5; transform: scale(1.05); }
         }
         @keyframes glow {
-            0%, 100% { filter: drop-shadow(0 0 5px #CC0000); }
-            50% { filter: drop-shadow(0 0 15px #ff0000); }
+            0%, 100% { filter: drop-shadow(0 0 8px #CC0000); }
+            50% { filter: drop-shadow(0 0 20px #ff0000) drop-shadow(0 0 30px #CC0000); }
         }
-        @keyframes load { to { width: 100%; } }
-        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
-        @keyframes spin { to { transform: rotateX(360deg) rotateY(360deg); } }
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); } 
+        }
+        @keyframes spin { 
+            to { transform: rotateX(360deg) rotateY(360deg); } 
+        }
         @keyframes titleGlow {
-            0%, 100% { text-shadow: 0 0 20px #CC0000; }
-            50% { text-shadow: 0 0 30px #ff0000, 0 0 40px #CC0000; }
+            0%, 100% { text-shadow: 0 0 20px #CC0000, 0 0 40px rgba(204,0,0,0.5); }
+            50% { text-shadow: 0 0 35px #ff0000, 0 0 60px #CC0000, 0 0 80px rgba(204,0,0,0.3); }
+        }
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            60% { transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cubeEntry {
+            0% { opacity: 0; transform: scale(0.3) rotateX(45deg) rotateY(45deg); }
+            60% { transform: scale(1.1) rotateX(10deg) rotateY(10deg); }
+            100% { opacity: 1; transform: scale(1) rotateX(0) rotateY(0); }
+        }
+        @keyframes titleEntry {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); letter-spacing: 10px; }
+            60% { transform: scale(1.05) translateY(-3px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 4px; }
+        }
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            60% { transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cubeEntry {
+            0% { opacity: 0; transform: scale(0.3) rotateX(45deg) rotateY(45deg); }
+            60% { transform: scale(1.1) rotateX(10deg) rotateY(10deg); }
+            100% { opacity: 1; transform: scale(1) rotateX(0) rotateY(0); }
+        }
+        @keyframes titleEntry {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); letter-spacing: 10px; }
+            60% { transform: scale(1.05) translateY(-3px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 4px; }
         }
         
         @media (max-width: 768px) {
-            .title { font-size: 28px; }
-            .bar { width: 200px; }
-            .mods { max-width: 250px; }
-            .cube-wrap { width: 120px; height: 120px; }
+            .logo-ring svg { width: 100px; height: 100px; }
+            .title { font-size: 26px; letter-spacing: 2px; }
+            .sub { font-size: 11px; letter-spacing: 1px; }
+            .bar { width: 180px; height: 2.5px; }
+            .text { font-size: 12px; }
+            .mods { max-width: 250px; gap: 10px; }
+            .mod { padding: 10px 16px; font-size: 12px; }
+            .cube-wrap { width: 110px; height: 110px; }
+            .f { font-size: 28px; }
+            .snd { width: 36px; height: 36px; font-size: 16px; top: 15px; right: 15px; }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
         `;
         
         document.head.appendChild(Object.assign(document.createElement('style'), {textContent: css}));
         document.body.appendChild(splash);
         
-        // Particle canvas
+        // Optimize particle count for mobile
+        const isMobile = window.innerWidth <= 768;
+        const particleCount = isMobile ? 30 : 50;
+        
+        // Enhanced Particle canvas with glow effects
         const canvas = splash.querySelector('#particles');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         const ctx = canvas.getContext('2d');
-        const particles = Array.from({length: 50}, () => ({
+        const particles = Array.from({length: particleCount}, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            size: Math.random() * 2 + 1,
-            opacity: Math.random() * 0.5 + 0.2
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: (Math.random() - 0.5) * 0.6,
+            size: Math.random() * 2.5 + 0.5,
+            opacity: Math.random() * 0.5 + 0.3,
+            pulse: Math.random() * Math.PI * 2
         }));
         
         function animateParticles() {
@@ -256,24 +443,50 @@
             particles.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
+                p.pulse += 0.03;
+                
                 if (p.x < 0) p.x = canvas.width;
                 if (p.x > canvas.width) p.x = 0;
                 if (p.y < 0) p.y = canvas.height;
                 if (p.y > canvas.height) p.y = 0;
                 
-                ctx.fillStyle = '#CC0000';
-                ctx.globalAlpha = p.opacity;
+                // Pulsing glow effect
+                const glowSize = p.size * (1 + Math.sin(p.pulse) * 0.3);
+                const glowOpacity = p.opacity * (0.8 + Math.sin(p.pulse) * 0.2);
+                
+                // Draw outer glow
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowSize * 3);
+                gradient.addColorStop(0, `rgba(204, 0, 0, ${glowOpacity * 0.6})`);
+                gradient.addColorStop(0.5, `rgba(204, 0, 0, ${glowOpacity * 0.2})`);
+                gradient.addColorStop(1, 'rgba(204, 0, 0, 0)');
+                ctx.fillStyle = gradient;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, glowSize * 3, 0, Math.PI * 2);
                 ctx.fill();
                 
+                // Draw particle core
+                ctx.fillStyle = '#CC0000';
+                ctx.globalAlpha = glowOpacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw connection lines with gradient
                 particles.forEach(p2 => {
                     const dx = p.x - p2.x, dy = p.y - p2.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        ctx.strokeStyle = '#CC0000';
-                        ctx.globalAlpha = (1 - dist / 100) * 0.2;
-                        ctx.lineWidth = 0.5;
+                    if (dist < 120 && dist > 0) {
+                        const lineOpacity = (1 - dist / 120) * 0.3;
+                        
+                        // Gradient line for smoother look
+                        const lineGradient = ctx.createLinearGradient(p.x, p.y, p2.x, p2.y);
+                        lineGradient.addColorStop(0, `rgba(204, 0, 0, ${lineOpacity})`);
+                        lineGradient.addColorStop(0.5, `rgba(255, 100, 100, ${lineOpacity * 0.8})`);
+                        lineGradient.addColorStop(1, `rgba(204, 0, 0, ${lineOpacity})`);
+                        
+                        ctx.strokeStyle = lineGradient;
+                        ctx.globalAlpha = 1;
+                        ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
@@ -287,31 +500,50 @@
         
         // Sound toggle
         splash.querySelector('#snd').onclick = () => {
-            const enabled = localStorage.getItem('a3km_splash_sound') !== 'false';
-            localStorage.setItem('a3km_splash_sound', enabled ? 'false' : 'true');
-            location.reload();
+            SOUNDS_ENABLED = !SOUNDS_ENABLED;
+            localStorage.setItem('a3km_splash_sound', SOUNDS_ENABLED ? 'true' : 'false');
+            splash.querySelector('#snd').textContent = SOUNDS_ENABLED ? '🔊' : '🔇';
         };
         
-        // Boot sequence
+        // SMOOTH PREMIUM BOOT SEQUENCE - Perfect timing for best animations
         setTimeout(async () => {
-            playBeep(800, 100);
-            await typeText(splash.querySelector('#t1'), '> Initializing A3KM Studio...');
-            await new Promise(r => setTimeout(r, 1000));
+            playStartupChime(); // Smooth attractive sound
             
-            playBeep(900, 80);
-            splash.querySelector('#s1').classList.add('hide');
-            splash.querySelector('#s2').classList.remove('hide');
-            await typeText(splash.querySelector('#t2'), '> Loading engineering modules...');
+            // Stage 1: Logo + Initialization with bouncy entrance
+            const stage1 = splash.querySelector('#s1');
+            splash.querySelector('#t1').textContent = '> Initializing A3KM Studio';
+            
+            // Animate progress bar smoothly
+            const progressBar = splash.querySelector('#p1');
+            if (progressBar) {
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                }, 100);
+            }
+            
+            // Let startup sound and animations breathe (perfect for logo float + rings pulse)
+            await new Promise(r => setTimeout(r, 1200));
+            
+            // Smooth transition out with coordinated timing
+            stage1.style.opacity = '0';
+            stage1.style.transform = 'scale(0.9)';
+            
+            await new Promise(r => setTimeout(r, 400));
+            stage1.classList.add('hide');
+            
+            // Stage 2: 3D Cube + Company name with dramatic reveal
+            const finalStage = splash.querySelector('#s3');
+            finalStage.classList.remove('hide');
+            finalStage.style.opacity = '1';
+            finalStage.style.transform = 'scale(1)';
+            
+            // Let cube entry animation and title animation complete beautifully
             await new Promise(r => setTimeout(r, 1500));
             
-            playBeep(1000, 100);
-            splash.querySelector('#s2').classList.add('hide');
-            splash.querySelector('#s3').classList.remove('hide');
-            await new Promise(r => setTimeout(r, 1500));
-            
-            playBeep(1200, 150);
+            playCompleteChime(); // Attractive completion sound with sparkle
+            await new Promise(r => setTimeout(r, 400)); // Let sound fully finish with echo
             hideSplash();
-        }, 500);
+        }, 400); // Smooth initial reveal with fadeIn animation
         
         return splash;
     }
@@ -320,7 +552,7 @@
         const splash = document.getElementById('a3km-splash');
         if (splash) {
             splash.classList.add('out');
-            setTimeout(() => splash.remove(), 500);
+            setTimeout(() => splash.remove(), 500); // Smooth fade out
         }
     }
     
@@ -331,8 +563,9 @@
         const checkReady = () => {
             const elapsed = Date.now() - startTime;
             const ready = document.readyState === 'complete';
-            if (ready && elapsed >= 4500) {
-                setTimeout(hideSplash, 300);
+            // Minimum 3.3s for smooth animations to complete
+            if (ready && elapsed >= 3300) {
+                setTimeout(hideSplash, 400);
             } else {
                 setTimeout(checkReady, 100);
             }
@@ -344,9 +577,28 @@
             window.addEventListener('load', checkReady);
         }
         
+        // Maximum timeout: 4 seconds - enough time for all animations
         setTimeout(() => {
             if (document.getElementById('a3km-splash')) hideSplash();
-        }, 8000);
+        }, 4000);
+    }
+        }
+        
+        // Maximum timeout: 4 seconds - enough time for all animations
+        setTimeout(() => {
+            if (document.getElementById('a3km-splash')) hideSplash();
+        }, 4
+        
+        if (document.readyState === 'complete') {
+            checkReady();
+        } else {
+            window.addEventListener('load', checkReady);
+        }
+        
+        // Maximum timeout: 3 seconds (was 8 seconds - way too long!)
+        setTimeout(() => {
+            if (document.getElementById('a3km-splash')) hideSplash();
+        }, 3000);
     }
     
     init();

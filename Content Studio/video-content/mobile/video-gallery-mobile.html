@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Video Gallery - Mobile</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-universal-styles.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-navbar.css">
+    <link rel="stylesheet" href="../../../Optimization/mobile-system/mobile-grid-background.css">
+    
+    <style>
+        .gallery-header {
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(26,0,0,0.95));
+            border-bottom: 2px solid var(--primary-red);
+            margin-bottom: 20px;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .back-button:active {
+            transform: scale(0.97);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-red);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: rgba(204, 0, 0, 0.15);
+            border: 1px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-red);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+        
+        .search-bar {
+            padding: 0 20px 15px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 45px 14px 20px;
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-red);
+            font-size: 18px;
+        }
+        
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0 20px 15px;
+            scrollbar-width: none;
+        }
+        
+        .filter-chips::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-chip {
+            padding: 10px 18px;
+            background: rgba(204, 0, 0, 0.15);
+            border: 2px solid var(--primary-red);
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        
+        .filter-chip.active {
+            background: var(--primary-red);
+        }
+        
+        .filter-chip:active {
+            transform: scale(0.95);
+        }
+        
+        .videos-grid {
+            padding: 0 20px 100px;
+            display: grid;
+            gap: 20px;
+        }
+        
+        .video-card {
+            background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(15, 5, 5, 0.98));
+            border: 2px solid var(--primary-red);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .video-card:active {
+            transform: scale(0.98);
+        }
+        
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.3), rgba(0, 0, 0, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: var(--primary-red);
+            position: relative;
+        }
+        
+        .play-icon {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(204, 0, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .video-duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .video-info {
+            padding: 20px;
+        }
+        
+        .video-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid var(--primary-red);
+            border-radius: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+        
+        .video-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .video-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .video-meta {
+            display: flex;
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(204, 0, 0, 0.3);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .meta-item i {
+            color: var(--primary-red);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-grid-background"></div>
+    
+    <div class="gallery-header">
+        <a href="../../mobile/hub-mobile.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Studio</span>
+        </a>
+        
+        <h1 class="header-title">
+            <i class="fas fa-play-circle"></i>
+            Video Gallery
+        </h1>
+        <p class="header-subtitle">🎬 Educational & tutorial videos</p>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalVideos">64</div>
+                <div class="stat-label">Videos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">18h</div>
+                <div class="stat-label">Watch Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5.2K</div>
+                <div class="stat-label">Total Views</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search videos..." id="searchInput">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    
+    <div class="filter-chips" id="filterChips">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="arduino">Arduino</button>
+        <button class="filter-chip" data-filter="solidworks">SolidWorks</button>
+        <button class="filter-chip" data-filter="tutorials">Tutorials</button>
+        <button class="filter-chip" data-filter="projects">Projects</button>
+    </div>
+    
+    <div class="videos-grid" id="videosGrid">
+        <!-- Sample Video -->
+        <div class="video-card" onclick="playVideo(1)">
+            <div class="video-thumbnail">
+                <i class="fab fa-youtube"></i>
+                <div class="play-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <span class="video-duration">12:45</span>
+            </div>
+            <div class="video-info">
+                <span class="video-category">
+                    <i class="fas fa-tag"></i>
+                    Arduino Tutorial
+                </span>
+                <h3 class="video-title">Getting Started with Arduino Uno</h3>
+                <p class="video-description">
+                    Learn the basics of Arduino programming in this comprehensive beginner tutorial covering setup, IDE, and first project.
+                </p>
+                <div class="video-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-eye"></i>
+                        1.2K views
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        2 weeks ago
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="video-card" onclick="playVideo(2)">
+            <div class="video-thumbnail">
+                <i class="fas fa-cube"></i>
+                <div class="play-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <span class="video-duration">18:30</span>
+            </div>
+            <div class="video-info">
+                <span class="video-category">
+                    <i class="fas fa-tag"></i>
+                    SolidWorks CAD
+                </span>
+                <h3 class="video-title">3D Modeling Techniques in SolidWorks</h3>
+                <p class="video-description">
+                    Advanced modeling techniques including lofts, sweeps, and surface modeling for complex part design.
+                </p>
+                <div class="video-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-eye"></i>
+                        890 views
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        1 month ago
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="mobile-bottom-nav">
+        <a href="../../../Home/mobile/index-mobile.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="../../../About me/mobile/about-mobile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>About</span>
+        </a>
+        <a href="../../../Projects Code/mobile/projects-mobile.html" class="nav-item">
+            <i class="fas fa-code"></i>
+            <span>Projects</span>
+        </a>
+        <a href="../../mobile/hub-mobile.html" class="nav-item active">
+            <i class="fas fa-book"></i>
+            <span>Studio</span>
+        </a>
+        <a href="../../../Contact/mobile/contact-mobile.html" class="nav-item">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+    
+    <script>
+        let currentFilter = 'all';
+        
+        // Filter handling
+        document.getElementById('filterChips').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-chip')) {
+                document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                if (navigator.vibrate) navigator.vibrate(5);
+                filterVideos();
+            }
+        });
+        
+        // Search handling
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterVideos();
+        });
+        
+        function filterVideos() {
+            console.log('Filter:', currentFilter);
+        }
+        
+        function playVideo(id) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            window.location.href = `video-viewer-mobile.html?id=${id}`;
+        }
+        
+        // Load videos from videos.json
+        fetch('../videos.json')
+            .then(res => res.json())
+            .then(videos => {
+                document.getElementById('totalVideos').textContent = videos.length;
+            })
+            .catch(err => console.error('Error loading videos:', err));
+    </script>
+</body>
+</html>

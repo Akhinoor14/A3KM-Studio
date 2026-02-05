@@ -8,8 +8,6 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Books Manager - A3KM Studio</title>
-  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
-  <script src="../../../Optimization/mobile-universal.js" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
@@ -30,12 +28,12 @@
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 25px 30px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .back-btn { background: rgba(139, 69, 19, 0.1); border: 2px solid #8B4513; padding: 10px 20px; border-radius: 10px; color: #8B4513; font-weight: 600; cursor: pointer; text-decoration: none; }
     .back-btn:hover { background: #8B4513; color: white; }
-    h1 { color: #8B4513; font-size: 32px; margin-bottom: 10px; }
+    h1 { color: #6D4C41; font-size: 32px; margin-bottom: 10px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; }
+    label { display: block; margin-bottom: 8px; color: #1a1a1a; font-weight: 600; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; color: #1a1a1a; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #8B4513; }
     textarea { resize: vertical; min-height: 100px; }
     .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B4513, #A0522D); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
@@ -50,16 +48,16 @@
     .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
     .card-thumbnail { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, #8B4513, #A0522D); }
     .card-body { padding: 15px; }
-    .card-title { font-weight: 600; color: #333; margin-bottom: 8px; font-size: 16px; }
-    .card-meta { font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.6; }
+    .card-title { font-weight: 600; color: #1a1a1a; margin-bottom: 8px; font-size: 16px; }
+    .card-meta { font-size: 12px; color: #2c2c2c; margin-bottom: 10px; line-height: 1.6; }
     .card-actions { display: flex; gap: 8px; }
     .card-actions button { flex: 1; padding: 8px; border: 1px solid #e0e0e0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
     .card-actions button:hover { background: #8B4513; color: white; border-color: #8B4513; }
     .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; }
     .pagination button { padding: 10px 20px; border: 2px solid #8B4513; background: white; color: #8B4513; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .pagination button:hover:not(:disabled) { background: #8B4513; color: white; }
-    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
-    .pagination .page-info { color: #666; font-weight: 600; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #999; }
+    .pagination .page-info { color: #1a1a1a; font-weight: 600; }
     .book-badge { display: inline-block; padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; margin-right: 5px; }
     .badge-pages { background: #2196f3; color: white; }
     .badge-size { background: #ff9800; color: white; }
@@ -141,7 +139,7 @@
       <div class="header">
         <div>
           <h1>Books Manager</h1>
-          <p style="color: #666;">Manage your digital library and book resources</p>
+          <p style="color: #555;">Manage your digital library and book resources</p>
         </div>
         <a href="content-hub.html" class="back-btn">← Back to Hub</a>
       </div>
@@ -182,10 +180,19 @@
       <div id="uploadTab" class="tab-content">
         <form id="uploadForm">
           <div class="form-group">
-            <label>Category</label>
-            <select id="category" required>
+            <label>Category <span style="color: #999; font-weight: 400;">(150+ categories in 9 sectors)</span></label>
+            <input type="text" 
+                   id="categorySearch" 
+                   placeholder="🔍 Search by keyword (e.g. Arduino, Programming, Literature)..." 
+                   autocomplete="off"
+                   style="margin-bottom: 8px; border: 2px solid #8B4513; background: rgba(139, 69, 19, 0.05); padding: 12px; border-radius: 10px; font-size: 14px;">
+            <select id="category" required size="12" style="height: 250px; font-size: 13px; line-height: 1.6;">
               <option value="">Loading categories...</option>
             </select>
+            <small style="color: #444; display: block; margin-top: 5px;">
+              💡 Categories are organized by sector (Literature, Science, Engineering, etc.)
+              <span id="categoryCount" style="font-weight: 600; color: #8B4513; margin-left: 8px;"></span>
+            </small>
           </div>
 
           <div class="form-group">
@@ -411,6 +418,48 @@
           <label>Tags</label>
           <input type="text" id="editTags" placeholder="programming, python, tutorial">
         </div>
+        
+        <!-- Book File Replacement/Deletion -->
+        <div class="form-group" style="background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(139, 69, 19, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span><i class="fas fa-file"></i> 📚 Replace Book File (Optional)</span>
+            <button type="button" onclick="deleteBookFile()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete Current File
+            </button>
+          </label>
+          <input type="file" id="edit-bookFile" accept=".pdf,.epub,.mobi" onchange="handleEditBookFileSelect(event)">
+          <small style="color: #333; display: block; margin-top: 8px;">
+            ✅ Upload new PDF/EPUB/MOBI to replace existing file | ❌ Delete button removes file from storage<br>
+            📋 Current: <span id="edit-currentBookFilePath" style="color: #6D4C41; font-weight: 600;">Loading...</span>
+          </small>
+          <div id="edit-bookFilePreview" style="display: none; margin-top: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 3px solid #4CAF50;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #4CAF50;">✅ New File Selected:</strong> <span id="edit-bookFileName"></span> (<span id="edit-bookFileSize"></span>)
+              </div>
+              <button type="button" onclick="removeEditBookFileSelection()" style="background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Remove</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Cover Image Replacement/Deletion -->
+        <div class="form-group" style="background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(139, 69, 19, 0.3);">
+          <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span><i class="fas fa-image"></i> 🖼️ Replace Cover Image (Optional)</span>
+            <button type="button" onclick="deleteBookCoverImage()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+              <i class="fas fa-trash"></i> Delete Current Cover
+            </button>
+          </label>
+          <input type="file" id="edit-coverImage" accept="image/*" onchange="handleEditCoverImageSelect(event)">
+          <small style="color: #333; display: block; margin-top: 8px;">
+            ✅ Upload new image to replace existing cover | ❌ Delete button removes cover from storage<br>
+            📋 Current: <span id="edit-currentCoverImagePath" style="color: #6D4C41; font-weight: 600;">Loading...</span>
+          </small>
+          <div id="edit-coverImagePreview" style="display: none; margin-top: 10px;">
+            <img id="edit-coverImagePreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #8B4513;">
+            <button type="button" onclick="removeEditCoverImageSelection()" style="margin-top: 8px; background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: block;">❌ Remove</button>
+          </div>
+        </div>
 
         <button type="submit" class="btn-primary">💾 Update Book</button>
       </form>
@@ -476,28 +525,154 @@
       updateSelectedCount();
     }
 
-    // Load categories
+    // Load categories with proper grouping
     async function loadCategories() {
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
         const categorySelect = document.getElementById('category');
         const editCategorySelect = document.getElementById('editCategory');
         
-        categorySelect.innerHTML = '<option value="">Select category...</option>';
+        categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #8B4513;">━━━ SELECT CATEGORY ━━━</option>';
         editCategorySelect.innerHTML = '<option value="">Select category...</option>';
         
+        const allCategories = [];
+        let totalCategories = 0;
+        
         if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
-          data.categoryGroups.forEach(group => {
-            if (group.categories) {
+          // Sort groups by order
+          const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+          
+          sortedGroups.forEach(group => {
+            if (group.categories && group.categories.length > 0) {
+              // Add group header as disabled option
+              const groupHeader = document.createElement('option');
+              groupHeader.disabled = true;
+              groupHeader.style.cssText = 'font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.1); padding: 8px 5px; font-size: 13px; margin-top: 5px;';
+              groupHeader.textContent = `${group.icon || '📁'} ${group.name} (${group.categories.length})`;
+              categorySelect.appendChild(groupHeader);
+              
+              // Add all categories in this group
               group.categories.forEach(cat => {
+                allCategories.push({
+                  name: cat,
+                  group: group.name,
+                  icon: group.icon || '📁'
+                });
+                totalCategories++;
+                
                 const option = document.createElement('option');
                 option.value = cat;
-                option.textContent = cat;
-                categorySelect.appendChild(option.cloneNode(true));
-                editCategorySelect.appendChild(option);
+                option.textContent = `  ${cat}`;
+                option.style.cssText = 'padding-left: 15px;';
+                option.dataset.group = group.name;
+                categorySelect.appendChild(option);
+                
+                // For edit modal (simple list without grouping)
+                const editOption = document.createElement('option');
+                editOption.value = cat;
+                editOption.textContent = cat;
+                editCategorySelect.appendChild(editOption);
               });
             }
           });
+          
+          console.log(`✅ Loaded ${totalCategories} categories from ${sortedGroups.length} groups`);
+        }
+        
+        // Add category search/filter functionality
+        const categorySearch = document.getElementById('categorySearch');
+        const categoryCount = document.getElementById('categoryCount');
+        
+        if (categorySearch) {
+          categorySearch.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            // Clear and rebuild select options
+            categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #8B4513;">━━━ SELECT CATEGORY ━━━</option>';
+            
+            if (!searchTerm) {
+              // Restore full grouped view
+              const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+              sortedGroups.forEach(group => {
+                if (group.categories && group.categories.length > 0) {
+                  const groupHeader = document.createElement('option');
+                  groupHeader.disabled = true;
+                  groupHeader.style.cssText = 'font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.1); padding: 8px 5px; font-size: 13px; margin-top: 5px;';
+                  groupHeader.textContent = `${group.icon || '📁'} ${group.name} (${group.categories.length})`;
+                  categorySelect.appendChild(groupHeader);
+                  
+                  group.categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = `  ${cat}`;
+                    option.style.cssText = 'padding-left: 15px;';
+                    categorySelect.appendChild(option);
+                  });
+                }
+              });
+              
+              if (categoryCount) {
+                categoryCount.textContent = `All ${totalCategories} categories`;
+                categoryCount.style.color = '#8B4513';
+              }
+              return;
+            }
+            
+            // Filter categories
+            let matchCount = 0;
+            const matchedGroups = new Map();
+            
+            allCategories.forEach(cat => {
+              if (cat.name.toLowerCase().includes(searchTerm)) {
+                if (!matchedGroups.has(cat.group)) {
+                  matchedGroups.set(cat.group, []);
+                }
+                matchedGroups.get(cat.group).push(cat.name);
+                matchCount++;
+              }
+            });
+            
+            if (matchCount === 0) {
+              const noResult = document.createElement('option');
+              noResult.disabled = true;
+              noResult.style.color = '#f44336';
+              noResult.textContent = '❌ No categories found. Try different keywords.';
+              categorySelect.appendChild(noResult);
+              
+              if (categoryCount) {
+                categoryCount.textContent = 'No matches';
+                categoryCount.style.color = '#f44336';
+              }
+            } else {
+              // Show filtered results with group headers
+              matchedGroups.forEach((categories, groupName) => {
+                const groupHeader = document.createElement('option');
+                groupHeader.disabled = true;
+                groupHeader.style.cssText = 'font-weight: 700; color: #4caf50; background: rgba(76, 175, 80, 0.1); padding: 5px;';
+                groupHeader.textContent = `✓ ${groupName} (${categories.length})`;
+                categorySelect.appendChild(groupHeader);
+                
+                categories.forEach(catName => {
+                  const option = document.createElement('option');
+                  option.value = catName;
+                  option.textContent = `  ${catName}`;
+                  option.style.cssText = 'padding-left: 15px;';
+                  categorySelect.appendChild(option);
+                });
+              });
+              
+              if (categoryCount) {
+                categoryCount.textContent = `${matchCount} match${matchCount !== 1 ? 'es' : ''} in ${matchedGroups.size} sector${matchedGroups.size !== 1 ? 's' : ''}`;
+                categoryCount.style.color = '#4caf50';
+              }
+            }
+          });
+          
+          // Initial count
+          if (categoryCount) {
+            categoryCount.textContent = `All ${totalCategories} categories loaded`;
+            categoryCount.style.color = '#4caf50';
+          }
         }
       } catch (error) {
         console.error('Failed to load categories:', error);
@@ -832,6 +1007,129 @@
       }
     }
 
+    // ==================== BOOK FILE & COVER IMAGE REPLACEMENT & DELETION ====================
+    let editBookFileToUpload = null;
+    let editCoverImageToUpload = null;
+
+    function handleEditBookFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Validate file type
+      const validExtensions = ['.pdf', '.epub', '.mobi'];
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!validExtensions.includes(fileExtension)) {
+        alert('❌ Please select a PDF, EPUB, or MOBI file only!');
+        event.target.value = '';
+        return;
+      }
+      
+      // Validate file size (max 100MB for book files)
+      const maxSize = 100 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 100MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      editBookFileToUpload = file;
+      
+      // Show preview
+      document.getElementById('edit-bookFileName').textContent = file.name;
+      document.getElementById('edit-bookFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+      document.getElementById('edit-bookFilePreview').style.display = 'block';
+    }
+
+    function removeEditBookFileSelection() {
+      editBookFileToUpload = null;
+      document.getElementById('edit-bookFile').value = '';
+      document.getElementById('edit-bookFilePreview').style.display = 'none';
+    }
+
+    async function deleteBookFile() {
+      const bookId = document.getElementById('editBookId').value;
+      const book = currentContent.find(b => b.id === bookId);
+      
+      if (!book) return;
+      
+      if (!confirm(`🗑️ Delete book file for "${book.title}"?\n\nThis will remove the PDF/EPUB/MOBI file from GitHub storage.\nThe book entry will remain without a downloadable file.`)) {
+        return;
+      }
+      
+      try {
+        delete book.filePath;
+        delete book.downloadUrl;
+        delete book.contentFile;
+        await contentManager.updateContent(CONTENT_TYPE, bookId, book);
+        alert('✅ Book file marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        document.getElementById('edit-currentBookFilePath').textContent = 'No book file';
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Failed to delete book file: ' + error.message);
+      }
+    }
+
+    function handleEditCoverImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Please select an image file only!');
+        event.target.value = '';
+        return;
+      }
+      
+      // Validate file size (max 5MB for images)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ Image too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 5MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      editCoverImageToUpload = file;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewImg = document.getElementById('edit-coverImagePreviewImg');
+        previewImg.src = e.target.result;
+        document.getElementById('edit-coverImagePreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeEditCoverImageSelection() {
+      editCoverImageToUpload = null;
+      document.getElementById('edit-coverImage').value = '';
+      document.getElementById('edit-coverImagePreview').style.display = 'none';
+    }
+
+    async function deleteBookCoverImage() {
+      const bookId = document.getElementById('editBookId').value;
+      const book = currentContent.find(b => b.id === bookId);
+      
+      if (!book) return;
+      
+      if (!confirm(`🗑️ Delete cover image for "${book.title}"?\n\nThis will remove the cover image from GitHub storage.\nThe book will remain with default cover.`)) {
+        return;
+      }
+      
+      try {
+        delete book.cover;
+        delete book.coverImage;
+        delete book.thumbnail;
+        await contentManager.updateContent(CONTENT_TYPE, bookId, book);
+        alert('✅ Cover image marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        document.getElementById('edit-currentCoverImagePath').textContent = 'No cover image';
+        loadManageContent();
+      } catch (error) {
+        alert('❌ Failed to delete cover image: ' + error.message);
+      }
+    }
+    // ============================================================================
+
     // Edit book
     function editBook(id) {
       const book = currentContent.find(b => b.id === id);
@@ -847,6 +1145,30 @@
       document.getElementById('editDownloads').value = book.downloads || 0;
       document.getElementById('editSummary').value = book.summary || book.description || '';
       document.getElementById('editTags').value = (book.tags || []).join(', ');
+      
+      // Show current book file path
+      const bookFilePathSpan = document.getElementById('edit-currentBookFilePath');
+      if (bookFilePathSpan) {
+        bookFilePathSpan.textContent = book.filePath || book.downloadUrl || book.contentFile || 'No book file';
+      }
+      
+      // Reset book file input and preview
+      if (document.getElementById('edit-bookFile')) {
+        document.getElementById('edit-bookFile').value = '';
+        document.getElementById('edit-bookFilePreview').style.display = 'none';
+      }
+      
+      // Show current cover image path
+      const coverImagePathSpan = document.getElementById('edit-currentCoverImagePath');
+      if (coverImagePathSpan) {
+        coverImagePathSpan.textContent = book.cover || book.coverImage || book.thumbnail || 'No cover image';
+      }
+      
+      // Reset cover image input and preview
+      if (document.getElementById('edit-coverImage')) {
+        document.getElementById('edit-coverImage').value = '';
+        document.getElementById('edit-coverImagePreview').style.display = 'none';
+      }
       
       loadCategories().then(() => {
         document.getElementById('editCategory').value = book.category;
@@ -881,6 +1203,60 @@
       };
       
       try {
+        // Check if new book file was selected
+        if (editBookFileToUpload) {
+          if (!confirm('📤 Upload new book file?\n\nThis will replace the existing PDF/EPUB/MOBI in GitHub storage.\n\nContinue?')) {
+            return;
+          }
+          
+          try {
+            const category = document.getElementById('editCategory').value;
+            const fileName = editBookFileToUpload.name;
+            const filePath = `Content Storage/books-pdfs/${category}/${id}/${fileName}`;
+            
+            // Upload book file to GitHub
+            await contentManager.uploadFile(filePath, editBookFileToUpload, `Upload book file: ${fileName} for ${id}`);
+            
+            // Update book with new file path
+            updatedBook.filePath = filePath;
+            updatedBook.downloadUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${filePath}`;
+            updatedBook.size = (editBookFileToUpload.size / 1024 / 1024).toFixed(2) + ' MB';
+            
+            alert('✅ Book file uploaded successfully!');
+            editBookFileToUpload = null;
+          } catch (uploadError) {
+            alert('❌ Failed to upload book file: ' + uploadError.message);
+            return;
+          }
+        }
+        
+        // Check if new cover image was selected
+        if (editCoverImageToUpload) {
+          if (!confirm('📤 Upload new cover image?\n\nThis will replace the existing cover in GitHub storage.\n\nContinue?')) {
+            return;
+          }
+          
+          try {
+            const category = document.getElementById('editCategory').value;
+            const fileName = editCoverImageToUpload.name;
+            const fileExtension = fileName.split('.').pop();
+            const coverPath = `Content Storage/books-pdfs/${category}/${id}/cover.${fileExtension}`;
+            
+            // Upload cover image to GitHub
+            await contentManager.uploadFile(coverPath, editCoverImageToUpload, `Upload cover image: ${fileName} for ${id}`);
+            
+            // Update book with new cover path
+            updatedBook.cover = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${coverPath}`;
+            updatedBook.coverImage = updatedBook.cover;
+            
+            alert('✅ Cover image uploaded successfully!');
+            editCoverImageToUpload = null;
+          } catch (uploadError) {
+            alert('❌ Failed to upload cover image: ' + uploadError.message);
+            return;
+          }
+        }
+        
         await contentManager.updateContent(CONTENT_TYPE, id, updatedBook);
         alert('✅ Book updated successfully!');
         closeEditModal();
