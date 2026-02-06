@@ -5,11 +5,41 @@
 (function() {
     'use strict';
     
-    const isInstalledApp = window.matchMedia('(display-mode: standalone)').matches || 
-                          window.navigator.standalone === true;
+    // Enhanced detection for installed PWA (works on all platforms)
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = window.navigator.standalone === true;
+    const isWindowsPWA = window.location.href.includes('ms-appx://') || 
+                         document.referrer.includes('ms-appx://');
+    const hasWindowControlsOverlay = window.matchMedia('(display-mode: window-controls-overlay)').matches;
     
-    if (!isInstalledApp) return;
-    if (sessionStorage.getItem('a3km_splash_shown') === 'true') return;
+    // Force splash for testing (add ?splash=true to URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceShow = urlParams.get('splash') === 'true' || 
+                      localStorage.getItem('a3km_splash_debug') === 'true';
+    
+    const isInstalledApp = isStandaloneMode || isIOSStandalone || isWindowsPWA || 
+                          hasWindowControlsOverlay || forceShow;
+    
+    // Debug logging
+    console.log('[A3KM Splash] Detection:', {
+        standalone: isStandaloneMode,
+        iOS: isIOSStandalone,
+        windowsPWA: isWindowsPWA,
+        windowControls: hasWindowControlsOverlay,
+        force: forceShow,
+        willShow: isInstalledApp
+    });
+    
+    if (!isInstalledApp) {
+        console.log('[A3KM Splash] Not installed app, skipping splash');
+        return;
+    }
+    if (sessionStorage.getItem('a3km_splash_shown') === 'true') {
+        console.log('[A3KM Splash] Already shown in this session');
+        return;
+    }
+    
+    console.log('[A3KM Splash] Starting splash screen...');
     
     let SOUNDS_ENABLED = localStorage.getItem('a3km_splash_sound') !== 'false';
     let audioContext;
@@ -582,24 +612,48 @@
             if (document.getElementById('a3km-splash')) hideSplash();
         }, 4000);
     }
-        }
-        
-        // Maximum timeout: 4 seconds - enough time for all animations
-        setTimeout(() => {
-            if (document.getElementById('a3km-splash')) hideSplash();
-        }, 4
-        
-        if (document.readyState === 'complete') {
-            checkReady();
-        } else {
-            window.addEventListener('load', checkReady);
-        }
-        
-        // Maximum timeout: 3 seconds (was 8 seconds - way too long!)
-        setTimeout(() => {
-            if (document.getElementById('a3km-splash')) hideSplash();
-        }, 3000);
-    }
     
+    // Initialize splash screen
     init();
+    
+    // Debug commands for testing (use in browser console)
+    window.A3KM_SPLASH_DEBUG = {
+        show: () => {
+            sessionStorage.removeItem('a3km_splash_shown');
+            localStorage.setItem('a3km_splash_debug', 'true');
+            location.reload();
+        },
+        hide: () => {
+            localStorage.removeItem('a3km_splash_debug');
+            const splash = document.getElementById('a3km-splash');
+            if (splash) splash.remove();
+        },
+        reset: () => {
+            sessionStorage.removeItem('a3km_splash_shown');
+            localStorage.removeItem('a3km_splash_debug');
+            console.log('[A3KM Splash] Reset complete - reload to see splash');
+        },
+        enableSound: () => {
+            localStorage.setItem('a3km_splash_sound', 'true');
+            console.log('[A3KM Splash] Sound enabled');
+        },
+        disableSound: () => {
+            localStorage.setItem('a3km_splash_sound', 'false');
+            console.log('[A3KM Splash] Sound disabled');
+        },
+        info: () => {
+            console.log({
+                sessionShown: sessionStorage.getItem('a3km_splash_shown'),
+                debugMode: localStorage.getItem('a3km_splash_debug'),
+                soundEnabled: localStorage.getItem('a3km_splash_sound') !== 'false',
+                displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'
+            });
+        }
+    };
+    
+    console.log('[A3KM Splash] Debug commands available: window.A3KM_SPLASH_DEBUG');
+    console.log('  - .show()   : Force show splash');
+    console.log('  - .hide()   : Hide current splash');
+    console.log('  - .reset()  : Reset and show on next load');
+    console.log('  - .info()   : Show current settings');
 })();

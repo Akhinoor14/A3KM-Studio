@@ -7,6 +7,11 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <title>Educational Videos Manager - A3KM Studio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
@@ -24,7 +29,7 @@
     body {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -462,7 +467,7 @@
     .form-group textarea {
       min-height: 200px;
       resize: vertical;
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: inherit;
     }
 
     .form-group small {
@@ -974,6 +979,94 @@
       border-radius: 12px;
       border: 2px solid rgba(0, 137, 123, 0.3);
     }
+
+    /* Mobile Responsive Design */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
+
+      .form-row, .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .content-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px 20px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 0 15px;
+        margin: 15px auto;
+      }
+
+      .content-area {
+        padding: 15px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .content-card {
+        margin-bottom: 15px;
+      }
+
+      .filter-section, .stats-section {
+        padding: 15px;
+      }
+
+      .bulk-toolbar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        margin: 5vh auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.2rem;
+      }
+
+      .card-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .card-actions button {
+        width: 100%;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab-item {
+        width: 100%;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1417,39 +1510,6 @@
   <script src="youtube-integration.js"></script>
   <script>
     // Load category groups from JSON (150+ categories in 9 sectors)
-    async function loadCategories() {
-      try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        
-        // Populate category group dropdowns (sector selection)
-        const groupSelects = ['categoryGroup', 'editCategoryGroup', 'filterCategoryGroup'];
-        groupSelects.forEach(selectId => {
-          const select = document.getElementById(selectId);
-          if (!select) return;
-          
-          // Clear and add default option
-          const isFilter = selectId === 'filterCategoryGroup';
-          select.innerHTML = isFilter 
-            ? '<option value="">All Sectors</option>' 
-            : '<option value="">Select sector first...</option>';
-          
-          // Sort groups by order and add them
-          const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
-          sortedGroups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.id;
-            option.textContent = `${group.icon} ${group.name} (${group.categories.length})`;
-            option.dataset.categories = JSON.stringify(group.categories);
-            select.appendChild(option);
-          });
-        });
-        
-        console.log(`✅ Educational Videos Manager: Loaded ${data.categoryGroups.length} sectors with 150+ categories`);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-      }
-    }
-    
     // Update category dropdown based on selected sector
     function updateVideoCategoriesFromGroup(categorySelectId, mode = 'upload') {
       const groupSelectId = mode === 'edit' ? 'editCategoryGroup' : 'categoryGroup';
@@ -1624,70 +1684,7 @@
       }
     }
 
-    async function loadCategories() {
-      const categoryGroupSelects = [
-        document.getElementById('categoryGroup'),
-        document.getElementById('editCategoryGroup'),
-        document.getElementById('filterCategoryGroup')
-      ];
-      
-      const categorySelects = [
-        document.getElementById('category'),
-        document.getElementById('editCategory'),
-        document.getElementById('filterCategory')
-      ];
-      
-      // Populate sector dropdowns
-      categoryGroupSelects.forEach((select, index) => {
-        if (!select) return;
-        const isFilter = index === 2;
-        select.innerHTML = isFilter ? '<option value="">All Sectors</option>' : '<option value="">Select sector...</option>';
-        
-        Object.keys(VIDEO_CATEGORIES).forEach(groupName => {
-          const option = document.createElement('option');
-          option.value = groupName;
-          option.textContent = groupName;
-          select.appendChild(option);
-        });
-      });
-      
-      // Initialize category selects
-      categorySelects.forEach((select, index) => {
-        if (!select) return;
-        const isFilter = index === 2;
-        select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select sector first...</option>';
-        if (!isFilter) select.disabled = true;
-      });
-      
-      // Try to load from GitHub (will fail gracefully if no token)
-      try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
-          categorySelects.forEach((select, index) => {
-            if (!select) return;
-            const isFilter = index === 2;
-            select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select category...</option>';
-            
-            data.categoryGroups.forEach(group => {
-              const optgroup = document.createElement('optgroup');
-              optgroup.label = `${group.icon} ${group.name}`;
-              
-              if (group.categories) {
-                group.categories.forEach(cat => {
-                  const option = document.createElement('option');
-                  option.value = cat;
-                  option.textContent = cat;
-                  optgroup.appendChild(option);
-                });
-              }
-              select.appendChild(optgroup);
-            });
-          });
-        }
-      } catch (error) {
-        console.log('Using hardcoded categories (GitHub API unavailable)');
-      }
-    }
+    // Removed duplicate loadCategories - using the working version that loads from JSON with sector dropdown population
 
     async function loadManageContent() {
       const grid = document.getElementById('contentGrid');
@@ -1735,9 +1732,16 @@
         if (item.enrolled > 0) badges.push(`<span class="course-badge badge-enrolled">👥 ${item.enrolled}</span>`);
         if (item.views > 0) badges.push(`<span class="course-badge badge-views">👁️ ${item.views}</span>`);
         
+        // Get proper thumbnail URL
+        let thumbnailUrl = item.thumbnail || item.thumbnailUrl || item.coverImage;
+        if (!thumbnailUrl && item.thumbnailPath) {
+          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.thumbnailPath}`;
+        }
+        const fallbackThumbnail = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%2300897B%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E🎓%3C/text%3E%3C/svg%3E';
+        
         card.innerHTML = `
           <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
-          <img src="${item.thumbnail || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <img src="${thumbnailUrl || fallbackThumbnail}" class="card-thumbnail" onerror="this.src='${fallbackThumbnail}'">
           <div class="card-body">
             <div style="margin-bottom: 8px;">${badges.join(' ')}</div>
             <div class="card-title">${item.title}</div>

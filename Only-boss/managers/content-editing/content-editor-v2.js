@@ -451,6 +451,9 @@ function checkAuthentication() {
     const editorSection = document.getElementById('editorSection');
     
     if (githubSync.isAuthenticated()) {
+        // Show saved token info
+        displaySavedTokenInfo();
+        
         // Verify token is still valid
         githubSync.verifyToken().then(valid => {
             if (valid) {
@@ -462,12 +465,14 @@ function checkAuthentication() {
                 if (authSection) authSection.style.display = 'block';
                 if (editorSection) editorSection.style.display = 'none';
                 showError('GitHub token expired. Please re-authenticate.');
+                hideSavedTokenInfo();
             }
         });
     } else {
         // Show authentication prompt
         if (authSection) authSection.style.display = 'block';
         if (editorSection) editorSection.style.display = 'none';
+        hideSavedTokenInfo();
     }
 }
 
@@ -490,15 +495,18 @@ function authenticateGitHub() {
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('editorSection').style.display = 'block';
             showSuccess('✓ Successfully authenticated with GitHub!');
+            displaySavedTokenInfo();
             loadPage('home'); // Reload with GitHub data
         } else {
             githubSync.clearToken();
             showError('Invalid token. Please check and try again.');
+            hideSavedTokenInfo();
         }
     }).catch(error => {
         hideLoading();
         githubSync.clearToken();
         showError('Authentication failed: ' + error.message);
+        hideSavedTokenInfo();
     });
 }
 
@@ -507,7 +515,88 @@ function logout() {
         githubSync.clearToken();
         document.getElementById('authSection').style.display = 'block';
         document.getElementById('editorSection').style.display = 'none';
+        hideSavedTokenInfo();
+        // Clear input field
+        const tokenInput = document.getElementById('githubTokenInput');
+        if (tokenInput) tokenInput.value = '';
         showSuccess('Logged out successfully');
+    }
+}
+
+// ==================== TOKEN DISPLAY FUNCTIONS ====================
+function displaySavedTokenInfo() {
+    const token = githubSync.getToken();
+    if (!token) return;
+    
+    // Show badge
+    const badge = document.getElementById('tokenSavedBadge');
+    if (badge) badge.style.display = 'inline-block';
+    
+    // Show info section
+    const infoSection = document.getElementById('tokenInfoSection');
+    if (infoSection) infoSection.style.display = 'block';
+    
+    // Display save date
+    const savedAt = localStorage.getItem('github_token_saved_at');
+    const dateElement = document.getElementById('tokenSaveDate');
+    if (dateElement && savedAt) {
+        const date = new Date(savedAt);
+        dateElement.textContent = `Saved: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+    }
+    
+    // Display masked token preview
+    const previewElement = document.getElementById('tokenPreview');
+    if (previewElement) {
+        const maskedToken = maskToken(token);
+        previewElement.textContent = maskedToken;
+    }
+    
+    // Fill input with masked token
+    const tokenInput = document.getElementById('githubTokenInput');
+    if (tokenInput && !tokenInput.value) {
+        tokenInput.value = token;
+        tokenInput.type = 'password'; // Keep it hidden
+    }
+}
+
+function hideSavedTokenInfo() {
+    const badge = document.getElementById('tokenSavedBadge');
+    if (badge) badge.style.display = 'none';
+    
+    const infoSection = document.getElementById('tokenInfoSection');
+    if (infoSection) infoSection.style.display = 'none';
+}
+
+function maskToken(token) {
+    if (!token || token.length < 8) return '***';
+    const start = token.substring(0, 4);
+    const end = token.substring(token.length - 4);
+    const middle = '*'.repeat(Math.min(token.length - 8, 20));
+    return `${start}${middle}${end}`;
+}
+
+function toggleTokenVisibility() {
+    const tokenInput = document.getElementById('githubTokenInput');
+    const icon = document.getElementById('toggleTokenIcon');
+    
+    if (!tokenInput || !icon) return;
+    
+    if (tokenInput.type === 'password') {
+        tokenInput.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        tokenInput.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function clearSavedToken() {
+    if (confirm('Clear saved token? You will need to re-authenticate.')) {
+        githubSync.clearToken();
+        const tokenInput = document.getElementById('githubTokenInput');
+        if (tokenInput) tokenInput.value = '';
+        hideSavedTokenInfo();
+        showSuccess('Token cleared. Please enter a new token.');
     }
 }
 
@@ -561,13 +650,20 @@ async function loadPage(pageName) {
         }
     }
     
-    renderEditor(pageData);
+    // Don't automatically render editor - let user click "Start Editing" from preview
+    // renderEditor(pageData);
 }
 
 // Show original page preview
 function showPagePreview(pageData) {
     const previewPanel = document.getElementById('pagePreviewPanel');
+    const editorContent = document.getElementById('editorContent');
     if (!previewPanel) return;
+    
+    // Hide editor content when showing preview
+    if (editorContent) {
+        editorContent.classList.add('hidden');
+    }
     
     // Build preview URL (relative to current location)
     const baseUrl = window.location.origin + window.location.pathname.replace('Only-boss/managers/content-editing/content-editor.html', '');
@@ -576,8 +672,8 @@ function showPagePreview(pageData) {
     previewPanel.innerHTML = `
         <div class="preview-header">
             <h3><i class="fas fa-eye"></i> Original Page Preview - ${pageData.title}</h3>
-            <button onclick="togglePagePreview()" class="btn-close-preview">
-                <i class="fas fa-times"></i>
+            <button onclick="closePagePreview()" class="btn-close-preview">
+                <i class="fas fa-times"></i> Close Preview
             </button>
         </div>
         <div class="preview-iframe-wrapper">
@@ -591,20 +687,63 @@ function showPagePreview(pageData) {
             <button onclick="window.open('${previewUrl}', '_blank')" class="btn btn-secondary">
                 <i class="fas fa-external-link-alt"></i> Open in New Tab
             </button>
-            <button onclick="togglePagePreview()" class="btn btn-primary">
+            <button onclick="startEditing()" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Start Editing
             </button>
         </div>
     `;
     
+    previewPanel.classList.remove('hidden');
     previewPanel.style.display = 'block';
+}
+
+// Close preview and show editor
+function closePagePreview() {
+    const previewPanel = document.getElementById('pagePreviewPanel');
+    const editorContent = document.getElementById('editorContent');
+    
+    if (previewPanel) {
+        previewPanel.classList.add('hidden');
+        previewPanel.style.display = 'none';
+    }
+    
+    if (editorContent) {
+        editorContent.classList.remove('hidden');
+    }
+}
+
+// Start editing - hide preview, show editor
+function startEditing() {
+    closePagePreview();
+    
+    // Render the editor with current page data
+    const pageData = editedData[currentPage];
+    if (pageData) {
+        renderEditor(pageData);
+    }
+    
+    showSuccess('Editor mode activated - You can now edit the content');
 }
 
 // Toggle preview panel
 function togglePagePreview() {
     const previewPanel = document.getElementById('pagePreviewPanel');
-    if (previewPanel) {
-        previewPanel.style.display = previewPanel.style.display === 'none' ? 'block' : 'none';
+    const editorContent = document.getElementById('editorContent');
+    
+    if (previewPanel && editorContent) {
+        const isPreviewVisible = previewPanel.style.display !== 'none' && !previewPanel.classList.contains('hidden');
+        
+        if (isPreviewVisible) {
+            // Hide preview, show editor
+            previewPanel.classList.add('hidden');
+            previewPanel.style.display = 'none';
+            editorContent.classList.remove('hidden');
+        } else {
+            // Show preview, hide editor
+            previewPanel.classList.remove('hidden');
+            previewPanel.style.display = 'block';
+            editorContent.classList.add('hidden');
+        }
     }
 }
 
@@ -728,6 +867,14 @@ function renderEditor(pageData) {
     });
     
     container.innerHTML = html;
+    
+    // Ensure editor is visible and preview is hidden
+    container.classList.remove('hidden');
+    const previewPanel = document.getElementById('pagePreviewPanel');
+    if (previewPanel) {
+        previewPanel.classList.add('hidden');
+        previewPanel.style.display = 'none';
+    }
 }
 
 // ==================== FIELD UPDATES ====================

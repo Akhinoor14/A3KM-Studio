@@ -7,6 +7,11 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <title>Research Papers Manager - A3KM Studio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
@@ -24,7 +29,7 @@
     body {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -449,7 +454,7 @@
     .form-group textarea {
       min-height: 200px;
       resize: vertical;
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: inherit;
     }
 
     .form-group small {
@@ -1028,6 +1033,94 @@
       background: rgba(0, 0, 0, 0.5);
       border-radius: 12px;
       border: 2px solid rgba(21, 101, 192, 0.3);
+    }
+
+    /* Mobile Responsive Design */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
+
+      .form-row, .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .papers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px 20px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 0 15px;
+        margin: 15px auto;
+      }
+
+      .content-area {
+        padding: 15px;
+      }
+
+      .papers-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .paper-card {
+        margin-bottom: 15px;
+      }
+
+      .filter-section, .stats-section {
+        padding: 15px;
+      }
+
+      .bulk-toolbar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        margin: 5vh auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.2rem;
+      }
+
+      .paper-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .paper-actions button {
+        width: 100%;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab-item {
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -1728,90 +1821,6 @@
       }
     }
 
-    // Load categories into dropdowns
-    function loadCategories() {
-      const categoryGroupSelects = [
-        document.getElementById('categoryGroup'),
-        document.getElementById('edit-categoryGroup'),
-        document.getElementById('filterCategoryGroup')
-      ];
-      
-      const categorySelect = document.getElementById('category');
-      const editCategorySelect = document.getElementById('edit-category');
-      const filterCategorySelect = document.getElementById('filter-category');
-      
-      // Populate sector dropdowns
-      categoryGroupSelects.forEach((select, index) => {
-        if (!select) return;
-        const isFilter = index === 2;
-        select.innerHTML = isFilter ? '<option value="">All Sectors</option>' : '<option value="">Select sector...</option>';
-        
-        Object.keys(PAPER_CATEGORIES).forEach(groupName => {
-          const option = document.createElement('option');
-          option.value = groupName;
-          option.textContent = groupName;
-          select.appendChild(option);
-        });
-      });
-      
-      // Initialize category selects
-      categorySelect.innerHTML = '<option value="">Select sector first...</option>';
-      categorySelect.disabled = true;
-      editCategorySelect.innerHTML = '<option value="">Select sector first...</option>';
-      editCategorySelect.disabled = true;
-      if (filterCategorySelect) {
-        filterCategorySelect.innerHTML = '<option value="">All Categories</option>';
-      }
-      
-      // Try to load from JSON (will override if available)
-      if (papersData.categoryGroups && papersData.categoryGroups.length > 0) {
-        categorySelect.innerHTML = '<option value="">Select category...</option>';
-        editCategorySelect.innerHTML = '<option value="">Select category...</option>';
-        if (filterCategorySelect) {
-          filterCategorySelect.innerHTML = '<option value="">All Categories</option>';
-        }
-        
-        papersData.categoryGroups.forEach(group => {
-          const optgroup = document.createElement('optgroup');
-          optgroup.label = `${group.icon || ''} ${group.name}`;
-          const editOptgroup = document.createElement('optgroup');
-          editOptgroup.label = `${group.icon || ''} ${group.name}`;
-          const filterOptgroup = filterCategorySelect ? document.createElement('optgroup') : null;
-          if (filterOptgroup) filterOptgroup.label = `${group.icon || ''} ${group.name}`;
-          
-          if (group.categories && Array.isArray(group.categories)) {
-            group.categories.forEach(cat => {
-              const option = document.createElement('option');
-              option.value = cat;
-              option.textContent = cat;
-              optgroup.appendChild(option);
-              
-              const editOption = document.createElement('option');
-              editOption.value = cat;
-              editOption.textContent = cat;
-              editOptgroup.appendChild(editOption);
-              
-              if (filterOptgroup) {
-                const filterOption = document.createElement('option');
-                filterOption.value = cat;
-                filterOption.textContent = cat;
-                filterOptgroup.appendChild(filterOption);
-              }
-            });
-          }
-          
-          categorySelect.appendChild(optgroup);
-          editCategorySelect.appendChild(editOptgroup);
-          if (filterCategorySelect && filterOptgroup) {
-            filterCategorySelect.appendChild(filterOptgroup);
-          }
-        });
-      }
-      
-      // Load author suggestions
-      loadAuthorSuggestions();
-    }
-    
     // Load author suggestions from existing papers
     function loadAuthorSuggestions() {
       const authorDatalist = document.getElementById('author-list');
@@ -2111,8 +2120,21 @@
           ? paper.keywords.slice(0, 5).map(k => `<span class="paper-tag">${k}</span>`).join('')
           : '';
         
+        // Get proper PDF URL
+        let pdfUrl = paper.downloadUrl || paper.pdfUrl;
+        if (!pdfUrl && paper.pdfPath) {
+          pdfUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.pdfPath}`;
+        }
+        
+        // Get thumbnail with fallback
+        let thumbnailUrl = paper.thumbnail || paper.thumbnailUrl || paper.coverImage;
+        if (!thumbnailUrl && paper.thumbnailPath) {
+          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.thumbnailPath}`;
+        }
+        
         card.innerHTML = `
           <input type="checkbox" onchange="togglePaperSelection('${paper.id}')" ${selectedPapers.has(paper.id) ? 'checked' : ''}>
+          ${thumbnailUrl ? `<img src="${thumbnailUrl}" class="paper-thumbnail" onerror="this.style.display='none'" style="width: 100%; height: 180px; object-fit: cover;">` : ''}
           <div class="paper-header">
             <h3 style="color: white; font-size: 1.1rem; font-weight: 700;">${paper.category || 'Uncategorized'}</h3>
           </div>
@@ -2128,7 +2150,7 @@
             <div class="paper-abstract">${paper.abstract || 'No abstract available'}</div>
             <div class="paper-tags">${keywordsHTML}</div>
             <div class="paper-actions">
-              <button onclick="window.open('${paper.downloadUrl}', '_blank')">📄 View</button>
+              ${pdfUrl ? `<button onclick="window.open('${pdfUrl}', '_blank')">📄 View</button>` : '<button disabled style="opacity: 0.5;">📄 No PDF</button>'}
               <button onclick="editPaper('${paper.id}')">✏️ Edit</button>
               <button onclick="deletePaper('${paper.id}')">🗑️ Delete</button>
             </div>
@@ -2267,6 +2289,28 @@
     function editPaper(id) {
       const paper = papersData.papers.find(p => p.id === id);
       if (!paper) return;
+      
+      // Populate edit-category dropdown before setting value
+      const editCategorySelect = document.getElementById('edit-category');
+      editCategorySelect.innerHTML = '<option value="">Select category...</option>';
+      
+      if (papersData.categoryGroups && papersData.categoryGroups.length > 0) {
+        papersData.categoryGroups.forEach(group => {
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = `${group.icon || ''} ${group.name}`;
+          
+          if (group.categories && Array.isArray(group.categories)) {
+            group.categories.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat;
+              option.textContent = cat;
+              optgroup.appendChild(option);
+            });
+          }
+          
+          editCategorySelect.appendChild(optgroup);
+        });
+      }
       
       document.getElementById('edit-id').value = id;
       document.getElementById('edit-category').value = paper.category;

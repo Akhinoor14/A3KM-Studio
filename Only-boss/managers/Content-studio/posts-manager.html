@@ -8,6 +8,12 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Written Posts Manager - A3KM Studio</title>
+  
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- Load Unified Token Manager -->
   <script src="../shared/unified-token-manager.js"></script>
@@ -26,7 +32,7 @@
     body {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -409,7 +415,7 @@
     .form-group textarea {
       min-height: 200px;
       resize: vertical;
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: inherit;
     }
 
     .form-group small {
@@ -1666,7 +1672,7 @@
               <i class="fas fa-sync fa-spin"></i> Loading from file...
             </span>
           </label>
-          <textarea id="editContent" required style="min-height: 300px; font-family: 'Courier New', monospace;"></textarea>
+          <textarea id="editContent" required style="min-height: 300px; font-family: 'Noto Sans Bengali', 'Inter', 'Courier New', monospace;"></textarea>
           <div style="margin-top: 5px; font-size: 11px; color: #666;">
             <i class="fas fa-info-circle"></i> This will update the actual .md file in Content Storage
           </div>
@@ -1915,73 +1921,7 @@
       }
     }
 
-    async function loadCategories() {
-      const categoryGroupSelects = [
-        document.getElementById('categoryGroup'),
-        document.getElementById('editCategoryGroup'),
-        document.getElementById('filterCategoryGroup')
-      ];
-      
-      const categorySelects = [
-        document.getElementById('category'), 
-        document.getElementById('editCategory'),
-        document.getElementById('filterCategory')
-      ];
-      
-      // Populate Category Group dropdowns
-      categoryGroupSelects.forEach((select, index) => {
-        if (!select) return;
-        const isFilter = index === 2;
-        select.innerHTML = isFilter ? '<option value="">All Sectors</option>' : '<option value="">Select sector...</option>';
-        
-        Object.keys(CATEGORIES).forEach(groupName => {
-          const option = document.createElement('option');
-          option.value = groupName;
-          option.textContent = groupName;
-          select.appendChild(option);
-        });
-      });
-      
-      // Initialize category selects as disabled
-      categorySelects.forEach((select, index) => {
-        if (!select) return;
-        const isFilter = index === 2;
-        select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select sector first...</option>';
-        if (!isFilter) select.disabled = true;
-      });
-      
-      // Try to load from GitHub (will fail gracefully if no token)
-      try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        if (data.categoryGroups) {
-          // Refresh with server categories if available
-          categorySelects.forEach(select => {
-            if (!select) return;
-            const isFilter = select.id === 'filterCategory';
-            select.innerHTML = isFilter ? '<option value="">All Categories</option>' : '<option value="">Select category...</option>';
-            
-            data.categoryGroups.forEach(group => {
-              const optgroup = document.createElement('optgroup');
-              optgroup.label = `${group.icon || ''} ${group.name}`;
-              
-              group.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                optgroup.appendChild(option);
-              });
-              
-              select.appendChild(optgroup);
-            });
-          });
-        }
-      } catch (err) {
-        console.log('Using hardcoded categories (GitHub API unavailable)');
-      }
-      
-      // Load existing posts
-      loadManageContent();
-    }
+    // Removed duplicate loadCategories - using the working version at line 1805
     
     // Update subcategories based on selected category
     function updateSubcategoriesPosts() {
@@ -2464,11 +2404,17 @@ ${content}`;
           ? audiences.slice(0, 2).map(a => `<span class="audience-tag">${a}</span>`).join('')
           : '';
         
+        // Get proper thumbnail URL
+        let thumbnailUrl = item.thumbnail || item.thumbnailUrl || item.coverImage;
+        if (!thumbnailUrl && item.thumbnailPath) {
+          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.thumbnailPath}`;
+        }
+        
         card.innerHTML = `
           <div style="position: absolute; top: 10px; left: 10px; z-index: 10;">
             <input type="checkbox" class="post-checkbox" value="${item.id}" style="width: 18px; height: 18px; cursor: pointer;">
           </div>
-          <img src="${item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <img src="${thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📝%3C/text%3E%3C/svg%3E'}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📝%3C/text%3E%3C/svg%3E'">
           <div class="card-body">
             <div style="margin-bottom: 10px;">
               <span class="status-badge ${statusClass}">${statusText.toUpperCase()}</span>

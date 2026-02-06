@@ -7,6 +7,11 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <title>Video Blogs Manager - A3KM Studio</title>
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -26,7 +31,7 @@
     body {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -409,7 +414,7 @@
     .form-group textarea {
       min-height: 200px;
       resize: vertical;
-      font-family: 'Consolas', 'Monaco', monospace;
+      font-family: inherit;
     }
 
     .form-group small {
@@ -920,6 +925,94 @@
       background: rgba(0, 0, 0, 0.5);
       border-radius: 12px;
       border: 2px solid rgba(106, 27, 154, 0.3);
+    }
+
+    /* Mobile Responsive Design */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
+
+      .form-row, .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .content-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px 20px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 0 15px;
+        margin: 15px auto;
+      }
+
+      .content-area {
+        padding: 15px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .content-card {
+        margin-bottom: 15px;
+      }
+
+      .filter-section, .stats-section {
+        padding: 15px;
+      }
+
+      .bulk-toolbar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        margin: 5vh auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.2rem;
+      }
+
+      .card-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .card-actions button {
+        width: 100%;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab-item {
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -1670,12 +1763,22 @@
         card.className = 'content-card';
         if (selectedVlogs.has(vlog.id)) card.classList.add('selected');
         
-        const thumbnail = vlog.thumbnail || vlog.coverImage || `https://img.youtube.com/vi/${vlog.youtubeId}/maxresdefault.jpg` || '';
+        // Get proper thumbnail URL with multiple fallbacks
+        let thumbnailUrl = vlog.thumbnail || vlog.thumbnailUrl || vlog.coverImage;
+        if (!thumbnailUrl && vlog.thumbnailPath) {
+          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${vlog.thumbnailPath}`;
+        }
+        if (!thumbnailUrl && vlog.youtubeId) {
+          thumbnailUrl = `https://img.youtube.com/vi/${vlog.youtubeId}/maxresdefault.jpg`;
+        }
+        if (!thumbnailUrl) {
+          thumbnailUrl = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E🎥%3C/text%3E%3C/svg%3E';
+        }
         const seriesInfo = vlog.series ? `<br>📺 ${vlog.series}${vlog.episode ? ` - Ep ${vlog.episode}` : ''}` : '';
         
         card.innerHTML = `
           <input type="checkbox" class="card-checkbox" ${selectedVlogs.has(vlog.id) ? 'checked' : ''} onchange="toggleVlogSelection('${vlog.id}')">
-          <img src="${thumbnail}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B0000, #C80000)'">
+          <img src="${thumbnailUrl}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E🎥%3C/text%3E%3C/svg%3E'">
           <div class="card-body">
             <div class="card-title">${vlog.title}</div>
             <div class="card-meta">
@@ -2099,48 +2202,6 @@
     }
 
     // Load categories from JSON (video-blog + educational categories combined)
-    async function loadCategories() {
-      try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        const categorySelect = document.getElementById('category');
-        
-        if (!categorySelect) return;
-        
-        categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #6A1B9A;">━━━ SELECT CATEGORY ━━━</option>';
-        
-        // videos.json has different structure: categoryGroups is an object with video-blog and educational arrays
-        const videoBlogGroups = data.categoryGroups['video-blog'] || [];
-        const educationalGroups = data.categoryGroups['educational'] || [];
-        const allGroups = [...videoBlogGroups, ...educationalGroups].sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        let totalCategories = 0;
-        
-        allGroups.forEach(group => {
-          // Group header (disabled, styled)
-          const groupHeader = document.createElement('option');
-          groupHeader.disabled = true;
-          groupHeader.style.cssText = 'font-weight: 700; color: #6A1B9A; background: rgba(106, 27, 154, 0.1); padding: 8px 5px;';
-          groupHeader.textContent = `${group.icon} ${group.name} (${group.categories.length})`;
-          categorySelect.appendChild(groupHeader);
-          
-          // Individual categories (indented)
-          group.categories.forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = `  ${cat}`;
-            option.style.paddingLeft = '15px';
-            categorySelect.appendChild(option);
-            totalCategories++;
-          });
-        });
-        
-        console.log(`✅ Vlogs Manager: Loaded ${totalCategories} categories in ${allGroups.length} groups`);
-        updateVlogCategoryCounter(`All ${totalCategories} categories loaded`, 'green');
-      } catch (error) {
-        console.error('Error loading vlog categories:', error);
-      }
-    }
-    
     // Update category counter helper
     function updateVlogCategoryCounter(message, color) {
       const counter = document.querySelector('#categorySearch + select + small');

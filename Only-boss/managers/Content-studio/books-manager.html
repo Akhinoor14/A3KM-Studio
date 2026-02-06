@@ -8,6 +8,12 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Books & PDFs Manager - A3KM Studio</title>
+  
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="../../../Optimization/mobile-universal.js" defer></script>
@@ -26,7 +32,7 @@
     body {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
@@ -922,41 +928,18 @@
       border: 2px solid rgba(139, 69, 19, 0.3);
     }
 
-    body {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      position: relative;
-      overflow-x: hidden;
-    }
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
 
-    /* Engineering Grid Background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: 
-        repeating-linear-gradient(0deg, rgba(139, 69, 19, 0.03) 0 1px, transparent 1px 30px),
-        repeating-linear-gradient(90deg, rgba(139, 69, 19, 0.03) 0 1px, transparent 1px 30px),
-        repeating-linear-gradient(45deg, rgba(139, 69, 19, 0.05) 0 2px, transparent 2px 40px);
-      background-size: 30px 30px, 30px 30px, 80px 80px;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.6;
-    }
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
 
-    /* Header */
-    .header {
-      position: relative;
-      z-index: 100;
-      background: linear-gradient(135deg, rgba(101, 67, 33, 0.98), rgba(139, 69, 19, 0.99));
-      border-bottom: 3px solid var(--primary-color);
-      box-shadow: 0 6px 25px rgba(139, 69, 19, 0.4);
-      padding: 20px 40px;
-    }
-
-    .header-container {
+      .form-row, .form-grid {
       max-width: 1600px;
       margin: 0 auto;
       display: flex;
@@ -2667,45 +2650,25 @@
       
       // Try to load from JSON (will be overridden if available)
       if (booksData.categoryGroups && booksData.categoryGroups.length > 0) {
-        categorySelect.innerHTML = '<option value="">Select Category</option>';
-        editCategorySelect.innerHTML = '<option value="">Select Category</option>';
+        // Don't override upload/edit category selects - they are disabled and populated by sector selection
+        // Only populate filter category with all available categories
         if (filterCategorySelect) {
           filterCategorySelect.innerHTML = '<option value="">All Categories</option>';
-        }
-        
-        booksData.categoryGroups.forEach(group => {
-          const optgroup = document.createElement('optgroup');
-          optgroup.label = `${group.icon || ''} ${group.name}`;
-          const editOptgroup = document.createElement('optgroup');
-          editOptgroup.label = `${group.icon || ''} ${group.name}`;
-          const filterOptgroup = filterCategorySelect ? document.createElement('optgroup') : null;
-          if (filterOptgroup) filterOptgroup.label = `${group.icon || ''} ${group.name}`;
           
-          group.categories.forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
-            optgroup.appendChild(option);
+          booksData.categoryGroups.forEach(group => {
+            const filterOptgroup = document.createElement('optgroup');
+            filterOptgroup.label = `${group.icon || ''} ${group.name}`;
             
-            const editOption = document.createElement('option');
-            editOption.value = cat;
-            editOption.textContent = cat;
-            editOptgroup.appendChild(editOption);
-            
-            if (filterOptgroup) {
+            group.categories.forEach(cat => {
               const filterOption = document.createElement('option');
               filterOption.value = cat;
               filterOption.textContent = cat;
               filterOptgroup.appendChild(filterOption);
-            }
-          });
-          
-          categorySelect.appendChild(optgroup);
-          editCategorySelect.appendChild(editOptgroup);
-          if (filterCategorySelect && filterOptgroup) {
+            });
+            
             filterCategorySelect.appendChild(filterOptgroup);
-          }
-        });
+          });
+        }
       }
       
       // Load author suggestions
@@ -2971,12 +2934,23 @@
         const formatClass = book.format.toLowerCase();
         const isSelected = selectedBooks.has(book.id);
         
+        // Get proper cover/thumbnail URL
+        let coverUrl = book.cover || book.coverImage || book.thumbnail;
+        if (!coverUrl && book.coverPath) {
+          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${book.coverPath}`;
+        }
+        if (!coverUrl && book.thumbnailPath) {
+          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${book.thumbnailPath}`;
+        }
+        const fallbackCover = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22280%22%3E%3Crect fill=%22%238B4513%22 width=%22200%22 height=%22280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📚%3C/text%3E%3C/svg%3E';
+        
         return `
           <div class="book-card" data-id="${book.id}">
             <input type="checkbox" class="book-card-checkbox" ${isSelected ? 'checked' : ''} 
                    onchange="toggleBookSelection('${book.id}')">
-            <img src="${book.cover || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%238B4513%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📚%3C/text%3E%3C/svg%3E'}" 
-                 class="book-cover" alt="${book.title}">
+            <img src="${coverUrl || fallbackCover}" 
+                 class="book-cover" alt="${book.title}" 
+                 onerror="this.src='${fallbackCover}'">
             <div class="book-body">
               <div class="book-title">${book.title}</div>
               <div class="book-author">by ${book.author}</div>

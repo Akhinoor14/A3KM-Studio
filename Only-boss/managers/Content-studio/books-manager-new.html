@@ -8,9 +8,18 @@
   <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
   
   <title>Books Manager - A3KM Studio</title>
+  
+  <!-- Bangla Font Support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
+    body { font-family: 'Noto Sans Bengali', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
     .container { display: flex; min-height: 100vh; background: white; }
     .sidebar { width: 280px; background: linear-gradient(180deg, #2c1810 0%, #3d2415 100%); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 4px solid #8B4513; }
     .sidebar-header { background: linear-gradient(135deg, #8B4513, #A0522D); padding: 30px 20px; color: white; }
@@ -890,9 +899,19 @@
         if (item.downloads > 0) badges.push(`<span class="book-badge badge-downloads">📥 ${item.downloads}</span>`);
         if (item.language) badges.push(`<span class="book-badge badge-en">${languageMap[item.language] || item.language}</span>`);
         
+        // Get proper cover/thumbnail URL
+        let coverUrl = item.cover || item.coverImage || item.thumbnail;
+        if (!coverUrl && item.coverPath) {
+          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.coverPath}`;
+        }
+        if (!coverUrl && item.thumbnailPath) {
+          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.thumbnailPath}`;
+        }
+        const fallbackCover = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22280%22%3E%3Crect fill=%22%238B4513%22 width=%22200%22 height=%22280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📚%3C/text%3E%3C/svg%3E';
+        
         card.innerHTML = `
           <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
-          <img src="${item.cover || item.thumbnail || item.coverImage || ''}" class="card-thumbnail" onerror="this.style.background='linear-gradient(135deg, #8B4513, #A0522D)'">
+          <img src="${coverUrl || fallbackCover}" class="card-thumbnail" onerror="this.src='${fallbackCover}'">
           <div class="card-body">
             <div style="margin-bottom: 8px;">${badges.join(' ')}</div>
             <div class="card-title">${item.title}</div>
