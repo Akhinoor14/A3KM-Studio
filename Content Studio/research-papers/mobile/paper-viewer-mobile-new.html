@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paper Viewer | Md Akhinoor Islam</title>
+    <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <meta name="theme-color" content="#1565C0">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #000a14 0%, #00152a 50%, #000a14 100%);
+            background-attachment: fixed;
+            color: #FFFFFF;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(21, 101, 192, 0.03) 2px, rgba(21, 101, 192, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(21, 101, 192, 0.03) 2px, rgba(21, 101, 192, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .mobile-back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(0, 26, 51, 0.8);
+            border: 2px solid rgba(21, 101, 192, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #1565C0;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-back-button:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-loading-state {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .mobile-loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(21, 101, 192, 0.2);
+            border-top-color: #1565C0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .mobile-paper-container {
+            position: relative;
+            z-index: 1;
+            padding: 80px 20px 20px;
+            display: none;
+        }
+
+        .mobile-paper-header {
+            background: rgba(0, 26, 51, 0.4);
+            border: 2px solid rgba(21, 101, 192, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-paper-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(21, 101, 192, 0.3), rgba(66, 165, 245, 0.2));
+            border: 3px solid rgba(21, 101, 192, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .mobile-paper-icon i {
+            font-size: 32px;
+            color: #1565C0;
+        }
+
+        .mobile-paper-title {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            color: #FFFFFF;
+        }
+
+        .mobile-paper-authors {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .mobile-paper-institution {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 12px;
+        }
+
+        .mobile-paper-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mobile-paper-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-paper-category {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(21, 101, 192, 0.2);
+            border: 1px solid rgba(21, 101, 192, 0.4);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1565C0;
+        }
+
+        .mobile-action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mobile-action-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 26, 51, 0.6);
+            border: 2px solid rgba(21, 101, 192, 0.4);
+            border-radius: 12px;
+            color: #1565C0;
+            text-decoration: none;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-action-btn:active {
+            transform: scale(0.95);
+            background: rgba(21, 101, 192, 0.2);
+        }
+
+        .mobile-abstract-section {
+            background: rgba(0, 26, 51, 0.4);
+            border: 2px solid rgba(21, 101, 192, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1565C0;
+            margin-bottom: 12px;
+        }
+
+        .mobile-abstract-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .mobile-keywords-section {
+            background: rgba(0, 26, 51, 0.4);
+            border: 2px solid rgba(21, 101, 192, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mobile-keyword {
+            padding: 6px 12px;
+            background: rgba(21, 101, 192, 0.2);
+            border: 1px solid rgba(21, 101, 192, 0.4);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .mobile-pdf-section {
+            background: rgba(0, 26, 51, 0.4);
+            border: 2px solid rgba(21, 101, 192, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-pdf-viewer {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-bottom-navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            background: rgba(0, 10, 20, 0.98);
+            border-top: 2px solid rgba(21, 101, 192, 0.3);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 20px 15px;
+            z-index: 200;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .mobile-nav-item.active {
+            color: #1565C0;
+        }
+
+        .mobile-nav-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-item.active .mobile-nav-icon {
+            background: linear-gradient(135deg, rgba(21, 101, 192, 0.3), rgba(66, 165, 245, 0.2));
+            border: 2px solid rgba(21, 101, 192, 0.5);
+        }
+
+        .mobile-nav-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .mobile-error-state {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .mobile-error-icon {
+            font-size: 60px;
+            color: rgba(21, 101, 192, 0.3);
+            margin-bottom: 16px;
+        }
+
+        .mobile-error-text {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="paper-listing-mobile-new.html" class="mobile-back-button">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <!-- Loading State -->
+    <div class="mobile-loading-state" id="loadingState">
+        <div class="mobile-loading-spinner"></div>
+        <p style="margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.6);">Loading paper...</p>
+    </div>
+
+    <!-- Paper Container -->
+    <div class="mobile-paper-container" id="paperContainer">
+        <!-- Paper Header -->
+        <div class="mobile-paper-header">
+            <div class="mobile-paper-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1 class="mobile-paper-title" id="paperTitle">Loading...</h1>
+            <p class="mobile-paper-authors" id="paperAuthors"></p>
+            <p class="mobile-paper-institution" id="paperInstitution"></p>
+            <div class="mobile-paper-meta">
+                <div class="mobile-paper-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span id="paperDate">-</span>
+                </div>
+                <div class="mobile-paper-meta-item">
+                    <i class="fas fa-file-pdf"></i>
+                    <span id="paperPages">-</span>
+                </div>
+                <span class="mobile-paper-category" id="paperCategory">-</span>
+            </div>
+            <div class="mobile-action-buttons" style="margin-top: 16px;">
+                <a href="#" class="mobile-action-btn" id="downloadBtn" download>
+                    <i class="fas fa-download"></i>
+                    <span>Download</span>
+                </a>
+                <a href="#" class="mobile-action-btn" id="shareBtn">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Share</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Abstract -->
+        <div class="mobile-abstract-section" id="abstractSection" style="display: none;">
+            <h2 class="mobile-section-title">Abstract</h2>
+            <p class="mobile-abstract-text" id="paperAbstract"></p>
+        </div>
+
+        <!-- Keywords -->
+        <div class="mobile-keywords-section" id="keywordsSection" style="display: none;">
+            <h2 class="mobile-section-title">Keywords</h2>
+            <div class="mobile-keyword-list" id="keywordList"></div>
+        </div>
+
+        <!-- PDF Viewer -->
+        <div class="mobile-pdf-section">
+            <h2 class="mobile-section-title">Full Paper</h2>
+            <iframe id="pdfViewer" class="mobile-pdf-viewer" src=""></iframe>
+        </div>
+    </div>
+
+    <!-- Bottom Navbar -->
+    <div class="mobile-bottom-navbar">
+        <a href="../../../Home/mobile/home-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <span class="mobile-nav-label">Home</span>
+        </a>
+        <a href="../../../Projects Code/mobile/projects-mobile-home.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-code"></i>
+            </div>
+            <span class="mobile-nav-label">Projects</span>
+        </a>
+        <a href="../hub-mobile-new.html" class="mobile-nav-item active">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <span class="mobile-nav-label">Content</span>
+        </a>
+        <a href="../../../About me/mobile/about-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="mobile-nav-label">About</span>
+        </a>
+        <a href="../../../Contact/mobile/contact-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <span class="mobile-nav-label">Contact</span>
+        </a>
+    </div>
+
+    <script>
+        let currentPaper = null;
+
+        // Get paper ID from URL
+        function getPaperId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        // Load paper
+        async function loadPaper() {
+            try {
+                const paperId = getPaperId();
+                if (!paperId) {
+                    showError('No paper ID specified');
+                    return;
+                }
+
+                // Load papers.json
+                const response = await fetch('../papers.json');
+                const data = await response.json();
+
+                // Find paper
+                currentPaper = data.papers.find(p => p.id === paperId);
+
+                if (!currentPaper) {
+                    showError('Paper not found');
+                    return;
+                }
+
+                // Display paper details
+                document.getElementById('paperTitle').textContent = currentPaper.title || 'Untitled Paper';
+                
+                if (currentPaper.authors && currentPaper.authors.length > 0) {
+                    document.getElementById('paperAuthors').textContent = 'by ' + currentPaper.authors.join(', ');
+                }
+
+                if (currentPaper.institution) {
+                    document.getElementById('paperInstitution').textContent = currentPaper.institution;
+                }
+
+                document.getElementById('paperDate').textContent = formatDate(currentPaper.date);
+                document.getElementById('paperPages').textContent = `${currentPaper.pages || 0} pages`;
+                document.getElementById('paperCategory').textContent = currentPaper.category || '-';
+
+                // Abstract
+                if (currentPaper.abstract) {
+                    document.getElementById('abstractSection').style.display = 'block';
+                    document.getElementById('paperAbstract').textContent = currentPaper.abstract;
+                }
+
+                // Keywords
+                if (currentPaper.keywords && currentPaper.keywords.length > 0) {
+                    document.getElementById('keywordsSection').style.display = 'block';
+                    const keywordList = document.getElementById('keywordList');
+                    keywordList.innerHTML = '';
+                    currentPaper.keywords.forEach(keyword => {
+                        const keywordEl = document.createElement('span');
+                        keywordEl.className = 'mobile-keyword';
+                        keywordEl.textContent = keyword;
+                        keywordList.appendChild(keywordEl);
+                    });
+                }
+
+                // PDF viewer
+                if (currentPaper.pdfUrl) {
+                    const pdfPath = currentPaper.pdfUrl + '#view=FitH&toolbar=1&navpanes=0';
+                    document.getElementById('pdfViewer').src = pdfPath;
+                    document.getElementById('downloadBtn').href = currentPaper.pdfUrl;
+                }
+
+                // Share button
+                document.getElementById('shareBtn').href = `mailto:?subject=${encodeURIComponent(currentPaper.title)}&body=Check out this research paper: ${encodeURIComponent(window.location.href)}`;
+
+                // Hide loading, show paper
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('paperContainer').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading paper:', error);
+                showError('Error loading paper');
+            }
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('loadingState').innerHTML = `
+                <div class="mobile-error-state">
+                    <div class="mobile-error-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <p class="mobile-error-text">${message}</p>
+                    <a href="paper-listing-mobile-new.html" style="display: inline-block; padding: 12px 24px; background: #1565C0; color: white; text-decoration: none; border-radius: 12px; font-weight: 600;">← Back to Papers</a>
+                </div>
+            `;
+        }
+
+        // Initialize
+        loadPaper();
+    </script>
+</body>
+</html>

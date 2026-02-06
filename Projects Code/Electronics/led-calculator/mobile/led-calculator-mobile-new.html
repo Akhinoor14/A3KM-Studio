@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LED Calculator | A3KM Studio</title>
+    <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../resistor-calculator/mobile/styles-calculator-mobile.css">
+</head>
+<body class="mobile-body">
+    <div class="mobile-bg-container">
+        <div class="mobile-bg-gradient"></div>
+        <div class="mobile-bg-grid"></div>
+    </div>
+
+    <div class="mobile-content-wrapper">
+        <div class="mobile-page-header">
+            <button class="mobile-back-btn" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="mobile-header-content">
+                <div class="mobile-header-badge">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Current Limiting</span>
+                </div>
+                <h1>LED Calculator</h1>
+                <p>Calculate resistor value for LED circuits</p>
+            </div>
+        </div>
+
+        <div class="calculator-container">
+            <!-- Voltage Input -->
+            <div class="input-group">
+                <label class="input-label">Source Voltage (V)</label>
+                <input type="number" id="sourceVoltage" class="input-field" value="5" step="0.1" placeholder="e.g., 5">
+            </div>
+
+            <!-- LED Voltage -->
+            <div class="input-group">
+                <label class="input-label">LED Forward Voltage (V)</label>
+                <input type="number" id="ledVoltage" class="input-field" value="2" step="0.1" placeholder="e.g., 2">
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 6px;">Red: 1.8-2.2V, Green: 2-3.5V, Blue: 3-3.5V, White: 3-3.5V</div>
+            </div>
+
+            <!-- LED Current -->
+            <div class="input-group">
+                <label class="input-label">LED Current (mA)</label>
+                <input type="number" id="ledCurrent" class="input-field" value="20" step="1" placeholder="e.g., 20">
+            </div>
+
+            <!-- Number of LEDs in Series -->
+            <div class="input-group">
+                <label class="input-label">LEDs in Series</label>
+                <input type="number" id="ledsInSeries" class="input-field" value="1" min="1" step="1">
+            </div>
+
+            <!-- Calculate Button -->
+            <button class="calc-btn" onclick="calculate()">
+                <i class="fas fa-calculator"></i> Calculate Resistor
+            </button>
+
+            <!-- Result Display -->
+            <div class="result-card">
+                <div class="result-label">Resistor Value</div>
+                <div class="result-value" id="resistorValue">150 Ω</div>
+                <div class="result-tolerance" id="powerRating">0.13 W</div>
+            </div>
+
+            <!-- Formula Reference -->
+            <div class="color-reference">
+                <h3>Formula & Notes</h3>
+                <div class="ref-item" style="grid-column: 1 / -1; flex-direction: column; align-items: flex-start;">
+                    <strong style="color: #CC0000;">R = (Vs - (Vf × N)) / I</strong>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 8px;">
+                        • R = Resistor value (Ω)<br>
+                        • Vs = Source voltage (V)<br>
+                        • Vf = LED forward voltage (V)<br>
+                        • N = Number of LEDs in series<br>
+                        • I = LED current (A)
+                    </div>
+                </div>
+                <div class="ref-item" style="grid-column: 1 / -1; flex-direction: column; align-items: flex-start;">
+                    <strong style="color: #CC0000;">Power Rating</strong>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 8px;">
+                        Use resistor with power rating ≥ calculated power.<br>
+                        Common ratings: 1/8W (0.125W), 1/4W (0.25W), 1/2W (0.5W), 1W
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mobile-bottom-spacer"></div>
+    </div>
+
+    <nav class="mobile-bottom-navbar">
+        <a href="../../../Home/mobile/index-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-home"></i></div>
+            <span class="mobile-nav-label">Home</span>
+        </a>
+        <a href="../../../About me/mobile/about-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-user"></i></div>
+            <span class="mobile-nav-label">About</span>
+        </a>
+        <a href="../../mobile/projects-mobile-new.html" class="mobile-nav-item active">
+            <div class="mobile-nav-icon"><i class="fas fa-folder-open"></i></div>
+            <span class="mobile-nav-label">Projects</span>
+        </a>
+        <a href="../../../Content Studio/mobile/studio-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-play-circle"></i></div>
+            <span class="mobile-nav-label">Content</span>
+        </a>
+        <a href="../../../Contact/mobile/contact-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-envelope"></i></div>
+            <span class="mobile-nav-label">Contact</span>
+        </a>
+    </nav>
+
+    <script>
+        function calculate() {
+            const sourceVoltage = parseFloat(document.getElementById('sourceVoltage').value) || 5;
+            const ledVoltage = parseFloat(document.getElementById('ledVoltage').value) || 2;
+            const ledCurrent = parseFloat(document.getElementById('ledCurrent').value) || 20;
+            const ledsInSeries = parseInt(document.getElementById('ledsInSeries').value) || 1;
+
+            // Calculate resistor value
+            const currentInAmps = ledCurrent / 1000; // Convert mA to A
+            const voltageAcrossResistor = sourceVoltage - (ledVoltage * ledsInSeries);
+            const resistance = voltageAcrossResistor / currentInAmps;
+
+            // Calculate power dissipation
+            const power = voltageAcrossResistor * currentInAmps;
+
+            // Determine standard resistor value (E12 series)
+            const standardValues = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
+            let closestResistor = resistance;
+            let multiplier = Math.pow(10, Math.floor(Math.log10(resistance)));
+            let normalizedValue = resistance / multiplier;
+            let closest = standardValues.reduce((prev, curr) => 
+                Math.abs(curr - normalizedValue) < Math.abs(prev - normalizedValue) ? curr : prev
+            );
+            closestResistor = closest * multiplier;
+
+            // Update display
+            document.getElementById('resistorValue').textContent = formatResistance(closestResistor);
+            document.getElementById('powerRating').textContent = 
+                `${power.toFixed(2)} W (use ${getSuggestedPowerRating(power)})`;
+        }
+
+        function formatResistance(value) {
+            if (value >= 1000000) return (value / 1000000).toFixed(2) + ' MΩ';
+            if (value >= 1000) return (value / 1000).toFixed(2) + ' kΩ';
+            return value.toFixed(0) + ' Ω';
+        }
+
+        function getSuggestedPowerRating(power) {
+            if (power <= 0.0625) return '1/16W min';
+            if (power <= 0.125) return '1/8W min';
+            if (power <= 0.25) return '1/4W min';
+            if (power <= 0.5) return '1/2W min';
+            if (power <= 1) return '1W min';
+            return '2W+ min';
+        }
+
+        // Calculate on page load
+        calculate();
+
+        // Calculate on any input change
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+    </script>
+</body>
+</html>

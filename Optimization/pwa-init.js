@@ -27,15 +27,15 @@
      * Load app splash screen (only for installed apps)
      */
     function loadSplashScreen() {
-        if (document.querySelector('script[src*="app-splash"]')) {
+        if (document.querySelector('script[src*="splash"]')) {
             return; // Already loaded
         }
         
         const script = document.createElement('script');
-        script.src = '/Optimization/app-splash-advanced.js';
-        // Load immediately, not deferred
+        script.src = '/Optimization/mobile-splash.js'; // Universal splash (mobile + desktop)
+        script.async = false; // Load immediately
         document.head.insertBefore(script, document.head.firstChild);
-        console.log('✅ Advanced app splash screen loaded');
+        console.log('✅ Universal splash screen loaded');
     }
 
     /**
@@ -43,6 +43,72 @@
      */
     function showPreSplash() {
         if (document.getElementById('a3km-pre-splash')) return;
+
+        // Add CSS first
+        const css = document.createElement('style');
+        css.textContent = `
+            #a3km-pre-splash {
+                position: fixed;
+                inset: 0;
+                z-index: 999998;
+                background: radial-gradient(circle at 50% 50%, #1a0505 0%, #0a0a0a 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Courier New', monospace;
+                opacity: 1;
+                animation: preFadeIn 0.3s ease-out;
+            }
+            .a3km-pre-splash-content {
+                text-align: center;
+                animation: preFloat 2s ease-in-out infinite;
+            }
+            .a3km-pre-splash-logo {
+                font-size: 48px;
+                font-weight: 700;
+                color: #CC0000;
+                text-shadow: 0 0 20px #CC0000, 0 0 40px rgba(204,0,0,0.5);
+                animation: preGlow 1.5s ease-in-out infinite;
+                margin-bottom: 20px;
+            }
+            .a3km-pre-splash-text {
+                font-size: 14px;
+                color: #0f0;
+                letter-spacing: 2px;
+                animation: preBlink 1s ease-in-out infinite;
+            }
+            @keyframes preFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes preFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            @keyframes preGlow {
+                0%, 100% { 
+                    text-shadow: 0 0 20px #CC0000, 0 0 40px rgba(204,0,0,0.5);
+                    transform: scale(1);
+                }
+                50% { 
+                    text-shadow: 0 0 30px #ff0000, 0 0 60px #CC0000, 0 0 80px rgba(204,0,0,0.3);
+                    transform: scale(1.05);
+                }
+            }
+            @keyframes preBlink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            @media (max-width: 768px) {
+                .a3km-pre-splash-logo {
+                    font-size: 36px;
+                }
+                .a3km-pre-splash-text {
+                    font-size: 12px;
+                }
+            }
+        `;
+        document.head.appendChild(css);
 
         const pre = document.createElement('div');
         pre.id = 'a3km-pre-splash';
@@ -53,14 +119,27 @@
             </div>
         `;
 
-        if (document.body) {
-            document.body.appendChild(pre);
-        } else {
-            document.addEventListener('DOMContentLoaded', () => {
-                if (!document.getElementById('a3km-pre-splash')) {
+        // Ensure document.documentElement or document.head is used if body doesn't exist
+        const insertPre = () => {
+            if (!document.getElementById('a3km-pre-splash')) {
+                if (document.body) {
                     document.body.appendChild(pre);
+                } else {
+                    // Fallback: append to html element directly
+                    document.documentElement.appendChild(pre);
                 }
-            }, { once: true });
+            }
+        };
+
+        if (document.body || document.documentElement) {
+            insertPre();
+        } else {
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', insertPre, { once: true });
+            } else {
+                insertPre();
+            }
         }
     }
 

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>MATLAB Project Viewer | A3KM Studio</title>
+    <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* Background System */
+        .mobile-background-system {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .mobile-gradient-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                #0a0a0a 0%, 
+                #1a0000 30%, 
+                #0a0a0a 70%, 
+                #000000 100%);
+        }
+
+        .mobile-grid-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(204, 0, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(204, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.6;
+        }
+
+        /* Page Header */
+        .mobile-page-header {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            padding-top: 60px;
+        }
+
+        .mobile-back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(26, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #CC0000;
+            font-size: 18px;
+            text-decoration: none;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-back-button:active {
+            transform: scale(0.95);
+            background: rgba(204, 0, 0, 0.2);
+        }
+
+        .mobile-category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(26, 0, 0, 0.6);
+            border: 2px solid rgba(204, 0, 0, 0.4);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #CC0000;
+            margin-bottom: 16px;
+        }
+
+        .mobile-project-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(204, 0, 0, 0.4);
+        }
+
+        .mobile-difficulty-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .difficulty-beginner {
+            background: rgba(0, 204, 102, 0.2);
+            color: #00CC66;
+            border: 1px solid rgba(0, 204, 102, 0.5);
+        }
+
+        .difficulty-intermediate {
+            background: rgba(255, 153, 0, 0.2);
+            color: #FF9900;
+            border: 1px solid rgba(255, 153, 0, 0.5);
+        }
+
+        .difficulty-advanced {
+            background: rgba(204, 0, 0, 0.2);
+            color: #CC0000;
+            border: 1px solid rgba(204, 0, 0, 0.5);
+        }
+
+        .mobile-project-description {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        /* Tags */
+        .mobile-tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-tag {
+            padding: 6px 12px;
+            background: rgba(26, 0, 0, 0.6);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Topics Section */
+        .mobile-topics-section {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mobile-section-title i {
+            color: #CC0000;
+            font-size: 20px;
+        }
+
+        .mobile-topics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mobile-topic-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(26, 0, 0, 0.4);
+            border: 1px solid rgba(204, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .mobile-topic-item i {
+            color: #CC0000;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Download Section */
+        .mobile-download-section {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-download-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.1));
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-download-btn:active {
+            transform: scale(0.98);
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.25), rgba(139, 0, 0, 0.2));
+        }
+
+        .mobile-download-btn i {
+            font-size: 20px;
+            color: #CC0000;
+        }
+
+        .mobile-download-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Results Gallery */
+        .mobile-results-section {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-results-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mobile-result-item {
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid rgba(204, 0, 0, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mobile-result-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+
+        .mobile-result-caption {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+        }
+
+        /* Code Section */
+        .mobile-code-section {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-code-container {
+            background: rgba(26, 0, 0, 0.4);
+            border: 2px solid rgba(204, 0, 0, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mobile-code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(204, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(204, 0, 0, 0.2);
+        }
+
+        .mobile-code-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mobile-copy-btn {
+            padding: 6px 12px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 6px;
+            color: #CC0000;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .mobile-copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-code-content {
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .mobile-code-content pre {
+            margin: 0;
+        }
+
+        .mobile-code-content code {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Video Section */
+        .mobile-video-section {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(204, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mobile-video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* No Content Message */
+        .mobile-no-content {
+            padding: 30px 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .mobile-no-content i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: rgba(204, 0, 0, 0.3);
+        }
+
+        /* Loading State */
+        .mobile-loading {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .mobile-loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(204, 0, 0, 0.2);
+            border-top-color: #CC0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .mobile-loading-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Bottom Navbar */
+        .mobile-bottom-navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            background: rgba(15, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid rgba(204, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            padding: 8px;
+        }
+
+        .mobile-nav-icon-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: transparent;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-item i {
+            font-size: 24px;
+        }
+
+        .mobile-nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .mobile-nav-item.active .mobile-nav-icon-container {
+            background: rgba(204, 0, 0, 0.15);
+            border-color: rgba(204, 0, 0, 0.5);
+        }
+
+        .mobile-nav-item.active {
+            color: #CC0000;
+        }
+
+        .mobile-nav-item:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background System -->
+    <div class="mobile-background-system">
+        <div class="mobile-gradient-bg"></div>
+        <div class="mobile-grid-overlay"></div>
+    </div>
+
+    <!-- Back Button -->
+    <a href="javascript:history.back()" class="mobile-back-button">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <!-- Loading State -->
+    <div class="mobile-loading" id="loadingState">
+        <div class="mobile-loader"></div>
+        <div class="mobile-loading-text">Loading project...</div>
+    </div>
+
+    <!-- Project Content -->
+    <div id="projectContent" style="display: none;">
+        <!-- Page Header -->
+        <div class="mobile-page-header">
+            <div class="mobile-category-badge" id="categoryBadge">
+                <span id="categoryEmoji">☀️</span>
+                <span id="categoryName">Category</span>
+            </div>
+            <h1 class="mobile-project-title" id="projectTitle">Project Title</h1>
+            <div class="mobile-difficulty-badge" id="difficultyBadge">Intermediate</div>
+            <p class="mobile-project-description" id="projectDescription">Project description...</p>
+            <div class="mobile-tags-container" id="tagsContainer"></div>
+        </div>
+
+        <!-- Topics Section -->
+        <div class="mobile-topics-section">
+            <h2 class="mobile-section-title">
+                <i class="fas fa-list-check"></i>
+                Topics Covered
+            </h2>
+            <div class="mobile-topics-list" id="topicsList"></div>
+        </div>
+
+        <!-- Download Section -->
+        <div class="mobile-download-section">
+            <h2 class="mobile-section-title">
+                <i class="fas fa-download"></i>
+                Download Options
+            </h2>
+            <div class="mobile-download-grid" id="downloadGrid"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="mobile-results-section" id="resultsSection" style="display: none;">
+            <h2 class="mobile-section-title">
+                <i class="fas fa-chart-line"></i>
+                Results & Plots
+            </h2>
+            <div class="mobile-results-gallery" id="resultsGallery"></div>
+        </div>
+
+        <!-- Video Section -->
+        <div class="mobile-video-section" id="videoSection" style="display: none;">
+            <h2 class="mobile-section-title">
+                <i class="fab fa-youtube"></i>
+                Video Demonstration
+            </h2>
+            <div class="mobile-video-container" id="videoContainer"></div>
+        </div>
+
+        <!-- Code Section -->
+        <div class="mobile-code-section" id="codeSection" style="display: none;">
+            <h2 class="mobile-section-title">
+                <i class="fas fa-code"></i>
+                MATLAB Code
+            </h2>
+            <div class="mobile-code-container">
+                <div class="mobile-code-header">
+                    <div class="mobile-code-title">
+                        <i class="fas fa-file-code"></i>
+                        <span id="codeFileName">code.m</span>
+                    </div>
+                    <button class="mobile-copy-btn" onclick="copyCode()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="mobile-code-content">
+                    <pre><code class="language-matlab" id="codeBlock">% Loading code...</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navbar -->
+    <nav class="mobile-bottom-navbar">
+        <a href="../../../index.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon-container">
+                <i class="fas fa-home"></i>
+            </div>
+            <span class="mobile-nav-label">Home</span>
+        </a>
+        <a href="../../../About me/about.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon-container">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="mobile-nav-label">About</span>
+        </a>
+        <a href="../../projects.html" class="mobile-nav-item active">
+            <div class="mobile-nav-icon-container">
+                <i class="fas fa-code"></i>
+            </div>
+            <span class="mobile-nav-label">Projects</span>
+        </a>
+        <a href="../../../Content Studio/content-home.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon-container">
+                <i class="fas fa-photo-film"></i>
+            </div>
+            <span class="mobile-nav-label">Content</span>
+        </a>
+        <a href="../../../Contact/contact.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon-container">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <span class="mobile-nav-label">Contact</span>
+        </a>
+    </nav>
+
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/matlab.min.js"></script>
+
+    <script>
+        const categoryIcons = {
+            'Renewable Energy': '☀️',
+            'Power Systems': '⚡',
+            'Heat Transfer': '🔥',
+            'Control Systems': '🎛️',
+            'Simulink': '📊'
+        };
+
+        async function loadProject() {
+            try {
+                // Get project ID from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const projectId = urlParams.get('id');
+
+                if (!projectId) {
+                    throw new Error('No project ID specified');
+                }
+
+                // Load project data
+                const response = await fetch('../matlab-data.json');
+                const data = await response.json();
+                
+                const project = data.projects.find(p => p.id === projectId);
+                
+                if (!project) {
+                    throw new Error('Project not found');
+                }
+
+                // Hide loading, show content
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('projectContent').style.display = 'block';
+
+                // Populate project info
+                const categoryEmoji = categoryIcons[project.category] || '📊';
+                document.getElementById('categoryEmoji').textContent = categoryEmoji;
+                document.getElementById('categoryName').textContent = project.category;
+                document.getElementById('projectTitle').textContent = project.title;
+                document.getElementById('projectDescription').textContent = project.description;
+                
+                // Difficulty badge
+                const difficultyBadge = document.getElementById('difficultyBadge');
+                difficultyBadge.textContent = project.difficulty;
+                difficultyBadge.className = 'mobile-difficulty-badge difficulty-' + project.difficulty.toLowerCase();
+
+                // Tags
+                const tagsContainer = document.getElementById('tagsContainer');
+                project.tags.forEach(tag => {
+                    const tagEl = document.createElement('span');
+                    tagEl.className = 'mobile-tag';
+                    tagEl.textContent = tag;
+                    tagsContainer.appendChild(tagEl);
+                });
+
+                // Topics
+                const topicsList = document.getElementById('topicsList');
+                project.topics.forEach(topic => {
+                    const topicItem = document.createElement('div');
+                    topicItem.className = 'mobile-topic-item';
+                    topicItem.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>${topic}</span>
+                    `;
+                    topicsList.appendChild(topicItem);
+                });
+
+                // Download buttons
+                const downloadGrid = document.getElementById('downloadGrid');
+                const basePath = `../../Projects Storage/MATLAB Projects/${projectId}/`;
+                
+                // Code file
+                if (project.files.code) {
+                    downloadGrid.innerHTML += `
+                        <a href="${basePath}${project.files.code}" class="mobile-download-btn" download>
+                            <i class="fas fa-file-code"></i>
+                            Download MATLAB Code
+                        </a>
+                    `;
+                }
+                
+                // PDF
+                if (project.files.pdf) {
+                    downloadGrid.innerHTML += `
+                        <a href="${basePath}${project.files.pdf}" class="mobile-download-btn" target="_blank">
+                            <i class="fas fa-file-pdf"></i>
+                            View PDF Report
+                        </a>
+                    `;
+                }
+                
+                // ZIP
+                if (project.files.zip) {
+                    downloadGrid.innerHTML += `
+                        <a href="${basePath}${project.files.zip}" class="mobile-download-btn" download>
+                            <i class="fas fa-file-archive"></i>
+                            Download ZIP Package
+                        </a>
+                    `;
+                }
+                
+                // YouTube
+                if (project.files.youtubeVideo) {
+                    downloadGrid.innerHTML += `
+                        <a href="${project.files.youtubeVideo}" class="mobile-download-btn" target="_blank">
+                            <i class="fab fa-youtube"></i>
+                            Watch on YouTube
+                        </a>
+                    `;
+                }
+
+                // Results gallery
+                if (project.files.images && project.files.images.length > 0) {
+                    document.getElementById('resultsSection').style.display = 'block';
+                    const resultsGallery = document.getElementById('resultsGallery');
+                    
+                    project.files.images.forEach((img, index) => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'mobile-result-item';
+                        const caption = img.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+                        resultItem.innerHTML = `
+                            <img src="${basePath}results/${img}" alt="Result ${index + 1}" class="mobile-result-image" 
+                                onerror="this.src='../../../images/placeholder.png'">
+                            <div class="mobile-result-caption">${caption}</div>
+                        `;
+                        resultsGallery.appendChild(resultItem);
+                    });
+                }
+
+                // YouTube video
+                if (project.files.youtubeVideo) {
+                    document.getElementById('videoSection').style.display = 'block';
+                    const videoId = getYouTubeId(project.files.youtubeVideo);
+                    document.getElementById('videoContainer').innerHTML = `
+                        <iframe src="https://www.youtube.com/embed/${videoId}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    `;
+                }
+
+                // Load code if available
+                if (project.files.code) {
+                    document.getElementById('codeSection').style.display = 'block';
+                    document.getElementById('codeFileName').textContent = project.files.code;
+                    loadMatlabCode(basePath + project.files.code);
+                }
+
+            } catch (error) {
+                console.error('Error loading project:', error);
+                document.getElementById('loadingState').innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 60px; color: rgba(204, 0, 0, 0.3); margin-bottom: 16px;"></i>
+                        <h3 style="font-size: 18px; color: rgba(255, 255, 255, 0.8); margin-bottom: 8px;">Failed to Load Project</h3>
+                        <p style="font-size: 14px; color: rgba(255, 255, 255, 0.5);">The project could not be loaded. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadMatlabCode(filepath) {
+            try {
+                const response = await fetch(filepath);
+                if (!response.ok) throw new Error('Code file not found');
+                
+                const code = await response.text();
+                const codeBlock = document.getElementById('codeBlock');
+                codeBlock.textContent = code;
+                hljs.highlightElement(codeBlock);
+            } catch (error) {
+                console.error('Error loading code:', error);
+                document.getElementById('codeBlock').textContent = `% MATLAB code file not found\n% File: ${filepath}\n% \n% The code file will be uploaded soon.`;
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeBlock').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target.closest('.mobile-copy-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+
+        function getYouTubeId(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            return match ? match[1] : '';
+        }
+
+        // Load project on page load
+        loadProject();
+    </script>
+</body>
+</html>

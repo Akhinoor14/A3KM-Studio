@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="description" content="35 SOLIDWORKS Beginner Models - Foundation CAD Projects - A3KM Studio">
+    <title>SOLIDWORKS Basic Models | A3KM Studio</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles-solidworks-mobile-new.css">
+</head>
+<body class="mobile-body">
+
+    <!-- Background System -->
+    <div class="mobile-bg-container">
+        <div class="mobile-bg-gradient"></div>
+        <div class="mobile-bg-grid"></div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="mobile-content-wrapper">
+        
+        <!-- Page Header -->
+        <div class="mobile-page-header">
+            <button class="mobile-back-btn" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="mobile-header-content">
+                <div class="mobile-header-badge">
+                    <i class="fas fa-cube"></i>
+                    <span>⭐ Beginner Level</span>
+                </div>
+                <h1>Basic SOLIDWORKS Models</h1>
+                <p>35 foundation CAD projects with drawings</p>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="mobile-stats-bar">
+            <div class="mobile-stat-item">
+                <div class="mobile-stat-icon">
+                    <i class="fas fa-shapes"></i>
+                </div>
+                <div class="mobile-stat-info">
+                    <div class="mobile-stat-number" id="totalModels">35</div>
+                    <div class="mobile-stat-label">Models</div>
+                </div>
+            </div>
+            <div class="mobile-stat-item">
+                <div class="mobile-stat-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="mobile-stat-info">
+                    <div class="mobile-stat-number">35</div>
+                    <div class="mobile-stat-label">Drawings</div>
+                </div>
+            </div>
+            <div class="mobile-stat-item">
+                <div class="mobile-stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="mobile-stat-info">
+                    <div class="mobile-stat-number">⭐</div>
+                    <div class="mobile-stat-label">Beginner</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="mobile-search-section">
+            <div class="mobile-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search models...">
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="mobile-loading">
+            <div class="mobile-spinner"></div>
+            <p>Loading models...</p>
+        </div>
+
+        <!-- Models Container -->
+        <div id="modelsContainer" class="mobile-models-container"></div>
+
+        <!-- Bottom Spacer -->
+        <div class="mobile-bottom-spacer"></div>
+    </div>
+
+    <!-- Model Modal -->
+    <div id="modelModal" class="mobile-modal">
+        <div class="mobile-modal-content">
+            <div class="mobile-modal-header">
+                <h2 id="modalTitle">Model Name</h2>
+                <button class="mobile-modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mobile-modal-body">
+                <div class="mobile-modal-preview">
+                    <img id="modalImage" src="" alt="Model Preview">
+                </div>
+                <div class="mobile-modal-info" id="modalInfo"></div>
+                <div class="mobile-modal-tags" id="modalTags"></div>
+                <div class="mobile-modal-actions">
+                    <a id="modalViewBtn" href="#" class="mobile-modal-btn mobile-btn-primary">
+                        <i class="fas fa-cube"></i>
+                        <span>View 3D Model</span>
+                    </a>
+                    <a id="modalDownloadBtn" href="#" download class="mobile-modal-btn mobile-btn-secondary">
+                        <i class="fas fa-download"></i>
+                        <span>Download ZIP</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navbar -->
+    <nav class="mobile-bottom-navbar">
+        <a href="../../../Home/mobile/index-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <span class="mobile-nav-label">Home</span>
+        </a>
+        
+        <a href="../../../About me/mobile/about-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="mobile-nav-label">About</span>
+        </a>
+        
+        <a href="../../mobile/projects-mobile-new.html" class="mobile-nav-item active">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <span class="mobile-nav-label">Projects</span>
+        </a>
+        
+        <a href="../../../Content Studio/mobile/studio-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <span class="mobile-nav-label">Content</span>
+        </a>
+        
+        <a href="../../../Contact/mobile/contact-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <span class="mobile-nav-label">Contact</span>
+        </a>
+    </nav>
+
+    <script src="../solidworks-models-data.js"></script>
+    <script>
+        let modelsData = null;
+        let currentModel = null;
+
+        // Load models data
+        function loadModels() {
+            try {
+                if (!solidworksModelsData || !solidworksModelsData.basic) {
+                    throw new Error('Failed to load models data');
+                }
+                
+                modelsData = solidworksModelsData.basic;
+                
+                document.getElementById('totalModels').textContent = modelsData.length;
+                document.getElementById('loadingState').style.display = 'none';
+                
+                renderModels();
+            } catch (error) {
+                console.error('Error loading models:', error);
+                document.getElementById('loadingState').innerHTML = `
+                    <div class="mobile-empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Models</h3>
+                        <p>${error.message}</p>
+                        <button onclick="location.reload()" class="mobile-retry-btn">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Render models
+        function renderModels(searchTerm = '') {
+            if (!modelsData) return;
+            
+            const container = document.getElementById('modelsContainer');
+            container.innerHTML = '';
+
+            let filteredModels = modelsData;
+            
+            // Filter by search term
+            if (searchTerm) {
+                filteredModels = modelsData.filter(model =>
+                    model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    model.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    model.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+            }
+
+            if (filteredModels.length === 0) {
+                container.innerHTML = `
+                    <div class="mobile-empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No Models Found</h3>
+                        <p>Try a different search term</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'mobile-models-grid';
+
+            filteredModels.forEach(model => {
+                const card = createModelCard(model);
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        // Create model card
+        function createModelCard(model) {
+            const card = document.createElement('div');
+            card.className = 'mobile-model-card';
+            card.onclick = () => openModal(model);
+
+            // Extract model number
+            const modelNumber = model.id.replace('model-', '');
+
+            // Use thumbnail if available, otherwise placeholder
+            const thumbnailPath = model.thumbnailPath || '';
+
+            card.innerHTML = `
+                <div class="mobile-card-number">#${modelNumber}</div>
+                <div class="mobile-card-preview">
+                    <img src="${thumbnailPath}" alt="${model.name}" 
+                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect width=%22300%22 height=%22200%22 fill=%22%23CC0000%22 opacity=%220.1%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23CC0000%22 font-size=%2220%22>Model ${modelNumber}</text></svg>';">
+                </div>
+                <div class="mobile-card-info">
+                    <h3>${model.name}</h3>
+                    <p>${model.description}</p>
+                </div>
+                <div class="mobile-card-footer">
+                    <span class="mobile-card-tag">${model.difficulty}</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Open model modal
+        function openModal(model) {
+            currentModel = model;
+            const modal = document.getElementById('modelModal');
+            
+            document.getElementById('modalTitle').textContent = model.name;
+            
+            // Set preview image
+            const imagePath = model.thumbnailPath || '';
+            document.getElementById('modalImage').src = imagePath;
+            document.getElementById('modalImage').onerror = function() {
+                this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23CC0000" opacity="0.1"/><text x="50%" y="50%" text-anchor="middle" fill="%23CC0000" font-size="20">3D Preview</text></svg>';
+            };
+
+            // Model info
+            document.getElementById('modalInfo').innerHTML = `
+                <div class="mobile-info-item">
+                    <div class="mobile-info-label">Model ID</div>
+                    <div class="mobile-info-value">${model.id}</div>
+                </div>
+                <div class="mobile-info-item">
+                    <div class="mobile-info-label">Category</div>
+                    <div class="mobile-info-value">${model.category}</div>
+                </div>
+                <div class="mobile-info-item">
+                    <div class="mobile-info-label">Difficulty</div>
+                    <div class="mobile-info-value">${model.difficulty}</div>
+                </div>
+                <div class="mobile-info-item">
+                    <div class="mobile-info-label">Files</div>
+                    <div class="mobile-info-value">${model.files.length} file(s)</div>
+                </div>
+                <div class="mobile-info-item" style="grid-column: 1 / -1;">
+                    <div class="mobile-info-label">Description</div>
+                    <div class="mobile-info-value">${model.description}</div>
+                </div>
+            `;
+
+            // Tags
+            document.getElementById('modalTags').innerHTML = `
+                <h4>Tags</h4>
+                <div class="mobile-tags-list">
+                    ${model.tags.map(tag => `<span class="mobile-tag">${tag}</span>`).join('')}
+                </div>
+            `;
+
+            // Set action buttons
+            document.getElementById('modalViewBtn').href = `solidworks-model-viewer-mobile-new.html?model=${model.id}`;
+            document.getElementById('modalDownloadBtn').href = model.zipPath || '#';
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modelModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderModels(e.target.value);
+        });
+
+        // Load on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadModels);
+        } else {
+            loadModels();
+        }
+    </script>
+
+</body>
+</html>

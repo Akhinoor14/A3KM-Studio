@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Resistor Calculator | A3KM Studio</title>
+    <link rel="icon" href="../../../images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles-calculator-mobile.css">
+</head>
+<body class="mobile-body">
+    <div class="mobile-bg-container">
+        <div class="mobile-bg-gradient"></div>
+        <div class="mobile-bg-grid"></div>
+    </div>
+
+    <div class="mobile-content-wrapper">
+        <div class="mobile-page-header">
+            <button class="mobile-back-btn" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="mobile-header-content">
+                <div class="mobile-header-badge">
+                    <i class="fas fa-microchip"></i>
+                    <span>IEC 60062:2016</span>
+                </div>
+                <h1>Resistor Calculator</h1>
+                <p>Decode 4/5/6 band color codes</p>
+            </div>
+        </div>
+
+        <div class="calculator-container">
+            <!-- Band Mode Selector -->
+            <div class="band-mode-selector">
+                <button class="band-btn active" data-bands="4">4 Bands</button>
+                <button class="band-btn" data-bands="5">5 Bands</button>
+                <button class="band-btn" data-bands="6">6 Bands</button>
+            </div>
+
+            <!-- Color Band Selectors -->
+            <div id="bandSelectors" class="band-selectors"></div>
+
+            <!-- Result Display -->
+            <div class="result-card">
+                <div class="result-label">Resistance</div>
+                <div class="result-value" id="resistanceValue">0 Ω</div>
+                <div class="result-tolerance" id="toleranceValue">±5%</div>
+            </div>
+
+            <!-- Color Reference -->
+            <div class="color-reference">
+                <h3>Color Code Reference</h3>
+                <div class="reference-grid">
+                    <div class="ref-item"><div class="ref-color" style="background:#000"></div><span>Black = 0</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#654321"></div><span>Brown = 1</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#F00"></div><span>Red = 2</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#F90"></div><span>Orange = 3</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#FF0"></div><span>Yellow = 4</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#0F0"></div><span>Green = 5</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#00F"></div><span>Blue = 6</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#8B00FF"></div><span>Violet = 7</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#808080"></div><span>Gray = 8</span></div>
+                    <div class="ref-item"><div class="ref-color" style="background:#FFF; border:1px solid #666"></div><span>White = 9</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mobile-bottom-spacer"></div>
+    </div>
+
+    <nav class="mobile-bottom-navbar">
+        <a href="../../../Home/mobile/index-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-home"></i></div>
+            <span class="mobile-nav-label">Home</span>
+        </a>
+        <a href="../../../About me/mobile/about-mobile-new.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-user"></i></div>
+            <span class="mobile-nav-label">About</span>
+        </a>
+        <a href="../../mobile/projects-mobile-new.html" class="mobile-nav-item active">
+            <div class="mobile-nav-icon"><i class="fas fa-folder-open"></i></div>
+            <span class="mobile-nav-label">Projects</span>
+        </a>
+        <a href="../../../Content Studio/mobile/studio-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-play-circle"></i></div>
+            <span class="mobile-nav-label">Content</span>
+        </a>
+        <a href="../../../Contact/mobile/contact-mobile.html" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="fas fa-envelope"></i></div>
+            <span class="mobile-nav-label">Contact</span>
+        </a>
+    </nav>
+
+    <script>
+        const colors = {
+            black: { value: 0, multiplier: 1, color: '#000' },
+            brown: { value: 1, multiplier: 10, tolerance: 1, color: '#654321' },
+            red: { value: 2, multiplier: 100, tolerance: 2, color: '#F00' },
+            orange: { value: 3, multiplier: 1000, color: '#F90' },
+            yellow: { value: 4, multiplier: 10000, color: '#FF0' },
+            green: { value: 5, multiplier: 100000, tolerance: 0.5, color: '#0F0' },
+            blue: { value: 6, multiplier: 1000000, tolerance: 0.25, color: '#00F' },
+            violet: { value: 7, multiplier: 10000000, tolerance: 0.1, color: '#8B00FF' },
+            gray: { value: 8, multiplier: 100000000, tolerance: 0.05, color: '#808080' },
+            white: { value: 9, multiplier: 1000000000, color: '#FFF' },
+            gold: { multiplier: 0.1, tolerance: 5, color: '#FFD700' },
+            silver: { multiplier: 0.01, tolerance: 10, color: '#C0C0C0' }
+        };
+
+        let bandMode = 4;
+        let selectedColors = ['brown', 'black', 'red', 'gold'];
+
+        function initBandSelectors() {
+            const container = document.getElementById('bandSelectors');
+            container.innerHTML = '';
+            
+            const labels = bandMode === 4 ? ['Digit 1', 'Digit 2', 'Multiplier', 'Tolerance'] :
+                          bandMode === 5 ? ['Digit 1', 'Digit 2', 'Digit 3', 'Multiplier', 'Tolerance'] :
+                          ['Digit 1', 'Digit 2', 'Digit 3', 'Multiplier', 'Tolerance', 'Temp Coeff'];
+            
+            selectedColors = bandMode === 4 ? ['brown', 'black', 'red', 'gold'] :
+                            bandMode === 5 ? ['brown', 'black', 'black', 'brown', 'gold'] :
+                            ['brown', 'black', 'black', 'brown', 'gold', 'brown'];
+
+            labels.forEach((label, idx) => {
+                const selector = document.createElement('div');
+                selector.className = 'band-selector';
+                selector.innerHTML = `
+                    <div class="selector-label">${label}</div>
+                    <select class="color-select" data-band="${idx}">
+                        ${getColorOptions(idx)}
+                    </select>
+                `;
+                container.appendChild(selector);
+            });
+
+            document.querySelectorAll('.color-select').forEach(select => {
+                select.value = selectedColors[parseInt(select.dataset.band)];
+                select.addEventListener('change', calculate);
+            });
+            
+            calculate();
+        }
+
+        function getColorOptions(bandIdx) {
+            if (bandIdx < bandMode - 2) {
+                return Object.entries(colors).filter(([_, v]) => v.value !== undefined && _ !== 'black' || bandIdx > 0 && _ === 'black')
+                    .map(([name]) => `<option value="${name}">${name.charAt(0).toUpperCase() + name.slice(1)}</option>`).join('');
+            } else if (bandIdx === bandMode - 2) {
+                return Object.entries(colors).filter(([_, v]) => v.multiplier !== undefined)
+                    .map(([name]) => `<option value="${name}">${name.charAt(0).toUpperCase() + name.slice(1)}</option>`).join('');
+            } else if (bandIdx === bandMode - 1) {
+                return `<option value="brown">Brown ±1%</option><option value="red">Red ±2%</option><option value="green">Green ±0.5%</option><option value="blue">Blue ±0.25%</option><option value="violet">Violet ±0.1%</option><option value="gray">Gray ±0.05%</option><option value="gold">Gold ±5%</option><option value="silver">Silver ±10%</option>`;
+            } else {
+                return `<option value="brown">Brown 100ppm</option><option value="red">Red 50ppm</option><option value="orange">Orange 15ppm</option><option value="yellow">Yellow 25ppm</option>`;
+            }
+        }
+
+        function calculate() {
+            const bands = Array.from(document.querySelectorAll('.color-select')).map(s => s.value);
+            selectedColors = bands;
+
+            let value = 0;
+            if (bandMode === 4) {
+                value = (colors[bands[0]].value * 10 + colors[bands[1]].value) * colors[bands[2]].multiplier;
+            } else if (bandMode === 5 || bandMode === 6) {
+                value = (colors[bands[0]].value * 100 + colors[bands[1]].value * 10 + colors[bands[2]].value) * colors[bands[3]].multiplier;
+            }
+
+            const tolerance = colors[bands[bandMode === 4 ? 3 : 4]].tolerance || 20;
+
+            document.getElementById('resistanceValue').textContent = formatResistance(value);
+            document.getElementById('toleranceValue').textContent = `±${tolerance}%`;
+        }
+
+        function formatResistance(value) {
+            if (value >= 1000000) return (value / 1000000).toFixed(2) + ' MΩ';
+            if (value >= 1000) return (value / 1000).toFixed(2) + ' kΩ';
+            return value.toFixed(2) + ' Ω';
+        }
+
+        document.querySelectorAll('.band-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.band-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                bandMode = parseInt(btn.dataset.bands);
+                initBandSelectors();
+            });
+        });
+
+        initBandSelectors();
+    </script>
+</body>
+</html>

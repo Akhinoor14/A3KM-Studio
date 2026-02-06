@@ -189,6 +189,7 @@
     }
     
     function showSplash() {
+        console.log('[A3KM Splash] showSplash() called, creating splash element...');
         sessionStorage.setItem('a3km_splash_shown', 'true');
         
         const splash = document.createElement('div');
@@ -428,10 +429,28 @@
         `;
         
         document.head.appendChild(Object.assign(document.createElement('style'), {textContent: css}));
-        document.body.appendChild(splash);
-
-        const preSplash = document.getElementById('a3km-pre-splash');
-        if (preSplash) preSplash.remove();
+        
+        // Ensure body exists before appending
+        const appendSplash = () => {
+            if (document.body) {
+                console.log('[A3KM Splash] Appending splash to body');
+                document.body.appendChild(splash);
+                
+                // Remove pre-splash
+                const preSplash = document.getElementById('a3km-pre-splash');
+                if (preSplash) {
+                    console.log('[A3KM Splash] Removing pre-splash');
+                    preSplash.remove();
+                }
+                
+                // Start animation sequence
+                startAnimationSequence();
+            } else {
+                console.log('[A3KM Splash] Body not ready, waiting...');
+                requestAnimationFrame(appendSplash);
+            }
+        };
+        appendSplash();
         
         // Optimize particle count for mobile
         const isMobile = window.innerWidth <= 768;
@@ -494,15 +513,32 @@
                         
                         // Gradient line for smoother look
                         const lineGradient = ctx.createLinearGradient(p.x, p.y, p2.x, p2.y);
-                        lineGradient.addColorStop(0, `rgba(204, 0, 0, ${lineOpacity})`);
-                        lineGradient.addColorStop(0.5, `rgba(255, 100, 100, ${lineOpacity * 0.8})`);
-                        lineGradient.addColorStop(1, `rgba(204, 0, 0, ${lineOpacity})`);
-                        
-                        ctx.strokeStyle = lineGradient;
-                        ctx.globalAlpha = 1;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
+        return splash;
+    }
+    
+    function startAnimationSequence() {
+        const splash = document.getElementById('a3km-splash');
+        if (!splash) {
+            console.log('[A3KM Splash] Splash element not found!');
+            return;
+        }
+        
+        console.log('[A3KM Splash] Starting animation sequence');
+        
+        // Sound toggle
+        consconst t1 = splash.querySelector('#t1');
+            if (t1) t1ctor('#snd');
+        if (sndBtn) {
+            sndBtn.onclick = () => {
+                SOUNDS_ENABLED = !SOUNDS_ENABLED;
+                localStorage.setItem('a3km_splash_sound', SOUNDS_ENABLED ? 'true' : 'false');
+                sndBtn.textContent = SOUNDS_ENABLED ? '🔊' : '🔇';
+            };
+        }
+        
+        // SMOOTH PREMIUM BOOT SEQUENCE - Perfect timing for best animations
+        setTimeout(async () => {
+            console.log('[A3KM Splash] Stage 1 starting');To(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
                         ctx.stroke();
                     }
@@ -513,8 +549,10 @@
         animateParticles();
         
         // Sound toggle
-        splash.querySelector('#snd').onclick = () => {
-            SOUNDS_ENABLED = !SOUNDS_ENABLED;
+        splash.qconsole.log('[A3KM Splash] Stage 2 starting');
+                stage2.classList.remove('hide');
+                const t2 = splash.querySelector('#t2');
+                if (t2) t2D;
             localStorage.setItem('a3km_splash_sound', SOUNDS_ENABLED ? 'true' : 'false');
             splash.querySelector('#snd').textContent = SOUNDS_ENABLED ? '🔊' : '🔇';
         };
@@ -539,20 +577,22 @@
             await new Promise(r => setTimeout(r, 1800));
             
             // Smooth transition out with coordinated timing
-            stage1.style.opacity = '0';
-            stage1.style.transform = 'scale(0.9)';
-            
-            await new Promise(r => setTimeout(r, 400));
+            stagole.log('[A3KM Splash] Stage 3 starting');
+            const finalStage = splash.querySelector('#s3');
+            if (finalStage) {
+                finalStage.classList.remove('hide');
+                finalStage.style.opacity = '1';
+                finalStage.style.transform = 'scale(1)';
+            }));
             stage1.classList.add('hide');
 
             // Stage 2: Module loading - Extended for smoother pacing
             const stage2 = splash.querySelector('#s2');
             if (stage2) {
                 stage2.classList.remove('hide');
-                splash.querySelector('#t2').textContent = '> Loading core modules';
-                await new Promise(r => setTimeout(r, 1400)); // Extended for readability
-                stage2.style.opacity = '0';
-                stage2.style.transform = 'scale(0.96)';
+            console.log('[A3KM Splash] Animation sequence complete, hiding splash');
+            hideSplash();
+        }, 450); // Smooth initial reveal with fadeIn animation.style.transform = 'scale(0.96)';
                 await new Promise(r => setTimeout(r, 350));
                 stage2.classList.add('hide');
             }
@@ -565,15 +605,33 @@
             
             // Let cube complete beautiful rotation and title be fully readable
             // Cube spin is 6s, we show for 2800ms to see nearly half rotation elegantly
-            await new Promise(r => setTimeout(r, 1200)); // Let cube entry + title entry complete
-            
-            playCompleteChime(); // Attractive completion sound with sparkle - perfectly timed
-            
-            // Continue showing for elegant effect
-            await new Promise(r => setTimeout(r, 1600)); // Let cube rotate majestically with sound
-            hideSplash();
-        }, 450); // Smooth initial reveal with fadeIn animation
+        console.log('[A3KM Splash] init() called');
         
+        // Wait for DOM to be ready
+        const start = () => {
+            console.log('[A3KM Splash] DOM ready, showing splash');
+            showSplash();
+
+            // Maximum timeout: 8.5 seconds - enough time for all premium animations
+            setTimeout(() => {
+                if (document.getElementById('a3km-splash')) {
+                    console.log('[A3KM Splash] Safety timeout reached, hiding splash');
+                    hideSplash();
+                }
+            }, 8500);
+        };
+        
+        if (document.readyState === 'loading') {
+            console.log('[A3KM Splash] Waiting for DOMContentLoaded');
+            document.addEventListener('DOMContentLoaded', start, { once: true });
+        } else {
+            console.log('[A3KM Splash] DOM already loaded');
+            start();
+        }
+    }
+    
+    // Initialize splash screen
+    console.log('[A3KM Splash] Script loaded, initializing...');
         return splash;
     }
     
