@@ -448,6 +448,9 @@
         
         document.head.appendChild(Object.assign(document.createElement('style'), {textContent: css}));
         document.body.appendChild(splash);
+
+        const preSplash = document.getElementById('a3km-pre-splash');
+        if (preSplash) preSplash.remove();
         
         // Optimize particle count for mobile
         const isMobile = window.innerWidth <= 768;
@@ -551,8 +554,8 @@
                 }, 100);
             }
             
-            // Let startup sound and animations breathe (perfect for logo float + rings pulse)
-            await new Promise(r => setTimeout(r, 1200));
+            // Let startup sound and animations breathe
+            await new Promise(r => setTimeout(r, 1600));
             
             // Smooth transition out with coordinated timing
             stage1.style.opacity = '0';
@@ -560,20 +563,32 @@
             
             await new Promise(r => setTimeout(r, 400));
             stage1.classList.add('hide');
+
+            // Stage 2: Module loading
+            const stage2 = splash.querySelector('#s2');
+            if (stage2) {
+                stage2.classList.remove('hide');
+                splash.querySelector('#t2').textContent = '> Loading core modules';
+                await new Promise(r => setTimeout(r, 1200));
+                stage2.style.opacity = '0';
+                stage2.style.transform = 'scale(0.96)';
+                await new Promise(r => setTimeout(r, 350));
+                stage2.classList.add('hide');
+            }
             
-            // Stage 2: 3D Cube + Company name with dramatic reveal
+            // Stage 3: 3D Cube + Company name with dramatic reveal
             const finalStage = splash.querySelector('#s3');
             finalStage.classList.remove('hide');
             finalStage.style.opacity = '1';
             finalStage.style.transform = 'scale(1)';
             
             // Let cube entry animation and title animation complete beautifully
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 1700));
             
             playCompleteChime(); // Attractive completion sound with sparkle
-            await new Promise(r => setTimeout(r, 400)); // Let sound fully finish with echo
+            await new Promise(r => setTimeout(r, 500)); // Let sound fully finish with echo
             hideSplash();
-        }, 400); // Smooth initial reveal with fadeIn animation
+        }, 450); // Smooth initial reveal with fadeIn animation
         
         return splash;
     }
@@ -588,29 +603,11 @@
     
     function init() {
         showSplash();
-        
-        const startTime = Date.now();
-        const checkReady = () => {
-            const elapsed = Date.now() - startTime;
-            const ready = document.readyState === 'complete';
-            // Minimum 3.3s for smooth animations to complete
-            if (ready && elapsed >= 3300) {
-                setTimeout(hideSplash, 400);
-            } else {
-                setTimeout(checkReady, 100);
-            }
-        };
-        
-        if (document.readyState === 'complete') {
-            checkReady();
-        } else {
-            window.addEventListener('load', checkReady);
-        }
-        
-        // Maximum timeout: 4 seconds - enough time for all animations
+
+        // Maximum timeout: 7 seconds - enough time for all animations
         setTimeout(() => {
             if (document.getElementById('a3km-splash')) hideSplash();
-        }, 4000);
+        }, 7000);
     }
     
     // Initialize splash screen

@@ -14,8 +14,13 @@
         console.log('✅ Running as installed PWA');
         localStorage.setItem('a3km_pwa_installed', 'true');
         
+        // Show a quick cover to avoid initial flash
+        showPreSplash();
+
         // Load splash screen for installed app
         loadSplashScreen();
+        // Offer fullscreen toggle for desktop apps (user-initiated)
+        showFullscreenPrompt();
     }
     
     /**
@@ -31,6 +36,69 @@
         // Load immediately, not deferred
         document.head.insertBefore(script, document.head.firstChild);
         console.log('✅ Advanced app splash screen loaded');
+    }
+
+    /**
+     * Lightweight cover shown before the full splash loads
+     */
+    function showPreSplash() {
+        if (document.getElementById('a3km-pre-splash')) return;
+
+        const pre = document.createElement('div');
+        pre.id = 'a3km-pre-splash';
+        pre.innerHTML = `
+            <div class="a3km-pre-splash-content">
+                <div class="a3km-pre-splash-logo">A3KM</div>
+                <div class="a3km-pre-splash-text">Starting...</div>
+            </div>
+        `;
+
+        if (document.body) {
+            document.body.appendChild(pre);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!document.getElementById('a3km-pre-splash')) {
+                    document.body.appendChild(pre);
+                }
+            }, { once: true });
+        }
+    }
+
+    /**
+     * Show a fullscreen prompt button (Edge/Chrome require user gesture)
+     */
+    function showFullscreenPrompt() {
+        if (document.getElementById('a3km-fullscreen-btn')) return;
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded', showFullscreenPrompt, { once: true });
+            return;
+        }
+
+        const btn = document.createElement('button');
+        btn.id = 'a3km-fullscreen-btn';
+        btn.type = 'button';
+        btn.textContent = 'Enter Fullscreen';
+        btn.title = 'Switch to fullscreen mode';
+        btn.onclick = async () => {
+            try {
+                if (!document.fullscreenElement) {
+                    await document.documentElement.requestFullscreen();
+                }
+                btn.remove();
+            } catch (error) {
+                console.warn('Fullscreen request denied:', error);
+            }
+        };
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'a3km-fullscreen-close';
+        close.textContent = '×';
+        close.title = 'Dismiss';
+        close.onclick = () => btn.remove();
+        btn.appendChild(close);
+
+        document.body.appendChild(btn);
     }
     
     /**
@@ -185,6 +253,80 @@
             @keyframes slideInRight {
                 from { opacity: 0; transform: translateX(100px); }
                 to { opacity: 1; transform: translateX(0); }
+            }
+
+            #a3km-pre-splash {
+                position: fixed;
+                inset: 0;
+                z-index: 999998;
+                background: radial-gradient(circle at 50% 50%, #1a0505 0%, #0a0a0a 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+                color: #fff;
+                letter-spacing: 2px;
+            }
+
+            .a3km-pre-splash-content {
+                text-align: center;
+                opacity: 0.9;
+                animation: slideInRight 0.35s ease-out;
+            }
+
+            .a3km-pre-splash-logo {
+                font-size: 28px;
+                font-weight: 800;
+                color: #CC0000;
+                text-shadow: 0 0 20px rgba(204,0,0,0.6);
+            }
+
+            .a3km-pre-splash-text {
+                font-size: 12px;
+                margin-top: 6px;
+                color: rgba(255,255,255,0.7);
+            }
+
+            #a3km-fullscreen-btn {
+                position: fixed;
+                right: 20px;
+                bottom: 20px;
+                z-index: 10001;
+                background: linear-gradient(135deg, #CC0000 0%, #990000 100%);
+                color: #fff;
+                border: 2px solid rgba(255,255,255,0.2);
+                border-radius: 999px;
+                padding: 10px 16px;
+                font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+                font-weight: 700;
+                font-size: 13px;
+                letter-spacing: 0.3px;
+                box-shadow: 0 8px 24px rgba(204,0,0,0.4), 0 4px 12px rgba(0,0,0,0.35);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideInRight 0.4s ease-out;
+            }
+
+            #a3km-fullscreen-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 30px rgba(204,0,0,0.5), 0 6px 16px rgba(0,0,0,0.4);
+            }
+
+            #a3km-fullscreen-btn .a3km-fullscreen-close {
+                margin-left: 4px;
+                background: transparent;
+                border: none;
+                color: #fff;
+                font-size: 18px;
+                line-height: 1;
+                cursor: pointer;
+                opacity: 0.7;
+            }
+
+            #a3km-fullscreen-btn .a3km-fullscreen-close:hover {
+                opacity: 1;
             }
         `;
         document.head.appendChild(style);
