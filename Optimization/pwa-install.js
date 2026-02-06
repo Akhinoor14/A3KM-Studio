@@ -10,6 +10,14 @@
 
   // Check if already installed or dismissed
   function shouldShowPrompt() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+
+    // Clear stale install flag if app was uninstalled
+    if (!isStandalone && localStorage.getItem(INSTALLED_KEY) === 'true') {
+      localStorage.removeItem(INSTALLED_KEY);
+    }
+
     // Check if already installed
     if (localStorage.getItem(INSTALLED_KEY) === 'true') {
       console.log('[PWA] Already installed - skipping prompt');
@@ -40,7 +48,7 @@
     }
     
     // Check if already running as installed app
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (isStandalone) {
       localStorage.setItem(INSTALLED_KEY, 'true');
       console.log('[PWA] Running as standalone - skipping prompt');
       return false;
