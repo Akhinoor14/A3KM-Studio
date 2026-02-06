@@ -315,7 +315,7 @@
         .cube {
             width: 100%; height: 100%;
             position: relative; transform-style: preserve-3d;
-            animation: spin 4s infinite cubic-bezier(0.45, 0, 0.55, 1), cubeEntry 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: spin 6s infinite cubic-bezier(0.45, 0, 0.55, 1), cubeEntry 1s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .f {
             position: absolute; width: 100%; height: 100%;
@@ -337,7 +337,7 @@
             font-size: 36px; font-weight: 700; color: #fff;
             margin: 0 0 10px; letter-spacing: 4px;
             text-shadow: 0 0 20px #CC0000;
-            animation: titleGlow 2.5s ease-in-out infinite, titleEntry 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
+            animation: titleGlow 3s ease-in-out infinite, titleEntry 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards;
         }
         .sub {
             font-size: 13px; color: rgba(255,255,255,0.6);
@@ -400,31 +400,12 @@
         }
         @keyframes cubeEntry {
             0% { opacity: 0; transform: scale(0.3) rotateX(45deg) rotateY(45deg); }
-            60% { transform: scale(1.1) rotateX(10deg) rotateY(10deg); }
+            60% { transform: scale(1.15) rotateX(10deg) rotateY(10deg); }
             100% { opacity: 1; transform: scale(1) rotateX(0) rotateY(0); }
         }
         @keyframes titleEntry {
-            0% { opacity: 0; transform: scale(0.8) translateY(20px); letter-spacing: 10px; }
-            60% { transform: scale(1.05) translateY(-3px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 4px; }
-        }
-        @keyframes scaleIn {
-            0% { opacity: 0; transform: scale(0.5); }
-            60% { transform: scale(1.1); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes cubeEntry {
-            0% { opacity: 0; transform: scale(0.3) rotateX(45deg) rotateY(45deg); }
-            60% { transform: scale(1.1) rotateX(10deg) rotateY(10deg); }
-            100% { opacity: 1; transform: scale(1) rotateX(0) rotateY(0); }
-        }
-        @keyframes titleEntry {
-            0% { opacity: 0; transform: scale(0.8) translateY(20px); letter-spacing: 10px; }
-            60% { transform: scale(1.05) translateY(-3px); }
+            0% { opacity: 0; transform: scale(0.8) translateY(30px); letter-spacing: 12px; }
+            60% { transform: scale(1.08) translateY(-5px); }
             100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 4px; }
         }
         
@@ -554,8 +535,8 @@
                 }, 100);
             }
             
-            // Let startup sound and animations breathe
-            await new Promise(r => setTimeout(r, 1600));
+            // Let startup sound and animations breathe - Extended for quality
+            await new Promise(r => setTimeout(r, 1800));
             
             // Smooth transition out with coordinated timing
             stage1.style.opacity = '0';
@@ -564,29 +545,32 @@
             await new Promise(r => setTimeout(r, 400));
             stage1.classList.add('hide');
 
-            // Stage 2: Module loading
+            // Stage 2: Module loading - Extended for smoother pacing
             const stage2 = splash.querySelector('#s2');
             if (stage2) {
                 stage2.classList.remove('hide');
                 splash.querySelector('#t2').textContent = '> Loading core modules';
-                await new Promise(r => setTimeout(r, 1200));
+                await new Promise(r => setTimeout(r, 1400)); // Extended for readability
                 stage2.style.opacity = '0';
                 stage2.style.transform = 'scale(0.96)';
                 await new Promise(r => setTimeout(r, 350));
                 stage2.classList.add('hide');
             }
             
-            // Stage 3: 3D Cube + Company name with dramatic reveal
+            // Stage 3: 3D Cube + Company name with dramatic reveal - Extended for full rotation
             const finalStage = splash.querySelector('#s3');
             finalStage.classList.remove('hide');
             finalStage.style.opacity = '1';
             finalStage.style.transform = 'scale(1)';
             
-            // Let cube entry animation and title animation complete beautifully
-            await new Promise(r => setTimeout(r, 1700));
+            // Let cube complete beautiful rotation and title be fully readable
+            // Cube spin is 6s, we show for 2800ms to see nearly half rotation elegantly
+            await new Promise(r => setTimeout(r, 1200)); // Let cube entry + title entry complete
             
-            playCompleteChime(); // Attractive completion sound with sparkle
-            await new Promise(r => setTimeout(r, 500)); // Let sound fully finish with echo
+            playCompleteChime(); // Attractive completion sound with sparkle - perfectly timed
+            
+            // Continue showing for elegant effect
+            await new Promise(r => setTimeout(r, 1600)); // Let cube rotate majestically with sound
             hideSplash();
         }, 450); // Smooth initial reveal with fadeIn animation
         
@@ -604,10 +588,10 @@
     function init() {
         showSplash();
 
-        // Maximum timeout: 7 seconds - enough time for all animations
+        // Maximum timeout: 8.5 seconds - enough time for all premium animations
         setTimeout(() => {
             if (document.getElementById('a3km-splash')) hideSplash();
-        }, 7000);
+        }, 8500);
     }
     
     // Initialize splash screen
