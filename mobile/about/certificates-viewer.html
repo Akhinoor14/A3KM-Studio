@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="View certificates and achievements">
+    <title>Certificates - A3KM Studio</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="../manifest.json">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../shared/mobile-common.css">
+    <link rel="stylesheet" href="../shared/mobile-navbar.css">
+    <style>
+        body{padding-bottom:70px;}
+        .cert-header{position:sticky;top:0;z-index:100;padding:12px 16px;background:rgba(0,0,0,0.98);backdrop-filter:blur(10px);border-bottom:1px solid var(--border-primary);}
+        .back-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(204,0,0,0.1);border:1px solid var(--border-primary);border-radius:8px;color:var(--primary-red);font-size:14px;font-weight:600;text-decoration:none;}
+        .back-btn:active{background:rgba(204,0,0,0.2);transform:translateX(-3px);}
+        .cert-container{padding:20px 16px;}
+        .page-title{font-size:24px;font-weight:900;margin-bottom:8px;color:var(--text-primary);}
+        .page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:24px;}
+        .filter-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+        .filter-tabs::-webkit-scrollbar{display:none;}
+        .filter-tab{flex-shrink:0;padding:8px 16px;background:rgba(204,0,0,0.1);border:1px solid var(--border-primary);border-radius:20px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.3s ease;white-space:nowrap;}
+        .filter-tab.active{background:var(--primary-red);border-color:var(--primary-red);color:#fff;}
+        .filter-tab:active{transform:scale(0.95);}
+        .cert-grid{display:grid;gap:16px;}
+        .cert-card{background:var(--bg-card);border:1px solid var(--border-primary);border-radius:12px;padding:16px;transition:all 0.3s ease;}
+        .cert-card:active{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:0 6px 20px rgba(204,0,0,0.2);}
+        .cert-category{font-size:10px;font-weight:700;color:var(--primary-red);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+        .cert-title{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text-primary);}
+        .cert-issuer{font-size:13px;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .cert-date{font-size:12px;color:var(--text-dim);}
+        .cert-badge{width:100%;height:150px;background:linear-gradient(135deg,rgba(204,0,0,0.05),rgba(0,0,0,0.2));border:1px solid var(--border-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-top:12px;overflow:hidden;}
+        .cert-badge img{width:100%;height:100%;object-fit:contain;}
+        .cert-badge i{font-size:48px;color:rgba(204,0,0,0.2);}
+        .view-btn{width:100%;padding:10px;background:rgba(204,0,0,0.1);border:1px solid var(--border-primary);border-radius:8px;font-size:13px;font-weight:600;color:var(--primary-red);margin-top:12px;cursor:pointer;transition:all 0.3s ease;}
+        .view-btn:active{background:rgba(204,0,0,0.2);}
+        .empty-state{text-align:center;padding:60px 20px;}
+        .empty-state i{font-size:64px;color:var(--text-dim);margin-bottom:16px;opacity:0.5;}
+    </style>
+</head>
+<body>
+    <header class="cert-header">
+        <a href="about.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back to About</span></a>
+    </header>
+    <div class="cert-container">
+        <h1 class="page-title">Certificates & Achievements</h1>
+        <p class="page-subtitle">Professional certifications and skill validations</p>
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-category="all">All Certificates</button>
+            <button class="filter-tab" data-category="skill">Technical Skills</button>
+            <button class="filter-tab" data-category="medical">Medical</button>
+            <button class="filter-tab" data-category="academic">Academic</button>
+        </div>
+        <div class="cert-grid" id="certGrid"></div>
+    </div>
+    <div id="mobileNavbar"></div>
+    <script src="../shared/mobile-navbar.js"></script>
+    <script>
+(function(){
+let allCertificates=[];
+let currentCategory='all';
+const certGrid=document.getElementById('certGrid');
+const filterTabs=document.querySelectorAll('.filter-tab');
+
+// Load certificates from desktop JSON
+async function loadCertificates(){
+    try{
+        const response=await fetch('../../About me/certificates-data.json');
+        const data=await response.json();
+        
+        // Parse categories to flat array
+        allCertificates=[];
+        Object.entries(data.categories).forEach(([catName,catData])=>{
+            catData.certificates.forEach(cert=>{
+                allCertificates.push({
+                    id:cert.id,
+                    title:cert.title,
+                    issuer:cert.issuedBy,
+                    date:cert.issuedDate,
+                    category:cert.category.toLowerCase(),
+                    subcategory:cert.subcategory||'',
+                    description:cert.description||'',
+                    image:cert.thumbnail?`../../About me/${cert.thumbnail}`:'',
+                    filePath:cert.filePath?`../../About me/${cert.filePath}`:'',
+                    verified:cert.verified||false,
+                    featured:cert.featured||false
+                });
+            });
+        });
+        
+        renderCertificates();
+    }catch(error){
+        console.error('Error loading certificates:',error);
+        certGrid.innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading Certificates</h3><p style="color:var(--text-dim);">Please try refreshing the page</p></div>';
+    }
+}
+
+function renderCertificates(){
+    const filtered=currentCategory==='all'?allCertificates:allCertificates.filter(c=>c.category===currentCategory);
+    
+    if(filtered.length===0){
+        certGrid.innerHTML='<div class="empty-state"><i class="fas fa-certificate"></i><h3>No Certificates Found</h3><p style="color:var(--text-dim);">Try selecting a different category</p></div>';
+        return;
+    }
+    
+    certGrid.innerHTML=filtered.map(cert=>`
+        <div class="cert-card">
+            <div class="cert-category">${cert.category}${cert.subcategory?' • '+cert.subcategory:''}</div>
+            <h3 class="cert-title">${cert.title}</h3>
+            <div class="cert-issuer"><i class="fas fa-building"></i> ${cert.issuer}</div>
+            <div class="cert-date"><i class="fas fa-calendar"></i> ${cert.date}</div>
+            ${cert.description?`<p style="font-size:12px;color:var(--text-dim);margin-top:8px;">${cert.description}</p>`:''}
+            <div class="cert-badge">
+                ${cert.image?`<img src="${cert.image}" alt="${cert.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-award\\'></i>'">`:'<i class="fas fa-award"></i>'}
+            </div>
+            ${cert.verified?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#00ff9d;margin-top:8px;"><i class="fas fa-check-circle"></i> Verified</span>':''}
+            ${cert.filePath?`<button class="view-btn" onclick="window.open('${cert.filePath}','_blank')"><i class="fas fa-external-link-alt"></i> View Certificate</button>`:''}
+        </div>
+    `).join('');
+    
+    addHapticFeedback();
+}
+
+function handleFilterChange(e){
+    const tab=e.target.closest('.filter-tab');
+    if(!tab)return;
+    if(navigator.vibrate)navigator.vibrate(10);
+    filterTabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCategory=tab.getAttribute('data-category');
+    renderCertificates();
+}
+
+function addHapticFeedback(){
+    document.querySelectorAll('.cert-card,.view-btn').forEach(el=>{
+        el.addEventListener('touchstart',()=>{
+            if(navigator.vibrate)navigator.vibrate(10);
+        });
+    });
+}
+
+function init(){
+    loadCertificates();
+    document.querySelector('.filter-tabs').addEventListener('click',handleFilterChange);
+    document.querySelector('.back-btn').addEventListener('touchstart',()=>{
+        if(navigator.vibrate)navigator.vibrate(10);
+    });
+}
+
+if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+}else{
+    init();
+}
+})();
+    </script>
+    <script src="../pwa-init.js"></script>
+</body>
+</html>

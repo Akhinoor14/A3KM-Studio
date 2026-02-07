@@ -1,0 +1,278 @@
+/* ============================================================================
+   MOBILE BOTTOM NAVIGATION BAR
+   Optimized for Mobile Devices
+   Theme: Red, Black, White, Engineering Grid, Architectural
+   Similar to Facebook's Bottom Navigation Pattern
+   ============================================================================ */
+
+:root {
+    --primary-red: #CC0000;
+    --dark-red: #8B0000;
+    --accent-red: #FF0000;
+    --bg-black: #000000;
+    --bg-dark: #0A0A0A;
+    --bg-nav: rgba(10, 10, 10, 0.98);
+    --border-primary: rgba(204, 0, 0, 0.3);
+    --border-active: rgba(204, 0, 0, 0.8);
+    --text-primary: rgba(255, 255, 255, 0.95);
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --text-inactive: rgba(255, 255, 255, 0.45);
+}
+
+/* Mobile Bottom Navigation Container */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: var(--bg-nav);
+    border-top: 2px solid var(--border-primary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
+    box-shadow: 
+        0 -4px 20px rgba(0, 0, 0, 0.5),
+        0 -2px 8px rgba(204, 0, 0, 0.2);
+}
+
+/* Engineering Grid Pattern Overlay */
+.mobile-bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(90deg, rgba(204, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(204, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Navigation Inner Container */
+.mobile-nav-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 8px;
+}
+
+/* Navigation Items */
+.mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: var(--text-inactive);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-width: 60px;
+}
+
+/* Icon Styles */
+.mobile-nav-item i {
+    font-size: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Label Styles */
+.mobile-nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+/* Hover Effect (for devices that support hover) */
+@media (hover: hover) {
+    .mobile-nav-item:hover {
+        color: var(--text-secondary);
+    }
+    
+    .mobile-nav-item:hover i {
+        transform: translateY(-2px) scale(1.05);
+    }
+}
+
+/* Active State */
+.mobile-nav-item.active {
+    color: var(--primary-red);
+}
+
+.mobile-nav-item.active i {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(204, 0, 0, 0.6));
+}
+
+.mobile-nav-item.active .mobile-nav-label {
+    color: var(--primary-red);
+    font-weight: 700;
+}
+
+/* Active Indicator */
+.mobile-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-red), transparent);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 0 10px rgba(204, 0, 0, 0.6);
+    animation: activeGlow 2s ease-in-out infinite;
+}
+
+@keyframes activeGlow {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(204, 0, 0, 0.6);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 20px rgba(204, 0, 0, 0.8);
+    }
+}
+
+/* Ripple Effect on Tap */
+.mobile-nav-item::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(204, 0, 0, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s, opacity 0.4s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.mobile-nav-item:active::after {
+    width: 100px;
+    height: 100px;
+    opacity: 1;
+    transition: 0s;
+}
+
+/* Notification Badge (for future use) */
+.mobile-nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 50%;
+    transform: translateX(18px);
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--accent-red);
+    border: 2px solid var(--bg-nav);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
+}
+
+/* Safe Area for Devices with Notch */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobile-bottom-nav {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(65px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Content Padding to Account for Fixed Bottom Nav */
+body {
+    padding-bottom: 75px; /* 65px nav height + 10px spacing */
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    body {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom));
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .mobile-bottom-nav {
+        border-top-width: 3px;
+    }
+    
+    .mobile-nav-item.active {
+        color: var(--accent-red);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .mobile-nav-item,
+    .mobile-nav-item i,
+    .mobile-nav-label {
+        transition: none;
+    }
+    
+    .mobile-nav-item.active::before {
+        animation: none;
+    }
+}
+
+/* Very Small Devices (< 360px) */
+@media (max-width: 359px) {
+    .mobile-nav-item i {
+        font-size: 22px;
+    }
+    
+    .mobile-nav-label {
+        font-size: 10px;
+    }
+    
+    .mobile-bottom-nav {
+        height: 60px;
+    }
+    
+    body {
+        padding-bottom: 70px;
+    }
+}
+
+/* Landscape Mode on Small Devices */
+@media (max-height: 500px) and (orientation: landscape) {
+    .mobile-bottom-nav {
+        height: 55px;
+    }
+    
+    .mobile-nav-item {
+        padding: 4px 4px;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 20px;
+    }
+    
+    .mobile-nav-label {
+        font-size: 9px;
+    }
+    
+    body {
+        padding-bottom: 60px;
+    }
+}
