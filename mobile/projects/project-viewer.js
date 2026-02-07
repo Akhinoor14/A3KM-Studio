@@ -123,12 +123,23 @@
         const hasTinkercad = currentProject.tinkercadLink;
         const hasSteps = currentProject.steps && currentProject.steps.length > 0;
         const hasComponents = currentProject.components && currentProject.components.length > 0;
+        const hasImages = currentProject.images && currentProject.images.length > 0;
+        const hasTopics = currentProject.topics && currentProject.topics.length > 0;
         const isArduino = currentProject.category === 'arduino';
+        const isMATLAB = currentProject.category === 'matlab';
+        const isElectronics = currentProject.category === 'electronics';
+        const hasToolLink = currentProject.toolLink;
+        const hasFeatures = currentProject.features && currentProject.features.length > 0;
 
         projectContainer.innerHTML = `
             <div class="project-hero">
                 <span class="project-category"><i class="fas fa-folder"></i> ${currentProject.category.toUpperCase()}</span>
                 <h1 class="project-title">${currentProject.title}</h1>
+                ${currentProject.description ? `
+                <p class="project-description" style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; margin: 16px 0; max-width: 700px;">
+                    ${currentProject.description}
+                </p>
+                ` : ''}
                 <div class="project-meta">
                     <span><i class="fas fa-signal"></i> ${currentProject.difficulty}</span>
                     ${currentProject.duration ? `<span><i class="fas fa-clock"></i> ${currentProject.duration}</span>` : ''}
@@ -223,9 +234,33 @@
             </section>
             ` : ''}
 
+            ${hasFeatures && isElectronics ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-star"></i> Tool Features</h2>
+                <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                    ${currentProject.features.map(feature => `
+                        <div class="feature-badge" style="padding: 14px; background: rgba(0,151,157,0.1); border: 2px solid rgba(0,151,157,0.3); border-radius: 10px; text-align: center;">
+                            <i class="fas fa-check-circle" style="color: #00979d; font-size: 20px; margin-bottom: 8px;"></i>
+                            <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">${feature}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+            ` : ''}
+
+            ${hasToolLink && isElectronics ? `
+            <section style="margin-top: 32px;">
+                <a href="${currentProject.toolLink}" target="_blank" class="open-tool-btn" style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 18px 32px; background: linear-gradient(135deg, #8B0000, #5a0000); color: #fff; text-decoration: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 8px 24px rgba(139,0,0,0.4); transition: all 0.3s ease;">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Open ${currentProject.title}</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </section>
+            ` : ''}
+
             ${hasCode ? `
             <section>
-                <h2 class="section-title"><i class="fas fa-code"></i> ${isArduino ? 'Arduino Sketch' : 'Sample Code'}</h2>
+                <h2 class="section-title"><i class="fas fa-code"></i> ${isMATLAB ? 'MATLAB Code' : isArduino ? 'Arduino Sketch' : 'Sample Code'}</h2>
                 <div class="code-section" style="background: rgba(0,0,0,0.4); border-radius: 12px; border: 2px solid var(--border-primary); overflow: hidden;">
                     <div class="code-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border-primary);">
                         <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">
@@ -286,6 +321,49 @@
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading explanation...</p>
                         </div>
+                    </div>
+                </div>
+            </section>
+            ` : ''}
+
+            ${hasTopics && isMATLAB ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Analysis Topics</h2>
+                <div class="topics-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">
+                    ${currentProject.topics.map(topic => `
+                        <div class="topic-badge" style="padding: 10px 14px; background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; text-align: center; color: var(--text-primary); font-size: 0.85rem; font-weight: 500;">
+                            ${topic}
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+            ` : ''}
+
+            ${hasImages && isMATLAB ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-chart-line"></i> Results & Visualizations</h2>
+                <div class="images-gallery" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    ${currentProject.images.map((imgPath, idx) => `
+                        <div class="result-image" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); overflow: hidden;">
+                            <img src="${imgPath}" alt="Result ${idx + 1}" style="width: 100%; height: auto; display: block;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:var(--text-secondary)\\'><i class=\\'fas fa-image\\' style=\\'font-size:32px;margin-bottom:12px;\\'></i><p>Image will be available soon</p></div>'">
+                            <div style="padding: 12px; background: rgba(0,0,0,0.5);">
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
+                                    Result ${idx + 1}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+            ` : ''}
+
+            ${isMATLAB && currentProject.matlabVersion ? `
+            <section>
+                <div style="padding: 16px; background: rgba(0,151,157,0.1); border-radius: 12px; border: 2px solid rgba(0,151,157,0.3); display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-info-circle" style="font-size: 24px; color: #00979d;"></i>
+                    <div style="flex: 1;">
+                        <h4 style="color: var(--text-primary); margin: 0 0 4px 0; font-size: 0.95rem;">MATLAB Version Required</h4>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">${currentProject.matlabVersion}</p>
                     </div>
                 </div>
             </section>

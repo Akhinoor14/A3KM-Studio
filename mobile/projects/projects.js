@@ -184,14 +184,32 @@
                     </div>
                     
                     <div class="project-footer">
+                        ${project.category === 'electronics' && project.toolLink ? `
+                        <a href="${project.toolLink}" target="_blank" class="project-btn primary" style="flex: 1;">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Open Tool</span>
+                        </a>
+                        <a href="project-viewer.html?id=${project.id}" class="project-btn">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Info</span>
+                        </a>
+                        ` : `
                         <a href="project-viewer.html?id=${project.id}" class="project-btn primary">
                             <i class="fas fa-eye"></i>
                             <span>View</span>
                         </a>
+                        ${project.code || project.codePath ? `
                         <a href="project-viewer.html?id=${project.id}" class="project-btn">
                             <i class="fas fa-code"></i>
                             <span>Code</span>
                         </a>
+                        ` : `
+                        <a href="project-viewer.html?id=${project.id}" class="project-btn">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Details</span>
+                        </a>
+                        `}
+                        `}
                     </div>
                 </div>
             </div>

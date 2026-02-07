@@ -1,71 +1,14 @@
 // ============================================================================
 // VIDEO VIEWER - Individual Video Player (Mobile)
 // Displays YouTube video with details and related content
+// Fetches data from central content.json
 // ============================================================================
 
 (function() {
     'use strict';
 
-    // ========== VIDEO DATABASE (same as video-gallery.js) ==========
-    const videos = [
-        {
-            id: 1,
-            title: "Arduino Line Follower Robot - Complete Tutorial",
-            thumbnail: "https://img.youtube.com/vi/VIDEO_ID_1/mqdefault.jpg",
-            duration: "15:32",
-            views: "12.5K",
-            date: "2024-01-15",
-            description: "Learn how to build a line follower robot using Arduino UNO. Complete circuit diagram, code explanation, and troubleshooting tips included.\n\nIn this comprehensive tutorial, we'll cover:\n• Circuit diagram and components needed\n• Sensor calibration techniques\n• PID control algorithm implementation\n• Code optimization for better performance\n• Common issues and how to fix them\n\nComponents Required:\n- Arduino UNO\n- IR Sensors (x5)\n- Motor Driver L298N\n- DC Motors (x2)\n- Chassis and wheels\n- Power supply",
-            tags: ["Arduino", "Robotics", "Tutorial"],
-            videoId: "VIDEO_ID_1"
-        },
-        {
-            id: 2,
-            title: "3D Modeling in SOLIDWORKS - Beginner Tips",
-            thumbnail: "https://img.youtube.com/vi/VIDEO_ID_2/mqdefault.jpg",
-            duration: "22:18",
-            views: "8.3K",
-            date: "2024-01-10",
-            description: "Essential SOLIDWORKS tips and tricks for beginners. Learn sketching, features, and assembly basics in this comprehensive guide.",
-            tags: ["SOLIDWORKS", "3D Modeling", "CAD"],
-            videoId: "VIDEO_ID_2"
-        },
-        {
-            id: 3,
-            title: "ESP32 WiFi Projects - IoT Made Easy",
-            thumbnail: "https://img.youtube.com/vi/VIDEO_ID_3/mqdefault.jpg",
-            duration: "18:45",
-            views: "15.2K",
-            date: "2024-01-05",
-            description: "Build WiFi-enabled IoT projects with ESP32. Control LEDs, read sensors, and create a web interface from scratch.",
-            tags: ["ESP32", "IoT", "WiFi"],
-            videoId: "VIDEO_ID_3"
-        },
-        {
-            id: 4,
-            title: "PCB Design Basics - From Schematic to Board",
-            thumbnail: "https://img.youtube.com/vi/VIDEO_ID_4/mqdefault.jpg",
-            duration: "25:10",
-            views: "9.7K",
-            date: "2023-12-28",
-            description: "Complete PCB design workflow. Learn schematic capture, PCB layout, and manufacturing file generation.",
-            tags: ["PCB", "Electronics", "Design"],
-            videoId: "VIDEO_ID_4"
-        },
-        {
-            id: 5,
-            title: "Arduino Nano - 10 Amazing Projects",
-            thumbnail: "https://img.youtube.com/vi/VIDEO_ID_5/mqdefault.jpg",
-            duration: "20:35",
-            views: "18.9K",
-            date: "2023-12-20",
-            description: "Discover 10 creative Arduino Nano projects with complete code and circuit diagrams. Perfect for beginners and intermediate makers.",
-            tags: ["Arduino", "Projects", "DIY"],
-            videoId: "VIDEO_ID_5"
-        }
-    ];
-
     // ========== STATE ==========
+    let allVideos = [];
     let currentVideo = null;
     let isLiked = false;
     let isSaved = false;
@@ -84,17 +27,39 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const relatedList = document.getElementById('relatedList');
 
+    // ========== LOAD VIDEOS FROM JSON ==========
+    async function loadVideosFromJSON() {
+        try {
+            const response = await fetch('../../../Content Code/content.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            allVideos = data['video-blogs'] || [];
+            console.log(`📺 Loaded ${allVideos.length} videos`);
+            
+            loadVideo();
+        } catch (error) {
+            console.error('❌ Failed to load videos:', error);
+            document.getElementById('videoInfo').innerHTML = `
+                <div style="padding: 40px; text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--primary-red);"></i>
+                    <p style="margin-top: 20px;">Failed to load video data</p>
+                    <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px; background: var(--primary-red); border: none; border-radius: 6px; color: white; cursor: pointer;">Retry</button>
+                </div>
+            `;
+        }
+    }
+
     // ========== GET VIDEO ID FROM URL ==========
     function getVideoIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        return id ? parseInt(id) : 1; // Default to first video
+        return urlParams.get('id') || allVideos[0]?.id; // Default to first video ID
     }
 
     // ========== LOAD VIDEO ==========
     function loadVideo() {
         const videoId = getVideoIdFromUrl();
-        currentVideo = videos.find(v => v.id === videoId);
+        currentVideo = allVideos.find(v => v.id === videoId);
 
         if (!currentVideo) {
             videoInfo.innerHTML = `
@@ -143,8 +108,8 @@
         videoInfo.innerHTML = `
             <h1 class="video-title">${currentVideo.title}</h1>
             <div class="video-meta">
-                <span><i class="fas fa-eye"></i> ${currentVideo.views} views</span>
-                <span><i class="fas fa-calendar"></i> ${formatDate(currentVideo.date)}</span>
+                <span><i class="fas fa-folder"></i> ${currentVideo.subcategory}</span>
+                <span><i class="fas fa-calendar"></i> ${formatDate(currentVideo.publishDate)}</span>
                 <span><i class="fas fa-clock"></i> ${currentVideo.duration}</span>
             </div>
             <div class="video-tags">
@@ -158,7 +123,7 @@
     // ========== RENDER RELATED VIDEOS ==========
     function renderRelatedVideos() {
         // Show other videos except current one
-        const relatedVideos = videos.filter(v => v.id !== currentVideo.id).slice(0, 5);
+        const relatedVideos = allVideos.filter(v => v.id !== currentVideo.id).slice(0, 5);
 
         relatedList.innerHTML = relatedVideos.map(video => `
             <a href="video-viewer.html?id=${video.id}" class="related-item">
@@ -169,7 +134,7 @@
                 </div>
                 <div class="related-info">
                     <h4>${video.title}</h4>
-                    <p>${video.views} views • ${formatDate(video.date)}</p>
+                    <p>${formatDate(video.publishDate)}</p>
                 </div>
             </a>
         `).join('');
@@ -325,15 +290,15 @@
 
     // ========== INITIALIZATION ==========
     function init() {
-        // Load video
-        loadVideo();
+        // Load videos from JSON then render current video
+        loadVideosFromJSON();
 
-        // Event listeners
-        likeBtn.addEventListener('click', handleLike);
-        shareBtn.addEventListener('click', handleShare);
-        saveBtn.addEventListener('click', handleSave);
-        downloadBtn.addEventListener('click', handleDownload);
-        expandBtn.addEventListener('click', toggleDescription);
+        // Event listeners (if elements exist)
+        if (likeBtn) likeBtn.addEventListener('click', handleLike);
+        if (shareBtn) shareBtn.addEventListener('click', handleShare);
+        if (saveBtn) saveBtn.addEventListener('click', handleSave);
+        if (downloadBtn) downloadBtn.addEventListener('click', handleDownload);
+        if (expandBtn) expandBtn.addEventListener('click', toggleDescription);
 
         // Haptic feedback
         addActionButtonHaptics();
