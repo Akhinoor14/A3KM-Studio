@@ -106,6 +106,16 @@ class ContentManager {
             
             await this.githubUploader.replaceJSON(jsonPath, data);
             
+            // 🔄 AUTO-SYNC: If video-content updated, sync to mobile content.json
+            if (contentType === 'video-content') {
+                try {
+                    await this.syncVideoToMobileContentJSON();
+                    console.log('✅ Mobile content.json auto-synced after video update');
+                } catch (syncError) {
+                    console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
+                }
+            }
+            
             // Update cache
             this.cache[contentType].data = data;
             
@@ -245,6 +255,16 @@ class ContentManager {
             const jsonFileName = this.getJSONFileName(contentType);
             const jsonPath = `Content Studio/${contentType}/${jsonFileName}`;
             await this.githubUploader.replaceJSON(jsonPath, data);
+            
+            // 🔄 AUTO-SYNC: If video-content updated, sync to mobile content.json
+            if (contentType === 'video-content') {
+                try {
+                    await this.syncVideoToMobileContentJSON();
+                    console.log('✅ Mobile content.json auto-synced after video delete');
+                } catch (syncError) {
+                    console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
+                }
+            }
             
             // Update cache
             this.cache[contentType].data = data;
@@ -681,6 +701,111 @@ class ContentManager {
         } catch (error) {
             console.error('Restore failed:', error);
             return null;
+        }
+    }
+
+    // ==================== MOBILE CONTENT.JSON SYNC ====================
+
+    /**
+     * Sync videos.json to mobile content.json (for auto-update)
+     * Converts nested videos.json structure to flat array for mobile
+     */
+    async syncVideoToMobileContentJSON() {
+        try {
+            console.log('🔄 Syncing videos to mobile content.json...');
+            
+            // 1. Load videos.json (nested structure)
+            const videosData = await this.loadContent('video-content');
+            
+            // 2. Extract all videos from nested structure
+            const allVideos = [];
+            if (videosData.categories && videosData.categories['video-blog']) {
+                const categories = videosData.categories['video-blog'];
+                
+                for (const catKey in categories) {
+                    const category = categories[catKey];
+                    if (category.videos && Array.isArray(category.videos)) {
+                        category.videos.forEach(video => {
+                            allVideos.push({
+                                id: video.id,
+                                title: video.title,
+                                description: video.description,
+                                youtubeUrl: video.youtubeUrl,
+                                videoId: video.videoId,
+                                thumbnail: video.thumbnail || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`,
+                                duration: video.duration,
+                                publishDate: video.date,
+                                subcategory: category.name,
+                                language: video.language || 'en',
+                                tags: video.tags || []
+                            });
+                        });
+                    }
+                }
+            }
+            
+            console.log(`📦 Extracted ${allVideos.length} videos from videos.json`);
+            
+            // 3. Load existing content.json
+            const contentJsonPath = 'Content Code/content.json';
+            let contentData;
+            
+            try {
+                const fileData = await this.githubUploader.getFile(contentJsonPath);
+                contentData = JSON.parse(atob(fileData.content));
+            } catch (error) {
+                console.warn('content.json not found, creating new...');
+                contentData = {
+                    lastUpdated: new Date().toISOString(),
+                    version: "1.0.0",
+                    description: "Central data source for all A3KM Studio content",
+                    statistics: {
+                        totalContent: 0,
+                        byCategory: {}
+                    },
+                    categories: {},
+                    "video-blogs": [],
+                    "written-posts": [],
+                    "educational-courses": [],
+                    "books-pdfs": [],
+                    "research-papers": []
+                };
+            }
+            
+            // 4. Update video-blogs array
+            contentData['video-blogs'] = allVideos;
+            
+            // 5. Update statistics
+            contentData.lastUpdated = new Date().toISOString();
+            contentData.statistics.byCategory['video-blogs'] = allVideos.length;
+            
+            // Recalculate total
+            contentData.statistics.totalContent = 
+                (contentData['video-blogs']?.length || 0) +
+                (contentData['written-posts']?.length || 0) +
+                (contentData['educational-courses']?.length || 0) +
+                (contentData['books-pdfs']?.length || 0) +
+                (contentData['research-papers']?.length || 0);
+            
+            // 6. Save back to GitHub
+            await this.githubUploader.uploadFile(
+                contentJsonPath,
+                JSON.stringify(contentData, null, 2),
+                `Auto-sync: Update mobile content.json with ${allVideos.length} videos`,
+                false
+            );
+            
+            console.log(`✅ Mobile content.json synced successfully! (${allVideos.length} videos)`);
+            
+            return {
+                success: true,
+                videosCount: allVideos.length,
+                totalContent: contentData.statistics.totalContent
+            };
+            
+        } catch (error) {
+            console.error('❌ Failed to sync mobile content.json:', error);
+            throw error;
         }
     }
 

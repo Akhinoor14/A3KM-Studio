@@ -46,23 +46,11 @@
     <div class="video-container" id="videoContainer"><div class="loading"><div class="loading-spinner"></div><p style="color:var(--text-dim);">Loading course...</p></div></div>
     <div class="course-info" id="courseInfo"></div>
     <div class="playlist-section" id="playlistSection"></div>
+    
     <div id="mobileNavbar"></div>
+    
     <script src="../../shared/mobile-navbar.js"></script>
-    <script>
-(function(){const courses=[{id:1,title:"Complete Arduino Programming Course - Zero to Hero",level:"beginner",videos:25,duration:"8h 30m",description:"Learn Arduino from scratch. Covers everything from basic LED blinking to advanced sensor integration and IoT projects.",playlist:[{id:1,title:"Introduction to Arduino",duration:"12:30",videoId:"VIDEO_1"},{id:2,title:"Setting Up Arduino IDE",duration:"15:20",videoId:"VIDEO_2"},{id:3,title:"Your First Program - Blink LED",duration:"18:45",videoId:"VIDEO_3"},{id:4,title:"Understanding Digital I/O",duration:"22:10", videoId:"VIDEO_4"},{id:5,title:"Working with Sensors",duration:"25:30",videoId:"VIDEO_5"}]}];
-let currentCourse=null;let currentVideoIndex=0;const videoContainer=document.getElementById('videoContainer');const courseInfo=document.getElementById('courseInfo');const playlistSection=document.getElementById('playlistSection');const shareBtn=document.getElementById('shareBtn');
-function getCourseIdFromUrl(){const urlParams=new URLSearchParams(window.location.search);return urlParams.get('id')?parseInt(urlParams.get('id')):1;}
-function loadCourse(){const courseId=getCourseIdFromUrl();currentCourse=courses.find(c=>c.id===courseId);if(!currentCourse){videoContainer.innerHTML='<div class="loading"><i class="fas fa-exclamation-circle" style="font-size:56px;color:var(--primary-red);margin-bottom:20px;"></i><h3>Course Not Found</h3><a href="course-listing.html" style="display:inline-block;margin-top:16px;padding:10px 20px;background:var(--primary-red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Back to Courses</a></div>';return;}
-loadVideo(0);renderCourseInfo();renderPlaylist();}
-function loadVideo(index){currentVideoIndex=index;const video=currentCourse.playlist[index];videoContainer.innerHTML=`<iframe src="https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;}
-function renderCourseInfo(){courseInfo.innerHTML=`<h1 class="course-title">${currentCourse.title}</h1><div class="course-stats"><span><i class="fas fa-video"></i> ${currentCourse.videos} videos</span><span><i class="fas fa-clock"></i> ${currentCourse.duration}</span><span><i class="fas fa-signal"></i> ${currentCourse.level}</span></div><p class="course-desc">${currentCourse.description}</p>`;}
-function renderPlaylist(){playlistSection.innerHTML=`<h3>Course Playlist (${currentCourse.playlist.length} videos)</h3>`+currentCourse.playlist.map((video,idx)=>`<div class="playlist-item ${idx===currentVideoIndex?'active':''}" data-index="${idx}"><div class="playlist-thumb"><img src="https://img.youtube.com/vi/${video.videoId}/default.jpg" alt="${video.title}"></div><div class="playlist-info"><h4>${idx+1}. ${video.title}</h4><p><i class="fas fa-clock"></i> ${video.duration}</p></div></div>`).join('');addPlaylistListeners();}
-function addPlaylistListeners(){document.querySelectorAll('.playlist-item').forEach(item=>{item.addEventListener('click',()=>{const index=parseInt(item.getAttribute('data-index'));loadVideo(index); renderPlaylist();if(navigator.vibrate)navigator.vibrate(10);});item.addEventListener('touchstart',()=>{if(navigator.vibrate)navigator.vibrate(10);});});}
-function handleShare(){if(navigator.vibrate)navigator.vibrate(10);if(navigator.share){navigator.share({title:currentCourse.title,text:`Check out this course: ${currentCourse.title}`,url:window.location.href}).catch(()=>{});}else{showToast('Sharing...');}}
-function showToast(msg){const toast=document.createElement('div');toast.textContent=msg;toast.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:12px 24px;background:rgba(255,152,0,0.95);color:#fff;border-radius:8px;font-size:13px;font-weight:600;z-index:10000;';document.body.appendChild(toast);setTimeout(()=>toast.remove(),2000);}
-function init(){loadCourse();shareBtn.addEventListener('click',handleShare);[shareBtn,document.querySelector('.back-btn')].forEach(btn=>{if(btn)btn.addEventListener('touchstart',()=>{if(navigator.vibrate)navigator.vibrate(10);});});}
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}})();
-    </script>
+    <script src="course-viewer.js"></script>
     <script src="../../pwa-init.js"></script>
 </body>
 </html>

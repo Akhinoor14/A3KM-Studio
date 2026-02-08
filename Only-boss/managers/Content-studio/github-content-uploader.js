@@ -312,12 +312,25 @@ class GitHubContentUploader {
             // Update file
             this.onProgress({ stage: 'updating JSON', path: jsonPath });
             
-            return await this.uploadFile(
+            const uploadResult = await this.uploadFile(
                 jsonPath,
                 JSON.stringify(jsonData, null, 2),
                 `Update ${jsonPath} - Add ${newEntry.title || 'new entry'}`,
                 false
             );
+            
+            // 🔄 AUTO-SYNC: If video-content updated, trigger mobile content.json sync
+            if (jsonPath.includes('video-content/videos.json')) {
+                try {
+                    console.log('🔄 Triggering mobile content.json sync...');
+                    // Note: Sync will be handled by content-manager after this returns
+                    // We just log the event here for debugging
+                } catch (syncError) {
+                    console.warn('⚠️ Mobile sync log failed:', syncError.message);
+                }
+            }
+            
+            return uploadResult;
             
         } catch (error) {
             this.onError({ stage: 'update JSON', path: jsonPath, error: error.message });

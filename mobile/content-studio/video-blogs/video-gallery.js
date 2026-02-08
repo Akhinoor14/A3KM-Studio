@@ -1,6 +1,6 @@
 // ============================================================================
 // VIDEO GALLERY - Video Blogs Listing (Mobile)
-// Displays YouTube video content with search functionality
+// Displays YouTube video content with search, filter, sort, and view toggle
 // Fetches data from central content.json
 // ============================================================================
 
@@ -10,11 +10,21 @@
     // ========== STATE ==========
     let allVideos = [];
     let searchQuery = '';
+    let currentCategory = 'all';
+    let currentSort = 'newest';
+    let currentView = 'grid';
+    let categories = [];
 
     // ========== DOM ELEMENTS ==========
     const searchInput = document.getElementById('contentSearch');
     const contentGrid = document.getElementById('contentGrid');
     const emptyState = document.getElementById('emptyState');
+    const categoryTabs = document.getElementById('categoryTabs');
+    const sortBtn = document.getElementById('sortBtn');
+    const sortLabel = document.getElementById('sortLabel');
+    const sortOverlay = document.getElementById('sortOverlay');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
 
     // ========== INITIALIZATION ==========
     document.addEventListener('DOMContentLoaded', () => {
@@ -37,10 +47,16 @@
             const data = await response.json();
             allVideos = data['video-blogs'] || [];
             
+            // Extract unique categories
+            const uniqueCategories = [...new Set(allVideos.map(v => v.subcategory))].sort();
+            categories = ['All', ...uniqueCategories];
+            
             console.log(`📺 Loaded ${allVideos.length} videos from content.json`);
+            console.log(`📂 Categories: ${categories.join(', ')}`);
             console.log(`📊 Total content: ${data.statistics.totalContent} items`);
             
             hideLoadingState();
+            renderCategoryTabs();
             renderVideos();
             
         } catch (error) {
@@ -92,28 +108,165 @@
      * Setup event listeners
      */
     function setupEventListeners() {
+        // Search input
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 searchQuery = e.target.value.toLowerCase();
                 renderVideos();
             });
         }
+        
+        // Sort button - opens bottom sheet
+        if (sortBtn) {
+            sortBtn.addEventListener('click', () => {
+                sortOverlay.classList.add('active');
+            });
+        }
+        
+        // Close sort overlay when clicking outside
+        if (sortOverlay) {
+            sortOverlay.addEventListener('click', (e) => {
+                if (e.target === sortOverlay) {
+                    sortOverlay.classList.remove('active');
+                }
+            });
+        }
+        
+        // Sort options
+        document.querySelectorAll('.sort-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const sortType = option.dataset.sort;
+                currentSort = sortType;
+                
+                // Update active state
+                document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Update button label
+                const sortLabels = {
+                    'newest': 'Newest First',
+                    'oldest': 'Oldest First',
+                    'title': 'Title (A-Z)'
+                };
+                sortLabel.textContent = sortLabels[sortType];
+                
+                // Close overlay and re-render
+                sortOverlay.classList.remove('active');
+                renderVideos();
+            });
+        });
+        
+        // View toggle buttons
+        if (gridViewBtn) {
+            gridViewBtn.addEventListener('click', () => {
+                currentView = 'grid';
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                contentGrid.classList.remove('list-view');
+            });
+        }
+        
+        if (listViewBtn) {
+            listViewBtn.addEventListener('click', () => {
+                currentView = 'list';
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+                contentGrid.classList.add('list-view');
+            });
+        }
     }
 
     /**
-     * Filter videos based on search query
+     * Render category tabs
+     */
+    function renderCategoryTabs() {
+        if (!categoryTabs || categories.length === 0) return;
+        
+        const icons = {
+            'All': 'fa-th',
+            'Tour & Vlogs': 'fa-map',
+            'Food & Lifestyle': 'fa-utensils',
+            'Tech Reviews': 'fa-laptop',
+            'Daily Life': 'fa-home',
+            'Poetry': 'fa-book',
+            'default': 'fa-folder'
+        };
+        
+        categoryTabs.innerHTML = categories.map(cat => {
+            const icon = icons[cat] || icons['default'];
+            const isActive = currentCategory === (cat === 'All' ? 'all' : cat);
+            return `
+                <button class="category-tab ${isActive ? 'active' : ''}" data-category="${cat === 'All' ? 'all' : cat}">
+                    <i class="fas ${icon}"></i>
+                    ${cat}
+                </button>
+            `;
+        }).join('');
+        
+        // Add event listeners to category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const category = tab.dataset.category;
+                currentCategory = category;
+                
+                // Update active state
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Re-render videos
+                renderVideos();
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            });
+        });
+    }
+
+    /**
+     * Filter videos based on search query and category
      */
     function filterVideos() {
-        if (!searchQuery) {
-            return allVideos;
+        let filtered = allVideos;
+        
+        // Filter by category
+        if (currentCategory !== 'all') {
+            filtered = filtered.filter(video => video.subcategory === currentCategory);
         }
         
-        return allVideos.filter(video => {
-            return video.title.toLowerCase().includes(searchQuery) ||
-                   video.description.toLowerCase().includes(searchQuery) ||
-                   video.tags.some(tag => tag.toLowerCase().includes(searchQuery)) ||
-                   video.subcategory.toLowerCase().includes(searchQuery);
-        });
+        // Filter by search query
+        if (searchQuery) {
+            filtered = filtered.filter(video => {
+                return video.title.toLowerCase().includes(searchQuery) ||
+                       video.description.toLowerCase().includes(searchQuery) ||
+                       video.tags.some(tag => tag.toLowerCase().includes(searchQuery)) ||
+                       video.subcategory.toLowerCase().includes(searchQuery);
+            });
+        }
+        
+        return filtered;
+    }
+
+    /**
+     * Sort videos based on current sort option
+     */
+    function sortVideos(videos) {
+        const sorted = [...videos];
+        
+        switch(currentSort) {
+            case 'newest':
+                sorted.sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
+                break;
+            case 'oldest':
+                sorted.sort((a, b) => new Date(a.publishDate) - new Date(b.publishDate));
+                break;
+            case 'title':
+                sorted.sort((a, b) => a.title.localeCompare(b.title));
+                break;
+        }
+        
+        return sorted;
     }
 
     /**
@@ -121,8 +274,9 @@
      */
     function renderVideos() {
         const filtered = filterVideos();
+        const sorted = sortVideos(filtered);
         
-        if (filtered.length === 0) {
+        if (sorted.length === 0) {
             contentGrid.innerHTML = '';
             if (emptyState) {
                 emptyState.style.display = 'block';
@@ -134,7 +288,7 @@
             emptyState.style.display = 'none';
         }
 
-        contentGrid.innerHTML = filtered.map(video => `
+        contentGrid.innerHTML = sorted.map(video => `
             <a href="video-viewer.html?id=${video.id}" class="content-item">
                 <div class="content-thumbnail">
                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#24292e">
+    
+    <title>GitHub Sync - Only Boss</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="sync-header">
+        <button class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="header-title">
+            <h1>GitHub Sync</h1>
+            <span class="repo-name" id="repoName">Not configured</span>
+        </div>
+        <button class="refresh-btn" onclick="refreshStatus()">
+            <i class="fas fa-sync-alt" id="refreshIcon"></i>
+        </button>
+    </header>
+
+    <!-- Connection Status Bar -->
+    <div class="status-bar" id="statusBar">
+        <div class="status-icon" id="statusIcon">
+            <i class="fas fa-circle"></i>
+        </div>
+        <div class="status-text" id="statusText">Checking connection...</div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons-container">
+        <button class="action-btn primary" onclick="showCommitSheet()">
+            <i class="fas fa-code-commit"></i>
+            <span>Commit & Push</span>
+        </button>
+        <button class="action-btn secondary" onclick="pullChanges()">
+            <i class="fas fa-download"></i>
+            <span>Pull</span>
+        </button>
+        <button class="action-btn secondary" onclick="syncAll()">
+            <i class="fas fa-arrows-rotate"></i>
+            <span>Sync</span>
+        </button>
+    </div>
+
+    <!-- Branch Info -->
+    <div class="info-section">
+        <div class="info-card">
+            <div class="info-label">Current Branch</div>
+            <div class="info-value" id="currentBranch">main</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Last Sync</div>
+            <div class="info-value" id="lastSync">Never</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('commits')">
+            <i class="fas fa-history"></i> Commits
+        </button>
+        <button class="tab-btn" onclick="switchTab('changes')">
+            <i class="fas fa-file-code"></i> Changes
+        </button>
+    </div>
+
+    <!-- Commits Tab -->
+    <div class="tab-content active" id="commits-tab">
+        <div class="commits-list" id="commitsList"></div>
+        
+        <div class="loading-state" id="commitsLoading">
+            <div class="spinner"></div>
+            <p>Loading commits...</p>
+        </div>
+        
+        <div class="empty-state" id="commitsEmpty">
+            <i class="fab fa-github"></i>
+            <h3>No commits found</h3>
+            <p>Unable to load commit history</p>
+        </div>
+    </div>
+
+    <!-- Changes Tab -->
+    <div class="tab-content" id="changes-tab">
+        <div class="changes-list" id="changesList"></div>
+        
+        <div class="loading-state" id="changesLoading">
+            <div class="spinner"></div>
+            <p>Loading changes...</p>
+        </div>
+        
+        <div class="empty-state" id="changesEmpty">
+            <i class="fas fa-check-circle"></i>
+            <h3>No changes detected</h3>
+            <p>Working tree is clean</p>
+        </div>
+    </div>
+
+    <!-- Commit Bottom Sheet -->
+    <div class="bottom-sheet" id="commitSheet">
+        <div class="bottom-sheet-header">
+            <h3>Commit & Push</h3>
+            <button class="sheet-close-btn" onclick="closeCommitSheet()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="bottom-sheet-content">
+            <form id="commitForm">
+                <div class="form-group">
+                    <label for="commitMessage">Commit Message *</label>
+                    <textarea id="commitMessage" rows="3" placeholder="Update files via Only Boss Mobile" required></textarea>
+                    <small class="form-hint">Describe what you changed</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="commitDescription">Description (Optional)</label>
+                    <textarea id="commitDescription" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+                
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="pushAfterCommit" checked />
+                        <span>Push to GitHub immediately</span>
+                    </label>
+                </div>
+                
+                <div class="commit-stats" id="commitStats">
+                    <div class="stat-item">
+                        <span class="stat-label">Files to commit:</span>
+                        <span class="stat-value" id="filesCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCommitSheet()">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-code-commit"></i> Commit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="../../../auth/only-boss-auth.js"></script>
+    <script src="../../shared/auth-guard.js"></script>
+    <script src="manager.js"></script>
+</body>
+</html>

@@ -1,150 +1,82 @@
 // ============================================================================
 // BOOK LISTING - Books & PDFs Section (Mobile)
-// Displays technical books and PDF documentation
+// Loads books from content.json and displays with download options
 // ============================================================================
 
 (function() {
     'use strict';
 
-    // ========== BOOK DATA ==========
-    const books = [
-        {
-            id: 1,
-            title: "Arduino Programming Handbook - Complete Guide",
-            thumbnail: "",
-            pages: 243,
-            size: "12.5 MB",
-            category: "Arduino",
-            description: "Comprehensive guide to Arduino programming covering basics to advanced topics. Includes practical projects and code examples.",
-            tags: ["Arduino", "Programming", "Electronics"],
-            downloadUrl: "#"
-        },
-        {
-            id: 2,
-            title: "SOLIDWORKS 2023 - Mastering 3D Design",
-            thumbnail: "",
-            pages: 486,
-            size: "28.3 MB",
-            category: "CAD",
-            description: "Professional SOLIDWORKS training manual. Learn sketching, part modeling, assemblies, and drawing creation.",
-            tags: ["SOLIDWORKS", "CAD", "3D Modeling"],
-            downloadUrl: "#"
-        },
-        {
-            id: 3,
-            title: "Electronics Components Encyclopedia",
-            thumbnail: "",
-            pages: 356,
-            size: "18.7 MB",
-            category: "Electronics",
-            description: "Complete reference guide for electronic components. Datasheets, pinouts, and practical applications included.",
-            tags: ["Electronics", "Components", "Reference"],
-            downloadUrl: "#"
-        },
-        {
-            id: 4,
-            title: "PCB Design Best Practices",
-            thumbnail: "",
-            pages: 189,
-            size: "9.2 MB",
-            category: "PCB Design",
-            description: "Professional PCB design guidelines and techniques. Layout optimization, signal integrity, and manufacturing considerations.",
-            tags: ["PCB", "Design", "Manufacturing"],
-            downloadUrl: "#"
-        },
-        {
-            id: 5,
-            title: "Embedded Systems Programming in C",
-            thumbnail: "",
-            pages: 412,
-            size: "15.8 MB",
-            category: "Programming",
-            description: "Master embedded C programming for microcontrollers. Real-world examples and optimization techniques.",
-            tags: ["C Language", "Embedded", "Programming"],
-            downloadUrl: "#"
-        },
-        {
-            id: 6,
-            title: "IoT Projects Cookbook",
-            thumbnail: "",
-            pages: 298,
-            size: "21.4 MB",
-            category: "IoT",
-            description: "25 Internet of Things projects with ESP32, Arduino, and Raspberry Pi. Complete with circuit diagrams and code.",
-            tags: ["IoT", "ESP32", "Projects"],
-            downloadUrl: "#"
-        },
-        {
-            id: 7,
-            title: "Robotics Fundamentals",
-            thumbnail: "",
-            pages: 367,
-            size: "24.1 MB",
-            category: "Robotics",
-            description: "Introduction to robotics covering mechanics, electronics, and programming. Build your own autonomous robots.",
-            tags: ["Robotics", "Automation", "Sensors"],
-            downloadUrl: "#"
-        },
-        {
-            id: 8,
-            title: "MATLAB for Engineers - Practical Guide",
-            thumbnail: "",
-            pages: 421,
-            size: "16.9 MB",
-            category: "MATLAB",
-            description: "MATLAB programming for engineering applications. Signal processing, data analysis, and visualization techniques.",
-            tags: ["MATLAB", "Engineering", "Analysis"],
-            downloadUrl: "#"
-        },
-        {
-            id: 9,
-            title: "Mechanical Design Handbook",
-            thumbnail: "",
-            pages: 534,
-            size: "32.6 MB",
-            category: "Mechanical",
-            description: "Comprehensive mechanical design reference. Material selection, stress analysis, and design optimization.",
-            tags: ["Mechanical", "Design", "Engineering"],
-            downloadUrl: "#"
-        },
-        {
-            id: 10,
-            title: "Sensor Technology Encyclopedia",
-            thumbnail: "",
-            pages: 278,
-            size: "13.5 MB",
-            category: "Sensors",
-            description: "Complete guide to sensor technologies. Temperature, pressure, motion, gas sensors and their applications.",
-            tags: ["Sensors", "Technology", "Applications"],
-            downloadUrl: "#"
-        },
-        {
-            id: 11,
-            title: "Power Electronics Essentials",
-            thumbnail: "",
-            pages: 392,
-            size: "19.7 MB",
-            category: "Electronics",
-            description: "Power supply design, motor control, and power management circuits. Practical design examples included.",
-            tags: ["Power", "Electronics", "Circuits"],
-            downloadUrl: "#"
-        },
-        {
-            id: 12,
-            title: "3D Printing Design Guide",
-            thumbnail: "",
-            pages: 215,
-            size: "25.8 MB",
-            category: "3D Printing",
-            description: "Design for additive manufacturing. CAD modeling, slicing, and post-processing techniques.",
-            tags: ["3D Printing", "CAD", "Manufacturing"],
-            downloadUrl: "#"
-        }
-    ];
+    // ========== STATE ==========
+    let allBooks = [];
 
     // ========== DOM ELEMENTS ==========
     const searchInput = document.getElementById('searchInput');
     const contentGrid = document.getElementById('contentGrid');
+
+    // ========== INITIALIZATION ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBooksFromJSON();
+    });
+
+    /**
+     * Load books from central content.json
+     */
+    async function loadBooksFromJSON() {
+        try {
+            showLoadingState();
+            
+            const response = await fetch('../../../Content Code/content.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            allBooks = data['books-pdfs'] || [];
+            console.log(`\ud83d\udcda Loaded ${allBooks.length} books`);
+            
+            hideLoadingState();
+            renderBooks(allBooks);
+            setupEventListeners();
+        } catch (error) {
+            console.error('\u274c Failed to load books:', error);
+            hideLoadingState();
+            showErrorState('Failed to load books. Please check your connection.');
+        }
+    }
+
+    /**
+     * Show loading state
+     */
+    function showLoadingState() {
+        contentGrid.innerHTML = `
+            <div class=\"loading-state\">
+                <div class=\"loading-spinner\"></div>
+                <p>Loading books...</p>
+            </div>
+        `;
+    }
+
+    /**
+     * Hide loading state
+     */
+    function hideLoadingState() {
+        const loadingState = contentGrid.querySelector('.loading-state');
+        if (loadingState) loadingState.remove();
+    }
+
+    /**
+     * Show error state
+     */
+    function showErrorState(message) {
+        contentGrid.innerHTML = `
+            <div class=\"error-state\">
+                <i class=\"fas fa-exclamation-circle\"></i>
+                <h3>Oops!</h3>
+                <p>${message}</p>
+                <button onclick=\"location.reload()\" class=\"retry-btn\">
+                    <i class=\"fas fa-redo\"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
 
     // ========== RENDER FUNCTIONS ==========
     function renderBooks(booksToRender) {
@@ -159,13 +91,18 @@
             return;
         }
 
-        contentGrid.innerHTML = booksToRender.map(book => `
-            <div class="content-item book-item">
+        contentGrid.innerHTML = booksToRender.map(book => {
+            const languageDisplay = getLanguageDisplay(book.language);
+            
+            return `
+            <div class="content-item book-item" data-book-id="${book.id}">
                 <div class="content-thumbnail book-thumbnail">
-                    ${book.thumbnail ? 
-                        `<img src="${book.thumbnail}" alt="${book.title}">` :
-                        '<i class="fas fa-book"></i>'
+                    ${book.cover ? 
+                        `<img src="${book.cover}" alt="${book.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` :
+                        ''
                     }
+                    <i class="fas fa-book" ${book.cover ? 'style="display:none;"' : ''}></i>
+                    <span class="book-badge">${languageDisplay}</span>
                 </div>
                 <div class="content-info-wrap">
                     <span class="book-category">${book.category}</span>
@@ -173,32 +110,62 @@
                     <div class="content-item-meta">
                         <span class="book-pages"><i class="fas fa-file-pdf"></i> ${book.pages} pages</span>
                         <span><i class="fas fa-database"></i> ${book.size}</span>
+                        <span><i class="fas fa-file"></i> ${book.format}</span>
                     </div>
-                    <p class="content-item-desc">${book.description}</p>
+                    <p class="content-item-desc">${truncateText(book.description, 120)}</p>
                     <div class="content-tags">
-                        ${book.tags.map(tag => `<span class="content-tag">${tag}</span>`).join('')}
+                        ${book.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
                     </div>
-                    <a href="${book.downloadUrl}" class="download-btn" data-book-id="${book.id}">
+                    ${ book.author ? `<div style="margin-top: 8px; font-size: 11px; color: var(--text-dim);"><i class="fas fa-user"></i> ${book.author}</div>` : ''}
+                    <button class="download-btn" data-book-id="${book.id}">
                         <i class="fas fa-download"></i>
                         <span>Read / Download</span>
-                    </a>
+                    </button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Add haptic feedback
         addHapticFeedback();
+    }
+
+    /**
+     * Get language display badge
+     */
+    function getLanguageDisplay(lang) {
+        const displays = {
+            'bn': '\ud83c\udde7\ud83c\udde9 \u09ac\u09be\u0982',
+            'en': '\ud83c\uddec\ud83c\udde7 EN',
+            'bn-en': '\ud83c\udde7\ud83c\udde9 EN',
+            'en-bn': '\ud83c\uddec\ud83c\udde7 \u09ac\u09be\u0982'
+        };
+        return displays[lang] || 'EN';
+    }
+
+    /**
+     * Truncate text to specified length
+     */
+    function truncateText(text, maxLength) {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength).trim() + '...';
     }
 
     // ========== SEARCH FUNCTIONALITY ==========
     function searchBooks() {
         const query = searchInput.value.toLowerCase().trim();
 
-        const filtered = books.filter(book => {
+        const filtered = allBooks.filter(book => {
             return book.title.toLowerCase().includes(query) ||
                    book.description.toLowerCase().includes(query) ||
                    book.category.toLowerCase().includes(query) ||
                    book.tags.some(tag => tag.toLowerCase().includes(query));
+        });
+
+        // Sort by date (newest first)
+        filtered.sort((a, b) => {
+            return new Date(b.publishDate) - new Date(a.publishDate);
         });
 
         renderBooks(filtered);
@@ -232,28 +199,25 @@
     }
 
     function handleDownload(bookId) {
-        const book = books.find(b => b.id === parseInt(bookId));
+        const book = allBooks.find(b => b.id === bookId);
         if (book) {
             // Vibration feedback
             if (navigator.vibrate) {
                 navigator.vibrate([30, 50, 30]);
             }
 
-            // In production, this would open PDF viewer or trigger download
-            // For now, show message
             console.log(`Opening book: ${book.title}`);
             
-            // You can redirect to a PDF viewer page:
-            // window.location.href = `book-viewer.html?id=${bookId}`;
+            // Open in book reader
+            window.location.href = `book-reader.html?id=${bookId}`;
         }
     }
 
-    // ========== INITIALIZATION ==========
-    function init() {
-        // Render all books initially
-        renderBooks(books);
-
-        // Search functionality
+    /**
+     * Setup event listeners
+     */
+    function setupEventListeners() {
+        // Search functionality with debounce
         let searchTimeout;
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
@@ -264,18 +228,9 @@
         const backBtn = document.querySelector('.back-btn');
         if (backBtn) {
             backBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
+                if (navigator.vibrate) navigator.vibrate(10);
             });
         }
-    }
-
-    // Wait for DOM
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
     }
 
 })();

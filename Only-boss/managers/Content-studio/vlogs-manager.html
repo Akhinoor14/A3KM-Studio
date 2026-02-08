@@ -1051,6 +1051,18 @@
         <div class="stat-item-sidebar"><span>Series</span><span id="sidebarSeries">0</span></div>
         <div class="stat-item-sidebar"><span>This Month</span><span id="sidebarThisMonth">0</span></div>
       </div>
+      
+      <!-- 🔄 Mobile Sync Button -->
+      <div style="margin-top: 20px; padding: 15px; background: rgba(0, 204, 102, 0.1); border: 2px solid rgba(0, 204, 102, 0.3); border-radius: 10px;">
+        <h3 style="font-size: 0.95rem; margin-bottom: 10px; color: #00CC66;">📱 Mobile Sync</h3>
+        <button onclick="syncToMobileContentJSON()" 
+                style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00CC66, #00FF7F); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">
+          <i class="fas fa-sync-alt"></i> Sync to Mobile
+        </button>
+        <small style="display: block; margin-top: 8px; color: rgba(255,255,255,0.7); font-size: 0.75rem; line-height: 1.4;">
+          Updates content.json for mobile app with latest videos
+        </small>
+      </div>
     </aside>
 
     <!-- Main Content Area -->
@@ -2270,6 +2282,38 @@
         }
       });
     }
+
+    // 🔄 MANUAL SYNC TO MOBILE CONTENT.JSON
+    async function syncToMobileContentJSON() {
+      const syncBtn = event?.target;
+      if (syncBtn) {
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+      }
+      
+      try {
+        console.log('🔄 Starting manual sync to mobile content.json...');
+        
+        const result = await contentManager.syncVideoToMobileContentJSON();
+        
+        if (result.success) {
+          alert(`✅ Mobile Sync Successful!\n\n📊 Synced Data:\n• ${result.videosCount} videos\n• Total content: ${result.totalContent}\n\n🎉 Mobile app will now show updated videos!`);
+          console.log('✅ Mobile content.json synced:', result);
+        }
+        
+      } catch (error) {
+        console.error('❌ Mobile sync failed:', error);
+        alert(`❌ Sync Failed!\n\n${error.message}\n\nCheck console for details.`);
+      } finally {
+        if (syncBtn) {
+          syncBtn.disabled = false;
+          syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync to Mobile';
+        }
+      }
+    }
+    
+    // Make sync function globally accessible
+    window.syncToMobileContentJSON = syncToMobileContentJSON;
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {

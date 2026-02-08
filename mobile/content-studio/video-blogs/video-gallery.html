@@ -26,6 +26,207 @@
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="../../manifest.json">
+    
+    <style>
+        /* Category Tabs Horizontal Scroll */
+        .category-tabs-section {
+            background: var(--bg-secondary);
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-primary);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .category-tabs-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .category-tabs-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px;
+            white-space: nowrap;
+        }
+        
+        .category-tab {
+            padding: 8px 16px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .category-tab.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .category-tab i {
+            margin-right: 6px;
+        }
+        
+        /* Toolbar Section */
+        .toolbar-section {
+            padding: 12px 0;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .toolbar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .toolbar-left,
+        .toolbar-right {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .toolbar-btn {
+            padding: 8px 16px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .toolbar-btn.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .toolbar-btn i {
+            font-size: 16px;
+        }
+        
+        .toolbar-right .toolbar-btn {
+            padding: 8px 12px;
+        }
+        
+        /* List View Styles */
+        .content-items-grid.list-view {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .content-items-grid.list-view .content-item {
+            display: flex;
+            flex-direction: row;
+            height: auto;
+        }
+        
+        .content-items-grid.list-view .content-item-image {
+            width: 120px;
+            height: 90px;
+            flex-shrink: 0;
+        }
+        
+        .content-items-grid.list-view .content-item-body {
+            flex: 1;
+            padding: 8px 12px;
+        }
+        
+        .content-items-grid.list-view .content-item-title {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .content-items-grid.list-view .content-item-description {
+            display: none;
+        }
+        
+        .content-items-grid.list-view .content-item-meta {
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        
+        /* Sort Dropdown Overlay */
+        .sort-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+        }
+        
+        .sort-overlay.active {
+            display: flex;
+        }
+        
+        .sort-sheet {
+            background: var(--bg-secondary);
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .sort-overlay.active .sort-sheet {
+            transform: translateY(0);
+        }
+        
+        .sort-sheet-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        
+        .sort-option {
+            padding: 16px;
+            background: rgba(204, 0, 0, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sort-option.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .sort-option i {
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
     
@@ -57,6 +258,37 @@
             </div>
         </section>
         
+        <!-- Category Tabs (Horizontal Scroll) -->
+        <section class="category-tabs-section">
+            <div class="category-tabs-scroll">
+                <div id="categoryTabs" class="category-tabs">
+                    <!-- Tabs will be loaded dynamically -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Toolbar (Sort & View Toggle) -->
+        <section class="toolbar-section">
+            <div class="mobile-container">
+                <div class="toolbar-controls">
+                    <div class="toolbar-left">
+                        <button id="sortBtn" class="toolbar-btn">
+                            <i class="fas fa-sort-amount-down"></i>
+                            <span id="sortLabel">Newest First</span>
+                        </button>
+                    </div>
+                    <div class="toolbar-right">
+                        <button id="gridViewBtn" class="toolbar-btn active" data-view="grid">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button id="listViewBtn" class="toolbar-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
         <!-- Content Grid -->
         <section class="mobile-section">
             <div class="mobile-container">
@@ -81,6 +313,25 @@
             </div>
         </footer>
         
+    </div>
+    
+    <!-- Sort BottomSheet Overlay -->
+    <div class="sort-overlay" id="sortOverlay">
+        <div class="sort-sheet">
+            <h3 class="sort-sheet-title">Sort Videos By</h3>
+            <div class="sort-option active" data-sort="newest">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Newest First</span>
+            </div>
+            <div class="sort-option" data-sort="oldest">
+                <i class="fas fa-history"></i>
+                <span>Oldest First</span>
+            </div>
+            <div class="sort-option" data-sort="title">
+                <i class="fas fa-font"></i>
+                <span>Title (A-Z)</span>
+            </div>
+        </div>
     </div>
     
     <!-- Mobile Bottom Navigation -->

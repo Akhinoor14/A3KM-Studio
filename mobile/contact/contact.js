@@ -28,9 +28,9 @@
      * Setup contact form submission
      */
     function setupContactForm() {
-        const form = document.getElementById('contact-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const formStatus = document.getElementById('form-status');
+        const form = document.getElementById('contactForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formStatus = document.getElementById('formStatus');
         
         if (!form || !submitBtn || !formStatus) {
             console.error('Contact form elements not found');
@@ -131,7 +131,7 @@
      * Show status message
      */
     function showStatus(type, message) {
-        const formStatus = document.getElementById('form-status');
+        const formStatus = document.getElementById('formStatus');
         
         formStatus.className = `form-status ${type}`;
         formStatus.textContent = message;

@@ -32,10 +32,10 @@
         }
         
         const script = document.createElement('script');
-        script.src = '/Optimization/mobile-splash.js'; // Universal splash (mobile + desktop)
+        script.src = '/Optimization/app-splash.js'; // Desktop splash
         script.async = false; // Load immediately
         document.head.insertBefore(script, document.head.firstChild);
-        console.log('✅ Universal splash screen loaded');
+        console.log('✅ Desktop splash screen loaded');
     }
 
     /**

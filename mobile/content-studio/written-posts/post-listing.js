@@ -1,207 +1,231 @@
 // ============================================================================
 // POST LISTING - Written Posts Section (Mobile)
-// Displays blog posts and articles in multiple languages
+// Displays blog posts and articles from content.json
+// Fetches data from central content.json
 // ============================================================================
 
 (function() {
     'use strict';
 
-    // ========== POST DATA ==========
-    const posts = [
-        {
-            id: 1,
-            title: "Getting Started with Arduino: A Complete Beginner's Guide",
-            thumbnail: "",
-            readTime: "8 min read",
-            language: "english",
-            langDisplay: "EN",
-            date: "2024-01-20",
-            description: "Learn the fundamentals of Arduino programming from scratch. This comprehensive guide covers everything you need to start building electronic projects.",
-            tags: ["Arduino", "Tutorial", "Beginner"],
-            slug: "arduino-beginners-guide"
-        },
-        {
-            id: 2,
-            title: "আরডুইনো দিয়ে শুরু করুন: সম্পূর্ণ বাংলা গাইড",
-            thumbnail: "",
-            readTime: "১০ মিনিট",
-            language: "bangla",
-            langDisplay: "বাং",
-            date: "2024-01-18",
-            description: "আরডুইনো প্রোগ্রামিং এর মূল বিষয়গুলো শিখুন। এই সম্পূর্ণ গাইডে রয়েছে ইলেকট্রনিক্স প্রজেক্ট তৈরির জন্য প্রয়োজনীয় সব কিছু।",
-            tags: ["আরডুইনো", "টিউটোরিয়াল", "শিক্ষানবিস"],
-            slug: "arduino-bangla-guide"
-        },
-        {
-            id: 3,
-            title: "SOLIDWORKS Tips and Tricks for Efficient 3D Modeling",
-            thumbnail: "",
-            readTime: "12 min read",
-            language: "english",
-            langDisplay: "EN",
-            date: "2024-01-15",
-            description: "Master SOLIDWORKS with these professional tips. Improve your workflow, create better designs, and save time with advanced techniques.",
-            tags: ["SOLIDWORKS", "CAD", "3D Modeling"],
-            slug: "solidworks-tips-tricks"
-        },
-        {
-            id: 4,
-            title: "ESP32 দিয়ে IoT প্রজেক্ট: WiFi কন্ট্রোল সিস্টেম",
-            thumbnail: "",
-            readTime: "১৫ মিনিট",
-            language: "bangla",
-            langDisplay: "বাং",
-            date: "2024-01-12",
-            description: "ESP32 মাইক্রোকন্ট্রোলার ব্যবহার করে WiFi ভিত্তিক IoT প্রজেক্ট তৈরি করুন। সম্পূর্ণ কোড এবং সার্কিট ডায়াগ্রাম সহ।",
-            tags: ["ESP32", "IoT", "WiFi"],
-            slug: "esp32-iot-bangla"
-        },
-        {
-            id: 5,
-            title: "PCB Design Best Practices for Electronics Projects",
-            thumbnail: "",
-            readTime: "10 min read",
-            language: "english",
-            langDisplay: "EN",
-            date: "2024-01-10",
-            description: "Professional PCB design guidelines for creating reliable and manufacturable circuit boards. Layout optimization and design rules explained.",
-            tags: ["PCB", "Electronics", "Design"],
-            slug: "pcb-design-practices"
-        },
-        {
-            id: 6,
-            title: "রোবটিক্স প্রজেক্ট: লাইন ফলোয়ার রোবট তৈরি করুন",
-            thumbnail: "",
-            readTime: "২০ মিনিট",
-            language: "bangla",
-            langDisplay: "বাং",
-            date: "2024-01-08",
-            description: "Arduino ব্যবহার করে একটি সম্পূর্ণ লাইন ফলোয়ার রোবট তৈরি করুন। হার্ডওয়্যার সেটআপ থেকে প্রোগ্রামিং পর্যন্ত সব কিছু।",
-            tags: ["রোবটিক্স", "আরডুইনো", "প্রজেক্ট"],
-            slug: "line-follower-bangla"
-        },
-        {
-            id: 7,
-            title: "Mastering MATLAB: Data Analysis and Visualization",
-            thumbnail: "",
-            readTime: "14 min read",
-            language: "english",
-            langDisplay: "EN",
-            date: "2024-01-05",
-            description: "Comprehensive guide to MATLAB for data analysis and visualization. Learn plotting, matrix operations, and signal processing techniques.",
-            tags: ["MATLAB", "Data Analysis", "Programming"],
-            slug: "matlab-data-analysis"
-        },
-        {
-            id: 8,
-            title: "সেন্সর প্রযুক্তি: ইলেকট্রনিক্স প্রজেক্টে ব্যবহার",
-            thumbnail: "",
-            readTime: "১২ মিনিট",
-            language: "bangla",
-            langDisplay: "বাং",
-            date: "2024-01-02",
-            description: "বিভিন্ন ধরনের সেন্সর এবং তাদের প্রযুক্তিগত বৈশিষ্ট্য সম্পর্কে জানুন। ইলেকট্রনিক্স প্রজেক্টে সেন্সর ব্যবহারের বাস্তব উদাহরণ।",
-            tags: ["সেন্সর", "ইলেকট্রনিক্স", "প্রযুক্তি"],
-            slug: "sensor-technology-bangla"
-        },
-        {
-            id: 9,
-            title: "Bluetooth Communication with Arduino: Complete Guide",
-            thumbnail: "",
-            readTime: "11 min read",
-            language: "english",
-            langDisplay: "EN",
-            date: "2023-12-28",
-            description: "Build Bluetooth-enabled projects with Arduino. Learn HC-05 module setup, Android app integration, and wireless communication protocols.",
-            tags: ["Arduino", "Bluetooth", "Communication"],
-            slug: "arduino-bluetooth-guide"
-        },
-        {
-            id: 10,
-            title: "3D প্রিন্টিং: ডিজাইন থেকে প্রিন্ট পর্যন্ত",
-            thumbnail: "",
-            readTime: "১৮ মিনিট",
-            language: "bangla",
-            langDisplay: "বাং",
-            date: "2023-12-25",
-            description: "3D প্রিন্টিং এর সম্পূর্ণ প্রক্রিয়া। CAD মডেলিং, স্লাইসিং সেটিংস, এবং প্রিন্ট অপটিমাইজেশন কৌশল।",
-            tags: ["3D প্রিন্টিং", "CAD", "প্রযুক্তি"],
-            slug: "3d-printing-bangla"
-        }
-    ];
-
     // ========== STATE ==========
-    let currentLanguage = 'all';
+    let allPosts = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
 
     // ========== DOM ELEMENTS ==========
+    const postsGrid = document.getElementById('postsGrid');
     const searchInput = document.getElementById('searchInput');
-    const contentGrid = document.getElementById('contentGrid');
-    const languageFilters = document.querySelectorAll('.filter-chip');
+    const emptyState = document.getElementById('emptyState');
+    const filterChips = document.querySelectorAll('.filter-chip');
 
-    // ========== RENDER FUNCTIONS ==========
-    function renderPosts(postsToRender) {
-        if (postsToRender.length === 0) {
-            contentGrid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-pen-nib"></i>
-                    <h3>No Posts Found</h3>
-                    <p>Try adjusting your search or filter</p>
+    // ========== INITIALIZATION ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPostsFromJSON();
+        setupEventListeners();
+    });
+
+    /**
+     * Load posts from central content.json
+     */
+    async function loadPostsFromJSON() {
+        try {
+            showLoadingState();
+            
+            const response = await fetch('../../../Content Code/content.json');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            allPosts = data['written-posts'] || [];
+            
+            console.log(`📝 Loaded ${allPosts.length} posts from content.json`);
+            
+            hideLoadingState();
+            renderPosts();
+            
+        } catch (error) {
+            console.error('❌ Failed to load posts:', error);
+            showErrorState();
+        }
+    }
+
+    /**
+     * Show loading spinner
+     */
+    function showLoadingState() {
+        if (postsGrid) {
+            postsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                    <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(139, 0, 0, 0.2); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 20px; color: var(--text-secondary); font-size: 0.95rem;">Loading posts...</p>
                 </div>
             `;
+        }
+    }
+
+    /**
+     * Hide loading state
+     */
+    function hideLoadingState() {
+        // Loading UI will be replaced by renderPosts()
+    }
+
+    /**
+     * Show error message
+     */
+    function showErrorState() {
+        if (postsGrid) {
+            postsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--primary-red); margin-bottom: 20px;"></i>
+                    <p style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 10px;">Failed to load posts</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Please check your connection and try again</p>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer;">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Setup event listeners
+     */
+    function setupEventListeners() {
+        // Search input
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    renderPosts();
+                }, 300);
+            });
+        }
+        
+        // Filter chips
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+                
+                // Update active state
+                filterChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                
+                // Update filter
+                currentFilter = chip.dataset.filter;
+                renderPosts();
+            });
+        });
+    }
+
+    /**
+     * Filter and search posts
+     */
+    function filterPosts() {
+        let filtered = allPosts;
+        
+        // Language filter
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(post => {
+                if (currentFilter === 'bangla') return post.language === 'bn' || post.language === 'bn-en';
+                if (currentFilter === 'english') return post.language === 'en' || post.language === 'en-bn';
+                return true;
+            });
+        }
+        
+        // Search query
+        if (searchQuery) {
+            filtered = filtered.filter(post => {
+                return post.title.toLowerCase().includes(searchQuery) ||
+                       post.description.toLowerCase().includes(searchQuery) ||
+                       post.tags.some(tag => tag.toLowerCase().includes(searchQuery)) ||
+                       post.subcategory.toLowerCase().includes(searchQuery);
+            });
+        }
+        
+        return filtered;
+    }
+
+    /**
+     * Render posts to grid
+     */
+    function renderPosts() {
+        const filtered = filterPosts();
+        
+        if (filtered.length === 0) {
+            postsGrid.innerHTML = '';
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
             return;
         }
 
-        contentGrid.innerHTML = postsToRender.map(post => `
-            <a href="post-viewer.html?slug=${post.slug}" class="content-item post-item">
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        postsGrid.innerHTML = filtered.map(post => `
+            <a href="post-reader.html?id=${post.id}" class="content-item post-item">
                 <div class="content-thumbnail post-thumbnail">
                     ${post.thumbnail ? 
-                        `<img src="${post.thumbnail}" alt="${post.title}">` :
-                        '<i class="fas fa-newspaper"></i>'
+                        `<img src="${post.thumbnail}" alt="${post.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : 
+                        `<i class="${post.icon || 'fas fa-file-alt'}" style="display:flex;"></i>`
                     }
-                    <span class="post-language">${post.langDisplay}</span>
+                    <span class="post-language">${getLanguageDisplay(post.language)}</span>
                 </div>
                 <div class="content-info-wrap">
                     <h3 class="content-item-title">${post.title}</h3>
                     <div class="content-item-meta">
-                        <span class="read-time"><i class="fas fa-clock"></i> ${post.readTime}</span>
-                        <span><i class="fas fa-calendar"></i> ${formatDate(post.date)}</span>
+                        <span class="read-time"><i class="fas fa-clock"></i> ${post.readingTime}</span>
+                        <span><i class="fas fa-calendar"></i> ${formatDate(post.publishDate)}</span>
                     </div>
-                    <p class="content-item-desc">${post.description}</p>
+                    <p class="content-item-desc">${truncateText(post.description, 120)}</p>
                     <div class="content-tags">
-                        ${post.tags.map(tag => `<span class="content-tag">${tag}</span>`).join('')}
+                        ${post.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
                     </div>
                 </div>
             </a>
         `).join('');
 
-        // Add haptic feedback
+        // Add animation to newly rendered items
+        setTimeout(() => {
+            const items = document.querySelectorAll('.post-item');
+            items.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    item.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        }, 10);
+
         addHapticFeedback();
     }
 
-    // ========== FILTER & SEARCH FUNCTIONALITY ==========
-    function filterAndSearchPosts() {
-        const query = searchInput.value.toLowerCase().trim();
-
-        let filtered = posts;
-
-        // Language filter
-        if (currentLanguage !== 'all') {
-            filtered = filtered.filter(post => post.language === currentLanguage);
-        }
-
-        // Search query
-        if (query) {
-            filtered = filtered.filter(post => {
-                return post.title.toLowerCase().includes(query) ||
-                       post.description.toLowerCase().includes(query) ||
-                       post.tags.some(tag => tag.toLowerCase().includes(query));
-            });
-        }
-
-        renderPosts(filtered);
+    /**
+     * Get language display badge
+     */
+    function getLanguageDisplay(lang) {
+        const map = {
+            'bn': '🇧🇩 বাং',
+            'en': '🇬🇧 EN',
+            'bn-en': '🇧🇩 EN',
+            'en-bn': '🇬🇧 বাং'
+        };
+        return map[lang] || 'EN';
     }
 
-    // ========== HELPER FUNCTIONS ==========
+    /**
+     * Format date to relative time
+     */
     function formatDate(dateString) {
         const date = new Date(dateString);
         const now = new Date();
@@ -222,70 +246,26 @@
         }
     }
 
+    /**
+     * Truncate text to specified length
+     */
+    function truncateText(text, length) {
+        if (text.length <= length) return text;
+        return text.substring(0, length).trim() + '...';
+    }
+
+    /**
+     * Add haptic feedback to items
+     */
     function addHapticFeedback() {
-        const postItems = document.querySelectorAll('.post-item');
-        postItems.forEach(item => {
+        const items = document.querySelectorAll('.post-item');
+        items.forEach(item => {
             item.addEventListener('touchstart', () => {
                 if (navigator.vibrate) {
                     navigator.vibrate(10);
                 }
-            });
+            }, { passive: true });
         });
-    }
-
-    // ========== EVENT HANDLERS ==========
-    function handleLanguageFilter(e) {
-        const chip = e.target.closest('.filter-chip');
-        if (!chip) return;
-
-        // Haptic feedback
-        if (navigator.vibrate) {
-            navigator.vibrate(10);
-        }
-
-        // Update active state
-        languageFilters.forEach(f => f.classList.remove('active'));
-        chip.classList.add('active');
-
-        // Update current language
-        currentLanguage = chip.getAttribute('data-lang');
-
-        // Re-render
-        filterAndSearchPosts();
-    }
-
-    // ========== INITIALIZATION ==========
-    function init() {
-        // Render all posts initially
-        renderPosts(posts);
-
-        // Search functionality
-        let searchTimeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(filterAndSearchPosts, 300);
-        });
-
-        // Language filter
-        const filterContainer = document.getElementById('languageFilters');
-        filterContainer.addEventListener('click', handleLanguageFilter);
-
-        // Back button haptic feedback
-        const backBtn = document.querySelector('.back-btn');
-        if (backBtn) {
-            backBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
-        }
-    }
-
-    // Wait for DOM
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
     }
 
 })();

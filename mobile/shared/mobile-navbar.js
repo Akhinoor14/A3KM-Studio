@@ -14,6 +14,9 @@
     }
     
     function initMobileNav() {
+        // Redirect desktop users to the desktop site (avoid resize-based false positives)
+        redirectToDesktopIfNeeded();
+
         // Set active state based on current page
         setActiveNavItem();
         
@@ -22,6 +25,61 @@
         
         // Add haptic feedback on supported devices
         addHapticFeedback();
+    }
+
+    function isMobileDevice() {
+        const uaData = navigator.userAgentData;
+        if (uaData && typeof uaData.mobile === 'boolean') {
+            return uaData.mobile;
+        }
+
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+    }
+
+    function normalizePath(pathname) {
+        try {
+            return decodeURIComponent(pathname).toLowerCase();
+        } catch (err) {
+            return pathname.toLowerCase();
+        }
+    }
+
+    function getDesktopEquivalentPath() {
+        const path = normalizePath(window.location.pathname);
+        const mappings = [
+            { mobile: '/mobile/home/index.html', desktop: '/Home/index.html' },
+            { mobile: '/mobile/about/about.html', desktop: '/About me/about.html' },
+            { mobile: '/mobile/projects/projects.html', desktop: '/Projects Code/projects.html' },
+            { mobile: '/mobile/content-studio/hub.html', desktop: '/Content Studio/hub.html' },
+            { mobile: '/mobile/contact/contact.html', desktop: '/Contact/contact.html' },
+            { mobile: '/mobile/content-studio/video-blogs/video-gallery.html', desktop: '/Content Studio/video-content/video-gallery.html' },
+            { mobile: '/mobile/content-studio/video-blogs/video-viewer.html', desktop: '/Content Studio/video-content/video-viewer.html' },
+            { mobile: '/mobile/content-studio/written-posts/post-listing.html', desktop: '/Content Studio/written-posts/post-listing-new.html' },
+            { mobile: '/mobile/content-studio/written-posts/post-reader.html', desktop: '/Content Studio/written-posts/post-reader.html' },
+            { mobile: '/mobile/content-studio/educational-courses/course-listing.html', desktop: '/Content Studio/educational-videos/course-listing-new.html' },
+            { mobile: '/mobile/content-studio/educational-courses/course-viewer.html', desktop: '/Content Studio/educational-videos/course-viewer-new.html' },
+            { mobile: '/mobile/content-studio/books-pdfs/book-listing.html', desktop: '/Content Studio/books-pdfs/book-listing-new.html' },
+            { mobile: '/mobile/content-studio/books-pdfs/book-reader.html', desktop: '/Content Studio/books-pdfs/book-reader-new.html' },
+            { mobile: '/mobile/content-studio/research-papers/paper-listing.html', desktop: '/Content Studio/research-papers/paper-listing-new.html' },
+            { mobile: '/mobile/content-studio/research-papers/paper-viewer.html', desktop: '/Content Studio/research-papers/paper-viewer-new.html' }
+        ];
+
+        for (const mapping of mappings) {
+            if (path.endsWith(mapping.mobile)) {
+                return mapping.desktop;
+            }
+        }
+
+        return null;
+    }
+
+    function redirectToDesktopIfNeeded() {
+        if (isMobileDevice()) return;
+        const target = getDesktopEquivalentPath();
+        if (target && window.location.pathname !== target) {
+            window.location.replace(target);
+        }
     }
     
     /**

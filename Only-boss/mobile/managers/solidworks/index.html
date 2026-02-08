@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#3F51B5">
+    
+    <title>SolidWorks Manager - Only Boss</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="manager-header">
+        <button class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="header-title">
+            <h1>SolidWorks Models</h1>
+            <span class="model-count" id="modelCount">0 models</span>
+        </div>
+        <button class="add-btn" onclick="showAddModal()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </header>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-bar">
+        <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search models..." />
+            <button class="clear-btn" id="clearSearchBtn" onclick="clearSearch()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <button class="filter-btn" onclick="showFilterSheet()">
+            <i class="fas fa-filter"></i>
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-value" id="totalModels">0</div>
+            <div class="stat-label">Models</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalCategories">0</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalDownloads">0</div>
+            <div class="stat-label">Downloads</div>
+        </div>
+    </div>
+
+    <!-- Models Grid -->
+    <div class="models-grid" id="modelsGrid"></div>
+
+    <!-- Loading/Empty States -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>Loading models...</p>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+        <i class="fas fa-cube"></i>
+        <h3>No models found</h3>
+        <p>Add your first SolidWorks model</p>
+        <button class="btn-primary" onclick="showAddModal()">
+            <i class="fas fa-plus"></i> Add Model
+        </button>
+    </div>
+
+    <!-- Bottom Toolbar -->
+    <div class="bottom-toolbar" id="bottomToolbar">
+        <button class="toolbar-btn" onclick="bulkExport()">
+            <i class="fas fa-download"></i>
+            <span>Export</span>
+        </button>
+        <button class="toolbar-btn" onclick="bulkDelete()">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </button>
+        <button class="toolbar-btn" onclick="cancelSelection()">
+            <i class="fas fa-times"></i>
+            <span>Cancel</span>
+        </button>
+    </div>
+
+    <!-- Add/Edit Model Sheet -->
+    <div class="bottom-sheet" id="addModelSheet">
+        <div class="bottom-sheet-header">
+            <h3 id="sheetTitle">Add SolidWorks Model</h3>
+            <button class="sheet-close-btn" onclick="closeAddModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="bottom-sheet-content">
+            <form id="modelForm">
+                <div class="form-group">
+                    <label for="modelTitle">Model Title *</label>
+                    <input type="text" id="modelTitle" required placeholder="Model 01 - Basic Part" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelSubtitle">Subtitle</label>
+                    <input type="text" id="modelSubtitle" placeholder="Simple rectangular part" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modelCategory">Category *</label>
+                        <select id="modelCategory" required>
+                            <option value="">Select category...</option>
+                            <option value="parts">Parts</option>
+                            <option value="assemblies">Assemblies</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelDifficulty">Difficulty *</label>
+                        <select id="modelDifficulty" required>
+                            <option value="">Select difficulty...</option>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelDescription">Description</label>
+                    <textarea id="modelDescription" rows="3" placeholder="Model description..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelFeatures">Features (comma-separated)</label>
+                    <input type="text" id="modelFeatures" placeholder="Extrude, Fillet, Chamfer" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelTags">Tags (comma-separated)</label>
+                    <input type="text" id="modelTags" placeholder="Part, Basic, Practice" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modelGlb">3D Model (.glb)</label>
+                        <input type="text" id="modelGlb" placeholder="model.glb" />
+                    </div>
+                    <div class="form-group">
+                        <label for="modelZip">ZIP Download</label>
+                        <input type="text" id="modelZip" placeholder="model.zip" />
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter Sheet -->
+    <div class="bottom-sheet" id="filterSheet">
+        <div class="bottom-sheet-header">
+            <h3>Filter Models</h3>
+            <button class="sheet-close-btn" onclick="closeFilterSheet()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="bottom-sheet-content">
+            <div class="form-group">
+                <label>Category</label>
+                <select id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option value="parts">Parts</option>
+                    <option value="assemblies">Assemblies</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Difficulty</label>
+                <select id="filterDifficulty">
+                    <option value="">All Levels</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+                <button class="btn-primary" onclick="applyFilters()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="../../../auth/only-boss-auth.js"></script>
+    <script src="../../shared/auth-guard.js"></script>
+    <script src="manager.js"></script>
+</body>
+</html>
