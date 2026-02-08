@@ -28,13 +28,21 @@
     }
 
     function isMobileDevice() {
+        // Check userAgentData first (modern browsers)
         const uaData = navigator.userAgentData;
         if (uaData && typeof uaData.mobile === 'boolean') {
             return uaData.mobile;
         }
 
+        // Fallback to user agent string and screen size
         const ua = navigator.userAgent || navigator.vendor || window.opera;
-        return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+        const isMobileUA = /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+        
+        // Also check screen size as additional verification
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        // Return true if either UA indicates mobile OR screen is small
+        return isMobileUA || isSmallScreen;
     }
 
     function normalizePath(pathname) {

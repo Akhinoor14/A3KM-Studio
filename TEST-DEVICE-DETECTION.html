@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Detection Test - A3KM Studio</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-box {
+            background: #111;
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .info { color: #ff0; }
+        h1 { color: #f00; text-align: center; }
+        h2 { color: #0ff; border-bottom: 1px solid #0ff; padding-bottom: 10px; }
+        button {
+            background: #f00;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        button:hover { background: #c00; }
+        .result { margin: 10px 0; padding: 10px; background: #222; border-left: 4px solid #0f0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 A3KM Studio - Device Detection Test</h1>
+    
+    <div class="test-box">
+        <h2>📱 Current Device Detection</h2>
+        <div id="currentDevice"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>🔬 Detection Methods</h2>
+        <div id="detectionMethods"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>📊 Browser & Screen Info</h2>
+        <div id="browserInfo"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>🚀 Quick Actions</h2>
+        <button onclick="goToMobile()">Open Mobile Site</button>
+        <button onclick="goToDesktop()">Open Desktop Site</button>
+        <button onclick="location.reload()">Refresh Test</button>
+    </div>
+
+    <script>
+        // Same detection logic as index.html
+        function isMobileDevice() {
+            const uaData = navigator.userAgentData;
+            if (uaData && typeof uaData.mobile === 'boolean') {
+                return uaData.mobile;
+            }
+            
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+        }
+
+        // Enhanced detection with screen size
+        function isMobileDeviceEnhanced() {
+            const uaData = navigator.userAgentData;
+            if (uaData && typeof uaData.mobile === 'boolean') {
+                return uaData.mobile;
+            }
+
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isMobileUA = /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+            const isSmallScreen = window.innerWidth <= 768;
+            
+            return isMobileUA || isSmallScreen;
+        }
+
+        // Display current device
+        function displayCurrentDevice() {
+            const isMobile = isMobileDevice();
+            const isMobileEnhanced = isMobileDeviceEnhanced();
+            
+            document.getElementById('currentDevice').innerHTML = `
+                <div class="result">
+                    <strong>Basic Detection:</strong> 
+                    <span class="${isMobile ? 'pass' : 'info'}">${isMobile ? '📱 MOBILE DEVICE' : '💻 DESKTOP DEVICE'}</span>
+                </div>
+                <div class="result">
+                    <strong>Enhanced Detection:</strong> 
+                    <span class="${isMobileEnhanced ? 'pass' : 'info'}">${isMobileEnhanced ? '📱 MOBILE DEVICE' : '💻 DESKTOP DEVICE'}</span>
+                </div>
+                <div class="result">
+                    <strong>Recommended Site:</strong> 
+                    <span class="info">${isMobile ? 'mobile/home/index.html' : 'Home/index.html'}</span>
+                </div>
+            `;
+        }
+
+        // Display detection methods
+        function displayDetectionMethods() {
+            const uaData = navigator.userAgentData;
+            const hasUAData = uaData && typeof uaData.mobile === 'boolean';
+            const uaDataMobile = hasUAData ? uaData.mobile : null;
+            
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const uaStringMatch = /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+            
+            const screenWidth = window.innerWidth;
+            const isSmallScreen = screenWidth <= 768;
+
+            document.getElementById('detectionMethods').innerHTML = `
+                <div class="result">
+                    <strong>1. navigator.userAgentData:</strong> 
+                    ${hasUAData ? 
+                        `<span class="pass">✓ Available | mobile = ${uaDataMobile}</span>` : 
+                        `<span class="fail">✗ Not Available (Fallback needed)</span>`
+                    }
+                </div>
+                <div class="result">
+                    <strong>2. User Agent String Match:</strong> 
+                    <span class="${uaStringMatch ? 'pass' : 'info'}">${uaStringMatch ? '✓ Mobile UA detected' : '✗ Desktop UA detected'}</span>
+                </div>
+                <div class="result">
+                    <strong>3. Screen Width Check:</strong> 
+                    <span class="${isSmallScreen ? 'pass' : 'info'}">${screenWidth}px ${isSmallScreen ? '(≤ 768px = Mobile)' : '(> 768px = Desktop)'}</span>
+                </div>
+            `;
+        }
+
+        // Display browser info
+        function displayBrowserInfo() {
+            const info = {
+                'User Agent': navigator.userAgent,
+                'Platform': navigator.platform,
+                'Vendor': navigator.vendor,
+                'Language': navigator.language,
+                'Screen Width': `${window.innerWidth}px`,
+                'Screen Height': `${window.innerHeight}px`,
+                'Device Pixel Ratio': window.devicePixelRatio,
+                'Touch Support': 'ontouchstart' in window ? 'Yes ✓' : 'No ✗',
+                'Max Touch Points': navigator.maxTouchPoints || 0
+            };
+
+            let html = '';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<div class="result"><strong>${key}:</strong> ${value}</div>`;
+            }
+            
+            document.getElementById('browserInfo').innerHTML = html;
+        }
+
+        // Navigation functions
+        function goToMobile() {
+            window.location.href = 'mobile/home/index.html';
+        }
+
+        function goToDesktop() {
+            window.location.href = 'Home/index.html';
+        }
+
+        // Run tests
+        displayCurrentDevice();
+        displayDetectionMethods();
+        displayBrowserInfo();
+
+        // Update on resize
+        window.addEventListener('resize', () => {
+            displayCurrentDevice();
+            displayDetectionMethods();
+            displayBrowserInfo();
+        });
+    </script>
+</body>
+</html>
