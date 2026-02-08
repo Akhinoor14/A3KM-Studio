@@ -29,14 +29,26 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     
-    <!-- PWA Universal Initializer (Auto-loads manifest, service worker, install prompt, splash screen) -->
+    <!-- PWA Universal Initializer (manifest, service worker, install prompt) -->
     <script src="../Optimization/pwa-init.js" defer></script>
     
-    <!-- Mobile Detector & Auto-redirect -->
-    <script src="../Optimization/mobile-system/mobile-detector.js"></script>
+    <!-- Mobile Detector & Auto-redirect - IMMEDIATE -->
     <script>
-        // Redirect to mobile version if on mobile device
-        mobileDetector.redirectToMobile('../mobile/home/index.html');
+        // Immediate mobile check - must run before page loads
+        (function() {
+            function isMobileDevice() {
+                const uaData = navigator.userAgentData;
+                if (uaData && typeof uaData.mobile === 'boolean') {
+                    return uaData.mobile;
+                }
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
+            }
+            
+            if (isMobileDevice()) {
+                window.location.replace('../mobile/home/index.html');
+            }
+        })();
     </script>
 </head>
 <body>
