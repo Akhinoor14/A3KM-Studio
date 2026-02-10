@@ -19,7 +19,7 @@
     });
 
     /**
-     * Load posts from central content.json
+     * Load posts from central content.json + localStorage
      */
     async function loadPostsFromJSON() {
         try {
@@ -28,6 +28,23 @@
             
             const data = await response.json();
             allPosts = data['written-posts'] || [];
+            
+            // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+            const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+            
+            if (localPosts.length > 0) {
+                console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+                
+                // Normalize and merge with existing posts (avoid duplicates)
+                localPosts.forEach(localPost => {
+                    const normalized = normalizeLocalPost(localPost);
+                    const exists = allPosts.find(p => p.id === normalized.id);
+                    if (!exists) {
+                        allPosts.push(normalized);
+                    }
+                });
+            }
+            
             console.log(`📝 Loaded ${allPosts.length} posts`);
             
             loadPost();
@@ -62,8 +79,19 @@
         console.log(`📖 Loading post: ${currentPost.title}`);
         
         try {
-            // Fetch markdown content
-            const mdResponse = await fetch(currentPost.mdFilePath);
+            // If inline HTML content exists (from Simple Creator)
+            if (currentPost.content && (currentPost.content.startsWith('<') || currentPost.content.includes('<p>'))) {
+                renderPost(currentPost.content);
+                checkBookmarkState();
+                return;
+            }
+
+            // Fetch markdown content from file path
+            const mdPath = currentPost.mdFilePath || currentPost.content;
+            if (!mdPath) {
+                throw new Error('Missing markdown path');
+            }
+            const mdResponse = await fetch(mdPath);
             if (!mdResponse.ok) throw new Error(`Failed to load markdown: ${mdResponse.status}`);
             
             const markdownContent = await mdResponse.text();
@@ -85,66 +113,18 @@
     }
 
     /**
-     * Convert markdown to HTML
+     * Convert markdown to HTML using advanced viewer
      */
     function markdownToHTML(markdown) {
-        let html = markdown;
-
-        // Code blocks (must be before inline code)
-        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-            return `<pre><code class="language-${lang || 'plaintext'}">${escapeHtml(code.trim())}</code></pre>`;
+        // Use the new markdown viewer with full features
+        return renderMarkdown(markdown, {
+            generateTOC: true,
+            syntaxHighlight: true,
+            showLineNumbers: true,
+            copyButton: true,
+            sanitize: true,
+            theme: 'dark-red'
         });
-
-        // Headers (must be on new lines)
-        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-        // Bold
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
-
-        // Italic
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        html = html.replace(/_(.*?)_/g, '<em>$1</em>');
-
-        // Links
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-        // Images
-        html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy">');
-
-        // Inline code
-        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-        // Blockquotes
-        html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
-
-        // Unordered lists
-        html = html.replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>');
-        html = html.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>');
-        
-        // Ordered lists
-        html = html.replace(/^\d+\. (.*$)/gim, '<ol><li>$1</li></ol>');
-
-        // Horizontal rules
-        html = html.replace(/^---$/gim, '<hr>');
-        html = html.replace(/^\*\*\*$/gim, '<hr>');
-
-        // Line breaks and paragraphs
-        html = html.split('\n\n').map(block => {
-            // Skip if already wrapped in HTML tag
-            if (block.trim().startsWith('<')) return block;
-            // Wrap in paragraph
-            return `<p>${block.trim()}</p>`;
-        }).join('\n');
-
-        // Merge consecutive list items
-        html = html.replace(/<\/ul>\s*<ul>/g, '');
-        html = html.replace(/<\/ol>\s*<ol>/g, '');
-        html = html.replace(/<\/blockquote>\s*<blockquote>/g, ' ');
-
-        return html;
     }
 
     /**
@@ -166,7 +146,10 @@
      */
     function renderPost(htmlContent) {
         const languageDisplay = getLanguageDisplay(currentPost.language);
-        const formattedDate = formatDate(currentPost.publishDate);
+        const formattedDate = formatDate(currentPost.publishDate || currentPost.date);
+        
+        // Generate Table of Contents
+        const tocHtml = generateTOC();
         
         articleContainer.innerHTML = `
             <section class="article-header">
@@ -178,6 +161,8 @@
                     <span><i class="fas fa-language"></i> ${languageDisplay}</span>
                 </div>
             </section>
+            
+            ${tocHtml}
             
             <div class="article-content">
                 ${htmlContent}
@@ -196,11 +181,80 @@
                         <button class="share-btn" data-platform="copy"><i class="fas fa-link"></i></button>
                     </div>
                 </div>
+                
+                <!-- Post Navigation -->
+                <nav class="post-navigation" id="postNavigation">
+                    <div class="nav-header">
+                        <span class="nav-title">📖 More Articles</span>
+                        <span class="keyboard-hint" id="keyboardBadge">
+                            <i class="fas fa-keyboard"></i>
+                            <span id="articleCounter">Article</span>
+                        </span>
+                    </div>
+                    <div class="nav-buttons">
+                        <a href="#" class="nav-btn" id="prevPost">
+                            <span class="nav-btn-label">
+                                <i class="fas fa-arrow-left"></i>
+                                Previous Article
+                            </span>
+                            <span class="nav-btn-text" id="prevPostTitle">Title</span>
+                        </a>
+                        <a href="#" class="nav-btn" id="nextPost">
+                            <span class="nav-btn-label">
+                                Next Article
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                            <span class="nav-btn-text" id="nextPostTitle">Title</span>
+                        </a>
+                    </div>
+                </nav>
             </footer>
         `;
 
         // Attach share button listeners
         addShareListeners();
+        
+        // Setup navigation
+        setupNavigation();
+        
+        // Add smooth scroll for TOC links
+        document.querySelectorAll('.md-toc-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').slice(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (navigator.vibrate) navigator.vibrate(10);
+                }
+            });
+        });
+    }
+
+    function normalizeLocalPost(post) {
+        const fallbackText = stripHtml(post.content || post.summary || '');
+        const words = fallbackText.trim().split(/\s+/).filter(Boolean);
+        const readTime = post.readTime || Math.max(1, Math.ceil(words.length / 200));
+
+        return {
+            id: post.id,
+            title: post.title || 'Untitled Post',
+            description: post.summary || fallbackText || 'No description available',
+            mdFilePath: post.mdFilePath || '',
+            thumbnail: post.coverImage || '',
+            readingTime: `${readTime} min`,
+            publishDate: post.date || new Date().toISOString().split('T')[0],
+            language: post.language || 'en',
+            tags: Array.isArray(post.tags) ? post.tags : [],
+            icon: 'fa-pen-fancy',
+            content: post.content
+        };
+    }
+
+    function stripHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent || div.innerText || '';
     }
 
     /**
@@ -383,5 +437,110 @@
 
     // Setup listeners after DOM ready
     setTimeout(setupEventListeners, 100);
+
+    /**
+     * Setup Navigation between posts
+     */
+    function setupNavigation() {
+        const postNavigation = document.getElementById('postNavigation');
+        if (!postNavigation || !allPosts || allPosts.length === 0) {
+            console.log('⚠️ Navigation not available');
+            return;
+        }
+
+        // Sort posts by ID (post-001, post-002, etc.)
+        const sortedPosts = allPosts
+            .filter(p => p.id && p.id.startsWith('post-'))
+            .sort((a, b) => {
+                const numA = parseInt(a.id.replace('post-', ''));
+                const numB = parseInt(b.id.replace('post-', ''));
+                return numA - numB;
+            });
+
+        if (sortedPosts.length === 0) {
+            console.log('⚠️ No posts found for navigation');
+            return;
+        }
+
+        const currentIndex = sortedPosts.findIndex(p => p.id === currentPost.id);
+        if (currentIndex === -1) {
+            console.log('⚠️ Current post not found in sorted list');
+            return;
+        }
+
+        const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+        const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
+
+        // Update counter in keyboard badge
+        const keyboardBadge = document.getElementById('articleCounter');
+        if (keyboardBadge) {
+            keyboardBadge.textContent = `Article ${currentIndex + 1}/${sortedPosts.length}`;
+        }
+
+        // Setup previous button
+        const prevBtn = document.getElementById('prevPost');
+        const prevTitle = document.getElementById('prevPostTitle');
+        if (prevPost && prevBtn && prevTitle) {
+            prevBtn.href = `post-reader.html?id=${prevPost.id}`;
+            prevTitle.textContent = prevPost.title;
+            prevBtn.classList.remove('disabled');
+            
+            // Add haptic feedback for mobile
+            prevBtn.addEventListener('touchstart', () => {
+                if (navigator.vibrate) navigator.vibrate(10);
+            });
+        } else if (prevBtn) {
+            prevBtn. classList.add('disabled');
+            prevBtn.href = '#';
+        }
+
+        // Setup next button
+        const nextBtn = document.getElementById('nextPost');
+        const nextTitle = document.getElementById('nextPostTitle');
+        if (nextPost && nextBtn && nextTitle) {
+            nextBtn.href = `post-reader.html?id=${nextPost.id}`;
+            nextTitle.textContent = nextPost.title;
+            nextBtn.classList.remove('disabled');
+            
+            // Add haptic feedback for mobile
+            nextBtn.addEventListener('touchstart', () => {
+                if (navigator.vibrate) navigator.vibrate(10);
+            });
+        } else if (nextBtn) {
+            nextBtn.classList.add('disabled');
+            nextBtn.href = '#';
+        }
+
+        // Show navigation
+        postNavigation.classList.add('active');
+
+        // Setup keyboard navigation
+        setupKeyboardNavigation(prevPost, nextPost);
+
+        console.log(`📍 Post ${currentIndex + 1}/${sortedPosts.length}: ${currentPost.title}`);
+        console.log(`⬅️ Previous: ${prevPost ? prevPost.title : 'None'}`);
+        console.log(`➡️ Next: ${nextPost ? nextPost.title : 'None'}`);
+    }
+
+    /**
+     * Setup keyboard shortcuts for navigation
+     */
+    function setupKeyboardNavigation(prevPost, nextPost) {
+        document.addEventListener('keydown', (e) => {
+            // Left arrow - Previous post
+            if (e.key === 'ArrowLeft' && prevPost) {
+                e.preventDefault();
+                if (navigator.vibrate) navigator.vibrate(10);
+                window.location.href = `post-reader.html?id=${prevPost.id}`;
+            }
+            
+            // Right arrow - Next post
+            if (e.key === 'ArrowRight' && nextPost) {
+                e.preventDefault();
+                if (navigator.vibrate) navigator.vibrate(10);
+                window.location.href = `post-reader.html?id=${nextPost.id}`;
+            }
+        });
+    }
 
 })();

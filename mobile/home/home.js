@@ -6,6 +6,23 @@
 (function() {
     'use strict';
     
+    // ========== SMOOTH SPLASH SCREEN REMOVAL ==========
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const splash = document.getElementById('appSplash');
+            if (splash) {
+                splash.style.animation = 'splashFadeOut 0.8s ease forwards';
+            }
+            
+            setTimeout(() => {
+                document.body.classList.remove('splash-active');
+                if (splash) {
+                    splash.remove();
+                }
+            }, 800);
+        }, 1500); // Show splash for 1.5 seconds
+    });
+    
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

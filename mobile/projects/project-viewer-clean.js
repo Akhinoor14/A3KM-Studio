@@ -157,7 +157,6 @@
                         shadow-intensity="1"
                         environment-image="neutral"
                         exposure="1"
-                        style="width: 100%; height: 400px; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); border-radius: 12px; border: 2px solid var(--border-primary);"
                     >
                         <div class="glb-controls" slot="progress-bar">
                             <div class="loading-progress"></div>

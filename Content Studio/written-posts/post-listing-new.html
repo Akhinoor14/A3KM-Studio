@@ -825,11 +825,28 @@
       'Workspace Setup': 'fa-chair'
     };
 
-    // Load posts data - INSTANT
+    // Load posts data - INSTANT (includes localStorage posts!)
     async function loadPosts() {
       try {
         const response = await fetch('posts.json');
         postsData = await response.json();
+        
+        // 🚀 NEW: Load posts from localStorage (from simple creator!)
+        const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+        
+        if (localPosts.length > 0) {
+          console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+          
+          // Merge with existing posts (avoid duplicates)
+          localPosts.forEach(localPost => {
+            const exists = postsData.posts.find(p => p.id === localPost.id);
+            if (!exists) {
+              postsData.posts.push(localPost);
+              console.log(`✅ Added post: ${localPost.id}`);
+            }
+          });
+        }
+        
         renderCategories();
       } catch (error) {
         console.error('Error loading posts:', error);

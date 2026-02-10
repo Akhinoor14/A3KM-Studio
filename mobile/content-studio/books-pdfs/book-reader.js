@@ -107,29 +107,36 @@
 
     // ========== LOAD PDF VIEWER ==========
     function loadPDFViewer() {
-        // For demo purposes, show placeholder
-        // In production, use PDF.js or embed actual PDF
+        // Display book preview with Read button
         pdfViewerContainer.innerHTML = `
             <div class="pdf-placeholder">
                 <i class="fas fa-book-open"></i>
                 <h3>${currentBook.title}</h3>
                 <p>${currentBook.pages} pages • ${currentBook.size}</p>
-                <p style="margin-top: 16px; max-width: 300px; margin-left: auto; margin-right: auto;">
-                    PDF viewer will load here. In production, integrate PDF.js for mobile-optimized reading experience.
+                <p style="margin-top: 16px; max-width: 300px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                    Tap below to open this book in the mobile-optimized PDF viewer with pinch-to-zoom and touch gestures.
                 </p>
-                <button onclick="window.open('${currentBook.pdfUrl}', '_blank')" style="margin-top: 24px; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd, #0a58ca); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
-                    Open PDF in New Tab
+                <button id="openPDFBtn" style="margin-top: 24px; padding: 14px 28px; background: linear-gradient(135deg, rgba(205,92,92,0.3), rgba(205,92,92,0.2)); border: 1px solid rgba(205,92,92,0.5); color: #fff; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);">
+                    <i class="fas fa-book-reader"></i> Read Book
                 </button>
             </div>
         `;
 
-        // Alternative: Embed PDF using iframe
-        // pdfViewerContainer.innerHTML = `
-        //     <iframe src="${currentBook.pdfUrl}#page=${currentPage}" class="pdf-iframe"></iframe>
-        // `;
-
-        // Alternative: Use PDF.js for better mobile support
-        // loadPDFJS(currentBook.pdfUrl);
+        // Attach open PDF viewer handler
+        const openPDFBtn = document.getElementById('openPDFBtn');
+        if (openPDFBtn) {
+            openPDFBtn.addEventListener('click', () => {
+                if (navigator.vibrate) navigator.vibrate(10);
+                openMobilePDFViewer({
+                    filePath: currentBook.pdfUrl,
+                    fileType: 'pdf',
+                    title: currentBook.title,
+                    downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+                    showDownload: true,
+                    allowZoom: true
+                });
+            });
+        }
     }
 
     // ========== RENDER BOOK INFO ==========

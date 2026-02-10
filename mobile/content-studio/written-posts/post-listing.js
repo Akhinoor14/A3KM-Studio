@@ -25,7 +25,7 @@
     });
 
     /**
-     * Load posts from central content.json
+     * Load posts from central content.json + localStorage
      */
     async function loadPostsFromJSON() {
         try {
@@ -39,7 +39,24 @@
             const data = await response.json();
             allPosts = data['written-posts'] || [];
             
-            console.log(`📝 Loaded ${allPosts.length} posts from content.json`);
+            // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+            const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+            
+            if (localPosts.length > 0) {
+                console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+                
+                // Normalize and merge with existing posts (avoid duplicates)
+                localPosts.forEach(localPost => {
+                    const normalized = normalizeLocalPost(localPost);
+                    const exists = allPosts.find(p => p.id === normalized.id);
+                    if (!exists) {
+                        allPosts.push(normalized);
+                        console.log(`✅ Added post: ${normalized.id}`);
+                    }
+                });
+            }
+            
+            console.log(`📝 Total ${allPosts.length} posts loaded`);
             
             hideLoadingState();
             renderPosts();
@@ -244,6 +261,33 @@
             const years = Math.floor(diffDays / 365);
             return years === 1 ? '1 year ago' : `${years} years ago`;
         }
+    }
+
+    function normalizeLocalPost(post) {
+        const fallbackText = stripHtml(post.content || post.summary || '');
+        const words = fallbackText.trim().split(/\s+/).filter(Boolean);
+        const readTime = post.readTime || Math.max(1, Math.ceil(words.length / 200));
+
+        return {
+            id: post.id,
+            title: post.title || 'Untitled Post',
+            category: 'written-posts',
+            subcategory: post.category || 'General',
+            description: post.summary || fallbackText || 'No description available',
+            mdFilePath: post.mdFilePath || '',
+            thumbnail: post.coverImage || '',
+            readingTime: `${readTime} min`,
+            publishDate: post.date || new Date().toISOString().split('T')[0],
+            language: post.language || 'en',
+            tags: Array.isArray(post.tags) ? post.tags : [],
+            icon: 'fa-pen-fancy'
+        };
+    }
+
+    function stripHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent || div.innerText || '';
     }
 
     /**

@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post - A3KM Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #CC0000;
+            --dark-red: #990000;
+            --bg-dark: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-white: #ffffff;
+            --text-gray: #aaaaaa;
+            --border-color: rgba(204, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+            color: var(--text-white);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .header h1 {
+            color: var(--primary-red);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-gray);
+        }
+
+        /* Post Creator Card - Like Facebook */
+        .post-creator {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-white);
+            font-weight: 600;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-red);
+        }
+
+        .input-group textarea {
+            min-height: 200px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .char-counter {
+            text-align: right;
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        /* Media Upload Section - Like Facebook */
+        .media-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .media-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-red);
+            font-size: 1.1rem;
+        }
+
+        .media-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .media-btn {
+            padding: 12px 20px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .media-btn:hover {
+            background: var(--primary-red);
+            border-color: var(--primary-red);
+            transform: translateY(-2px);
+        }
+
+        .media-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Preview Areas */
+        .preview-area {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .preview-area.active {
+            display: block;
+        }
+
+        .preview-item {
+            position: relative;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-item img {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-dark);
+            color: var(--text-white);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary-red);
+        }
+
+        /* Success Message */
+        .success-message {
+            background: rgba(50, 205, 50, 0.2);
+            border: 2px solid #32CD32;
+            color: #90EE90;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-message.show {
+            display: flex;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid var(--primary-red);
+            color: #ff6666;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loader {
+            border: 4px solid rgba(204, 0, 0, 0.3);
+            border-top: 4px solid var(--primary-red);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hidden File Input */
+        input[type="file"] {
+            display: none;
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .tag {
+            background: var(--primary-red);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .tag .remove-tag {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-input-field {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: white;
+            padding: 5px;
+            outline: none;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-pen-fancy"></i> Create New Post</h1>
+            <p>লিখো যা মনে আসে - ঠিক Facebook এর মতো!</p>
+            <p id="syncStatus" style="margin-top: 10px; font-size: 0.9rem; color: #aaa;">
+                <i class="fas fa-cloud-upload-alt"></i> Cloud Sync: <span style="color: #FFA500;">Checking...</span>
+            </p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Post Published Successfully! 🎉</strong>
+                <p>তোমার post এখন live!</p>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="post-creator">
+            <!-- Title -->
+            <div class="input-group">
+                <label><i class="fas fa-heading"></i> Post Title</label>
+                <input type="text" id="postTitle" placeholder="তোমার post এর title লিখো..." maxlength="200">
+                <div class="char-counter"><span id="titleCounter">0</span>/200</div>
+            </div>
+
+            <!-- Category -->
+            <div class="input-group">
+                <label><i class="fas fa-folder"></i> Category</label>
+                <select id="postCategory">
+                    <option value="">Select Category</option>
+                    <option value="Arduino Projects & Microcontrollers">Arduino Projects</option>
+                    <option value="SolidWorks & CAD">SolidWorks & CAD</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Tutorial & How-To">Tutorial & How-To</option>
+                    <option value="Project Showcase">Project Showcase</option>
+                    <option value="Campus Life & University">Campus Life</option>
+                    <option value="Personal Growth">Personal Stories</option>
+                    <option value="Career Advice & Professional Growth">Career Advice</option>
+                </select>
+            </div>
+
+            <!-- Main Content - Like Facebook Post Box -->
+            <div class="input-group">
+                <label><i class="fas fa-edit"></i> তোমার কথা লিখো</label>
+                <textarea id="postContent" placeholder="What's on your mind, Akhinoor? 
+
+তুমি এখানে যা খুশি লিখতে পারো:
+- আজকের project কি করলে
+- কোন নতুন জিনিস শিখলে
+- টিপস শেয়ার করো
+- অভিজ্ঞতা শেয়ার করো
+
+ঠিক Facebook এর মতো! 😊"></textarea>
+                <div class="char-counter"><span id="contentCounter">0</span> characters</div>
+            </div>
+
+            <!-- Media Section (Like Facebook) -->
+            <div class="media-section">
+                <h3>Add to your post</h3>
+                <div class="media-buttons">
+                    <button class="media-btn" onclick="document.getElementById('imageUpload').click()">
+                        <i class="fas fa-image"></i> Photo
+                    </button>
+                    <button class="media-btn" onclick="showVideoInput()">
+                        <i class="fab fa-youtube"></i> Video
+                    </button>
+                    <button class="media-btn" onclick="showGalleryInput()">
+                        <i class="fas fa-images"></i> Gallery
+                    </button>
+                </div>
+
+                <!-- Hidden File Input -->
+                <input type="file" id="imageUpload" accept="image/*" multiple onchange="handleImageUpload(event)">
+
+                <!-- Image Preview -->
+                <div id="imagePreview" class="preview-area"></div>
+
+                <!-- Video Input -->
+                <div id="videoInput" class="preview-area">
+                    <input type="text" id="youtubeLink" placeholder="Paste YouTube video link here..." style="width: 100%; margin-bottom: 10px;">
+                    <button class="btn btn-secondary" onclick="addVideo()">Add Video</button>
+                </div>
+
+                <!-- Video Preview -->
+                <div id="videoPreview" class="preview-area"></div>
+
+                <!-- Gallery Input -->
+                <div id="galleryInput" class="preview-area">
+                    <input type="file" id="galleryUpload" accept="image/*" multiple onchange="handleGalleryUpload(event)">
+                    <button class="media-btn" onclick="document.getElementById('galleryUpload').click()">
+                        <i class="fas fa-upload"></i> Upload Multiple Images
+                    </button>
+                </div>
+
+                <!-- Gallery Preview -->
+                <div id="galleryPreview" class="preview-area"></div>
+            </div>
+
+            <!-- Tags -->
+            <div class="input-group">
+                <label><i class="fas fa-tags"></i> Tags (press Enter to add)</label>
+                <div class="tags-input" id="tagsContainer">
+                    <input type="text" class="tag-input-field" id="tagInput" placeholder="Add tags..." onkeypress="handleTagInput(event)">
+                </div>
+            </div>
+
+            <!-- Short Summary -->
+            <div class="input-group">
+                <label><i class="fas fa-align-left"></i> Short Summary (for preview)</label>
+                <textarea id="postSummary" placeholder="সংক্ষেপে লিখো এই post টা কিসের..." maxlength="500" style="min-height: 80px;"></textarea>
+                <div class="char-counter"><span id="summaryCounter">0</span>/500</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previewPost()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+                <button class="btn btn-primary" onclick="publishPost()">
+                    <i class="fas fa-paper-plane"></i> Publish Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loader"></div>
+            <p>Publishing your post...</p>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let uploadedImages = [];
+        let youtubeVideos = [];
+        let galleryImages = [];
+        let tags = [];
+
+        // Character Counters
+        document.getElementById('postTitle').addEventListener('input', (e) => {
+            document.getElementById('titleCounter').textContent = e.target.value.length;
+        });
+
+        document.getElementById('postContent').addEventListener('input', (e) => {
+            document.getElementById('contentCounter').textContent = e.target.value.length;
+        });
+
+        document.getElementById('postSummary').addEventListener('input', (e) => {
+            document.getElementById('summaryCounter').textContent = e.target.value.length;
+        });
+
+        // Handle Image Upload
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('imagePreview');
+            preview.classList.add('active');
+            
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImages.push({
+                        name: file.name,
+                        data: e.target.result
+                    });
+                    
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+                    item.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}">
+                        <span>${file.name}</span>
+                        <button class="remove-btn" onclick="removeImage(${uploadedImages.length - 1})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    preview.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        function renderImagePreviews() {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            uploadedImages.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <img src="${img.data}" alt="${img.name}">
+                    <span>${img.name}</span>
+                    <button class="remove-btn" onclick="removeImage(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                preview.appendChild(item);
+            });
+        }
+
+        // Video Functions
+        function showVideoInput() {
+            document.getElementById('videoInput').classList.toggle('active');
+        }
+
+        function addVideo() {
+            const link = document.getElementById('youtubeLink').value;
+            if (!link) {
+                alert('Please paste a YouTube link!');
+                return;
+            }
+
+            const videoId = extractYouTubeId(link);
+            if (!videoId) {
+                alert('Invalid YouTube link!');
+                return;
+            }
+
+            youtubeVideos.push(videoId);
+            
+            const preview = document.getElementById('videoPreview');
+            preview.classList.add('active');
+            
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.innerHTML = `
+                <i class="fab fa-youtube" style="font-size: 2rem; color: #FF0000;"></i>
+                <span>YouTube Video: ${videoId}</span>
+                <button class="remove-btn" onclick="removeVideo(${youtubeVideos.length - 1})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            preview.appendChild(item);
+
+            document.getElementById('youtubeLink').value = '';
+            document.getElementById('videoInput').classList.remove('active');
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        function removeVideo(index) {
+            youtubeVideos.splice(index, 1);
+            renderVideoPreviews();
+        }
+
+        function renderVideoPreviews() {
+            const preview = document.getElementById('videoPreview');
+            preview.innerHTML = '';
+            youtubeVideos.forEach((videoId, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <i class="fab fa-youtube" style="font-size: 2rem; color: #FF0000;"></i>
+                    <span>YouTube Video: ${videoId}</span>
+                    <button class="remove-btn" onclick="removeVideo(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                preview.appendChild(item);
+            });
+        }
+
+        // Gallery Functions
+        function showGalleryInput() {
+            document.getElementById('galleryInput').classList.toggle('active');
+        }
+
+        function handleGalleryUpload(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('galleryPreview');
+            preview.classList.add('active');
+            
+            Array.from(files).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    galleryImages.push({
+                        name: file.name,
+                        data: e.target.result
+                    });
+                    renderGalleryPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('galleryInput').classList.remove('active');
+        }
+
+        function renderGalleryPreviews() {
+            const preview = document.getElementById('galleryPreview');
+            preview.innerHTML = `<strong>Gallery Images (${galleryImages.length})</strong>`;
+            galleryImages.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <img src="${img.data}" alt="${img.name}">
+                    <span>${img.name}</span>
+                    <button class="remove-btn" onclick="removeGalleryImage(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                preview.appendChild(item);
+            });
+        }
+
+        function removeGalleryImage(index) {
+            galleryImages.splice(index, 1);
+            renderGalleryPreviews();
+        }
+
+        // Tags
+        function handleTagInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const value = input.value.trim();
+                
+                if (value && !tags.includes(value)) {
+                    tags.push(value);
+                    renderTags();
+                    input.value = '';
+                }
+            }
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            const input = document.getElementById('tagInput');
+            
+            container.innerHTML = '';
+            
+            tags.forEach((tag, index) => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `
+                    ${tag}
+                    <span class="remove-tag" onclick="removeTag(${index})">×</span>
+                `;
+                container.appendChild(tagEl);
+            });
+            
+            container.appendChild(input);
+        }
+
+        function removeTag(index) {
+            tags.splice(index, 1);
+            renderTags();
+        }
+
+        // Preview Post
+        function previewPost() {
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+
+            if (!title || !content) {
+                alert('Please add title and content!');
+                return;
+            }
+
+            alert(`Preview:\n\nTitle: ${title}\n\nContent: ${content.substring(0, 100)}...\n\nImages: ${uploadedImages.length}\nVideos: ${youtubeVideos.length}\nGallery: ${galleryImages.length}\nTags: ${tags.join(', ')}`);
+        }
+
+        // Publish Post
+        async function publishPost() {
+            // Validate
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const category = document.getElementById('postCategory').value;
+            const summary = document.getElementById('postSummary').value.trim();
+
+            if (!title) {
+                showError('Please add a title!');
+                return;
+            }
+
+            if (!content) {
+                showError('Please write some content!');
+                return;
+            }
+
+            if (!category) {
+                showError('Please select a category!');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingOverlay').classList.add('show');
+
+            // Generate unique post ID
+            const existingPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+            const postNumber = String(existingPosts.length + 1).padStart(3, '0');
+            const postId = `post-${postNumber}`;
+
+            // Create post object (compatible with posts.json format!)
+            const post = {
+                id: postId,
+                type: 'blog',
+                category: category,
+                title: title,
+                summary: summary || content.substring(0, 200) + '...',
+                content: formatContentForBlog(content), // This will be HTML content
+                date: new Date().toISOString().split('T')[0],
+                tags: tags.length > 0 ? tags : ['general'],
+                coverImage: uploadedImages.length > 0 ? uploadedImages[0].data : '../../images/blog-cover-default.svg',
+                readTime: Math.ceil(content.split(' ').length / 200),
+                author: 'Md Akhinoor Islam',
+                views: 0,
+                likes: 0,
+                language: detectLanguage(content),
+                media: {
+                    hasImages: uploadedImages.length > 0,
+                    hasVideo: youtubeVideos.length > 0,
+                    hasGallery: galleryImages.length > 0,
+                    images: uploadedImages,
+                    videos: youtubeVideos,
+                    gallery: galleryImages
+                }
+            };
+
+            // Save to localStorage
+            savePostToLocalStorage(post);
+
+            // Auto-sync to GitHub (async, non-blocking)
+            autoSyncToGitHub().then(result => {
+                console.log('Auto-sync result:', result);
+            }).catch(err => {
+                console.error('Auto-sync error:', err);
+            });
+
+            // Show success
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('show');
+                showSuccess(post);
+            }, 2000);
+        }
+
+        function formatContent(text) {
+            // Convert line breaks to <br>
+            let formatted = text.replace(/\n/g, '<br>');
+            
+            // Add YouTube embeds
+            youtubeVideos.forEach(videoId => {
+                formatted += `<div class="video-embed"><iframe src="https://youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
+            });
+            
+            // Add images
+            uploadedImages.forEach(img => {
+                formatted += `<img src="${img.data}" alt="${img.name}" class="post-image">`;
+            });
+            
+            // Add gallery
+            if (galleryImages.length > 0) {
+                formatted += '<div class="image-gallery">';
+                galleryImages.forEach(img => {
+                    formatted += `<img src="${img.data}" alt="${img.name}">`;
+                });
+                formatted += '</div>';
+            }
+            
+            return formatted;
+        }
+
+        function formatContentForBlog(text) {
+            // Format as paragraphs for blog display
+            let formatted = text.split('\n').map(para => {
+                if (para.trim()) {
+                    return `<p>${para}</p>`;
+                }
+                return '';
+            }).join('');
+            
+            // Add YouTube embeds
+            youtubeVideos.forEach(videoId => {
+                formatted += `<div class="video-embed"><iframe src="https://youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
+            });
+            
+            // Add images
+            uploadedImages.forEach(img => {
+                formatted += `<img src="${img.data}" alt="${img.name}" class="post-image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0;">`;
+            });
+            
+            // Add gallery
+            if (galleryImages.length > 0) {
+                formatted += '<div class="image-gallery" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">';
+                galleryImages.forEach(img => {
+                    formatted += `<img src="${img.data}" alt="${img.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">`;
+                });
+                formatted += '</div>';
+            }
+            
+            return formatted;
+        }
+
+        function detectLanguage(text) {
+            // Simple language detection
+            const bengaliChars = text.match(/[\u0980-\u09FF]/g);
+            return bengaliChars && bengaliChars.length > 10 ? 'bn' : 'en';
+        }
+
+        function savePostToLocalStorage(post) {
+            let posts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+            posts.push(post);
+            localStorage.setItem('a3km_posts', JSON.stringify(posts));
+            console.log('Post saved to localStorage:', post);
+        }
+
+        function showSuccess(post) {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.innerHTML = `
+                <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>Post Published Successfully! 🎉</strong>
+                    <p>Post ID: ${post ? post.id : 'unknown'}</p>
+                    <p style="color: #90EE90; margin-top: 10px;">
+                        ✅ তোমার post automatic blog এ show হবে!<br>
+                        কোনো copy-paste লাগবে না! Just blog open করো!
+                    </p>
+                    <div id="syncStatusMsg" style="margin-top: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 0.9rem;"></div>
+                    <button onclick="viewInBlog()" class="btn btn-primary" style="margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; background: var(--primary-red); color: white; font-weight: 600;">
+                        <i class="fas fa-eye"></i> View in Blog
+                    </button>
+                    <button onclick="viewAllPosts()" class="btn btn-secondary" style="margin-top: 10px; margin-left: 10px; padding: 10px 20px; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; background: transparent; color: white; font-weight: 600;">
+                        <i class="fas fa-list"></i> All Posts
+                    </button>
+                    <button onclick="manualSync()" class="btn btn-secondary" style="margin-top: 10px; margin-left: 10px; padding: 10px 20px; border: 2px solid rgba(204, 0, 0, 0.5); border-radius: 8px; cursor: pointer; background: transparent; color: white; font-weight: 600;">
+                        <i class="fas fa-sync"></i> Sync Now
+                    </button>
+                </div>
+            `;
+            successMsg.classList.add('show');
+            
+            // Reset form
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postContent').value = '';
+            document.getElementById('postSummary').value = '';
+            document.getElementById('postCategory').value = '';
+            uploadedImages = [];
+            youtubeVideos = [];
+            galleryImages = [];
+            tags = [];
+            
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('videoPreview').innerHTML = '';
+            document.getElementById('galleryPreview').innerHTML = '';
+            renderTags();
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function viewInBlog() {
+            const blogPath = '../../../Content Studio/written-posts/post-listing-new.html';
+            window.open(blogPath, '_blank');
+        }
+
+        function viewAllPosts() {
+            window.location.href = 'view-posts.html';
+        }
+
+        // ========================================
+        // GITHUB SYNC INTEGRATION
+        // ========================================
+        let githubSync = null;
+
+        // Initialize GitHub Sync on page load
+        async function initGitHubSync() {
+            githubSync = new GitHubPostSync();
+            const initialized = await githubSync.init();
+            
+            if (initialized) {
+                console.log('✅ GitHub Sync ready');
+                document.getElementById('syncStatus').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Cloud Sync: <span style="color: #90EE90;">Active</span>';
+            } else {
+                console.log('⚠️ GitHub Sync disabled (no token)');
+                document.getElementById('syncStatus').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Cloud Sync: <span style="color: #FFA500;">Offline</span>';
+            }
+        }
+
+        // Auto-sync after publishing post
+        async function autoSyncToGitHub() {
+            const statusDiv = document.getElementById('syncStatusMsg');
+            
+            if (!githubSync || !githubSync.token) {
+                console.log('⚠️ GitHub sync skipped - no token configured');
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> <span style="color: #FFA500;">Cloud sync disabled (no GitHub token)</span>';
+                }
+                return { synced: false, reason: 'no_token' };
+            }
+
+            try {
+                document.getElementById('syncStatus').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing to cloud...';
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading to GitHub...';
+                }
+                
+                const result = await githubSync.autoSyncOnPublish();
+                
+                if (result.success) {
+                    document.getElementById('syncStatus').innerHTML = '<i class="fas fa-check-circle"></i> <span style="color: #90EE90;">Synced to GitHub!</span>';
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span style="color: #90EE90;">✅ Synced to GitHub cloud! Your post is backed up.</span>';
+                    }
+                    return { synced: true };
+                } else {
+                    document.getElementById('syncStatus').innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span style="color: #FFA500;">Sync failed</span>';
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span style="color: #FFA500;">Sync failed, but post saved locally. Click "Sync Now" to retry.</span>';
+                    }
+                    return { synced: false, reason: result.reason || result.error };
+                }
+            } catch (error) {
+                console.error('❌ Auto-sync error:', error);
+                document.getElementById('syncStatus').innerHTML = '<i class="fas fa-times-circle"></i> <span style="color: #FF6B6B;">Sync error</span>';
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> <span style="color: #FF6B6B;">Sync error: ' + error.message + '</span>';
+                }
+                return { synced: false, error: error.message };
+            }
+        }
+
+        // Manual sync button
+        async function manualSync() {
+            if (!githubSync) {
+                alert('GitHub Sync not initialized!');
+                return;
+            }
+
+            if (!githubSync.token) {
+                alert('⚠️ GitHub token not configured!\n\nGo to: Only Boss Dashboard → API Configuration\nSet your GitHub Personal Access Token there.');
+                return;
+            }
+
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+
+                const result = await githubSync.fullSync();
+
+                btn.innerHTML = '<i class="fas fa-check"></i> Synced!';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Sync Now';
+                }, 2000);
+
+                alert(`✅ Sync Complete!\n\nLocal: ${result.localCount} posts\nGitHub: ${result.githubCount} posts\nMerged: ${result.mergedCount} posts`);
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-times"></i> Sync Failed';
+                alert(`❌ Sync Failed!\n\n${error.message}`);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initGitHubSync);
+    </script>
+    <script src="github-sync.js" defer></script>
+</body>
+</html>
+</html>

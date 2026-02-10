@@ -17,6 +17,14 @@
     const shareBtn = document.getElementById('shareBtn');
     const saveBtn = document.getElementById('saveBtn');
 
+    // Store loaded markdown for fullscreen viewing
+    let loadedReadmeMarkdown = '';
+    let loadedExplanationMarkdown = '';
+    
+    // Sequential navigation helpers
+    let currentProjectIndex = -1;
+    let sequentialProjects = []; // For Arduino: arduino-01 to arduino-23
+
     // Initialize on page load
     init();
 
@@ -81,6 +89,31 @@
         if (!currentProject) {
             showNotFoundState();
             return;
+        }
+
+        // Setup sequential navigation for Arduino and Solidworks projects
+        if (currentProject.category === 'arduino') {
+            sequentialProjects = allProjects
+                .filter(p => p.category === 'arduino')
+                .sort((a, b) => {
+                    // Sort by ID: arduino-01, arduino-02, etc.
+                    const numA = parseInt(a.id.replace('arduino-', ''));
+                    const numB = parseInt(b.id.replace('arduino-', ''));
+                    return numA - numB;
+                });
+            currentProjectIndex = sequentialProjects.findIndex(p => p.id === projectId);
+            console.log(`📍 Arduino project ${currentProjectIndex + 1}/${sequentialProjects.length}`);
+        } else if (currentProject.category === 'solidworks') {
+            sequentialProjects = allProjects
+                .filter(p => p.category === 'solidworks')
+                .sort((a, b) => {
+                    // Sort by ID: solidworks-model-01, solidworks-model-02, etc.
+                    const numA = parseInt(a.id.replace('solidworks-model-', ''));
+                    const numB = parseInt(b.id.replace('solidworks-model-', ''));
+                    return numA - numB;
+                });
+            currentProjectIndex = sequentialProjects.findIndex(p => p.id === projectId);
+            console.log(`📍 Solidworks model ${currentProjectIndex + 1}/${sequentialProjects.length}`);
         }
 
         renderProjectDetails();
@@ -168,7 +201,6 @@
                         shadow-intensity="1"
                         environment-image="neutral"
                         exposure="1"
-                        style="width: 100%; height: 400px; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); border-radius: 12px; border: 2px solid var(--border-primary);"
                     >
                         <div class="glb-controls" slot="progress-bar">
                             <div class="loading-progress"></div>
@@ -302,11 +334,16 @@
             <section>
                 <h2 class="section-title"><i class="fas fa-book-open"></i> README & Documentation</h2>
                 <div class="readme-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="readmeContent">
+                    <div id="readmeContent" style="max-height: 300px; overflow: hidden; position: relative;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading README...</p>
                         </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button class="action-btn" onclick="window.projectViewer.openReadmeFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fas fa-expand"></i> Open README in Fullscreen
+                        </button>
                     </div>
                 </div>
             </section>
@@ -316,11 +353,16 @@
             <section>
                 <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Code Explanation (For Beginners)</h2>
                 <div class="explanation-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="explanationContent">
+                    <div id="explanationContent" style="max-height: 300px; overflow: hidden; position: relative;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading explanation...</p>
                         </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button class="action-btn" onclick="window.projectViewer.openExplanationFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fas fa-expand"></i> Open Explanation in Fullscreen
+                        </button>
                     </div>
                 </div>
             </section>
@@ -403,6 +445,37 @@
                 </button>
                 ` : ''}
             </div>
+            
+            ${(currentProject.category === 'arduino' || currentProject.category === 'solidworks') && sequentialProjects.length > 1 ? `
+            <section style="margin-top: 32px; padding-top: 24px; border-top: 2px solid rgba(139,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                    ${currentProjectIndex > 0 ? `
+                    <button onclick="window.projectViewer.navigateToPrevProject()" style="flex: 1; padding: 14px 20px; background: rgba(204, 0, 0, 0.1); color: var(--text-primary); border: 2px solid var(--primary-red); border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95rem; transition: all 0.3s ease;">
+                        <i class="fas fa-chevron-left"></i>
+                        <div style="text-align: left;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Previous ${currentProject.category === 'solidworks' ? 'Model' : 'Project'}</div>
+                            <div style="font-size: 0.9rem; font-weight: 700;">${sequentialProjects[currentProjectIndex - 1].title}</div>
+                        </div>
+                    </button>
+                    ` : '<div style="flex: 1;"></div>'}
+                    
+                    <div style="text-align: center; padding: 0 12px;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">${currentProject.category === 'solidworks' ? 'Model' : 'Project'}</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-red);">${currentProjectIndex + 1}<span style="font-size: 1rem; color: var(--text-secondary);">/${sequentialProjects.length}</span></div>
+                    </div>
+                    
+                    ${currentProjectIndex < sequentialProjects.length - 1 ? `
+                    <button onclick="window.projectViewer.navigateToNextProject()" style="flex: 1; padding: 14px 20px; background: linear-gradient(135deg, var(--primary-red), #8B0000); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(139,0,0,0.3);">
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 2px;">Next ${currentProject.category === 'solidworks' ? 'Model' : 'Project'}</div>
+                            <div style="font-size: 0.9rem; font-weight: 700;">${sequentialProjects[currentProjectIndex + 1].title}</div>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    ` : '<div style="flex: 1;"></div>'}
+                </div>
+            </section>
+            ` : ''}
         `;
 
         // Load 3D viewer library if needed
@@ -463,7 +536,7 @@
     }
 
     /**
-     * Load README markdown file
+     * Load README markdown file with advanced rendering
      */
     async function loadREADME(readmePath) {
         const readmeContent = document.getElementById('readmeContent');
@@ -474,14 +547,16 @@
             if (!response.ok) throw new Error('Failed to load README');
             
             const readmeText = await response.text();
+            loadedReadmeMarkdown = readmeText; // Store for fullscreen
             
-            // Simple markdown to HTML conversion
+            // Advanced markdown rendering with tables, code, etc.
             const htmlContent = convertMarkdownToHTML(readmeText);
             
             readmeContent.innerHTML = `
-                <div style="color: var(--text-secondary); line-height: 1.8;">
+                <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
                     ${htmlContent}
                 </div>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: none;"></div>
             `;
         } catch (error) {
             console.error('Error loading README:', error);
@@ -496,7 +571,7 @@
     }
 
     /**
-     * Load explanation markdown file
+     * Load explanation markdown file with advanced rendering
      */
     async function loadExplanation(explanationPath) {
         const explanationContent = document.getElementById('explanationContent');
@@ -507,14 +582,16 @@
             if (!response.ok) throw new Error('Failed to load explanation');
             
             const explanationText = await response.text();
+            loadedExplanationMarkdown = explanationText; // Store for fullscreen
             
-            // Simple markdown to HTML conversion
+            // Advanced markdown rendering with tables, code, etc.
             const htmlContent = convertMarkdownToHTML(explanationText);
             
             explanationContent.innerHTML = `
-                <div style="color: var(--text-secondary); line-height: 1.8;">
+                <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
                     ${htmlContent}
                 </div>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: none;"></div>
             `;
         } catch (error) {
             console.error('Error loading explanation:', error);
@@ -529,40 +606,18 @@
     }
 
     /**
-     * Simple markdown to HTML converter
+     * Advanced markdown to HTML converter using renderMarkdown library
      */
     function convertMarkdownToHTML(markdown) {
-        let html = markdown;
-        
-        // Headers
-        html = html.replace(/^### (.*$)/gim, '<h3 style="color: var(--text-primary); margin: 20px 0 12px 0; font-size: 1.2rem;">$1</h3>');
-        html = html.replace(/^## (.*$)/gim, '<h2 style="color: var(--text-primary); margin: 24px 0 12px 0; font-size: 1.4rem;">$1</h2>');
-        html = html.replace(/^# (.*$)/gim, '<h1 style="color: var(--text-primary); margin: 28px 0 16px 0; font-size: 1.6rem;">$1</h1>');
-        
-        // Bold
-        html = html.replace(/\*\*(.*?)\*\*/gim, '<strong style="color: var(--primary-red);">$1</strong>');
-        
-        // Italic
-        html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-        
-        // Code blocks
-        html = html.replace(/```([a-z]*)\n([\s\S]*?)```/gim, '<pre style="background: rgba(0,0,0,0.5); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 12px 0;"><code style="font-family: monospace; font-size: 0.85rem; color: #e0e0e0;">$2</code></pre>');
-        
-        // Inline code
-        html = html.replace(/`([^`]+)`/gim, '<code style="background: rgba(204,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; color: #ff6666;">$1</code>');
-        
-        // Links
-        html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, '<a href="$2" target="_blank" rel="noopener" style="color: var(--primary-red); text-decoration: underline;">$1</a>');
-        
-        // Lists
-        html = html.replace(/^\* (.*$)/gim, '<li style="margin-left: 20px; margin-bottom: 8px;">$1</li>');
-        html = html.replace(/^- (.*$)/gim, '<li style="margin-left: 20px; margin-bottom: 8px;">$1</li>');
-        
-        // Line breaks
-        html = html.replace(/\n\n/g, '</p><p style="margin: 12px 0;">');
-        html = '<p style="margin: 12px 0;">' + html + '</p>';
-        
-        return html;
+        // Use advanced markdown viewer with all features
+        return renderMarkdown(markdown, {
+            generateTOC: false, // TOC shown in fullscreen only
+            syntaxHighlight: true,
+            showLineNumbers: false, // Compact view
+            copyButton: true,
+            sanitize: true,
+            theme: 'dark-red'
+        });
     }
 
     /**
@@ -622,8 +677,24 @@
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2500);
     }
+    
+    /**
+     * Navigate to another project (for sequential navigation)
+     */
+    function navigateToProject(projectId) {
+        console.log(`🔄 Navigating to ${projectId}`);
+        
+        // Close any open modals first
+        if (window.closeMarkdownViewer) {
+            closeMarkdownViewer();
+        }
+        
+        // Update URL and reload
+        const category = new URLSearchParams(window.location.search).get('category') || 'arduino';
+        window.location.href = `project-viewer.html?category=${category}&id=${projectId}`;
+    }
 
-    // Export copyCode to window for inline onclick handlers
+    // Export functions to window for inline onclick handlers
     window.projectViewer = {
         copyCode: function() {
             const code = document.getElementById('projectCode');
@@ -645,6 +716,78 @@
             }
             
             document.body.removeChild(textarea);
+        },
+        openReadmeFullscreen: function() {
+            if (!loadedReadmeMarkdown) {
+                showToast('README not loaded yet');
+                return;
+            }
+            
+            // Add navigation for sequential projects (Arduino)
+            const viewerOptions = {
+                mdContent: loadedReadmeMarkdown,
+                title: currentProject ? `${currentProject.title} - README` : 'README',
+                showTOC: true,
+                showToolbar: true,
+                allowZoom: true,
+                showDownload: false
+            };
+            
+            // Add next/prev navigation for Arduino projects
+            if (currentProject.category === 'arduino' && sequentialProjects.length > 1) {
+                if (currentProjectIndex > 0) {
+                    viewerOptions.prevCallback = () => navigateToProject(sequentialProjects[currentProjectIndex - 1].id);
+                }
+                if (currentProjectIndex < sequentialProjects.length - 1) {
+                    viewerOptions.nextCallback = () => navigateToProject(sequentialProjects[currentProjectIndex + 1].id);
+                }
+                viewerOptions.navigationLabel = 'Project';
+            }
+            
+            openMarkdownViewer(viewerOptions);
+            if (navigator.vibrate) navigator.vibrate(10);
+        },
+        openExplanationFullscreen: function() {
+            if (!loadedExplanationMarkdown) {
+                showToast('Explanation not loaded yet');
+                return;
+            }
+            
+            // Add navigation for sequential projects (Arduino)
+            const viewerOptions = {
+                mdContent: loadedExplanationMarkdown,
+                title: currentProject ? `${currentProject.title} - Code Explanation` : 'Code Explanation',
+                showTOC: true,
+                showToolbar: true,
+                allowZoom: true,
+                showDownload: false
+            };
+            
+            // Add next/prev navigation for Arduino projects
+            if (currentProject.category === 'arduino' && sequentialProjects.length > 1) {
+                if (currentProjectIndex > 0) {
+                    viewerOptions.prevCallback = () => navigateToProject(sequentialProjects[currentProjectIndex - 1].id);
+                }
+                if (currentProjectIndex < sequentialProjects.length - 1) {
+                    viewerOptions.nextCallback = () => navigateToProject(sequentialProjects[currentProjectIndex + 1].id);
+                }
+                viewerOptions.navigationLabel = 'Project';
+            }
+            
+            openMarkdownViewer(viewerOptions);
+            if (navigator.vibrate) navigator.vibrate(10);
+        },
+        navigateToPrevProject: function() {
+            if (currentProjectIndex > 0 && sequentialProjects.length > 0) {
+                const prevProject = sequentialProjects[currentProjectIndex - 1];
+                navigateToProject(prevProject.id);
+            }
+        },
+        navigateToNextProject: function() {
+            if (currentProjectIndex < sequentialProjects.length - 1) {
+                const nextProject = sequentialProjects[currentProjectIndex + 1];
+                navigateToProject(nextProject.id);
+            }
         }
     };
 

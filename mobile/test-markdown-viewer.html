@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Markdown Viewer Test - A3KM Studio</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.85));
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: #CD5C5C;
+            margin-bottom: 12px;
+        }
+        
+        .header p {
+            font-size: 15px;
+            color: rgba(200, 200, 200, 0.9);
+            line-height: 1.6;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .test-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(205, 92, 92, 0.25), rgba(205, 92, 92, 0.15));
+            border: 1px solid rgba(205, 92, 92, 0.4);
+            border-radius: 8px;
+            color: #CD5C5C;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .test-btn:active {
+            transform: scale(0.98);
+            background: linear-gradient(135deg, rgba(205, 92, 92, 0.35), rgba(205, 92, 92, 0.2));
+        }
+        
+        .render-area {
+            background: linear-gradient(135deg, rgba(0,0,0,0.98), rgba(20,0,0,0.92));
+            border: 1px solid rgba(80, 80, 80, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 400px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .stats {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(205, 92, 92, 0.08);
+            border-left: 3px solid #CD5C5C;
+            border-radius: 4px;
+        }
+        
+        .stats h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #CD5C5C;
+            margin-bottom: 8px;
+        }
+        
+        .stats p {
+            font-size: 13px;
+            color: rgba(180, 180, 180, 0.9);
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-markdown"></i> Markdown Viewer Test</h1>
+            <p>Test all markdown features with mobile-optimized rendering, syntax highlighting, tables, and TOC generation</p>
+        </div>
+        
+        <div class="test-controls">
+            <button class="test-btn" onclick="testBasic()">
+                <i class="fas fa-font"></i> Basic Syntax
+            </button>
+            <button class="test-btn" onclick="testCode()">
+                <i class="fas fa-code"></i> Code Blocks
+            </button>
+            <button class="test-btn" onclick="testTables()">
+                <i class="fas fa-table"></i> Tables
+            </button>
+            <button class="test-btn" onclick="testAdvanced()">
+                <i class="fas fa-rocket"></i> Advanced
+            </button>
+            <button class="test-btn" onclick="testBangla()">
+                <i class="fas fa-language"></i> বাংলা Test
+            </button>
+            <button class="test-btn" onclick="testFull()">
+                <i class="fas fa-file-alt"></i> Full Demo
+            </button>
+        </div>
+        
+        <div id="toc-area"></div>
+        
+        <div class="render-area" id="renderArea">
+            <p style="text-align:center; color:rgba(180,180,180,0.7); padding:40px 20px;">
+                <i class="fas fa-arrow-up" style="font-size:48px; margin-bottom:16px; display:block;"></i>
+                Click a button above to test markdown rendering
+            </p>
+        </div>
+        
+        <div class="stats" id="stats" style="display:none;">
+            <h3><i class="fas fa-chart-bar"></i> Rendering Stats</h3>
+            <p id="statsContent"></p>
+        </div>
+    </div>
+    
+    <script src="shared/markdown-viewer.js"></script>
+    <script>
+        const renderArea = document.getElementById('renderArea');
+        const tocArea = document.getElementById('toc-area');
+        const stats = document.getElementById('stats');
+        const statsContent = document.getElementById('statsContent');
+        
+        function render(markdown, showTOC = true) {
+            const startTime = performance.now();
+            
+            const html = renderMarkdown(markdown, {
+                generateTOC: showTOC,
+                syntaxHighlight: true,
+                showLineNumbers: true,
+                copyButton: true,
+                sanitize: true,
+                theme: 'dark-red'
+            });
+            
+            const endTime = performance.now();
+            const renderTime = (endTime - startTime).toFixed(2);
+            
+            renderArea.innerHTML = html;
+            
+            if (showTOC) {
+                const tocHtml = generateTOC();
+                tocArea.innerHTML = tocHtml;
+            } else {
+                tocArea.innerHTML = '';
+            }
+            
+            // Show stats
+            stats.style.display = 'block';
+            // @ts-ignore - Template literal in HTML script tag
+            statsContent.innerHTML = `
+                Render Time: <strong>${renderTime}ms</strong><br>
+                Characters: <strong>${markdown.length}</strong><br>
+                HTML Size: <strong>${html.length}</strong> chars<br>
+                TOC Items: <strong>${MarkdownViewer.tocItems.length}</strong><br>
+                Code Blocks: <strong>${MarkdownViewer.codeBlockCounter}</strong>
+            `;
+            
+            // @ts-ignore - Template literal in HTML script tag
+            console.log(`✅ Rendered in ${renderTime}ms`);
+        }
+        
+        function testBasic() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# Basic Markdown Syntax
+
+## Text Formatting
+
+This is **bold text** and this is __also bold__.
+
+This is *italic text* and this is _also italic_.
+
+This is ~~strikethrough text~~.
+
+This is inline code example: code
+
+## Links and Images
+
+Check out [GitHub](https://github.com) for more information.
+
+## Lists
+
+### Unordered List
+- Item 1
+- Item 2
+- Item 3
+  - Nested item A
+  - Nested item B
+
+### Ordered List
+1. First item
+2. Second item
+3. Third item
+
+### Task List
+- [x] Completed task
+- [ ] Pending task
+- [x] Another completed task
+
+## Blockquote
+
+> This is a blockquote.
+> It can span multiple lines.
+> Very useful for quotes or callouts.
+
+## Horizontal Rule
+
+---
+
+That's the basic syntax! ✅
+`;
+            render(markdown, false);
+        }
+        
+        function testCode() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# Code Examples
+
+## JavaScript
+
+\\\`\\\`\\\`javascript
+function calculateSum(a, b) {
+    // Add two numbers
+    return a + b;
+}
+
+const result = calculateSum(5, 10);
+console.log(\\\`Result: \${result}\\\`);
+\\\`\\\`\\\`
+
+## Python
+
+\\\`\\\`\\\`python
+def factorial(n):
+    """Calculate factorial of n"""
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+# Test the function
+print(f"Factorial of 5: {factorial(5)}")
+\\\`\\\`\\\`
+
+## C++
+
+\\\`\\\`\\\`cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int number = 42;
+    cout << "The answer is: " << number << endl;
+    return 0;
+}
+\\\`\\\`\\\`
+
+Try clicking the copy button on any code block! 📋
+`;
+            render(markdown, false);
+        }
+        
+        function testTables() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# Table Examples
+
+## Student Records
+
+| Student ID | Name | Grade | Average |
+|------------|------|-------|---------|
+| 2313014 | Akhinoor Islam | A+ | 95.5 |
+| 2313015 | John Doe | A | 88.0 |
+| 2313016 | Jane Smith | A+ | 92.3 |
+
+## Arduino Pins
+
+| Pin | Function | Voltage | Type |
+|-----|----------|---------|------|
+| D0 | RX | 5V | Digital |
+| D1 | TX | 5V | Digital |
+| A0 | Analog In | 5V | Analog |
+| A1 | Analog In | 5V | Analog |
+
+## Project Status
+
+| Project | Status | Progress | Deadline |
+|---------|--------|----------|----------|
+| Line Follower | ✅ Complete | 100% | Jan 2024 |
+| 3D Printer | 🔄 In Progress | 75% | Mar 2024 |
+| IoT System | ⏳ Planned | 0% | Jun 2024 |
+
+Tables scroll horizontally on small screens! 📱
+`;
+            render(markdown, false);
+        }
+        
+        function testAdvanced() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# Advanced Features
+
+## Emojis
+
+:smile: :heart: :thumbsup: :rocket: :fire: :check: :x: :warning: :book: :bulb: :gear:
+
+## Mixed Content
+
+Here's a paragraph with **bold**, *italic*, code, and a [link](https://example.com).
+
+### Nested Structures
+
+1. First ordered item
+   - Nested unordered A
+   - Nested unordered B
+   - [ ] Nested task
+2. Second ordered item
+
+> **Important Note:**
+> This is a blockquote with **bold text** and inline code.
+
+---
+
+## Code with Highlighting
+
+\\\`\\\`\\\`javascript
+// Keywords, strings, numbers, comments all highlighted!
+const API_URL = "https://api.example.com";
+let counter = 0;
+
+async function fetchData() {
+    // This is a comment
+    const response = await fetch(API_URL);
+    return response.json();
+}
+\\\`\\\`\\\`
+
+Everything works together smoothly! 🎨
+`;
+            render(markdown, false);
+        }
+        
+        function testBangla() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# বাংলা Markdown Test
+
+## আমার ইঞ্জিনিয়ারিং Journey
+
+**KUET** তে আমি **Electronics and Communication Engineering (ECE)** পড়ছি। এটা একটা *চ্যালেঞ্জিং* কিন্তু *exciting* পথ।
+
+### আমার Skills
+
+1. **Arduino Programming** - Embedded systems
+2. **SolidWorks** - 3D CAD modeling
+3. **Python** - Data analysis
+4. **C/C++** - Low-level programming
+
+### প্রজেক্ট List
+
+- [x] Line Follower Robot তৈরি
+- [x] 7-Segment Display project
+- [ ] IoT Weather Station
+- [ ] Drone project
+
+## Code Example
+
+\\\`\\\`\\\`cpp
+// Arduino বেসিক program
+void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(1000);
+}
+\\\`\\\`\\\`
+
+> **মনে রাখবেন:** Practice makes perfect! 💪
+
+বাংলা + English একসাথে perfectly render হচ্ছে! ✅
+`;
+            render(markdown, false);
+        }
+        
+        function testFull() {
+            // @ts-ignore - Template literal in HTML script tag
+            const markdown = `
+# Complete Markdown Feature Demo
+
+Welcome to the comprehensive markdown viewer test! This document demonstrates all supported features.
+
+## Table of Contents
+
+This will be auto-generated above! 📋
+
+## 1. Typography
+
+### Headers
+
+All header levels (H1-H6) are supported with anchor links.
+
+### Text Formatting
+
+You can make text **bold**, *italic*, or ~~strikethrough~~. Combine them: **_bold italic_** or **~~bold strikethrough~~**.
+
+Inline code is also supported for technical terms like React.useState() or async/await.
+
+## 2. Lists
+
+### Unordered Lists
+
+- Arduino Projects
+  - Line Follower
+  - Obstacle Avoider
+  - Temperature Monitor
+- SolidWorks Designs
+- Research Papers
+
+### Ordered Lists
+
+1. Initialize hardware
+2. Configure settings
+3. Test functionality
+4. Deploy system
+
+### Task Lists
+
+- [x] Design circuit
+- [x] Write code
+- [ ] Build prototype
+- [ ] Test in real conditions
+
+## 3. Links and References
+
+Check out my [GitHub profile](https://github.com) or visit the [official documentation](https://example.com).
+
+## 4. Code Examples
+
+### JavaScript Example
+
+\\\`\\\`\\\`javascript
+// Async function with error handling
+async function loadData() {
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        console.log('Data loaded:', data);
+        return data;
+    } catch (error) {
+        console.error('Failed to load:', error);
+        return null;
+    }
+}
+
+// Arrow function example
+const multiply = (a, b) => a * b;
+\\\`\\\`\\\`
+
+### Python Example
+
+\\\`\\\`\\\`python
+def process_data(items):
+    """Process a list of items"""
+    result = []
+    for item in items:
+        if item > 0:
+            result.append(item * 2)
+    return result
+
+# Test the function
+numbers = [1, -2, 3, -4, 5]
+processed = process_data(numbers)
+print(f"Result: {processed}")
+\\\`\\\`\\\`
+
+### C++ Example
+
+\\\`\\\`\\\`cpp
+#include <Arduino.h>
+
+// LED blink program
+const int LED_PIN = 13;
+
+void setup() {
+    pinMode(LED_PIN, OUTPUT);
+    Serial.begin(9600);
+}
+
+void loop() {
+    digitalWrite(LED_PIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_PIN, LOW);
+    delay(1000);
+    Serial.println("LED toggled");
+}
+\\\`\\\`\\\`
+
+## 5. Tables
+
+### Project Comparison
+
+| Feature | Arduino | Raspberry Pi | ESP32 |
+|---------|---------|--------------|-------|
+| **Price** | $25 | $35 | $10 |
+| **GPIO Pins** | 14-54 | 40 | 34 |
+| **WiFi** | ❌ | ✅ | ✅ |
+| **Bluetooth** | ❌ | ✅ | ✅ |
+| **Power** | 5V | 5V | 3.3V |
+
+### Course Schedule
+
+| Day | Time | Course | Room |
+|-----|------|--------|------|
+| Monday | 9:00 AM | EEE 2101 | AB-301 |
+| Tuesday | 11:00 AM | ECE 2103 | AB-205 |
+| Wednesday | 2:00 PM | MATH 2141 | AB-401 |
+
+## 6. Blockquotes
+
+> **Engineering Wisdom:**
+> "The best way to predict the future is to invent it."
+> 
+> Practice consistently, learn from failures, and keep building projects!
+
+> **Pro Tip:** Always test your code before deploying to hardware! 🔧
+
+## 7. Images (Demonstration)
+
+Images would render here with lazy loading:
+
+![Arduino UNO](https://via.placeholder.com/600x300?text=Arduino+UNO+Board)
+
+## 8. Horizontal Rules
+
+Sections can be separated with horizontal rules:
+
+---
+
+## 9. Mixed Content
+
+Here's a **real-world example** combining multiple features:
+
+### Arduino Serial Communication
+
+\\\`\\\`\\\`cpp
+// Serial communication setup
+void setup() {
+    Serial.begin(9600);  // 9600 baud rate
+}
+
+void loop() {
+    if (Serial.available() > 0) {
+        String data = Serial.readString();
+        Serial.println("Received: " + data);
+    }
+}
+\\\`\\\`\\\`
+
+**Key Points:**
+- Baud rate: 9600
+- Data type: *String*
+- Function: Serial.available()
+
+> Remember to match baud rates on both devices!
+
+## 10. Emojis
+
+Express yourself: 😊 ❤️ 👍 ⭐ 🔥 🚀 ✅ ❌ ⚠️ 📖 💡 ⚙️
+
+## 11. বাংলা Content
+
+বাংলা এবং English দুটোই perfectly supported:
+
+**KUET** এ আমি **ECE** পড়ছি। আমার favorite subjects হলো:
+1. **Digital Electronics** 🔌
+2. **Microprocessor** 💻  
+3. **Signal Processing** 📡
+
+### Project List
+
+- [x] Line follower ✅
+- [x] 3D printer design 🖨️
+- [ ] IoT weather station ☁️
+
+## Conclusion
+
+This markdown viewer supports:
+
+✅ All basic syntax (bold, italic, lists, etc.)  
+✅ Code blocks with syntax highlighting  
+✅ Tables with horizontal scroll  
+✅ Task lists with checkboxes  
+✅ Blockquotes with styling  
+✅ Links and images  
+✅ Emojis and Unicode  
+✅ Mixed Bangla/English content  
+✅ Table of Contents generation  
+✅ Copy code buttons  
+✅ Mobile-optimized design  
+
+**Total Features: 40+** 🎯
+
+---
+
+*Created with ❤️ by Akhinoor Kaiser | A3KM Studio*
+`;
+            render(markdown, true);
+        }
+        
+        // Auto-run full demo on load
+        window.addEventListener('load', () => {
+            setTimeout(testFull, 500);
+        });
+    </script>
+</body>
+</html>

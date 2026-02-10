@@ -1,17 +1,10 @@
 /* ============================================================================
-   MOBILE PROJECTS PAGE - JAVASCRIPT
-   Project loading, filtering, and search functionality
-   Dynamic data loading from projects.json (Desktop → Mobile sync)
+   MOBILE PROJECTS MAIN PAGE - JAVASCRIPT
+   Category cards with navigation
    ============================================================================ */
 
 (function() {
     'use strict';
-    
-    // Project data - loaded dynamically from JSON
-    let allProjects = [];
-    let currentFilter = 'all';
-    let searchQuery = '';
-    let isLoading = true;
     
     // Wait for DOM
     if (document.readyState === 'loading') {
@@ -20,64 +13,47 @@
         init();
     }
     
-    async function init() {
-        setupEventListeners();
-        await loadProjectsFromJSON();
+    function init() {
         animateSections();
+        addHapticFeedback();
     }
     
     /**
-     * Load projects dynamically from desktop JSON file
-     * This enables automatic desktop → mobile sync
+     * Animate sections on page load
      */
-    async function loadProjectsFromJSON() {
-        try {
-            showLoadingState();
-            
-            const response = await fetch('../../Projects Code/projects.json');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            allProjects = data.projects;
-            
-            console.log(`✅ Loaded ${allProjects.length} projects from JSON`);
-            console.log(`📊 Categories: SOLIDWORKS(${data.statistics.byCategory.solidworks}), Arduino(${data.statistics.byCategory.arduino}), MATLAB(${data.statistics.byCategory.matlab}), Electronics(${data.statistics.byCategory.electronics})`);
-            
-            isLoading = false;
-            hideLoadingState();
-            renderProjects();
-            
-        } catch (error) {
-            console.error('❌ Error loading projects:', error);
-            isLoading = false;
-            showErrorState();
-        }
+    function animateSections() {
+        const sections = document.querySelectorAll('.mobile-section, .projects-hero');
+        
+        sections.forEach((section, index) => {
+            setTimeout(() => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                
+                requestAnimationFrame(() => {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                });
+            }, index * 100);
+        });
     }
     
     /**
-     * Show loading spinner
+     * Add haptic feedback for category cards
      */
-    function showLoadingState() {
-        const grid = document.getElementById('projectsGrid');
-        if (grid) {
-            grid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-                    <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(204, 0, 0, 0.2); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <p style="margin-top: 20px; color: var(--text-secondary); font-size: 0.95rem;">Loading projects...</p>
-                </div>
-            `;
-        }
+    function addHapticFeedback() {
+        const cards = document.querySelectorAll('.category-card, .quick-stat-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('touchstart', () => {
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            });
+        });
     }
     
-    /**
-     * Hide loading state
-     */
-    function hideLoadingState() {
-        // Loading UI will be replaced by renderProjects()
-    }
+})();
     
     /**
      * Show error message

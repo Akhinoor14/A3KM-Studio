@@ -1,0 +1,217 @@
+/* ============================================================================
+   ARDUINO PROJECTS LISTING - JAVASCRIPT
+   Load and display Arduino projects from JSON
+   ============================================================================ */
+
+(function() {
+    'use strict';
+    
+    let allProjects = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    
+    async function init() {
+        setupEventListeners();
+        await loadArduinoProjects();
+        animateSections();
+    }
+    
+    function setupEventListeners() {
+        // Search toggle
+        const searchToggle = document.getElementById('searchToggle');
+        const searchSection = document.getElementById('searchSection');
+        const searchInput = document.getElementById('projectSearch');
+        const searchClear = document.getElementById('searchClear');
+        
+        if (searchToggle) {
+            searchToggle.addEventListener('click', () => {
+                const isVisible = searchSection.style.display !== 'none';
+                searchSection.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) searchInput.focus();
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase().trim();
+                searchClear.style.display = searchQuery ? 'block' : 'none';
+                filterAndRenderProjects();
+            });
+        }
+        
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                searchClear.style.display = 'none';
+                filterAndRenderProjects();
+            });
+        }
+        
+        // Filter chips
+        const filterChips = document.querySelectorAll('.filter-chip');
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                filterChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentFilter = chip.dataset.filter;
+                filterAndRenderProjects();
+                
+                if (navigator.vibrate) navigator.vibrate(10);
+            });
+        });
+    }
+    
+    async function loadArduinoProjects() {
+        try {
+            showLoadingState();
+            
+            const response = await fetch('../../Projects Code/Arduino/arduino-data.json');
+            if (!response.ok) throw new Error('Failed to load');
+            
+            const data = await response.json();
+            allProjects = data.projects || [];
+            
+            console.log(`✅ Loaded ${allProjects.length} Arduino projects`);
+            
+            hideLoadingState();
+            filterAndRenderProjects();
+            updateProjectCount();
+            
+        } catch (error) {
+            console.error('❌ Error loading Arduino projects:', error);
+            showErrorState();
+        }
+    }
+    
+    function filterAndRenderProjects() {
+        let filtered = allProjects;
+        
+        // Apply category filter
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(p => p.category === currentFilter);
+        }
+        
+        // Apply search filter
+        if (searchQuery) {
+            filtered = filtered.filter(p => {
+                return p.title.toLowerCase().includes(searchQuery) ||
+                       p.description.toLowerCase().includes(searchQuery) ||
+                       (p.components && p.components.some(c => c.toLowerCase().includes(searchQuery)));
+            });
+        }
+        
+        renderProjects(filtered);
+    }
+    
+    function renderProjects(projects) {
+        const grid = document.getElementById('projectsGrid');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (projects.length === 0) {
+            grid.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        grid.style.display = 'grid';
+        emptyState.style.display = 'none';
+        
+        grid.innerHTML = projects.map(project => `
+            <a href="project-viewer.html?id=${project.id}&category=arduino" class="project-card">
+                <div class="project-thumbnail">
+                    <i class="fas fa-microchip"></i>
+                    <div class="project-badge">${getCategoryLabel(project.category)}</div>
+                </div>
+                <div class="project-content">
+                    <h3 class="project-title">${project.title}</h3>
+                    <p class="project-desc">${project.description}</p>
+                    <div class="project-meta">
+                        <span><i class="fas fa-tools"></i> ${project.components ? project.components.length : 0} Components</span>
+                        ${project.tinkercad ? '<span><i class="fas fa-cube"></i> Tinkercad</span>' : ''}
+                    </div>
+                </div>
+                <div class="project-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+        `).join('');
+        
+        addHapticFeedback();
+    }
+    
+    function getCategoryLabel(category) {
+        const labels = {
+            'led-basics': 'LED',
+            'sensors': 'Sensors',
+            'displays': 'Display',
+            'iot': 'IoT',
+            'advanced': 'Advanced'
+        };
+        return labels[category] || 'Arduino';
+    }
+    
+    function updateProjectCount() {
+        const countEl = document.getElementById('projectCount');
+        if (countEl) {
+            countEl.textContent = `${allProjects.length} Projects`;
+        }
+    }
+    
+    function showLoadingState() {
+        const grid = document.getElementById('projectsGrid');
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(0, 150, 136, 0.2); border-top-color: #009688; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 20px; color: var(--text-secondary);">Loading Arduino projects...</p>
+            </div>
+        `;
+    }
+    
+    function hideLoadingState() {
+        // Will be replaced by renderProjects
+    }
+    
+    function showErrorState() {
+        const grid = document.getElementById('projectsGrid');
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--primary-red); margin-bottom: 16px;"></i>
+                <h3>Failed to Load Projects</h3>
+                <p style="color: var(--text-dim); margin: 12px 0;">Please check your connection and try again.</p>
+                <button onclick="location.reload()" style="margin-top: 16px; padding: 10px 20px; background: var(--primary-red); color: #fff; border: none; border-radius: 8px; font-weight: 600;">Retry</button>
+            </div>
+        `;
+    }
+    
+    function animateSections() {
+        const sections = document.querySelectorAll('.mobile-section, .category-hero');
+        sections.forEach((section, index) => {
+            setTimeout(() => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                requestAnimationFrame(() => {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                });
+            }, index * 100);
+        });
+    }
+    
+    function addHapticFeedback() {
+        const cards = document.querySelectorAll('.project-card');
+        cards.forEach(card => {
+            card.addEventListener('touchstart', () => {
+                if (navigator.vibrate) navigator.vibrate(10);
+            });
+        });
+    }
+    
+})();

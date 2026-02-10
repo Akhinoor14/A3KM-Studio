@@ -72,13 +72,29 @@
   }
 
   /* ============================================
-     LOAD POSTS DATA
+     LOAD POSTS DATA (includes localStorage!)
      ============================================ */
   async function loadPosts() {
     try {
       const response = await fetch('posts.json');
       const data = await response.json();
       allPosts = data.posts || [];
+      
+      // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+      const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+      
+      if (localPosts.length > 0) {
+        console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+        
+        // Merge with existing posts (avoid duplicates)
+        localPosts.forEach(localPost => {
+          const exists = allPosts.find(p => p.id === localPost.id);
+          if (!exists) {
+            allPosts.push(localPost);
+            console.log(`✅ Added post: ${localPost.id}`);
+          }
+        });
+      }
     } catch (error) {
       console.error('Error loading posts:', error);
       throw error;
@@ -99,36 +115,6 @@
     // Update page title
     document.title = `${currentPost.title} - Md Akhinoor Islam`;
 
-    // Load actual markdown content from file
-    try {
-      const mdPath = currentPost.markdownFile || currentPost.contentPath || `Content Studio/written-posts/${currentPost.id}.md`;
-      const response = await fetch(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${mdPath}`);
-      
-      if (response.ok) {
-        const markdownContent = await response.text();
-        
-        // Remove frontmatter if exists
-        let content = markdownContent;
-        if (content.startsWith('---')) {
-          const parts = content.split('---');
-          if (parts.length >= 3) {
-            content = parts.slice(2).join('---').trim();
-          }
-        }
-        
-        // Convert markdown to HTML (basic conversion - you can use a markdown library)
-        const htmlContent = convertMarkdownToHTML(content);
-        elements.content.innerHTML = htmlContent;
-      } else {
-        // Fallback to stored content
-        elements.content.innerHTML = convertMarkdownToHTML(currentPost.content || 'Content not available');
-      }
-    } catch (error) {
-      console.error('Error loading markdown file:', error);
-      // Fallback to stored content
-      elements.content.innerHTML = convertMarkdownToHTML(currentPost.content || 'Content not available');
-    }
-
     // Render tags
     if (currentPost.tags && currentPost.tags.length > 0) {
       elements.tags.innerHTML = currentPost.tags.map(tag => 
@@ -142,26 +128,71 @@
       elements.cover.style.display = 'block';
     }
 
-    // Load and render markdown content
-    if (currentPost.content) {
-      try {
-        const response = await fetch(currentPost.content);
-        const markdown = await response.text();
-        const html = marked.parse(markdown);
-        elements.content.innerHTML = html;
-
-        // Syntax highlighting
-        document.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
-
-        // Generate TOC
-        generateTOC();
-      } catch (error) {
-        console.error('Error loading markdown:', error);
-        elements.content.innerHTML = '<p>Content could not be loaded.</p>';
+    // Load content - Check if inline HTML or external file
+    try {
+      // If content is HTML (starts with < or contains HTML tags) - from simple creator
+      if (currentPost.content && (currentPost.content.startsWith('<') || currentPost.content.includes('<p>') || currentPost.content.includes('<div>'))) {
+        console.log('Rendering inline HTML content');
+        elements.content.innerHTML = currentPost.content;
       }
+      // If content is a file path - traditional markdown posts
+      else if (currentPost.content && (currentPost.content.endsWith('.md') || currentPost.content.includes('/'))) {
+        console.log('Loading markdown from file:', currentPost.content);
+        const response = await fetch(currentPost.content);
+        
+        if (response.ok) {
+          const markdownContent = await response.text();
+          
+          // Remove frontmatter if exists
+          let content = markdownContent;
+          if (content.startsWith('---')) {
+            const parts = content.split('---');
+            if (parts.length >= 3) {
+              content = parts.slice(2).join('---').trim();
+            }
+          }
+          
+          // Convert markdown to HTML
+          const htmlContent = convertMarkdownToHTML(content);
+          elements.content.innerHTML = htmlContent;
+        } else {
+          elements.content.innerHTML = '<p>Content could not be loaded.</p>';
+        }
+      }
+      // Fallback for old format
+      else {
+        const mdPath = currentPost.markdownFile || currentPost.contentPath || `Content Studio/written-posts/${currentPost.id}.md`;
+        const response = await fetch(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${mdPath}`);
+        
+        if (response.ok) {
+          const markdownContent = await response.text();
+          let content = markdownContent;
+          if (content.startsWith('---')) {
+            const parts = content.split('---');
+            if (parts.length >= 3) {
+              content = parts.slice(2).join('---').trim();
+            }
+          }
+          const htmlContent = convertMarkdownToHTML(content);
+          elements.content.innerHTML = htmlContent;
+        } else {
+          elements.content.innerHTML = convertMarkdownToHTML(currentPost.content || 'Content not available');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading content:', error);
+      elements.content.innerHTML = '<p>Content could not be loaded.</p>';
     }
+
+    // Syntax highlighting for code blocks
+    document.querySelectorAll('pre code').forEach(block => {
+      if (typeof hljs !== 'undefined') {
+        hljs.highlightElement(block);
+      }
+    });
+
+    // Generate TOC
+    generateTOC();
 
     // Load likes from localStorage
     const likeKey = `post_like_${postId}`;
@@ -438,16 +469,25 @@
      SETUP NAVIGATION
      ============================================ */
   function setupNavigation() {
-    // Find current post index
-    const currentIndex = allPosts.findIndex(p => p.id === postId);
+    // Sort posts by ID (post-001, post-002, etc.)
+    const sortedPosts = allPosts
+      .filter(p => p.id && p.id.startsWith('post-'))
+      .sort((a, b) => {
+        const numA = parseInt(a.id.replace('post-', ''));
+        const numB = parseInt(b.id.replace('post-', ''));
+        return numA - numB;
+      });
     
-    if (currentIndex === -1) {
+    // Find current post index in sorted list
+    const currentIndex = sortedPosts.findIndex(p => p.id === postId);
+    
+    if (currentIndex === -1 || sortedPosts.length <= 1) {
       hideNavigation();
       return;
     }
 
-    const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
-    const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+    const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+    const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
 
     // Get navigation elements
     const navSection = document.querySelector('.post-navigation');
@@ -460,11 +500,27 @@
 
     if (!navSection) return;
 
+    // Update keyboard hint badge with counter
+    const keyboardBadge = navSection.querySelector('.keyboard-hint-badge');
+    if (keyboardBadge) {
+      keyboardBadge.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; gap: 4px;">
+            <kbd style="background: rgba(204, 0, 0, 0.3); border: 1px solid rgba(204, 0, 0, 0.5); border-radius: 4px; padding: 2px 8px; font-family: monospace; font-size: 0.75rem; color: #CC0000;">←</kbd>
+            <kbd style="background: rgba(204, 0, 0, 0.3); border: 1px solid rgba(204, 0, 0, 0, 0.5); border-radius: 4px; padding: 2px 8px; font-family: monospace; font-size: 0.75rem; color: #CC0000;">→</kbd>
+          </div>
+          <span style="border-left: 1px solid rgba(204, 0, 0, 0.3); padding-left: 8px; font-size: 0.75rem;">
+            Article <strong style="color: #CC0000;">${currentIndex + 1}</strong>/<strong>${sortedPosts.length}</strong>
+          </span>
+        </div>
+      `;
+    }
+
     // Setup previous post
     if (prevPost && prevLink && prevTitle && prevExcerpt) {
       prevLink.href = `post-reader.html?id=${prevPost.id}`;
       prevTitle.textContent = prevPost.title;
-      prevExcerpt.textContent = prevPost.description || extractExcerpt(prevPost);
+      prevExcerpt.textContent = prevPost.summary || extractExcerpt(prevPost);
       prevLink.style.display = 'flex';
     } else if (prevLink) {
       prevLink.style.display = 'none';
@@ -474,7 +530,7 @@
     if (nextPost && nextLink && nextTitle && nextExcerpt) {
       nextLink.href = `post-reader.html?id=${nextPost.id}`;
       nextTitle.textContent = nextPost.title;
-      nextExcerpt.textContent = nextPost.description || extractExcerpt(nextPost);
+      nextExcerpt.textContent = nextPost.summary || extractExcerpt(nextPost);
       nextLink.style.display = 'flex';
     } else if (nextLink) {
       nextLink.style.display = 'none';
@@ -482,10 +538,34 @@
 
     // Show navigation section if at least one link exists
     if (prevPost || nextPost) {
-      navSection.style.display = 'block';
+      navSection.style.display = 'flex';
+      setupKeyboardNavigation(prevPost, nextPost);
     } else {
       navSection.style.display = 'none';
     }
+    
+    console.log(`📍 Post ${currentIndex + 1}/${sortedPosts.length}`);
+  }
+
+  /* ============================================
+     KEYBOARD NAVIGATION
+     ============================================ */
+  function setupKeyboardNavigation(prevPost, nextPost) {
+    document.addEventListener('keydown', function handleKeyNav(e) {
+      // Ignore if user is typing in input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      if (e.key === 'ArrowLeft' && prevPost) {
+        e.preventDefault();
+        window.location.href = `post-reader.html?id=${prevPost.id}`;
+      } else if (e.key === 'ArrowRight' && nextPost) {
+        e.preventDefault();
+        window.location.href = `post-reader.html?id=${nextPost.id}`;
+      }
+    });
+    console.log('⌨️ Keyboard navigation enabled (←/→)');
   }
 
   /* ============================================
