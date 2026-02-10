@@ -9,6 +9,9 @@
     // ========== SMOOTH SPLASH SCREEN REMOVAL ==========
     let splashRemoved = false;
     
+    // Check if splash was already shown in this session
+    const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
+    
     // Function to remove splash
     const removeSplashScreen = () => {
         if (splashRemoved) return;
@@ -26,30 +29,43 @@
                 splash.remove();
             }
         }, 500);
+        
+        // Mark splash as shown for this session
+        sessionStorage.setItem('splashShown', 'true');
     };
     
-    // Immediate fallback to prevent stuck overflow:hidden
-    setTimeout(() => {
+    // If splash already shown, remove immediately
+    if (splashAlreadyShown) {
         document.body.classList.remove('splash-active');
-    }, 3000); // Emergency fallback at 3 seconds
-    
-    // Primary splash handling - use DOMContentLoaded for faster response
-    const removeSplash = () => {
-        setTimeout(removeSplashScreen, 1500); // Show splash for 1.5 seconds
-    };
-    
-    // Allow user to tap to skip splash
-    const splash = document.getElementById('appSplash');
-    if (splash) {
-        splash.addEventListener('click', removeSplashScreen);
-        splash.addEventListener('touchend', removeSplashScreen);
-    }
-    
-    // Use DOMContentLoaded instead of 'load' for faster execution
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeSplash);
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.remove();
+        }
+        splashRemoved = true;
     } else {
-        removeSplash();
+        // Immediate fallback to prevent stuck overflow:hidden
+        setTimeout(() => {
+            document.body.classList.remove('splash-active');
+        }, 3000); // Emergency fallback at 3 seconds
+        
+        // Primary splash handling - use DOMContentLoaded for faster response
+        const removeSplash = () => {
+            setTimeout(removeSplashScreen, 1500); // Show splash for 1.5 seconds
+        };
+        
+        // Allow user to tap to skip splash
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.addEventListener('click', removeSplashScreen);
+            splash.addEventListener('touchend', removeSplashScreen);
+        }
+        
+        // Use DOMContentLoaded instead of 'load' for faster execution
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeSplash);
+        } else {
+            removeSplash();
+        }
     }
     
     // Wait for DOM to be ready
