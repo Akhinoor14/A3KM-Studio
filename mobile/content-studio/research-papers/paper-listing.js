@@ -1,311 +1,213 @@
 // ============================================================================
 // PAPER LISTING - Research Papers Section (Mobile)
-// Displays academic publications and research work
+// Loads papers dynamically from desktop papers.json file
 // ============================================================================
 
 (function() {
     'use strict';
 
-    // ========== PAPER DATA ==========
-    const papers = [
-        {
-            id: 1,
-            title: "IoT-Based Smart Home Automation System Using ESP32 and Machine Learning",
-            thumbnail: "",
-            status: "published",
-            venue: "IEEE Internet of Things Journal",
-            year: "2024",
-            pages: "12",
-            citations: 15,
-            doi: "10.1109/JIOT.2024.12345",
-            date: "2024-01-15",
-            description: "This paper presents a novel IoT-based smart home automation system integrating ESP32 microcontrollers with machine learning algorithms for intelligent energy management and predictive maintenance.",
-            tags: ["IoT", "Machine Learning", "ESP32", "Smart Home"],
-            pdfUrl: "#"
-        },
-        {
-            id: 2,
-            title: "Advanced PCB Design Techniques for High-Frequency Applications",
-            thumbnail: "",
-            status: "published",
-            venue: "International Journal of Electronics",
-            year: "2023",
-            pages: "18",
-            citations: 28,
-            doi: "10.1080/IJE.2023.67890",
-            date: "2023-12-10",
-            description: "Investigation of PCB design methodologies addressing signal integrity, impedance matching, and EMI reduction in high-frequency circuits up to 10 GHz.",
-            tags: ["PCB Design", "RF Engineering", "Signal Integrity"],
-            pdfUrl: "#"
-        },
-        {
-            id: 3,
-            title: "Autonomous Line Following Robot with Obstacle Avoidance Using Computer Vision",
-            thumbnail: "",
-            status: "under-review",
-            venue: "Robotics and Autonomous Systems",
-            year: "2024",
-            pages: "15",
-            citations: 0,
-            doi: "Pending",
-            date: "2024-01-05",
-            description: "Development of an autonomous mobile robot combining traditional line following algorithms with computer vision-based obstacle detection and avoidance strategies.",
-            tags: ["Robotics", "Computer Vision", "Autonomous Systems"],
-            pdfUrl: "#"
-        },
-        {
-            id: 4,
-            title: "Optimization of 3D Printing Parameters for Mechanical Strength in FDM Process",
-            thumbnail: "",
-            status: "published",
-            venue: "Additive Manufacturing",
-            year: "2023",
-            pages: "20",
-            citations: 42,
-            doi: "10.1016/AM.2023.34567",
-            date: "2023-11-20",
-            description: "Comprehensive study on FDM 3D printing parameter optimization using Taguchi method and response surface methodology to maximize tensile strength and minimize porosity.",
-            tags: ["3D Printing", "FDM", "Optimization", "Materials"],
-            pdfUrl: "#"
-        },
-        {
-            id: 5,
-            title: "Energy Harvesting System for Wireless Sensor Networks in Industrial Applications",
-            thumbnail: "",
-            status: "published",
-            venue: "Sensors",
-            year: "2023",
-            pages: "16",
-            citations: 35,
-            doi: "10.3390/sensors23010234",
-            date: "2023-10-15",
-            description: "Design and implementation of a hybrid energy harvesting system combining solar and vibration energy for self-powered wireless sensor networks in industrial environments.",
-            tags: ["Energy Harvesting", "WSN", "Industrial IoT"],
-            pdfUrl: "#"
-        },
-        {
-            id: 6,
-            title: "MATLAB-Based Signal Processing Framework for Biomedical Applications",
-            thumbnail: "",
-            status: "draft",
-            venue: "Target: IEEE Transactions on Biomedical Engineering",
-            year: "2024",
-            pages: "14",
-            citations: 0,
-            doi: "In Preparation",
-            date: "2024-01-01",
-            description: "Development of a comprehensive MATLAB toolbox for biomedical signal processing including ECG, EEG, and EMG analysis with real-time filtering and feature extraction capabilities.",
-            tags: ["MATLAB", "Signal Processing", "Biomedical"],
-            pdfUrl: "#"
-        },
-        {
-            id: 7,
-            title: "Comparative Analysis of Arduino and ESP32 for Real-Time Control Systems",
-            thumbnail: "",
-            status: "published",
-            venue: "Microprocessors and Microsystems",
-            year: "2023",
-            pages: "22",
-            citations: 51,
-            doi: "10.1016/MM.2023.45678",
-            date: "2023-09-05",
-            description: "Performance comparison of Arduino and ESP32 platforms in real-time control applications considering processing speed, memory efficiency, and power consumption.",
-            tags: ["Arduino", "ESP32", "Real-Time Systems"],
-            pdfUrl: "#"
-        },
-        {
-            id: 8,
-            title: "Machine Learning Algorithms for Predictive Maintenance in Manufacturing",
-            thumbnail: "",
-            status: "under-review",
-            venue: "Journal of Manufacturing Systems",
-            year: "2024",
-            pages: "19",
-            citations: 2,
-            doi: "Under Review",
-            date: "2023-12-28",
-            description: "Application of supervised and unsupervised machine learning techniques for predictive maintenance in CNC machines, reducing downtime by 40% through early fault detection.",
-            tags: ["Machine Learning", "Predictive Maintenance", "Manufacturing"],
-            pdfUrl: "#"
-        }
-    ];
-
     // ========== STATE ==========
-    let currentStatus = 'all';
+    let allPapers = [];
+    let filteredPapers = [];
+    let currentFilter = 'all';
 
     // ========== DOM ELEMENTS ==========
-    const searchInput = document.getElementById('searchInput');
     const contentGrid = document.getElementById('contentGrid');
-    const statusFilters = document.querySelectorAll('.filter-chip');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilters = document.querySelectorAll('#statusFilters .filter-chip');
+
+    // ========== LOAD PAPERS FROM JSON ==========
+    async function loadPapers() {
+        try {
+            const response = await fetch('../../../Content Studio/research-papers/papers.json');
+            const data = await response.json();
+            allPapers = data.papers || [];
+            filteredPapers = [...allPapers];
+            renderPapers();
+        } catch (error) {
+            console.error('Error loading papers:', error);
+            contentGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align:center; padding:80px 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:56px; color:var(--primary-red); margin-bottom:20px;"></i>
+                    <h3 style="color:var(--text-primary); margin-bottom:12px;">Error Loading Papers</h3>
+                    <p style="color:var(--text-dim); font-size:14px;">Please try refreshing the page</p>
+                </div>
+            `;
+        }
+    }
 
     // ========== RENDER FUNCTIONS ==========
-    function renderPapers(papersToRender) {
-        if (papersToRender.length === 0) {
+    function renderPapers() {
+        if (filteredPapers.length === 0) {
             contentGrid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-flask"></i>
-                    <h3>No Papers Found</h3>
-                    <p>Try adjusting your search or filter</p>
+                <div style="grid-column: 1/-1; text-align:center; padding:80px 20px;">
+                    <i class="fas fa-file-alt" style="font-size:56px; color:var(--primary-red); opacity:0.5; margin-bottom:20px;"></i>
+                    <h3 style="color:var(--text-primary); margin-bottom:8px;">No Papers Found</h3>
+                    <p style="color:var(--text-dim); font-size:14px;">Try adjusting your filters or search</p>
                 </div>
             `;
             return;
         }
 
-        contentGrid.innerHTML = papersToRender.map(paper => `
-            <div class="content-item paper-item">
-                <div class="content-thumbnail paper-thumbnail">
-                    ${paper.thumbnail ? 
-                        `<img src="${paper.thumbnail}" alt="${paper.title}">` :
-                        '<i class="fas fa-file-alt"></i>'
-                    }
+        contentGrid.innerHTML = filteredPapers.map(paper => createPaperCard(paper)).join('');
+    }
+
+    // ========== CREATE PAPER CARD ==========
+    function createPaperCard(paper) {
+        const date = new Date(paper.date);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+
+        const authors = Array.isArray(paper.authors) 
+            ? paper.authors.slice(0, 2).join(', ') + (paper.authors.length > 2 ? ' et al.' : '')
+            : paper.authors || 'Unknown Author';
+
+        const status = paper.status || 'Published';
+        const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+
+        return `
+            <div class="content-item" onclick="openPaper('${paper.id}')">
+                <div class="paper-thumbnail">
+                    <i class="fas fa-file-pdf"></i>
                 </div>
-                <div class="content-info-wrap">
-                    <span class="paper-status ${paper.status}">${paper.status.replace('-', ' ')}</span>
+                <div class="content-item-body">
+                    <span class="paper-status ${statusClass}">${status}</span>
                     <h3 class="content-item-title">${paper.title}</h3>
-                    <p class="paper-venue"><i class="fas fa-university"></i> ${paper.venue}</p>
-                    <div class="content-item-meta">
-                        <span><i class="fas fa-calendar"></i> ${paper.year}</span>
-                        <span><i class="fas fa-file-pdf"></i> ${paper.pages} pages</span>
-                        ${paper.citations > 0 ? `<span><i class="fas fa-quote-right"></i> ${paper.citations} citations</span>` : ''}
+                    <p class="content-item-meta">
+                        <i class="fas fa-user-graduate"></i> ${authors}
+                    </p>
+                    <p class="content-item-meta">
+                        <i class="fas fa-university"></i> ${paper.institution || 'N/A'}
+                    </p>
+                    <div class="paper-venue">${paper.venue || paper.category}</div>
+                    <div class="content-item-footer">
+                        <span class="content-item-date">
+                            <i class="fas fa-calendar"></i> ${formattedDate}
+                        </span>
+                        <span class="content-item-stats">
+                            <i class="fas fa-quote-right"></i> ${paper.citations || 0}
+                        </span>
                     </div>
-                    <p class="content-item-desc">${paper.description}</p>
-                    <div class="content-tags">
-                        ${paper.tags.map(tag => `<span class="content-tag">${tag}</span>`).join('')}
-                    </div>
-                    <a href="${paper.pdfUrl}" class="citation-btn" data-paper-id="${paper.id}">
-                        <i class="fas fa-external-link-alt"></i>
-                        <span>View Paper / Cite</span>
-                    </a>
+                    <button class="citation-btn" onclick="event.stopPropagation(); citePaper('${paper.id}')">
+                        <i class="fas fa-quote-left"></i> Cite Paper
+                    </button>
                 </div>
             </div>
-        `).join('');
-
-        // Add haptic feedback
-        addHapticFeedback();
+        `;
     }
 
-    // ========== FILTER & SEARCH FUNCTIONALITY ==========
-    function filterAndSearchPapers() {
-        const query = searchInput.value.toLowerCase().trim();
-
-        let filtered = papers;
-
-        // Status filter
-        if (currentStatus !== 'all') {
-            filtered = filtered.filter(paper => paper.status === currentStatus);
+    // ========== FILTER BY STATUS ==========
+    function filterByStatus(status) {
+        currentFilter = status;
+        
+        if (status === 'all') {
+            filteredPapers = [...allPapers];
+        } else {
+            filteredPapers = allPapers.filter(paper => 
+                (paper.status || 'Published').toLowerCase().replace(/\s+/g, '-') === status
+            );
         }
+        
+        applySearch();
+        renderPapers();
+    }
 
-        // Search query
-        if (query) {
-            filtered = filtered.filter(paper => {
-                return paper.title.toLowerCase().includes(query) ||
-                       paper.description.toLowerCase().includes(query) ||
-                       paper.venue.toLowerCase().includes(query) ||
-                       paper.tags.some(tag => tag.toLowerCase().includes(query));
-            });
+    // ========== SEARCH FUNCTIONALITY ==========
+    function applySearch() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            return;
         }
-
-        // Sort by date (newest first)
-        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        renderPapers(filtered);
-    }
-
-    // ========== HELPER FUNCTIONS ==========
-    function addHapticFeedback() {
-        const citationBtns = document.querySelectorAll('.citation-btn');
-        citationBtns.forEach(btn => {
-            btn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
-
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const paperId = btn.getAttribute('data-paper-id');
-                handlePaperView(paperId);
-            });
-        });
-
-        const paperItems = document.querySelectorAll('.paper-item');
-        paperItems.forEach(item => {
-            item.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
-        });
-    }
-
-    function handlePaperView(paperId) {
-        const paper = papers.find(p => p.id === parseInt(paperId));
-        if (paper) {
-            // Vibration feedback
-            if (navigator.vibrate) {
-                navigator.vibrate([30, 50, 30]);
-            }
-
-            console.log(`Opening paper: ${paper.title}`);
+        
+        filteredPapers = filteredPapers.filter(paper => {
+            const titleMatch = paper.title.toLowerCase().includes(searchTerm);
+            const authorsMatch = (Array.isArray(paper.authors) 
+                ? paper.authors.join(' ') 
+                : paper.authors || '').toLowerCase().includes(searchTerm);
+            const keywordsMatch = (paper.keywords || []).some(keyword => 
+                keyword.toLowerCase().includes(searchTerm)
+            );
+            const abstractMatch = (paper.abstract || ''). toLowerCase().includes(searchTerm);
             
-            // You can redirect to a PDF viewer or paper details page:
-            // window.location.href = `paper-viewer.html?id=${paperId}`;
-        }
+            return titleMatch || authorsMatch || keywordsMatch || abstractMatch;
+        });
     }
 
-    // ========== EVENT HANDLERS ==========
-    function handleStatusFilter(e) {
-        const chip = e.target.closest('.filter-chip');
-        if (!chip) return;
+    // ========== OPEN PAPER VIEWER ==========
+    window.openPaper = function(paperId) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        window.location.href = `paper-viewer.html?id=${paperId}`;
+    };
 
-        // Haptic feedback
-        if (navigator.vibrate) {
-            navigator.vibrate(10);
+    // ========== CITE PAPER ==========
+    window.citePaper = function(paperId) {
+        if (navigator.vibrate) navigator.vibrate(20);
+        
+        const paper = allPapers.find(p => p.id === paperId);
+        if (!paper) return;
+
+        const authors = Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors;
+        const year = new Date(paper.date).getFullYear();
+        const citation = `${authors}. (${year}). ${paper.title}. ${paper.institution || ''}.`;
+
+        const textarea = document.createElement('textarea');
+        textarea.value = citation;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            showToast('Citation copied to clipboard!');
+        } catch (err) {
+            alert('Citation:\\n\\n' + citation);
         }
+        
+        document.body.removeChild(textarea);
+    };
 
-        // Update active state
-        statusFilters.forEach(f => f.classList.remove('active'));
-        chip.classList.add('active');
-
-        // Update current status
-        currentStatus = chip.getAttribute('data-status');
-
-        // Re-render
-        filterAndSearchPapers();
+    // ========== SHOW TOAST ==========
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: rgba(205, 92, 92, 0.95);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(),2500);
     }
+
+    // ========== EVENT LISTENERS ==========
+    statusFilters.forEach(chip => {
+        chip.addEventListener('click', function() {
+            statusFilters.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            filterByStatus(this.dataset.status);
+        });
+    });
+
+    searchInput.addEventListener('input', function() {
+        filteredPapers = [...allPapers];
+        filterByStatus(currentFilter);
+    });
 
     // ========== INITIALIZATION ==========
-    function init() {
-        // Render all papers initially
-        renderPapers(papers);
-
-        // Search functionality
-        let searchTimeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(filterAndSearchPapers, 300);
-        });
-
-        // Status filter
-        const filterContainer = document.getElementById('statusFilters');
-        filterContainer.addEventListener('click', handleStatusFilter);
-
-        // Back button haptic feedback
-        const backBtn = document.querySelector('.back-btn');
-        if (backBtn) {
-            backBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
-        }
-    }
-
-    // Wait for DOM
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    loadPapers();
 
 })();

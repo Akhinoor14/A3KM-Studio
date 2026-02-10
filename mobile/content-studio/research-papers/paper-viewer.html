@@ -79,16 +79,134 @@
     <script src="../../shared/mobile-navbar.js"></script>
     <script src="../../shared/pdf-viewer.js"></script>
     <script>
-(function(){const papers=[{id:1,title:"IoT-Based Smart Home Automation System Using ESP32 and Machine Learning",status:"Published",venue:"IEEE Internet of Things Journal",year:"2024",pages:"12",citations:15,doi:"10.1109/JIOT.2024.12345",abstract:"This paper presents a novel IoT-based smart home automation system integrating ESP32 microcontrollers with machine learning algorithms for intelligent energy management and predictive maintenance.",tags:["IoT","Machine Learning","ESP32"],pdfUrl:"#"}];
-let currentPaper=null;const paperContainer=document.getElementById('paperContainer');const citeBtn=document.getElementById('citeBtn');const shareBtn=document.getElementById('shareBtn');
-function getPaperIdFromUrl(){const urlParams=new URLSearchParams(window.location.search);const id=urlParams.get('id');return id?parseInt(id):1;}
-function loadPaper(){const paperId=getPaperIdFromUrl();currentPaper=papers.find(p=>p.id===paperId);if(!currentPaper){paperContainer.innerHTML='<div style="padding:60px 20px;text-align:center;"><i class="fas fa-exclamation-circle" style="font-size:56px;color:var(--primary-red);margin-bottom:20px;"></i><h3>Paper Not Found</h3><a href="paper-listing.html" style="display:inline-block;margin-top:16px;padding:10px 20px;background:var(--primary-red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Back to Papers</a></div>';return;}
-paperContainer.innerHTML=`<span class="paper-status">${currentPaper.status}</span><h1 class="paper-title">${currentPaper.title}</h1><div class="paper-meta"><span><i class="fas fa-university"></i> ${currentPaper.venue}</span><span><i class="fas fa-calendar"></i> ${currentPaper.year}</span><span><i class="fas fa-quote-right"></i> ${currentPaper.citations} citations</span></div><div class="paper-abstract"><h3>Abstract</h3><p>${currentPaper.abstract}</p></div><div class="paper-info-grid"><div class="info-item"><div class="info-label">DOI</div><div class="info-value">${currentPaper.doi}</div></div><div class="info-item"><div class="info-label">Pages</div><div class="info-value">${currentPaper.pages}</div></div><div class="info-item"><div class="info-label">Year</div><div class="info-value">${currentPaper.year}</div></div><div class="info-item"><div class="info-label">Citations</div><div class="info-value">${currentPaper.citations}</div></div></div><button class="download-btn" id="downloadBtn"><i class="fas fa-file-pdf"></i><span>Download Full Paper (PDF)</span></button>`;}
-function handleCite(){if(navigator.vibrate)navigator.vibrate(10);const citation=`${currentPaper.title}. ${currentPaper.venue}, ${currentPaper.year}. DOI: ${currentPaper.doi}`;const textarea=document.createElement('textarea');textarea.value=citation;textarea.style.position='fixed';textarea.style.opacity='0';document.body.appendChild(textarea);textarea.select();try{document.execCommand('copy');showToast('Citation copied!');}catch(err){}document.body.removeChild(textarea);}
-function handleShare(){if(navigator.vibrate)navigator.vibrate(10);if(navigator.share){navigator.share({title:currentPaper.title,text:`Research Paper: ${currentPaper.title}`,url:window.location.href}).catch(()=>{});}else{showToast('Sharing...'); }}
-function showToast(msg){const toast=document.createElement('div');toast.textContent=msg;toast.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:12px 24px;background:rgba(13,110,253,0.95);color:#fff;border-radius:8px;font-size:13px;font-weight:600;z-index:10000;';document.body.appendChild(toast);setTimeout(()=>toast.remove(),2000);}
-function init(){loadPaper();citeBtn.addEventListener('click',handleCite);shareBtn.addEventListener('click',handleShare);[citeBtn,shareBtn,document.querySelector('.back-btn')].forEach(btn=>{if(btn)btn.addEventListener('touchstart',()=>{if(navigator.vibrate)navigator.vibrate(10);});});}
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}})();
+(function(){
+let allPapers=[];
+let currentPaper=null;
+const paperContainer=document.getElementById('paperContainer');
+const citeBtn=document.getElementById('citeBtn');
+const shareBtn=document.getElementById('shareBtn');
+const downloadBtn=document.getElementById('downloadBtn');
+
+async function loadPapersData(){
+try{
+const response=await fetch('../../../Content Studio/research-papers/papers.json');
+const data=await response.json();
+allPapers=data.papers||[];
+loadPaper();
+}catch(error){
+console.error('Error loading papers:',error);
+paperContainer.innerHTML='<div style="padding:60px 20px;text-align:center;"><i class="fas fa-exclamation-triangle" style="font-size:56px;color:var(--primary-red);margin-bottom:20px;"></i><h3>Error Loading Papers</h3><p style="color:var(--text-dim);margin-top:12px;">Please try refreshing the page</p></div>';
+}
+}
+
+function getPaperIdFromUrl(){
+const urlParams=new URLSearchParams(window.location.search);
+const id=urlParams.get('id');
+return id||allPapers[0]?.id;
+}
+
+function loadPaper(){
+const paperId=getPaperIdFrommUrl();
+currentPaper=allPapers.find(p=>p.id===paperId);
+if(!currentPaper){
+paperContainer.innerHTML='<div style="padding:60px 20px;text-align:center;"><i class="fas fa-exclamation-circle" style="font-size:56px;color:var(--primary-red);margin-bottom:20px;"></i><h3>Paper Not Found</h3><a href="paper-listing.html" style="display:inline-block;margin-top:16px;padding:10px 20px;background:var(--primary-red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Back to Papers</a></div>';
+return;
+}
+
+const authors=Array.isArray(currentPaper.authors)?currentPaper.authors.join(', '):currentPaper.authors||'Unknown Author';
+const date=new Date(currentPaper.date);
+const formattedDate=date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+paperContainer.innerHTML=`
+<span class="paper-status">${currentPaper.status||'Published'}</span>
+<h1 class="paper-title">${currentPaper.title}</h1>
+<div class="paper-meta">
+<span><i class="fas fa-user-graduate"></i> ${authors}</span>
+<span><i class="fas fa-university"></i> ${currentPaper.institution||'N/A'}</span>
+<span><i class="fas fa-calendar"></i> ${formattedDate}</span>
+<span><i class="fas fa-quote-right"></i> ${currentPaper.citations||0} citations</span>
+</div>
+<div class="paper-abstract">
+<h3>Abstract</h3>
+<p>${currentPaper.abstract||currentPaper.summary||'No abstract available'}</p>
+</div>
+<div class="paper-info-grid">
+<div class="info-item"><div class="info-label">DOI</div><div class="info-value">${currentPaper.doi||'N/A'}</div></div>
+<div class="info-item"><div class="info-label">Pages</div><div class="info-value">${currentPaper.pages||'N/A'}</div></div>
+<div class="info-item"><div class="info-label">Year</div><div class="info-value">${new Date(currentPaper.date).getFullYear()}</div></div>
+<div class="info-item"><div class="info-label">Downloads</div><div class="info-value">${currentPaper.downloads||0}</div></div>
+</div>
+`;
+
+if(currentPaper.pdfUrl&&currentPaper.pdfUrl!=='#'){
+paperContainer.innerHTML+=`<button class="download-btn" id="downloadBtn"><i class="fas fa-file-pdf"></i><span>Download Full Paper (PDF)</span></button>`;
+const dlBtn=document.getElementById('downloadBtn');
+if(dlBtn){
+dlBtn.addEventListener('click',()=>{
+if(navigator.vibrate)navigator.vibrate(20);
+window.open(currentPaper.pdfUrl,'_blank');
+});
+dlBtn.addEventListener('touchstart',()=>{if(navigator.vibrate)navigator.vibrate(10);});
+}
+}
+}
+
+function handleCite(){
+if(navigator.vibrate)navigator.vibrate(10);
+if(!currentPaper)return;
+const authors=Array.isArray(currentPaper.authors)?currentPaper.authors.join(', '):currentPaper.authors;
+const year=new Date(currentPaper.date).getFullYear();
+const citation=`${authors}. (${year}). ${currentPaper.title}. ${currentPaper.institution||''}. DOI: ${currentPaper.doi||'N/A'}`;
+const textarea=document.createElement('textarea');
+textarea.value=citation;
+textarea.style.position='fixed';
+textarea.style.opacity='0';
+document.body.appendChild(textarea);
+textarea.select();
+try{
+document.execCommand('copy');
+showToast('Citation copied!');
+}catch(err){alert('Citation:\n\n'+citation);}
+document.body.removeChild(textarea);
+}
+
+function handleShare(){
+if(navigator.vibrate)navigator.vibrate(10);
+if(!currentPaper)return;
+if(navigator.share){
+navigator.share({
+title:currentPaper.title,
+text:`Research Paper: ${currentPaper.title}`,
+url:window.location.href
+}).catch(()=>{});
+}else{
+showToast('Sharing...');
+}
+}
+
+function showToast(msg){
+const toast=document.createElement('div');
+toast.textContent=msg;
+toast.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:12px 24px;background:rgba(205,92,92,0.95);color:#fff;border-radius:8px;font-size:13px;font-weight:600;z-index:10000;';
+document.body.appendChild(toast);
+setTimeout(()=>toast.remove(),2000);
+}
+
+function init(){
+loadPapersData();
+if(citeBtn)citeBtn.addEventListener('click',handleCite);
+if(shareBtn)shareBtn.addEventListener('click',handleShare);
+[citeBtn,shareBtn,document.querySelector('.back-btn')].forEach(btn=>{
+if(btn)btn.addEventListener('touchstart',()=>{if(navigator.vibrate)navigator.vibrate(10);});
+});
+}
+
+if(document.readyState==='loading'){
+document.addEventListener('DOMContentLoaded',init);
+}else{
+init();
+}
+})();
     </script>
     <script src="../../pwa-init.js"></script>
 </body>
