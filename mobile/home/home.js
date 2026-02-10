@@ -7,21 +7,50 @@
     'use strict';
     
     // ========== SMOOTH SPLASH SCREEN REMOVAL ==========
-    window.addEventListener('load', () => {
+    let splashRemoved = false;
+    
+    // Function to remove splash
+    const removeSplashScreen = () => {
+        if (splashRemoved) return;
+        splashRemoved = true;
+        
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.classList.add('removing');
+            splash.style.animation = 'splashFadeOut 0.5s ease forwards';
+        }
+        
         setTimeout(() => {
-            const splash = document.getElementById('appSplash');
+            document.body.classList.remove('splash-active');
             if (splash) {
-                splash.style.animation = 'splashFadeOut 0.8s ease forwards';
+                splash.remove();
             }
-            
-            setTimeout(() => {
-                document.body.classList.remove('splash-active');
-                if (splash) {
-                    splash.remove();
-                }
-            }, 800);
-        }, 1500); // Show splash for 1.5 seconds
-    });
+        }, 500);
+    };
+    
+    // Immediate fallback to prevent stuck overflow:hidden
+    setTimeout(() => {
+        document.body.classList.remove('splash-active');
+    }, 3000); // Emergency fallback at 3 seconds
+    
+    // Primary splash handling - use DOMContentLoaded for faster response
+    const removeSplash = () => {
+        setTimeout(removeSplashScreen, 1500); // Show splash for 1.5 seconds
+    };
+    
+    // Allow user to tap to skip splash
+    const splash = document.getElementById('appSplash');
+    if (splash) {
+        splash.addEventListener('click', removeSplashScreen);
+        splash.addEventListener('touchend', removeSplashScreen);
+    }
+    
+    // Use DOMContentLoaded instead of 'load' for faster execution
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeSplash);
+    } else {
+        removeSplash();
+    }
     
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {

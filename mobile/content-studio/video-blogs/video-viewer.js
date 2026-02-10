@@ -57,7 +57,7 @@
     }
 
     // ========== LOAD VIDEO ==========
-    function loadVideo() {
+    async function loadVideo() {
         const videoId = getVideoIdFromUrl();
         currentVideo = allVideos.find(v => v.id === videoId);
 
@@ -71,6 +71,13 @@
                 </div>
             `;
             return;
+        }
+
+        // Enhance video with YouTube data
+        if (window.youtubeFetcher && currentVideo.videoId) {
+            console.log('🔄 Fetching YouTube data for video...');
+            currentVideo = await window.youtubeFetcher.enhanceVideoData(currentVideo);
+            console.log('✅ Video enhanced with YouTube data', currentVideo);
         }
 
         // Load YouTube player
@@ -105,13 +112,33 @@
 
     // ========== RENDER VIDEO INFO ==========
     function renderVideoInfo() {
+        // Format views and likes
+        const viewsText = currentVideo.views && currentVideo.views > 0 
+            ? window.youtubeFetcher?.formatViews(currentVideo.views) || `${currentVideo.views} views`
+            : 'N/A';
+        
+        const likesText = currentVideo.likes && currentVideo.likes > 0
+            ? window.youtubeFetcher?.formatLikes(currentVideo.likes) || currentVideo.likes
+            : '0';
+        
         videoInfo.innerHTML = `
             <h1 class="video-title">${currentVideo.title}</h1>
             <div class="video-meta">
                 <span><i class="fas fa-folder"></i> ${currentVideo.subcategory}</span>
                 <span><i class="fas fa-calendar"></i> ${formatDate(currentVideo.publishDate)}</span>
-                <span><i class="fas fa-clock"></i> ${currentVideo.duration}</span>
+                <span><i class="fas fa-clock"></i> ${currentVideo.duration || 'N/A'}</span>
             </div>
+            ${(currentVideo.views > 0 || currentVideo.likes > 0) ? `
+            <div class="video-stats" style="display: flex; gap: 16px; padding: 12px 0; border-top: 1px solid rgba(205,92,92,0.2); border-bottom: 1px solid rgba(205,92,92,0.2); margin: 12px 0;">
+                <span style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                    <i class="fas fa-eye" style="color: #CD5C5C;"></i> ${viewsText}
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+                    <i class="fas fa-thumbs-up" style="color: #CD5C5C;"></i> ${likesText}
+                </span>
+                ${currentVideo.apiEnhanced ? '<span style="color: rgba(76,175,80,0.8); font-size: 0.7rem; margin-left: auto;"><i class="fas fa-check-circle"></i> Live Data</span>' : ''}
+            </div>
+            ` : ''}
             <div class="video-tags">
                 ${currentVideo.tags.map(tag => `<span class="video-tag">${tag}</span>`).join('')}
             </div>

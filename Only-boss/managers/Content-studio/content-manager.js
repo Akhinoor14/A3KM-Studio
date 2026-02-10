@@ -109,8 +109,15 @@ class ContentManager {
             // 🔄 AUTO-SYNC: If video-content updated, sync to mobile content.json
             if (contentType === 'video-content') {
                 try {
-                    await this.syncVideoToMobileContentJSON();
-                    console.log('✅ Mobile content.json auto-synced after video update');
+                    // Use unified sync system if available
+                    if (window.unifiedVideoSync) {
+                        await window.unifiedVideoSync.syncDesktopToMobile();
+                        console.log('✅ Mobile content.json auto-synced (Unified Sync)');
+                    } else {
+                        // Fallback to old method
+                        await this.syncVideoToMobileContentJSON();
+                        console.log('✅ Mobile content.json auto-synced (Legacy method)');
+                    }
                 } catch (syncError) {
                     console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
                 }

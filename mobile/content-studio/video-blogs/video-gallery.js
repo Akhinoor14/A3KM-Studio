@@ -55,6 +55,18 @@
             console.log(`📂 Categories: ${categories.join(', ')}`);
             console.log(`📊 Total content: ${data.statistics.totalContent} items`);
             
+            // Enhance videos with YouTube data in background
+            if (window.youtubeFetcher && allVideos.length > 0) {
+                console.log('🔄 Fetching YouTube data for videos...');
+                window.youtubeFetcher.enhanceMultipleVideos(allVideos).then(enhanced => {
+                    allVideos = enhanced;
+                    console.log('✅ Videos enhanced with YouTube data');
+                    renderVideos(); // Re-render with enhanced data
+                }).catch(err => {
+                    console.warn('⚠️ Failed to enhance videos:', err);
+                });
+            }
+            
             hideLoadingState();
             renderCategoryTabs();
             renderVideos();
@@ -288,13 +300,23 @@
             emptyState.style.display = 'none';
         }
 
-        contentGrid.innerHTML = sorted.map(video => `
+        contentGrid.innerHTML = sorted.map(video => {
+            const viewsText = video.views && video.views > 0 
+                ? (window.youtubeFetcher?.formatViews(video.views) || `${video.views} views`)
+                : '';
+            
+            const likesText = video.likes && video.likes > 0
+                ? (window.youtubeFetcher?.formatLikes(video.likes) || video.likes)
+                : '';
+            
+            return `
             <a href="video-viewer.html?id=${video.id}" class="content-item">
                 <div class="content-thumbnail">
                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                     <i class="fab fa-youtube" style="display:none; font-size: 48px; color: rgba(255,0,0,0.6);"></i>
-                    <span class="content-duration">${video.duration}</span>
+                    <span class="content-duration">${video.duration || 'N/A'}</span>
                     ${video.language === 'bn' ? '<span class="content-language">🇧🇩 বাংলা</span>' : ''}
+                    ${video.apiEnhanced ? '<span class="content-live-badge" style="position: absolute; top: 8px; left: 8px; background: rgba(76,175,80,0.9); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; backdrop-filter: blur(4px);"><i class="fas fa-signal"></i> LIVE</span>' : ''}
                 </div>
                 <div class="content-info-wrap">
                     <h3 class="content-item-title">${video.title}</h3>
@@ -302,13 +324,20 @@
                         <span><i class="fas fa-folder"></i> ${video.subcategory}</span>
                         <span><i class="fas fa-calendar"></i> ${formatDate(video.publishDate)}</span>
                     </div>
+                    ${(viewsText || likesText) ? `
+                    <div class="content-stats" style="display: flex; gap: 12px; margin: 6px 0; font-size: 0.75rem; color: rgba(255,255,255,0.6);">
+                        ${viewsText ? `<span><i class="fas fa-eye"></i> ${viewsText}</span>` : ''}
+                        ${likesText ? `<span><i class="fas fa-thumbs-up"></i> ${likesText}</span>` : ''}
+                    </div>
+                    ` : ''}
                     <p class="content-item-desc">${truncateText(video.description, 120)}</p>
                     <div class="content-tags">
                         ${video.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
                     </div>
                 </div>
             </a>
-        `).join('');
+            `;
+        }).join('');
 
         // Add animation to newly rendered items
         setTimeout(() => {

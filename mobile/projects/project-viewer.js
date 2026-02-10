@@ -29,24 +29,63 @@
     init();
 
     async function init() {
+        updateBackButton();
         await loadProjectsFromJSON();
         loadProject();
         setupEventListeners();
     }
+    
+    /**
+     * Update back button to point to correct category page
+     */
+    function updateBackButton() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        const backBtn = document.querySelector('.back-btn');
+        
+        if (backBtn && category) {
+            const categoryPages = {
+                'arduino': 'arduino-projects.html',
+                'solidworks': 'solidworks-projects.html',
+                'matlab': 'matlab-projects.html',
+                'electronics': 'electronics-projects.html'
+            };
+            
+            const backPage = categoryPages[category] || 'projects.html';
+            backBtn.href = backPage;
+            
+            console.log(`🔙 Back button updated to: ${backPage}`);
+        }
+    }
 
     /**
-     * Load projects dynamically from desktop JSON file
+     * Load projects dynamically based on category
      */
     async function loadProjectsFromJSON() {
         try {
-            const response = await fetch('../../Projects Code/projects.json');
+            // Get category from URL to determine which JSON to load
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category');
+            
+            let dataSource = '../../Projects Code/projects.json';
+            
+            // Load from appropriate data source based on category
+            if (category === 'arduino') {
+                dataSource = '../../Projects Code/Arduino/arduino-data.json';
+            } else if (category === 'matlab') {
+                dataSource = '../../Projects Code/MATLAB/matlab-data.json';
+            }
+            
+            console.log(`🔍 Loading from: ${dataSource} (category: ${category})`);
+            
+            const response = await fetch(dataSource);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
-            allProjects = data.projects;
+            allProjects = data.projects || [];
             
             console.log(`✅ Loaded ${allProjects.length} projects for viewer`);
             
@@ -84,26 +123,32 @@
             </div>
         `;
 
-        currentProject = allProjects.find(p => p.id === projectId);
+        // Arduino projects use numeric IDs, need to convert
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        
+        if (category === 'arduino') {
+            // Arduino IDs are numbers, compare as numbers
+            currentProject = allProjects.find(p => p.id == projectId);
+        } else {
+            // Other projects use string IDs
+            currentProject = allProjects.find(p => p.id === projectId);
+        }
 
         if (!currentProject) {
+            console.error(`❌ Project not found: ${projectId} in category: ${category}`);
             showNotFoundState();
             return;
         }
 
+        console.log(`✅ Found project: ${currentProject.title}`);
+
         // Setup sequential navigation for Arduino and Solidworks projects
-        if (currentProject.category === 'arduino') {
-            sequentialProjects = allProjects
-                .filter(p => p.category === 'arduino')
-                .sort((a, b) => {
-                    // Sort by ID: arduino-01, arduino-02, etc.
-                    const numA = parseInt(a.id.replace('arduino-', ''));
-                    const numB = parseInt(b.id.replace('arduino-', ''));
-                    return numA - numB;
-                });
-            currentProjectIndex = sequentialProjects.findIndex(p => p.id === projectId);
+        if (category === 'arduino') {
+            sequentialProjects = allProjects.sort((a, b) => a.id - b.id);
+            currentProjectIndex = sequentialProjects.findIndex(p => p.id == projectId);
             console.log(`📍 Arduino project ${currentProjectIndex + 1}/${sequentialProjects.length}`);
-        } else if (currentProject.category === 'solidworks') {
+        } else if (category === 'solidworks') {
             sequentialProjects = allProjects
                 .filter(p => p.category === 'solidworks')
                 .sort((a, b) => {
@@ -121,12 +166,24 @@
     }
 
     function showNotFoundState() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        
+        const categoryPages = {
+            'arduino': 'arduino-projects.html',
+            'solidworks': 'solidworks-projects.html',
+            'matlab': 'matlab-projects.html',
+            'electronics': 'electronics-projects.html'
+        };
+        
+        const backPage = categoryPages[category] || 'projects.html';
+        
         projectContainer.innerHTML = `
             <div style="padding:60px 20px;text-align:center;">
                 <i class="fas fa-exclamation-circle" style="font-size:56px;color:var(--primary-red);margin-bottom:20px;"></i>
                 <h3 style="color:var(--text-primary);margin-bottom:12px;">Project Not Found</h3>
                 <p style="color:var(--text-secondary);margin-bottom:24px;">The requested project could not be found.</p>
-                <a href="projects.html" style="display:inline-block;padding:12px 28px;background:var(--primary-red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+                <a href="${backPage}" style="display:inline-block;padding:12px 28px;background:var(--primary-red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
                     <i class="fas fa-arrow-left"></i> Back to Projects
                 </a>
             </div>
@@ -149,38 +206,47 @@
     }
 
     function renderProjectDetails() {
-        const hasGLB = currentProject.glbFile && currentProject.category === 'solidworks';
-        const hasCode = currentProject.code || currentProject.codePath;
-        const hasREADME = currentProject.readmePath;
-        const hasExplanation = currentProject.explanationPath;
-        const hasTinkercad = currentProject.tinkercadLink;
+        // Get category from URL parameter (not from project data)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCategory = urlParams.get('category') || currentProject.category;
+        
+        const hasGLB = currentProject.glbFile && urlCategory === 'solidworks';
+        const hasCode = currentProject.code || currentProject.codePath || currentProject.codeFile;
+        const hasREADME = currentProject.readmePath || currentProject.files?.readme;
+        const hasExplanation = currentProject.explanationPath || currentProject.files?.explanation;
+        const hasTinkercad = currentProject.tinkercad || currentProject.tinkercadLink;
         const hasSteps = currentProject.steps && currentProject.steps.length > 0;
         const hasComponents = currentProject.components && currentProject.components.length > 0;
         const hasImages = currentProject.images && currentProject.images.length > 0;
         const hasTopics = currentProject.topics && currentProject.topics.length > 0;
-        const isArduino = currentProject.category === 'arduino';
-        const isMATLAB = currentProject.category === 'matlab';
-        const isElectronics = currentProject.category === 'electronics';
+        const isArduino = urlCategory === 'arduino';
+        const isMATLAB = urlCategory === 'matlab';
+        const isElectronics = urlCategory === 'electronics';
         const hasToolLink = currentProject.toolLink;
         const hasFeatures = currentProject.features && currentProject.features.length > 0;
+        
+        // Display category as the URL category (arduino, solidworks, etc.) not subcategory
+        const displayCategory = urlCategory || currentProject.category;
 
         projectContainer.innerHTML = `
             <div class="project-hero">
-                <span class="project-category"><i class="fas fa-folder"></i> ${currentProject.category.toUpperCase()}</span>
+                <span class="project-category"><i class="fas fa-folder"></i> ${displayCategory.toUpperCase()}</span>
                 <h1 class="project-title">${currentProject.title}</h1>
-                ${currentProject.description ? `
+                ${currentProject.description || currentProject.subtitle ? `
                 <p class="project-description" style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; margin: 16px 0; max-width: 700px;">
-                    ${currentProject.description}
+                    ${currentProject.description || currentProject.subtitle}
                 </p>
                 ` : ''}
                 <div class="project-meta">
-                    <span><i class="fas fa-signal"></i> ${currentProject.difficulty}</span>
+                    <span><i class="fas fa-signal"></i> ${currentProject.difficulty || 'Intermediate'}</span>
                     ${currentProject.duration ? `<span><i class="fas fa-clock"></i> ${currentProject.duration}</span>` : ''}
                     ${currentProject.codeLines ? `<span><i class="fas fa-code"></i> ${currentProject.codeLines}+ lines</span>` : ''}
                 </div>
+                ${currentProject.tags && currentProject.tags.length > 0 ? `
                 <div class="project-tags">
                     ${currentProject.tags.map(tag => `<span class="project-tag">${tag}</span>`).join('')}
                 </div>
+                ` : ''}
             </div>
 
             ${hasGLB ? `
@@ -189,7 +255,7 @@
                 <div class="glb-viewer-container" id="glbViewerContainer">
                     <div class="glb-loading">
                         <div class="spinner"></div>
-                        <p>Loading 3D model...</p>
+                        <p>Loading 3D Model...</p>
                     </div>
                     <model-viewer 
                         id="modelViewer"
@@ -198,21 +264,109 @@
                         camera-controls 
                         touch-action="pan-y"
                         auto-rotate
-                        shadow-intensity="1"
+                        auto-rotate-delay="1000"
+                        rotation-per-second="30deg"
+                        shadow-intensity="1.2"
                         environment-image="neutral"
-                        exposure="1"
+                        exposure="1.2"
+                        camera-orbit="45deg 75deg 2.5m"
+                        min-camera-orbit="auto auto 1m"
+                        max-camera-orbit="auto auto 10m"
                     >
                         <div class="glb-controls" slot="progress-bar">
                             <div class="loading-progress"></div>
                         </div>
                     </model-viewer>
-                    <div class="glb-info">
-                        <p><i class="fas fa-info-circle"></i> Drag to rotate • Pinch to zoom • Two fingers to pan</p>
-                        ${currentProject.zipDownload ? `
-                        <a href="${currentProject.zipDownload}" download class="download-model-btn">
-                            <i class="fas fa-download"></i> Download Files
-                        </a>
-                        ` : ''}
+                    
+                    <!-- Premium Control Panel -->
+                    <div class="glb-controls-panel">
+                        <button class="glb-control-btn active" id="autoRotateBtn" onclick="window.projectViewer.toggleAutoRotate()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Auto Rotate</span>
+                        </button>
+                        <button class="glb-control-btn" id="fullscreenBtn" onclick="window.projectViewer.toggleFullscreen()">
+                            <i class="fas fa-expand"></i>
+                            <span>Fullscreen</span>
+                        </button>
+                        <button class="glb-control-btn" onclick="window.projectViewer.resetCamera()">
+                            <i class="fas fa-redo"></i>
+                            <span>Reset View</span>
+                        </button>
+                        <button class="glb-control-btn" onclick="window.projectViewer.takeScreenshot()">
+                            <i class="fas fa-camera"></i>
+                            <span>Screenshot</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Model Stats -->
+                    <div class="glb-stats-grid">
+                        <div class="glb-stat-card">
+                            <div class="glb-stat-icon"><i class="fas fa-cube"></i></div>
+                            <div class="glb-stat-label">Format</div>
+                            <div class="glb-stat-value">GLB 3D</div>
+                        </div>
+                        <div class="glb-stat-card">
+                            <div class="glb-stat-icon"><i class="fas fa-layer-group"></i></div>
+                            <div class="glb-stat-label">Complexity</div>
+                            <div class="glb-stat-value">${currentProject.difficulty || 'Standard'}</div>
+                        </div>
+                        <div class="glb-stat-card">
+                            <div class="glb-stat-icon"><i class="fas fa-palette"></i></div>
+                            <div class="glb-stat-label">Materials</div>
+                            <div class="glb-stat-value">Realistic</div>
+                        </div>
+                        <div class="glb-stat-card">
+                            <div class="glb-stat-icon"><i class="fas fa-arrows-alt"></i></div>
+                            <div class="glb-stat-label">Interactive</div>
+                            <div class="glb-stat-value">360°</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Download Section -->
+                    ${currentProject.zipDownload || currentProject.glbFile ? `
+                    <div class="glb-download-section">
+                        <h4 style="color: #FFFFFF; font-size: 14px; font-weight: 700; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-download" style="color: #CD5C5C;"></i>
+                            Download Model Files
+                        </h4>
+                        <p style="font-size: 11px; color: rgba(180,180,180,0.8); margin: 0 0 12px 0;">Get 3D models and source files</p>
+                        <div class="glb-download-grid">
+                            ${currentProject.glbFile ? `
+                            <a href="${currentProject.glbFile}" download class="download-model-btn primary">
+                                <i class="fas fa-cube"></i>
+                                <span>GLB Model</span>
+                            </a>
+                            ` : ''}
+                            ${currentProject.zipDownload ? `
+                            <a href="${currentProject.zipDownload}" download class="download-model-btn">
+                                <i class="fas fa-file-archive"></i>
+                                <span>Full Package</span>
+                            </a>
+                            ` : ''}
+                            ${currentProject.files && currentProject.files.includes('.SLDPRT') ? `
+                            <a href="${currentProject.files[0]}" download class="download-model-btn">
+                                <i class="fas fa-drafting-compass"></i>
+                                <span>SLDPRT File</span>
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Touch Instructions -->
+                    <div class="glb-instructions">
+                        <div class="glb-instruction-item">
+                            <i class="fas fa-hand-pointer"></i>
+                            <span>Drag to Rotate</span>
+                        </div>
+                        <div class="glb-instruction-item">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                            <span>Pinch to Zoom</span>
+                        </div>
+                        <div class="glb-instruction-item">
+                            <i class="fas fa-arrows-alt"></i>
+                            <span>Two Fingers to Pan</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -787,6 +941,89 @@
             if (currentProjectIndex < sequentialProjects.length - 1) {
                 const nextProject = sequentialProjects[currentProjectIndex + 1];
                 navigateToProject(nextProject.id);
+            }
+        },
+        
+        // GLB Viewer Control Functions
+        toggleAutoRotate: function() {
+            const viewer = document.getElementById('modelViewer');
+            const btn = document.getElementById('autoRotateBtn');
+            if (!viewer || !btn) return;
+            
+            const isRotating = viewer.hasAttribute('auto-rotate');
+            if (isRotating) {
+                viewer.removeAttribute('auto-rotate');
+                btn.classList.remove('active');
+                showToast('Auto-rotate disabled');
+            } else {
+                viewer.setAttribute('auto-rotate', '');
+                btn.classList.add('active');
+                showToast('Auto-rotate enabled');
+            }
+            if (navigator.vibrate) navigator.vibrate(10);
+        },
+        
+        toggleFullscreen: function() {
+            const viewer = document.getElementById('modelViewer');
+            if (!viewer) return;
+            
+            if (!document.fullscreenElement) {
+                viewer.requestFullscreen().then(() => {
+                    showToast('Fullscreen mode activated');
+                    if (navigator.vibrate) navigator.vibrate(15);
+                }).catch(err => {
+                    console.error('Fullscreen error:', err);
+                    showToast('Fullscreen not supported');
+                });
+            } else {
+                document.exitFullscreen();
+                showToast('Exited fullscreen');
+                if (navigator.vibrate) navigator.vibrate(10);
+            }
+        },
+        
+        resetCamera: function() {
+            const viewer = document.getElementById('modelViewer');
+            if (!viewer) return;
+            
+            viewer.cameraOrbit = '45deg 75deg 2.5m';
+            viewer.fieldOfView = '45deg';
+            viewer.jumpCameraToGoal();
+            showToast('Camera view reset');
+            if (navigator.vibrate) navigator.vibrate(10);
+        },
+        
+        takeScreenshot: function() {
+            const viewer = document.getElementById('modelViewer');
+            if (!viewer) {
+                showToast('Model viewer not found');
+                return;
+            }
+            
+            try {
+                viewer.toBlob({idealAspect: true}).then(blob => {
+                    if (!blob) {
+                        showToast('Screenshot failed');
+                        return;
+                    }
+                    
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const projectName = currentProject ? currentProject.title.replace(/\s+/g, '-') : 'model';
+                    link.download = `${projectName}-screenshot.png`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    showToast('Screenshot saved!');
+                    if (navigator.vibrate) navigator.vibrate(30);
+                }).catch(err => {
+                    console.error('Screenshot error:', err);
+                    showToast('Screenshot failed');
+                });
+            } catch (error) {
+                console.error('Screenshot error:', error);
+                showToast('Screenshot not supported');
             }
         }
     };

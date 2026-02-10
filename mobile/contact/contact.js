@@ -20,8 +20,14 @@
         // Setup form handler
         setupContactForm();
         
+        // Character counter for textarea
+        setupCharCounter();
+        
         // Add animations
         animateSections();
+        
+        // Input validation and effects
+        setupInputEffects();
     }
     
     /**
@@ -176,6 +182,77 @@
         
         sections.forEach(section => {
             observer.observe(section);
+        });
+    }
+    
+    /**
+     * Setup character counter for textarea
+     */
+    function setupCharCounter() {
+        const textarea = document.getElementById('message');
+        const charCount = document.getElementById('charCount');
+        
+        if (!textarea || !charCount) return;
+        
+        textarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            const maxLength = this.maxLength;
+            
+            charCount.textContent = currentLength;
+            
+            // Change color based on length
+            charCount.classList.remove('warning', 'danger');
+            if (currentLength >= maxLength) {
+                charCount.classList.add('danger');
+            } else if (currentLength >= maxLength * 0.9) {
+                charCount.classList.add('warning');
+            }
+        });
+    }
+    
+    /**
+     * Setup input validation and effects
+     */
+    function setupInputEffects() {
+        const inputs = document.querySelectorAll('.input-wrapper input, .input-wrapper textarea');
+        
+        inputs.forEach(input => {
+            // Add focus/blur effects
+            input.addEventListener('focus', function() {
+                const wrapper = this.closest('.input-wrapper');
+                wrapper.classList.add('focused');
+                
+                // Haptic feedback on focus
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(5);
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                const wrapper = this.closest('.input-wrapper');
+                wrapper.classList.remove('focused');
+                
+                // Validate on blur
+                if (this.value.trim()) {
+                    wrapper.classList.add('filled');
+                } else {
+                    wrapper.classList.remove('filled');
+                }
+            });
+            
+            // Real-time email validation
+            if (input.type === 'email') {
+                input.addEventListener('input', function() {
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const wrapper = this.closest('.input-wrapper');
+                    
+                    if (this.value && !emailPattern.test(this.value)) {
+                        wrapper.classList.add('invalid');
+                    } else {
+                        wrapper.classList.remove('invalid');
+                    }
+                });
+            }
         });
     }
     
