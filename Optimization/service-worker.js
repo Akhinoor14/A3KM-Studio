@@ -1,5 +1,5 @@
 /* A3KM Studio Service Worker - basic offline support */
-const VERSION = 'v1.0.0';
+const VERSION = 'v2.1.0-2026-02-10';
 const CACHE_PREFIX = 'a3km-studio';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${VERSION}`;
 const HTML_CACHE = `${CACHE_PREFIX}-html-${VERSION}`;
