@@ -115,21 +115,21 @@ function openMobilePDFViewer(options = {}) {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1));
-                border: 1px solid rgba(205,92,92,0.3);
+                background: linear-gradient(135deg, rgba(204,0,0,0.2), rgba(204,0,0,0.1));
+                border: 1px solid rgba(204,0,0,0.3);
                 border-radius: 10px;
-                color: #CD5C5C;
+                color: #CC0000;
                 font-size: 16px;
                 cursor: pointer;
                 transition: all 0.3s ease;
                 box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
             `;
             downloadBtn.ontouchstart = (e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(205,92,92,0.3), rgba(205,92,92,0.15))';
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(204,0,0,0.3), rgba(204,0,0,0.15))';
                 if (navigator.vibrate) navigator.vibrate(10);
             };
             downloadBtn.ontouchend = (e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1))';
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(204,0,0,0.2), rgba(204,0,0,0.1))';
                 downloadDocument(config.filePath, config.downloadName);
             };
             buttonContainer.appendChild(downloadBtn);
@@ -144,10 +144,10 @@ function openMobilePDFViewer(options = {}) {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(0,0,0,0.3));
-            border: 1px solid rgba(205,92,92,0.3);
+            background: linear-gradient(135deg, rgba(204,0,0,0.15), rgba(0,0,0,0.3));
+            border: 1px solid rgba(204,0,0,0.3);
             border-radius: 10px;
-            color: #CD5C5C;
+            color: #CC0000;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.3s ease;

@@ -269,9 +269,9 @@
                         shadow-intensity="1.2"
                         environment-image="neutral"
                         exposure="1.2"
-                        camera-orbit="45deg 75deg 2.5m"
-                        min-camera-orbit="auto auto 1m"
-                        max-camera-orbit="auto auto 10m"
+                        camera-orbit="45deg 75deg 1.2m"
+                        min-camera-orbit="auto auto 0.5m"
+                        max-camera-orbit="auto auto 5m"
                     >
                         <div class="glb-controls" slot="progress-bar">
                             <div class="loading-progress"></div>
@@ -448,23 +448,26 @@
             <section>
                 <h2 class="section-title"><i class="fas fa-code"></i> ${isMATLAB ? 'MATLAB Code' : isArduino ? 'Arduino Sketch' : 'Sample Code'}</h2>
                 <div class="code-section" style="background: rgba(0,0,0,0.4); border-radius: 12px; border: 2px solid var(--border-primary); overflow: hidden;">
-                    <div class="code-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border-primary);">
-                        <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">
-                            <i class="fas fa-file-code"></i> ${currentProject.codePath ? currentProject.codePath.split('/').pop() : 'Code'}
+                    <div class="code-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border-primary); flex-wrap: wrap; gap: 8px;">
+                        <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95rem; flex: 1; min-width: 120px;">
+                            <i class="fas fa-file-code"></i> ${isMATLAB && currentProject.files ? currentProject.files.code : (isArduino && currentProject.files ? currentProject.files.code : (currentProject.codePath ? currentProject.codePath.split('/').pop() : 'Code'))}
                         </h4>
-                        <button class="copy-btn" onclick="window.projectViewer.copyCode()" style="padding: 6px 12px; background: var(--primary-red); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="copy-btn" onclick="window.projectViewer.copyCode()" style="padding: 6px 12px; background: var(--primary-red); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            ${(isArduino && currentProject.files && currentProject.folder) || (isMATLAB && currentProject.files && currentProject.files.code) ? `
+                            <button class="copy-btn" onclick="window.projectViewer.downloadCode()" style="padding: 6px 12px; background: linear-gradient(135deg, rgba(204,0,0,0.5), rgba(0,0,0,0.8)); color: #FFFFFF; border: 1px solid rgba(204,0,0,0.6); border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            ` : ''}
+                        </div>
                     </div>
                     <div id="codeContent" style="padding: 16px; max-height: 400px; overflow-y: auto;">
-                        ${currentProject.codePath ? `
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading code...</p>
                         </div>
-                        ` : `
-                        <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;"><code id="projectCode" style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #e0e0e0; line-height: 1.6;">${currentProject.code || ''}</code></pre>
-                        `}
                     </div>
                 </div>
             </section>
@@ -473,13 +476,23 @@
             ${hasTinkercad ? `
             <section>
                 <h2 class="section-title"><i class="fas fa-cube"></i> Tinkercad Simulation</h2>
-                <div style="padding: 16px; background: rgba(0,151,157,0.1); border-radius: 12px; border: 2px solid rgba(0,151,157,0.3);">
-                    <p style="color: var(--text-secondary); margin-bottom: 12px;">
-                        <i class="fas fa-external-link-alt"></i> Simulate this circuit online with Tinkercad
-                    </p>
-                    <a href="${currentProject.tinkercadLink}" target="_blank" rel="noopener" style="display: inline-block; padding: 10px 20px; background: #00979d; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                        <i class="fas fa-play"></i> Open in Tinkercad
-                    </a>
+                <div style="background: rgba(0,151,157,0.1); border-radius: 12px; border: 2px solid rgba(0,151,157,0.3); overflow: hidden;">
+                    ${isArduino && currentProject.files?.circuit && currentProject.folder ? `
+                    <div style="width: 100%; height: 200px; background: #0a0a0a; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <img src="../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.circuit}" 
+                             alt="Circuit Diagram" 
+                             style="width: 100%; height: 100%; object-fit: contain; opacity: 0.85;"
+                             onerror="this.parentElement.innerHTML='<i class=\'fas fa-microchip\' style=\'font-size:48px;color:#00979d;opacity:0.3;\'></i>'">
+                    </div>
+                    ` : ''}
+                    <div style="padding: 16px;">
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;">
+                            <i class="fas fa-external-link-alt"></i> Simulate this circuit online with Tinkercad
+                        </p>
+                        <a href="${currentProject.tinkercad || currentProject.tinkercadLink}" target="_blank" rel="noopener" style="display: inline-block; padding: 12px 24px; background: #00979d; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,151,157,0.3);">
+                            <i class="fas fa-play"></i> Open in Tinkercad
+                        </a>
+                    </div>
                 </div>
             </section>
             ` : ''}
@@ -494,10 +507,15 @@
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading README...</p>
                         </div>
                     </div>
-                    <div style="text-align: center; margin-top: 16px;">
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
                         <button class="action-btn" onclick="window.projectViewer.openReadmeFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <i class="fas fa-expand"></i> Open README in Fullscreen
+                            <i class="fas fa-expand"></i> Open Fullscreen
                         </button>
+                        ${isArduino && currentProject.files && currentProject.folder ? `
+                        <button class="action-btn" onclick="window.projectViewer.downloadReadme()" style="padding: 12px 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(205,92,92,0.4); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fas fa-download"></i> Download README
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
             </section>
@@ -513,10 +531,15 @@
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading explanation...</p>
                         </div>
                     </div>
-                    <div style="text-align: center; margin-top: 16px;">
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
                         <button class="action-btn" onclick="window.projectViewer.openExplanationFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <i class="fas fa-expand"></i> Open Explanation in Fullscreen
+                            <i class="fas fa-expand"></i> Open Fullscreen
                         </button>
+                        ${isArduino && currentProject.files && currentProject.folder ? `
+                        <button class="action-btn" onclick="window.projectViewer.downloadExplanation()" style="padding: 12px 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(205,92,92,0.4); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <i class="fas fa-download"></i> Download Explanation
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
             </section>
@@ -588,12 +611,14 @@
                     <i class="fas fa-play"></i> Simulate in Tinkercad
                 </button>
                 ` : ''}
-                ${currentProject.detailsPage ? `
-                <button class="action-btn" onclick="window.open('${currentProject.detailsPage}', '_blank')" style="padding: 14px 24px; background: var(--primary-red); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
-                    <i class="fas fa-external-link-alt"></i> View Full Details
+
+                ${isMATLAB && currentProject.files && currentProject.files.zip ? `
+                <button class="action-btn" onclick="window.projectViewer.downloadMATLABZip()" style="padding: 14px 24px; background: linear-gradient(135deg, #CC0000, #8B0000); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(204,0,0,0.3);">
+                    <i class="fas fa-download"></i> Download MATLAB Files (.zip)
                 </button>
                 ` : ''}
-                ${currentProject.zipDownload && !hasGLB ? `
+
+                ${currentProject.zipDownload && !hasGLB && !isMATLAB ? `
                 <button class="action-btn secondary" onclick="window.open('${currentProject.zipDownload}', '_blank')" style="padding: 14px 24px; background: rgba(204, 0, 0, 0.1); color: var(--primary-red); border: 2px solid var(--primary-red); border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
                     <i class="fas fa-download"></i> Download Files
                 </button>
@@ -636,16 +661,76 @@
         if (hasGLB && !window.customElements.get('model-viewer')) {
             loadModelViewerLibrary();
         }
+        
+        // Setup model-viewer load event to hide loading state
+        if (hasGLB) {
+            setTimeout(() => {
+                const modelViewer = document.getElementById('modelViewer');
+                const loadingEl = document.querySelector('.glb-loading');
+                
+                if (modelViewer && loadingEl) {
+                    modelViewer.addEventListener('load', () => {
+                        loadingEl.style.display = 'none';
+                        console.log('✅ 3D Model loaded successfully');
+                    });
+                    
+                    modelViewer.addEventListener('error', (error) => {
+                        console.error('❌ Model loading error:', error);
+                        loadingEl.innerHTML = `
+                            <i class="fas fa-exclamation-triangle" style="font-size:32px;color:#CC0000;margin-bottom:12px;"></i>
+                            <p style="color:rgba(200,200,200,0.8);">Failed to load 3D model</p>
+                        `;
+                    });
+                }
+            }, 500);
+        }
 
-        // Load Arduino code/README/explanation if paths are provided
-        if (hasCode && currentProject.codePath) {
-            loadArduinoCode(currentProject.codePath);
+        // Load Arduino/MATLAB code - construct paths properly for projects
+        if (hasCode) {
+            let codePath = currentProject.codePath;
+            
+            // For Arduino projects, construct full path from JSON data
+            if (isArduino && !codePath && currentProject.files && currentProject.folder) {
+                const codeFile = currentProject.files.code || currentProject.codeFile;
+                codePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${codeFile}`;
+            }
+            
+            // For MATLAB projects, construct full path from JSON data
+            if (isMATLAB && !codePath && currentProject.files && currentProject.files.code) {
+                // Use project ID as folder name (e.g., matlab-demo-01)
+                const folderName = currentProject.id || 'default';
+                codePath = `../../Projects Storage/MATLAB Projects/${folderName}/${currentProject.files.code}`;
+            }
+            
+            if (codePath) {
+                loadArduinoCode(codePath);
+            }
         }
+        
         if (hasREADME) {
-            loadREADME(currentProject.readmePath);
+            let readmePath = currentProject.readmePath;
+            
+            // For Arduino projects, construct full path
+            if (isArduino && !readmePath && currentProject.files && currentProject.folder) {
+                readmePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.readme}`;
+            }
+            
+            if (readmePath) {
+                loadREADME(readmePath);
+            }
         }
+        
         if (hasExplanation) {
-            loadExplanation(currentProject.explanationPath);
+            let explanationPath = currentProject.explanationPath;
+            
+            // For Arduino projects, construct full path
+            if (isArduino && !explanationPath && currentProject.files && currentProject.folder) {
+                explanationPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.explanation}`;
+            }
+            
+            if (explanationPath) {
+                loadExplanation(explanationPath);
+            }
         }
     }
 
@@ -870,6 +955,88 @@
             }
             
             document.body.removeChild(textarea);
+        },
+        downloadCode: function() {
+            if (!currentProject || !currentProject.files) {
+                showToast('Download not available');
+                return;
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category');
+            let downloadPath, codeFile;
+            
+            if (category === 'arduino' && currentProject.folder) {
+                codeFile = currentProject.files.code || currentProject.codeFile;
+                downloadPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${codeFile}`;
+            } else if (category === 'matlab' && currentProject.files.code) {
+                codeFile = currentProject.files.code;
+                const folderName = currentProject.id || 'default';
+                downloadPath = `../../Projects Storage/MATLAB Projects/${folderName}/${codeFile}`;
+            } else {
+                showToast('Download not available');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = downloadPath;
+            link.download = codeFile;
+            link.click();
+            
+            showToast('Downloading code file...');
+            if (navigator.vibrate) navigator.vibrate(30);
+        },
+        downloadReadme: function() {
+            if (!currentProject || !currentProject.files || !currentProject.folder) {
+                showToast('Download not available');
+                return;
+            }
+            
+            const readmeFile = currentProject.files.readme;
+            const downloadPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${readmeFile}`;
+            
+            const link = document.createElement('a');
+            link.href = downloadPath;
+            link.download = readmeFile;
+            link.click();
+            
+            showToast('Downloading README...');
+            if (navigator.vibrate) navigator.vibrate(30);
+        },
+        downloadExplanation: function() {
+            if (!currentProject || !currentProject.files || !currentProject.folder) {
+                showToast('Download not available');
+                return;
+            }
+            
+            const explanationFile = currentProject.files.explanation;
+            const downloadPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${explanationFile}`;
+            
+            const link = document.createElement('a');
+            link.href = downloadPath;
+            link.download = explanationFile;
+            link.click();
+            
+            showToast('Downloading explanation...');
+            if (navigator.vibrate) navigator.vibrate(30);
+        },
+        downloadMATLABZip: function() {
+            if (!currentProject || !currentProject.files || !currentProject.files.zip) {
+                showToast('Download not available');
+                return;
+            }
+            
+            const zipFile = currentProject.files.zip;
+            const folderName = currentProject.id || 'default';
+            const downloadPath = `../../Projects Storage/MATLAB Projects/${folderName}/${zipFile}`;
+            
+            const link = document.createElement('a');
+            link.href = downloadPath;
+            link.download = zipFile;
+            link.click();
+            
+            showToast('Downloading MATLAB files...');
+            if (navigator.vibrate) navigator.vibrate(30);
         },
         openReadmeFullscreen: function() {
             if (!loadedReadmeMarkdown) {

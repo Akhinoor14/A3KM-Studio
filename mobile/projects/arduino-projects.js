@@ -123,10 +123,17 @@
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         
-        grid.innerHTML = projects.map(project => `
+        grid.innerHTML = projects.map(project => {
+            const circuitPath = project.files && project.files.circuit 
+                ? `../../Projects Storage/Arduino UNO Projects with Tinkercad/${project.folder}/${project.files.circuit}`
+                : null;
+            
+            return `
             <a href="project-viewer.html?id=${project.id}&category=arduino" class="project-card">
-                <div class="project-thumbnail">
-                    <i class="fas fa-microchip"></i>
+                <div class="project-thumbnail" style="${circuitPath ? 'background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(20, 0, 0, 0.85));' : ''}">
+                    ${circuitPath 
+                        ? `<img src="${circuitPath}" alt="${project.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:0.7;"><i class="fas fa-microchip" style="display:none; font-size:48px; color:#CC0000; opacity:0.4;"></i>` 
+                        : `<i class="fas fa-microchip"></i>`}
                     <div class="project-badge">${getCategoryLabel(project.category)}</div>
                 </div>
                 <div class="project-content">
@@ -141,18 +148,18 @@
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
-        `).join('');
+        `;
+        }).join('');
         
         addHapticFeedback();
     }
     
     function getCategoryLabel(category) {
         const labels = {
-            'led-basics': 'LED',
-            'sensors': 'Sensors',
-            'displays': 'Display',
-            'iot': 'IoT',
-            'advanced': 'Advanced'
+            'led-basics': 'LED Projects',
+            'sensors-actuators': 'Sensors & Actuators',
+            'display-input': 'Displays & Input',
+            'advanced-projects': 'Advanced'
         };
         return labels[category] || 'Arduino';
     }

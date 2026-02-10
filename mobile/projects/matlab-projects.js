@@ -127,8 +127,15 @@
         grid.innerHTML = projects.map(project => `
             <a href="project-viewer.html?id=${project.id}&category=matlab" class="project-card">
                 <div class="project-thumbnail matlab-project">
-                    <i class="fas fa-chart-line"></i>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                        <i class="fas fa-chart-line" style="font-size:56px;color:#CC0000;opacity:0.4;"></i>
+                        <span style="font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">MATLAB</span>
+                    </div>
                     <div class="project-badge">${getCategoryBadge(project.category)}</div>
+                    <div class="category-indicator" style="position:absolute;bottom:8px;left:8px;padding:4px 8px;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);border:1px solid rgba(204,0,0,0.3);border-radius:8px;display:flex;align-items:center;gap:4px;z-index:2;">
+                        <i class="fas fa-layer-group" style="font-size:10px;color:#CC0000;"></i>
+                        <span style="font-size:9px;color:rgba(200,200,200,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${getCategoryShortName(project.category)}</span>
+                    </div>
                 </div>
                 <div class="project-content">
                     <h3 class="project-title">${project.title}</h3>
@@ -163,6 +170,17 @@
         return badges[category] || 'MATLAB';
     }
     
+    function getCategoryShortName(category) {
+        const names = {
+            'Renewable Energy': 'SOLAR',
+            'Power Systems': 'POWER',
+            'Heat Transfer': 'HEAT',
+            'Control Systems': 'CTRL',
+            'Simulink': 'SIM'
+        };
+        return names[category] || 'MAT';
+    }
+    
     function getDifficultyBadge(difficulty) {
         const badges = {
             'Beginner': '⭐',
@@ -184,7 +202,7 @@
         const grid = document.getElementById('projectsGrid');
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(205, 92, 92, 0.2); border-top-color: #CD5C5C; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(204, 0, 0, 0.2); border-top-color: #CC0000; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <p style="margin-top: 20px; color: var(--text-secondary);">Loading MATLAB projects...</p>
             </div>
         `;

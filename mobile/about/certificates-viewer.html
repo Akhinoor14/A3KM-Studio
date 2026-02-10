@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../shared/mobile-common.css">
     <link rel="stylesheet" href="../shared/mobile-navbar.css">
+    <link rel="stylesheet" href="../shared/pdf-viewer.css">
     <style>
         body {
             padding-bottom: 70px;
@@ -29,7 +30,7 @@
                 rgba(20, 0, 0, 0.95)
             );
             backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(139, 0, 0, 0.4);
+            border-bottom: 2px solid rgba(204, 0, 0, 0.4);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
         }
         
@@ -39,12 +40,12 @@
             gap: 8px;
             padding: 8px 14px;
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.15), 
+                rgba(204, 0, 0, 0.15), 
                 rgba(0, 0, 0, 0.3)
             );
-            border: 1px solid rgba(205, 92, 92, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.3);
             border-radius: 8px;
-            color: #CD5C5C;
+            color: #CC0000;
             font-size: 14px;
             font-weight: 600;
             text-decoration: none;
@@ -52,12 +53,18 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         
+        .back-btn i {
+            font-size: 12px;
+            filter: drop-shadow(0 1px 2px rgba(204, 0, 0, 0.3));
+        }
+        
         .back-btn:active {
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.25), 
+                rgba(204, 0, 0, 0.25), 
                 rgba(0, 0, 0, 0.4)
             );
             transform: translateX(-3px);
+            box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.1);
         }
         
         /* Main Container */
@@ -69,19 +76,44 @@
         .page-title {
             font-size: 28px;
             font-weight: 900;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             color: #FFFFFF;
             display: flex;
             align-items: center;
             gap: 12px;
+            position: relative;
         }
         
+        /* Premium accent bar with white highlight */
         .page-title::before {
             content: '';
-            width: 4px;
-            height: 32px;
-            background: linear-gradient(180deg, #CD5C5C, rgba(139, 0, 0, 0.5));
-            border-radius: 2px;
+            width: 5px;
+            height: 36px;
+            background: linear-gradient(180deg, 
+                #CC0000 0%,
+                rgba(204, 0, 0, 0.7) 60%,
+                rgba(0, 0, 0, 0.3) 100%
+            );
+            border-radius: 3px;
+            box-shadow: 
+                0 0 15px rgba(204, 0, 0, 0.6),
+                inset 2px 0 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Stylish underline with fade */
+        .page-title::after {
+            content: '';
+            position: absolute;
+            left: 17px;
+            bottom: -4px;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.5) 0%,
+                rgba(204, 0, 0, 0.5) 40%,
+                transparent 100%
+            );
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
         }
         
         .page-subtitle {
@@ -94,26 +126,39 @@
         /* Filter Tabs */
         .filter-tabs {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
-            overflow-x: auto;
             padding-bottom: 20px;
-            margin-bottom: 20px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
+            margin-bottom: 28px;
+            position: relative;
         }
         
-        .filter-tabs::-webkit-scrollbar {
-            display: none;
+        /* Elegant section separator after filters */
+        .filter-tabs::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(204, 0, 0, 0.4) 0%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(204, 0, 0, 0.4) 100%
+            );
+            box-shadow: 
+                0 0 8px rgba(204, 0, 0, 0.3),
+                0 0 4px rgba(255, 255, 255, 0.2);
         }
         
         .filter-tab {
             flex-shrink: 0;
             padding: 10px 20px;
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.1), 
+                rgba(204, 0, 0, 0.1), 
                 rgba(0, 0, 0, 0.3)
             );
-            border: 1px solid rgba(205, 92, 92, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.2);
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
@@ -122,21 +167,38 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-tab i {
+            font-size: 12px;
+            color: #CC0000;
+            filter: drop-shadow(0 1px 2px rgba(204, 0, 0, 0.3));
         }
         
         .filter-tab.active {
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.25), 
-                rgba(205, 92, 92, 0.15)
+                rgba(204, 0, 0, 0.25), 
+                rgba(204, 0, 0, 0.15)
             );
-            border-color: rgba(205, 92, 92, 0.5);
+            border-color: rgba(204, 0, 0, 0.5);
             color: #FFFFFF;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                        0 2px 8px rgba(205, 92, 92, 0.15);
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 2px 8px rgba(204, 0, 0, 0.15),
+                inset 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+        
+        .filter-tab.active i {
+            color: #FFFFFF;
+            filter: drop-shadow(0 2px 4px rgba(204, 0, 0, 0.5));
         }
         
         .filter-tab:active {
             transform: scale(0.95);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.07);
         }
         
         /* Certificate Grid */
@@ -196,24 +258,30 @@
             left: 12px;
             width: 20px;
             height: 20px;
-            border-top: 2px solid rgba(205, 92, 92, 0.3);
-            border-left: 2px solid rgba(205, 92, 92, 0.3);
+            border-top: 2px solid rgba(204, 0, 0, 0.3);
+            border-left: 2px solid rgba(204, 0, 0, 0.3);
             transition: all 0.3s ease;
             z-index: 1;
         }
         
         .cert-card:active {
             transform: translateY(-3px);
-            border-color: rgba(205, 92, 92, 0.5);
+            border-color: rgba(204, 0, 0, 0.5);
             box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 6px 20px rgba(205, 92, 92, 0.2);
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                0 6px 20px rgba(204, 0, 0, 0.2),
+                inset 0 0 35px rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, 
+                rgba(0, 0, 0, 0.95), 
+                rgba(30, 0, 0, 0.88),
+                rgba(0, 0, 0, 0.95)
+            );
         }
         
         .cert-card:active::after {
             width: 24px;
             height: 24px;
-            border-color: rgba(205, 92, 92, 0.6);
+            border-color: rgba(204, 0, 0, 0.6);
         }
         
         /* Card Content */
@@ -226,14 +294,14 @@
             display: inline-block;
             padding: 4px 10px;
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.15), 
-                rgba(205, 92, 92, 0.05)
+                rgba(204, 0, 0, 0.15), 
+                rgba(204, 0, 0, 0.05)
             );
-            border: 1px solid rgba(205, 92, 92, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.3);
             border-radius: 6px;
             font-size: 10px;
             font-weight: 700;
-            color: #CD5C5C;
+            color: #CC0000;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 12px;
@@ -258,9 +326,9 @@
         }
         
         .cert-issuer i {
-            color: #CD5C5C;
+            color: #CC0000;
             font-size: 11px;
-            filter: drop-shadow(0 1px 2px rgba(205, 92, 92, 0.2));
+            filter: drop-shadow(0 1px 2px rgba(204, 0, 0, 0.2));
         }
         
         .cert-date {
@@ -272,7 +340,7 @@
         }
         
         .cert-date i {
-            color: rgba(205, 92, 92, 0.7);
+            color: rgba(204, 0, 0, 0.7);
             font-size: 10px;
         }
         
@@ -281,10 +349,10 @@
             width: 100%;
             height: 160px;
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.08), 
+                rgba(204, 0, 0, 0.08), 
                 rgba(0, 0, 0, 0.6)
             );
-            border: 1px solid rgba(205, 92, 92, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.2);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -322,8 +390,8 @@
         
         .cert-badge i {
             font-size: 56px;
-            color: rgba(205, 92, 92, 0.25);
-            filter: drop-shadow(0 4px 8px rgba(205, 92, 92, 0.1));
+            color: rgba(204, 0, 0, 0.25);
+            filter: drop-shadow(0 4px 8px rgba(204, 0, 0, 0.1));
             z-index: 1;
         }
         
@@ -332,14 +400,14 @@
             width: 100%;
             padding: 12px;
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.2), 
-                rgba(205, 92, 92, 0.1)
+                rgba(204, 0, 0, 0.2), 
+                rgba(204, 0, 0, 0.1)
             );
-            border: 1px solid rgba(205, 92, 92, 0.3);
+            border: 1px solid rgba(204, 0, 0, 0.3);
             border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
-            color: #CD5C5C;
+            color: #CC0000;
             margin-top: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -352,10 +420,11 @@
         
         .view-btn:active {
             background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.3), 
-                rgba(205, 92, 92, 0.15)
+                rgba(204, 0, 0, 0.3), 
+                rgba(204, 0, 0, 0.15)
             );
             transform: scale(0.98);
+            box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.09);
         }
         
         /* Empty State */
@@ -382,10 +451,10 @@
         
         .empty-state i {
             font-size: 72px;
-            color: rgba(205, 92, 92, 0.3);
+            color: rgba(204, 0, 0, 0.3);
             margin-bottom: 20px;
             opacity: 0.5;
-            filter: drop-shadow(0 4px 8px rgba(205, 92, 92, 0.1));
+            filter: drop-shadow(0 4px 8px rgba(204, 0, 0, 0.1));
         }
         
         .empty-state h3 {
@@ -409,10 +478,10 @@
         <h1 class="page-title">Certificates & Achievements</h1>
         <p class="page-subtitle">Professional certifications and skill validations</p>
         <div class="filter-tabs">
-            <button class="filter-tab active" data-category="all">All Certificates</button>
-            <button class="filter-tab" data-category="skill">Technical Skills</button>
-            <button class="filter-tab" data-category="medical">Medical</button>
-            <button class="filter-tab" data-category="academic">Academic</button>
+            <button class="filter-tab active" data-category="all"><i class="fas fa-th"></i> All Certificates</button>
+            <button class="filter-tab" data-category="skill"><i class="fas fa-award"></i> Technical Skills</button>
+            <button class="filter-tab" data-category="medical"><i class="fas fa-heart-pulse"></i> Medical</button>
+            <button class="filter-tab" data-category="academic"><i class="fas fa-graduation-cap"></i> Academic</button>
         </div>
         <div class="cert-grid" id="certGrid"></div>
     </div>
@@ -452,6 +521,50 @@ async function loadCertificates(){
             });
         });
         
+        // Add manual academic result cards (no certificate files)
+        allCertificates.push(
+            {
+                id: 'hsc-result-2023',
+                title: 'HSC Result 2023',
+                issuer: 'Dinajpur Education Board',
+                date: 'August 2023',
+                category: 'academic',
+                subcategory: 'HSC',
+                description: 'Higher Secondary Certificate - Science Group, GPA 5.00 (without 4th subject)',
+                image: '',
+                filePath: '',
+                verified: true,
+                featured: true,
+                manualData: {
+                    institution: 'Rangpur Govt. College, Rangpur',
+                    board: 'Dinajpur Education Board',
+                    year: '2023',
+                    result: 'GPA 5.00',
+                    group: 'Science'
+                }
+            },
+            {
+                id: 'ssc-result-2021',
+                title: 'SSC Result 2021',
+                issuer: 'Dinajpur Education Board',
+                date: 'December 2021',
+                category: 'academic',
+                subcategory: 'SSC',
+                description: 'Secondary School Certificate - Science Group, GPA 5.00 (with A+ in all subjects)',
+                image: '',
+                filePath: '',
+                verified: true,
+                featured: true,
+                manualData: {
+                    institution: 'Cantonment Public School and College, Saidpur',
+                    board: 'Dinajpur Education Board',
+                    year: '2021',
+                    result: 'GPA 5.00',
+                    group: 'Science'
+                }
+            }
+        );
+        
         renderCertificates();
     }catch(error){
         console.error('Error loading certificates:',error);
@@ -460,25 +573,68 @@ async function loadCertificates(){
 }
 
 function renderCertificates(){
-    const filtered=currentCategory==='all'?allCertificates:allCertificates.filter(c=>c.category===currentCategory);
+    // Filter by category only
+    const filtered = currentCategory === 'all' ? allCertificates : allCertificates.filter(c => c.category === currentCategory);
     
     if(filtered.length===0){
         certGrid.innerHTML='<div class="empty-state"><i class="fas fa-certificate"></i><h3>No Certificates Found</h3><p style="color:rgba(150,150,150,0.7);">Try selecting a different category</p></div>';
         return;
     }
     
-    certGrid.innerHTML=filtered.map(cert=>`
-        <div class="cert-card" data-cert-id="${cert.id}" ${cert.filePath?`onclick="viewCertificate('${cert.filePath}')"`:'style="cursor:default;"'}>
+    certGrid.innerHTML=filtered.map(cert=>{
+        // Check if this is a manual entry without certificate file
+        const isManual = cert.manualData !== undefined;
+        
+        return `
+        <div class="cert-card" data-cert-id="${cert.id}" style="cursor:default;">
             <div class="cert-category">${cert.category}${cert.subcategory?' • '+cert.subcategory:''}</div>
             <h3 class="cert-title">${cert.title}</h3>
             <div class="cert-issuer"><i class="fas fa-building"></i> ${cert.issuer}</div>
             <div class="cert-date"><i class="fas fa-calendar"></i> ${cert.date}</div>
             ${cert.description?`<p style="font-size:12px;color:rgba(150,150,150,0.7);margin-top:8px;line-height:1.4;">${cert.description}</p>`:''}
-            <div class="cert-badge" ${cert.filePath?`onclick="event.stopPropagation();viewCertificate('${cert.filePath}')"`:'style="cursor:default;"'}>
-                ${cert.image?`<img src="${cert.image}" alt="${cert.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-award\\'></i>'">`:'<i class="fas fa-award"></i>'}
-            </div>
-            ${cert.verified?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#CD5C5C;margin-top:8px;"><i class="fas fa-check-circle"></i> Verified</span>':''}
-            ${cert.filePath?`
+            
+            ${isManual ? `
+                <!-- Manual Academic Result Info -->
+                <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(204,0,0,0.08),rgba(0,0,0,0.4));border:1px solid rgba(204,0,0,0.3);border-radius:10px;">
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-school" style="color:#CC0000;font-size:14px;"></i>
+                            <span style="font-size:13px;color:#E8E8E8;font-weight:600;">${cert.manualData.institution}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-clipboard-list" style="color:#CC0000;font-size:14px;"></i>
+                            <span style="font-size:13px;color:rgba(200,200,200,0.9);">${cert.manualData.board}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-calendar-check" style="color:#CC0000;font-size:12px;"></i>
+                                <span style="font-size:12px;color:rgba(180,180,180,0.9);">${cert.manualData.year}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-graduation-cap" style="color:#CC0000;font-size:12px;"></i>
+                                <span style="font-size:12px;color:rgba(180,180,180,0.9);">${cert.manualData.group}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:6px;padding:10px;background:linear-gradient(135deg,rgba(204,0,0,0.2),rgba(0,0,0,0.3));border:1px solid rgba(204,0,0,0.4);border-radius:8px;text-align:center;">
+                            <span style="font-size:16px;font-weight:900;color:#CC0000;text-shadow:0 2px 4px rgba(204,0,0,0.3);">${cert.manualData.result}</span>
+                        </div>
+                    </div>
+                </div>
+            ` : cert.filePath ? `
+                <!-- Certificate with file - clickable badge -->
+                <div class="cert-badge" onclick="event.stopPropagation();viewCertificate('${cert.filePath}')" style="cursor:pointer;">
+                    ${cert.image?`<img src="${cert.image}" alt="${cert.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-award\\'></i>'">`:'<i class="fas fa-award"></i>'}
+                </div>
+            ` : `
+                <!-- Certificate without file - non-clickable badge -->
+                <div class="cert-badge" style="cursor:default;">
+                    ${cert.image?`<img src="${cert.image}" alt="${cert.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-award\\'></i>'">`:'<i class="fas fa-award"></i>'}
+                </div>
+            `}
+            
+            ${cert.verified?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#CC0000;margin-top:8px;"><i class="fas fa-check-circle"></i> Verified</span>':''}
+            
+            ${!isManual && cert.filePath?`
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
                     <button class="view-btn" onclick="event.stopPropagation();viewCertificate('${cert.filePath}')" style="margin-top:0;">
                         <i class="fas fa-eye"></i> View
@@ -487,9 +643,9 @@ function renderCertificates(){
                         <i class="fas fa-download"></i> Download
                     </button>
                 </div>
-            `:`<div style="padding:10px;margin-top:12px;background:rgba(205,92,92,0.08);border:1px solid rgba(205,92,92,0.2);border-radius:8px;text-align:center;"><i class="fas fa-lock" style="color:#CD5C5C;font-size:12px;margin-right:4px;"></i><span style="font-size:11px;color:rgba(180,180,180,0.8);">Certificate hidden for security</span></div>`}
-        </div>
-    `).join('');
+            `:''}            
+            ${!isManual && !cert.filePath && !cert.image?`<div style="padding:10px;margin-top:12px;background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.2);border-radius:8px;text-align:center;"><i class="fas fa-lock" style="color:#CC0000;font-size:12px;margin-right:4px;"></i><span style="font-size:11px;color:rgba(180,180,180,0.8);">Certificate not available</span></div>`:''}        </div>
+    `}).join('');
     
     addHapticFeedback();
 }
@@ -515,26 +671,32 @@ function addHapticFeedback(){
 function viewCertificate(filePath){
     if(!filePath)return;
     
+    console.log('📱 Opening certificate:', filePath);
+    
     // Detect file type
     const fileExt=filePath.split('.').pop().toLowerCase();
+    const fileName = filePath.split('/').pop();
     
     // Use mobile PDF viewer for all document types
     openMobilePDFViewer({
-        filePath:filePath,
-        fileType:fileExt,
-        title:'Certificate Viewer',
-        downloadName:`certificate.${fileExt}`,
-        showDownload:true,
-        allowZoom:true
+        filePath: filePath,
+        fileType: fileExt,
+        title: '📄 Certificate Viewer',
+        downloadName: fileName,
+        showDownload: true,
+        allowZoom: true
     });
 }
 
 function downloadCertificate(filePath,title){
     if(!filePath)return;
     
+    console.log('⬇️ Downloading certificate:', filePath);
+    
     // Use the shared download function
     const fileExt=filePath.split('.').pop().toLowerCase();
-    downloadDocument(filePath,`${title||'certificate'}.${fileExt}`);
+    const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    downloadDocument(filePath, `${safeTitle}.${fileExt}`);
 }
 
 function init(){
@@ -579,6 +741,7 @@ if(document.readyState==='loading'){
         </div>
     </nav>
     
+    <script src="../shared/pdf-viewer.js"></script>
     <script src="../shared/mobile-navbar.js"></script>
     <script src="../pwa-init.js"></script>
 </body>

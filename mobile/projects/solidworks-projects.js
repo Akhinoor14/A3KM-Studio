@@ -129,10 +129,17 @@
             <a href="project-viewer.html?id=${project.id}&category=solidworks" class="project-card">
                 <div class="project-thumbnail solidworks-model">
                     ${project.thumbnail ? 
-                        `<img src="${project.thumbnail}" alt="${project.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-cube\\'></i>'">` : 
-                        `<i class="fas fa-cube"></i>`
+                        `<img src="${project.thumbnail}" alt="${project.title}" onerror="this.parentElement.innerHTML='<div style=\\'display:flex;flex-direction:column;align-items:center;gap:8px\\'><i class=\\'fas fa-cube\\' style=\\'font-size:56px;color:#CC0000;opacity:0.4\\'></i><span style=\\'font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px\\'>3D Model</span></div>'">` : 
+                        `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                            <i class="fas fa-cube" style="font-size:56px;color:#CC0000;opacity:0.4;"></i>
+                            <span style="font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">3D Model</span>
+                        </div>`
                     }
                     <div class="project-badge">${getSubcategoryBadge(project.subcategory)}</div>
+                    <div class="glb-indicator" style="position:absolute;bottom:8px;left:8px;padding:4px 8px;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);border:1px solid rgba(204,0,0,0.3);border-radius:8px;display:flex;align-items:center;gap:4px;z-index:2;">
+                        <i class="fas fa-cube" style="font-size:10px;color:#CC0000;"></i>
+                        <span style="font-size:9px;color:rgba(200,200,200,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">GLB</span>
+                    </div>
                 </div>
                 <div class="project-content">
                     <h3 class="project-title">${project.title}</h3>
