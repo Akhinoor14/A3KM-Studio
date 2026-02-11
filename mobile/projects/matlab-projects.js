@@ -124,13 +124,47 @@
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         
-        grid.innerHTML = projects.map(project => `
+        grid.innerHTML = projects.map(project => {
+            // Get all result images from files.images array
+            const hasImages = project.files && project.files.images && project.files.images.length > 0;
+            const images = hasImages ? project.files.images : [];
+            
+            // Build image paths (assuming images are in Projects Storage/MATLAB Projects/folder/)
+            const imageUrls = images.map(img => 
+                `../../Projects Storage/MATLAB Projects/${project.folder || project.id}/${img}`
+            );
+            
+            return `
             <a href="project-viewer.html?id=${project.id}&category=matlab" class="project-card">
                 <div class="project-thumbnail matlab-project">
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-                        <i class="fas fa-chart-line" style="font-size:56px;color:#CC0000;opacity:0.4;"></i>
-                        <span style="font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">MATLAB</span>
-                    </div>
+                    ${imageUrls.length > 0 ? `
+                        <div class="matlab-carousel" data-images='${JSON.stringify(imageUrls)}' data-project-id="${project.id}">
+                            ${imageUrls.map((url, index) => `
+                                <img 
+                                    src="${url}" 
+                                    alt="${project.title} - Result ${index + 1}"
+                                    class="carousel-image ${index === 0 ? 'active' : ''}"
+                                    loading="lazy"
+                                    style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:${index === 0 ? '1' : '0'};transition:opacity 0.8s ease;"
+                                    onerror="this.style.display='none'"
+                                />
+                            `).join('')}
+                            ${imageUrls.length > 1 ? `
+                                <div class="carousel-indicators">
+                                    ${imageUrls.map((_, i) => `<span class="indicator ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="matlab-result-badge">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>${imageUrls.length > 1 ? `${imageUrls.length} Results` : 'Result'}</span>
+                        </div>
+                    ` : `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;">
+                            <i class="fas fa-chart-line" style="font-size:56px;color:#CC0000;opacity:0.4;"></i>
+                            <span style="font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">MATLAB</span>
+                        </div>
+                    `}
                     <div class="project-badge">${getCategoryBadge(project.category)}</div>
                     <div class="category-indicator" style="position:absolute;bottom:8px;left:8px;padding:4px 8px;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);border:1px solid rgba(204,0,0,0.3);border-radius:8px;display:flex;align-items:center;gap:4px;z-index:2;">
                         <i class="fas fa-layer-group" style="font-size:10px;color:#CC0000;"></i>
@@ -154,9 +188,47 @@
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
-        `).join('');
+        `;
+        }).join('');
         
         addHapticFeedback();
+        initializeCarousels();
+    }
+    
+    /**
+     * Initialize auto-rotating image carousels for MATLAB projects
+     */
+    function initializeCarousels() {
+        const carousels = document.querySelectorAll('.matlab-carousel');
+        
+        carousels.forEach(carousel => {
+            const images = JSON.parse(carousel.dataset.images);
+            if (images.length <= 1) return; // Skip if only one image
+            
+            let currentIndex = 0;
+            const carouselImages = carousel.querySelectorAll('.carousel-image');
+            const indicators = carousel.querySelectorAll('.indicator');
+            
+            // Auto-rotate every 3.5 seconds
+            setInterval(() => {
+                // Fade out current image
+                carouselImages[currentIndex].style.opacity = '0';
+                carouselImages[currentIndex].classList.remove('active');
+                if (indicators[currentIndex]) {
+                    indicators[currentIndex].classList.remove('active');
+                }
+                
+                // Move to next image
+                currentIndex = (currentIndex + 1) % images.length;
+                
+                // Fade in next image
+                carouselImages[currentIndex].style.opacity = '1';
+                carouselImages[currentIndex].classList.add('active');
+                if (indicators[currentIndex]) {
+                    indicators[currentIndex].classList.add('active');
+                }
+            }, 3500); // 3.5 seconds per image
+        });
     }
     
     function getCategoryBadge(category) {

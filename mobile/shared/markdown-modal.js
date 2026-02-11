@@ -252,26 +252,40 @@ function createHeader(config) {
 function createToolbar(config) {
     const toolbar = document.createElement('div');
     toolbar.style.cssText = `
-        padding: 10px 16px;
-        background: rgba(0,0,0,0.5);
-        border-bottom: 1px solid rgba(80,80,80,0.3);
+        position: sticky;
+        top: 60px;
+        z-index: 99;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.9));
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(139,0,0,0.3);
         display: flex;
-        gap: 12px;
+        gap: 8px;
         align-items: center;
-        flex-wrap: wrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-shrink: 0;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     `;
+    
+    // Hide scrollbar for webkit browsers
+    toolbar.style.setProperty('&::-webkit-scrollbar', 'display: none');
 
     // TOC Toggle
     if (config.showTOC) {
-        const tocBtn = createToolbarButton('list', 'TOC', toggleTOC);
+        const tocBtn = createToolbarButton('list', 'TOC', toggleTOC, true);
         toolbar.appendChild(tocBtn);
     }
 
     // Font size controls
     if (config.allowZoom) {
-        const zoomOut = createToolbarButton('minus', 'A-', () => adjustFontSize(-2));
-        const zoomReset = createToolbarButton('font', 'A', resetFontSize);
-        const zoomIn = createToolbarButton('plus', 'A+', () => adjustFontSize(2));
+        const zoomOut = createToolbarButton('search-minus', 'A-', () => adjustFontSize(-2), true);
+        const zoomReset = createToolbarButton('font', 'Reset', resetFontSize, true);
+        const zoomIn = createToolbarButton('search-plus', 'A+', () => adjustFontSize(2), true);
         
         toolbar.appendChild(zoomOut);
         toolbar.appendChild(zoomReset);
@@ -285,7 +299,7 @@ function createToolbar(config) {
             content.scrollTo({ top: 0, behavior: 'smooth' });
             if (navigator.vibrate) navigator.vibrate(10);
         }
-    });
+    }, true);
     toolbar.appendChild(scrollTop);
 
     return toolbar;
@@ -330,23 +344,47 @@ function createHeaderButton(icon, label, onClick) {
 /**
  * Create toolbar button
  */
-function createToolbarButton(icon, text, onClick) {
+function createToolbarButton(icon, text, onClick, compact = false) {
     const btn = document.createElement('button');
-    btn.innerHTML = `<i class="fas fa-${icon}"></i><span style="margin-left:6px;">${text}</span>`;
-    btn.style.cssText = `
-        padding: 8px 14px;
-        background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(0,0,0,0.3));
-        border: 1px solid rgba(205,92,92,0.25);
-        border-radius: 8px;
-        color: rgba(200,200,200,0.9);
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-    `;
+    
+    if (compact) {
+        // Compact mode: smaller button with icon + text inline
+        btn.innerHTML = `<i class="fas fa-${icon}" style="font-size:12px;"></i><span style="margin-left:5px; font-size:12px;">${text}</span>`;
+        btn.style.cssText = `
+            padding: 6px 10px;
+            background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(0,0,0,0.4));
+            border: 1px solid rgba(205,92,92,0.25);
+            border-radius: 6px;
+            color: rgba(200,200,200,0.95);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        `;
+    } else {
+        // Normal mode
+        btn.innerHTML = `<i class="fas fa-${icon}"></i><span style="margin-left:6px;">${text}</span>`;
+        btn.style.cssText = `
+            padding: 8px 14px;
+            background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(0,0,0,0.3));
+            border: 1px solid rgba(205,92,92,0.25);
+            border-radius: 8px;
+            color: rgba(200,200,200,0.9);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        `;
+    }
     
     btn.ontouchstart = () => {
         btn.style.background = 'linear-gradient(135deg, rgba(205,92,92,0.25), rgba(0,0,0,0.4))';

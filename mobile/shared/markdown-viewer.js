@@ -36,15 +36,28 @@ function renderMarkdown(markdown, options = {}) {
         html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
     }
 
-    // 1. CODE BLOCKS (must be first, with syntax highlighting)
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        return renderCodeBlock(code.trim(), lang || 'plaintext', config);
+    // IMPORTANT: Process in correct order to avoid conflicts
+    
+    // 1. INLINE CODE (before other processing to protect code from formatting)
+    const inlineCodePlaceholders = [];
+    html = html.replace(/`([^`]+)`/g, (match, code) => {
+        const placeholder = `___INLINE_CODE_${inlineCodePlaceholders.length}___`;
+        inlineCodePlaceholders.push(`<code class="md-inline-code">${escapeHtml(code)}</code>`);
+        return placeholder;
     });
 
-    // 2. TABLES (GitHub-flavored markdown tables)
+    // 2. CODE BLOCKS (with syntax highlighting)
+    const codeBlockPlaceholders = [];
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const placeholder = `___CODE_BLOCK_${codeBlockPlaceholders.length}___`;
+        codeBlockPlaceholders.push(renderCodeBlock(code.trim(), lang || 'plaintext', config));
+        return placeholder;
+    });
+
+    // 3. TABLES (GitHub-flavored markdown tables)
     html = renderTables(html);
 
-    // 3. TASK LISTS
+    // 4. TASK LISTS
     html = html.replace(/^- \[([ x])\] (.+)$/gim, (match, checked, text) => {
         const checkboxId = `task-${Math.random().toString(36).substr(2, 9)}`;
         const isChecked = checked === 'x';
@@ -54,10 +67,18 @@ function renderMarkdown(markdown, options = {}) {
         </div>`;
     });
 
-    // 4. HEADERS (with TOC anchors)
+    // 5. HEADERS (with TOC anchors - improved for special characters)
     html = html.replace(/^(#{1,6}) (.+)$/gim, (match, hashes, text) => {
         const level = hashes.length;
-        const anchor = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+        // Better anchor generation: transliterate, handle unicode, spaces
+        const anchor = text
+            .toLowerCase()
+            .normalize('NFD') // Decompose unicode
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[^\w\s-]/g, '') // Remove non-word chars except spaces and hyphens
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/--+/g, '-') // Replace multiple hyphens with single
+            .trim();
         
         if (config.generateTOC && level <= 3) {
             MarkdownViewer.tocItems.push({ level, text, anchor });
@@ -69,24 +90,23 @@ function renderMarkdown(markdown, options = {}) {
         </h${level}>`;
     });
 
-    // 5. BLOCKQUOTES (with styling)
+    // 6. BLOCKQUOTES (with styling)
     html = html.replace(/^> (.+)$/gim, '<blockquote class="md-blockquote">$1</blockquote>');
     html = html.replace(/<\/blockquote>\s*<blockquote class="md-blockquote">/g, '<br>');
 
-    // 6. HORIZONTAL RULES
-    html = html.replace(/^(---|\*\*\*|___)$/gim, '<hr class="md-hr">');
+    // 7. HORIZONTAL RULES & SECTION SEPARATORS
+    // Section separator (5+ chars) vs regular HR (3-4 chars)
+    html = html.replace(/^([-*_]){5,}$/gim, '<hr class="md-section-separator">');
+    html = html.replace(/^([-*_]){3,4}$/gim, '<hr class="md-hr">');
 
-    // 7. BOLD (with strikethrough support)
+    // 8. BOLD (with strikethrough support)
     html = html.replace(/~~(.*?)~~/g, '<del class="md-strikethrough">$1</del>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="md-bold">$1</strong>');
     html = html.replace(/__(.+?)__/g, '<strong class="md-bold">$1</strong>');
 
-    // 8. ITALIC
+    // 9. ITALIC
     html = html.replace(/\*(.+?)\*/g, '<em class="md-italic">$1</em>');
     html = html.replace(/_(.+?)_/g, '<em class="md-italic">$1</em>');
-
-    // 9. INLINE CODE
-    html = html.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>');
 
     // 10. IMAGES (with lazy loading)
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, 
@@ -115,7 +135,7 @@ function renderMarkdown(markdown, options = {}) {
         if (!block) return '';
         
         // Skip if already wrapped in HTML tag
-        if (block.match(/^<(div|h[1-6]|ul|ol|pre|blockquote|table|hr)/)) {
+        if (block.match(/^<(div|h[1-6]|ul|ol|pre|blockquote|table|hr|___)/)) {
             return block;
         }
         
@@ -123,7 +143,16 @@ function renderMarkdown(markdown, options = {}) {
         return `<p class="md-paragraph">${block}</p>`;
     }).join('\n');
 
-    // 14. EMOJI SUPPORT (basic)
+    // 14. RESTORE CODE BLOCKS AND INLINE CODE
+    codeBlockPlaceholders.forEach((codeBlock, i) => {
+        html = html.replace(`___CODE_BLOCK_${i}___`, codeBlock);
+    });
+    
+    inlineCodePlaceholders.forEach((inlineCode, i) => {
+        html = html.replace(`___INLINE_CODE_${i}___`, inlineCode);
+    });
+
+    // 15. EMOJI SUPPORT (basic)
     html = replaceEmojis(html);
 
     return html;
@@ -157,27 +186,35 @@ function renderCodeBlock(code, language, config) {
 }
 
 /**
- * Render markdown tables
+ * Render markdown tables with alignment support
  */
 function renderTables(markdown) {
-    const tableRegex = /^\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/gim;
+    const tableRegex = /^\|(.+)\|\n\|([-:\s|]+)\|\n((?:\|.+\|\n?)+)/gim;
     
-    return markdown.replace(tableRegex, (match, headerRow, bodyRows) => {
+    return markdown.replace(tableRegex, (match, headerRow, alignRow, bodyRows) => {
         // Parse header
         const headers = headerRow.split('|').map(h => h.trim()).filter(h => h);
+        
+        // Parse alignment from separator row
+        const alignments = alignRow.split('|').map(a => a.trim()).filter(a => a).map(a => {
+            if (a.startsWith(':') && a.endsWith(':')) return 'center';
+            if (a.endsWith(':')) return 'right';
+            return 'left';
+        });
         
         // Parse body rows
         const rows = bodyRows.trim().split('\n').map(row => {
             return row.split('|').map(cell => cell.trim()).filter(cell => cell);
         });
 
-        // Generate table HTML
+        // Generate table HTML with alignment
         let tableHtml = '<div class="md-table-wrapper"><table class="md-table">';
         
         // Header
         tableHtml += '<thead><tr>';
-        headers.forEach(header => {
-            tableHtml += `<th class="md-table-header">${header}</th>`;
+        headers.forEach((header, i) => {
+            const align = alignments[i] || 'left';
+            tableHtml += `<th class="md-table-header" style="text-align:${align};">${header}</th>`;
         });
         tableHtml += '</tr></thead>';
         
@@ -185,8 +222,9 @@ function renderTables(markdown) {
         tableHtml += '<tbody>';
         rows.forEach(row => {
             tableHtml += '<tr class="md-table-row">';
-            row.forEach(cell => {
-                tableHtml += `<td class="md-table-cell">${cell}</td>`;
+            row.forEach((cell, i) => {
+                const align = alignments[i] || 'left';
+                tableHtml += `<td class="md-table-cell" style="text-align:${align};">${cell}</td>`;
             });
             tableHtml += '</tr>';
         });
@@ -200,36 +238,76 @@ function renderTables(markdown) {
  * Basic syntax highlighting
  */
 function highlightSyntax(code, language) {
+    // Normalize language names
+    const normalizedLang = language.toLowerCase();
+    
     const patterns = {
         // JavaScript/TypeScript
         'javascript': [
-            { pattern: /\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await)\b/g, className: 'keyword' },
-            { pattern: /\b(true|false|null|undefined)\b/g, className: 'boolean' },
-            { pattern: /\b\d+\b/g, className: 'number' },
-            { pattern: /'[^']*'|"[^"]*"|`[^`]*`/g, className: 'string' },
+            { pattern: /\b(const|let|var|function|return|if|else|for|while|class|import|export|async|await|try|catch|finally|throw|new)\b/g, className: 'keyword' },
+            { pattern: /\b(true|false|null|undefined|NaN|Infinity)\b/g, className: 'boolean' },
+            { pattern: /\b\d+\.?\d*\b/g, className: 'number' },
+            { pattern: /'([^'\\]|\\.)*'|"([^"\\]|\\.)*"|`([^`\\]|\\.)*`/g, className: 'string' },
             { pattern: /\/\/.*/g, className: 'comment' },
             { pattern: /\/\*[\s\S]*?\*\//g, className: 'comment' }
         ],
         // Python
         'python': [
-            { pattern: /\b(def|class|return|if|elif|else|for|while|import|from|as|with|try|except|finally)\b/g, className: 'keyword' },
+            { pattern: /\b(def|class|return|if|elif|else|for|while|import|from|as|with|try|except|finally|raise|lambda|yield|pass|break|continue|global|nonlocal)\b/g, className: 'keyword' },
             { pattern: /\b(True|False|None)\b/g, className: 'boolean' },
-            { pattern: /\b\d+\b/g, className: 'number' },
-            { pattern: /'[^']*'|"[^"]*"/g, className: 'string' },
+            { pattern: /\b\d+\.?\d*\b/g, className: 'number' },
+            { pattern: /'([^'\\]|\\.)*'|"([^"\\]|\\.)*"|'''[\s\S]*?'''|"""[\s\S]*?"""/g, className: 'string' },
             { pattern: /#.*/g, className: 'comment' }
         ],
         // C/C++
         'cpp': [
-            { pattern: /\b(int|float|double|char|void|return|if|else|for|while|include|define|ifdef|endif)\b/g, className: 'keyword' },
-            { pattern: /\b(true|false|NULL)\b/g, className: 'boolean' },
-            { pattern: /\b\d+\b/g, className: 'number' },
-            { pattern: /"[^"]*"/g, className: 'string' },
+            { pattern: /\b(int|float|double|char|void|bool|long|short|unsigned|signed|const|static|extern|struct|class|public|private|protected|return|if|else|for|while|do|switch|case|break|continue|sizeof|typedef|enum|union|namespace|using|template|typename|virtual|override|final)\b/g, className: 'keyword' },
+            { pattern: /\b(true|false|NULL|nullptr)\b/g, className: 'boolean' },
+            { pattern: /\b\d+\.?\d*[uUlLfF]?\b/g, className: 'number' },
+            { pattern: /"([^"\\]|\\.)*"/g, className: 'string' },
             { pattern: /\/\/.*/g, className: 'comment' },
-            { pattern: /\/\*[\s\S]*?\*\//g, className: 'comment' }
-        ]
+            { pattern: /\/\*[\s\S]*?\*\//g, className: 'comment' },
+            { pattern: /#(include|define|ifdef|ifndef|endif|pragma|if|else|elif|error|warning)\b/g, className: 'preprocessor' }
+        ],
+        // Arduino (INO) - Enhanced for Arduino-specific keywords
+        'arduino': [
+            // Arduino-specific functions
+            { pattern: /\b(pinMode|digitalWrite|digitalRead|analogWrite|analogRead|analogReference|tone|noTone|shiftOut|shiftIn|pulseIn|millis|micros|delay|delayMicroseconds|min|max|abs|constrain|map|pow|sqrt|sin|cos|tan|randomSeed|random|lowByte|highByte|bitRead|bitWrite|bitSet|bitClear|bit|attachInterrupt|detachInterrupt)\b/g, className: 'function' },
+            // Arduino constants
+            { pattern: /\b(HIGH|LOW|INPUT|OUTPUT|INPUT_PULLUP|LED_BUILTIN|A0|A1|A2|A3|A4|A5|true|false)\b/g, className: 'constant' },
+            // Arduino Serial commands
+            { pattern: /\b(Serial|Serial1|Serial2|Serial3)\.(begin|end|available|read|peek|flush|print|println|write)\b/g, className: 'serial' },
+            // Data types
+            { pattern: /\b(void|int|char|byte|boolean|unsigned|long|short|float|double|word|string|String|array)\b/g, className: 'type' },
+            // Control structures
+            { pattern: /\b(if|else|for|switch|case|while|do|break|continue|return|goto|default)\b/g, className: 'keyword' },
+            // Setup/Loop
+            { pattern: /\b(setup|loop)\b/g, className: 'lifecycle' },
+            // Numbers
+            { pattern: /\b\d+\.?\d*[uUlLfF]?\b/g, className: 'number' },
+            // Strings
+            { pattern: /"([^"\\]|\\.)*"/g, className: 'string' },
+            // Comments
+            { pattern: /\/\/.*/g, className: 'comment' },
+            { pattern: /\/\*[\s\S]*?\*\//g, className: 'comment' },
+            // Preprocessor
+            { pattern: /#(include|define|ifdef|ifndef|endif|if|else|elif)\b/g, className: 'preprocessor' }
+        ],
+        // INO is same as Arduino
+        'ino': 'arduino'
     };
 
-    const langPatterns = patterns[language] || patterns['javascript'];
+    // Handle language aliases
+    if (patterns[normalizedLang] === 'arduino') {
+        return highlightSyntax(code, 'arduino');
+    }
+    
+    // Handle 'c' as cpp
+    if (normalizedLang === 'c') {
+        return highlightSyntax(code, 'cpp');
+    }
+
+    const langPatterns = patterns[normalizedLang] || patterns['javascript'];
     let highlighted = code;
 
     langPatterns.forEach(({ pattern, className }) => {
@@ -538,8 +616,14 @@ function initMarkdownStyles() {
             display: block;
         }
         
-        /* Syntax Highlighting */
+        /* Syntax Highlighting - Enhanced for Arduino */
         .syntax-keyword { color: #CD5C5C; font-weight: 600; }
+        .syntax-function { color: #BC8F8F; font-weight: 600; }
+        .syntax-constant { color: #DDA0DD; font-weight: 600; }
+        .syntax-serial { color: #87CEEB; }
+        .syntax-type { color: #98FB98; }
+        .syntax-lifecycle { color: #FFD700; font-weight: 700; }
+        .syntax-preprocessor { color: #FFA07A; }
         .syntax-string { color: #BC8F8F; }
         .syntax-number { color: #CD5C5C; }
         .syntax-boolean { color: #CD5C5C; }
@@ -550,36 +634,52 @@ function initMarkdownStyles() {
             overflow-x: auto;
             margin: 20px 0;
             -webkit-overflow-scrolling: touch;
+            border: 2px solid rgba(205, 92, 92, 0.3);
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.85));
         }
         
         .md-table {
             width: 100%;
             border-collapse: collapse;
-            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.85));
-            border: 1px solid rgba(80, 80, 80, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
+            background: transparent;
+            margin: 0;
         }
         
         .md-table-header {
             padding: 12px 16px;
             background: linear-gradient(135deg, rgba(205, 92, 92, 0.15), rgba(0, 0, 0, 0.3));
-            border-bottom: 2px solid rgba(205, 92, 92, 0.4);
+            border: 1px solid rgba(205, 92, 92, 0.3);
+            border-bottom: 2px solid rgba(205, 92, 92, 0.5);
             font-weight: 700;
             font-size: 14px;
             color: #CD5C5C;
             text-align: left;
         }
         
+        .md-table-row {
+            border-bottom: 1px solid rgba(80, 80, 80, 0.3);
+        }
+        
         .md-table-row:nth-child(even) {
             background: rgba(0, 0, 0, 0.3);
         }
         
+        .md-table-row:hover {
+            background: rgba(205, 92, 92, 0.05);
+        }
+        
         .md-table-cell {
             padding: 12px 16px;
+            border-right: 1px solid rgba(80, 80, 80, 0.2);
             border-bottom: 1px solid rgba(80, 80, 80, 0.2);
             font-size: 14px;
             color: rgba(200, 200, 200, 0.95);
+        }
+        
+        .md-table-cell:last-child,
+        .md-table-header:last-child {
+            border-right: none;
         }
         
         /* Blockquotes */
@@ -595,12 +695,46 @@ function initMarkdownStyles() {
             font-style: italic;
         }
         
-        /* Horizontal Rule */
+        /* Horizontal Rule & Section Separator */
         .md-hr {
             border: none;
             height: 2px;
             background: linear-gradient(90deg, transparent, rgba(205, 92, 92, 0.4), transparent);
             margin: 32px 0;
+        }
+        
+        .md-section-separator {
+            border: none;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(205, 92, 92, 0.2) 10%, 
+                rgba(205, 92, 92, 0.5) 50%, 
+                rgba(205, 92, 92, 0.2) 90%, 
+                transparent
+            );
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .md-section-separator::before,
+        .md-section-separator::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #CD5C5C;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .md-section-separator::before {
+            left: 20px;
+        }
+        
+        .md-section-separator::after {
+            right: 20px;
         }
         
         /* Images */
@@ -658,10 +792,57 @@ function initMarkdownStyles() {
         
         .md-toc-level-2 { padding-left: 16px; }
         .md-toc-level-3 { padding-left: 32px; }
+        
+        /* Smooth scroll for anchor links */
+        html {
+            scroll-behavior: smooth;
+        }
     `;
     
     document.head.appendChild(style);
     console.log('✅ Markdown viewer styles loaded');
+    
+    // Setup smooth scrolling after a brief delay
+    setTimeout(setupSmoothScrolling, 200);
+}
+
+/**
+ * Setup smooth scrolling for TOC and heading anchor links
+ */
+function setupSmoothScrolling() {
+    // Add click handlers to all TOC links and heading anchors
+    document.querySelectorAll('.md-toc-link, .md-heading-anchor').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                const targetId = href.substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    // Smooth scroll to target
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                        inline: 'nearest'
+                    });
+                    
+                    // Update URL hash without jumping
+                    if (history.pushState) {
+                        history.pushState(null, null, href);
+                    }
+                    
+                    // Flash highlight on target heading
+                    targetElement.style.transition = 'background-color 0.3s ease';
+                    targetElement.style.backgroundColor = 'rgba(205, 92, 92, 0.15)';
+                    setTimeout(() => {
+                        targetElement.style.backgroundColor = '';
+                    }, 800);
+                }
+            }
+        });
+    });
+    console.log('✅ Smooth scrolling enabled for markdown anchors');
 }
 
 // Auto-initialize styles on load

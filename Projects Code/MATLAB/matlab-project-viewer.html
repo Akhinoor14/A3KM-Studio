@@ -841,7 +841,6 @@
 
         // Render project
         function renderProject() {
-            const project = currentProject;
             // Extract project ID from URL (format: matlab-project-01)
             const projectIdParam = urlParams.get('id');
             const project = projectsData.projects.find(p => p.id === projectIdParam);
@@ -876,6 +875,41 @@
                     </div>
                 </div>
 
+                <!-- Analysis Topics Section -->
+                ${project.topics && project.topics.length > 0 ? `
+                <div style="margin: 30px 0; padding: 25px; background: rgba(0,0,0,0.3); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px;">
+                    <h2 style="color: #fff; font-size: 1.3rem; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-clipboard-list" style="color: var(--primary-red);"></i>
+                        Analysis Topics
+                    </h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+                        ${project.topics.map(topic => `
+                            <div style="padding: 14px 18px; background: rgba(204,0,0,0.1); border: 2px solid rgba(204,0,0,0.3); border-radius: 10px; text-align: center; color: #fff; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(204,0,0,0.2)'; this.style.borderColor='rgba(204,0,0,0.5)';" onmouseout="this.style.background='rgba(204,0,0,0.1)'; this.style.borderColor='rgba(204,0,0,0.3)';">
+                                ${topic}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Required Toolboxes Section -->
+                ${project.toolboxes && project.toolboxes.length > 0 ? `
+                <div style="margin: 30px 0; padding: 25px; background: rgba(0,118,168,0.05); border: 2px solid rgba(0,118,168,0.3); border-radius: 12px;">
+                    <h2 style="color: #fff; font-size: 1.3rem; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-toolbox" style="color: #0076A8;"></i>
+                        Required MATLAB Toolboxes
+                    </h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;">
+                        ${project.toolboxes.map(toolbox => `
+                            <div style="padding: 14px 18px; background: rgba(0,118,168,0.1); border: 2px solid rgba(0,118,168,0.3); border-radius: 10px; display: flex; align-items: center; gap: 12px; color: #fff; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(0,118,168,0.15)'; this.style.borderColor='rgba(0,118,168,0.5)';" onmouseout="this.style.background='rgba(0,118,168,0.1)'; this.style.borderColor='rgba(0,118,168,0.3)';">
+                                <i class="fas fa-cog" style="color: #0076A8; font-size: 18px;"></i>
+                                <span style="font-size: 0.95rem;">${toolbox}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <!-- Download Section -->
                 <div class="download-section">
                     <h2 class="download-title">
@@ -897,9 +931,10 @@
                         ` : '<span class="download-btn disabled"><i class="fas fa-file-pdf"></i> No PDF Available</span>'}
                         
                         ${project.files.zip ? `
-                            <a href="${basePath}${project.files.zip}" class="download-btn" download>
+                            <a href="${basePath}${project.files.zip}" class="download-btn" download title="Includes: Code files, Result images, Documentation (if available)">
                                 <i class="fas fa-file-archive"></i>
                                 Complete Project (ZIP)
+                                <small style="display: block; font-size: 0.75rem; margin-top: 4px; opacity: 0.8;">Includes all files</small>
                             </a>
                         ` : '<span class="download-btn disabled"><i class="fas fa-file-archive"></i> No ZIP Available</span>'}
                         
@@ -955,8 +990,11 @@
                         <div class="results-gallery">
                             ${project.files.images.map((img, index) => `
                                 <div class="result-item">
-                                    <img src="${basePath}results/${img}" alt="Result ${index + 1}" class="result-image" onclick="openLightbox('${basePath}results/${img}')" onerror="this.src='../../images/placeholder.png'">
-                                    <div class="result-caption">${img.replace(/\.[^/.]+$/, '').replace(/_/g, ' ')}</div>
+                                    <img src="${basePath}${img}" alt="Result ${index + 1}" class="result-image" onclick="openLightbox('${basePath}${img}')" onerror="this.parentElement.innerHTML='<div style=\\'padding:50px;text-align:center;color:rgba(255,255,255,0.5);\\'>Image not found<br><small>${img}</small></div>'">
+                                    <div class="result-caption">
+                                        <i class="fas fa-chart-bar" style="color: var(--primary-red); margin-right: 8px;"></i>
+                                        Result ${index + 1} of ${project.files.images.length}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>

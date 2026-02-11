@@ -310,53 +310,99 @@ function openMobilePDFViewer(options = {}) {
             viewerContainer.appendChild(imgWrapper);
 
         } else if (config.isPDF) {
-            // PDF viewer - use iframe with fallback
-            const pdfIframe = document.createElement('iframe');
-            pdfIframe.src = `${config.filePath}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
-            pdfIframe.style.cssText = `
-                width: 100%;
-                height: 100%;
-                border: none;
-                background: white;
-            `;
-            pdfIframe.setAttribute('loading', 'eager');
-            pdfIframe.setAttribute('allow', 'fullscreen');
-
-            pdfIframe.onload = () => {
-                setTimeout(() => loadingDiv.remove(), 500);
-                console.log('✅ PDF loaded successfully');
-            };
-
-            pdfIframe.onerror = () => {
+            // PDF viewer - Mobile: open in new tab, Desktop: use iframe
+            const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // Mobile: Open PDF in browser tab instead of iframe (better compatibility)
+                console.log('📱 Mobile detected - opening PDF in browser tab');
+                
+                // Open PDF in new tab immediately
+                window.open(config.filePath, '_blank');
+                
+                // Show user-friendly confirmation message
                 loadingDiv.innerHTML = `
-                    <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                    <div style="font-size: 16px; font-weight: 700; color: rgba(200,200,200,0.9); margin-bottom: 8px;">Failed to load PDF</div>
-                    <div style="font-size: 13px; color: rgba(150,150,150,0.7); margin-bottom: 16px;">Your browser may not support PDF viewing</div>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button onclick="window.open('${config.filePath}','_blank')" style="
-                            padding: 10px 20px;
-                            background: linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1));
-                            border: 1px solid rgba(205,92,92,0.3);
+                    <div style="font-size: 56px; margin-bottom: 20px;">✅</div>
+                    <div style="font-size: 18px; font-weight: 700; color: rgba(200,200,200,0.95); margin-bottom: 12px;">PDF Opened in Browser</div>
+                    <div style="font-size: 14px; color: rgba(150,150,150,0.8); margin-bottom: 24px; line-height: 1.5;">
+                        Check your browser tabs to view the PDF.<br>
+                        You can close this viewer now.
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="closeMobilePDFViewer()" style="
+                            padding: 12px 24px;
+                            background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1));
+                            border: 1px solid rgba(76,175,80,0.3);
                             border-radius: 8px;
-                            color: #CD5C5C;
+                            color: #4CAF50;
                             font-weight: 600;
                             cursor: pointer;
-                        ">🔗 Open in Browser</button>
+                            font-size: 15px;
+                        ">✓ Close Viewer</button>
                         <button onclick="downloadDocument('${config.filePath}','${config.downloadName}')" style="
-                            padding: 10px 20px;
+                            padding: 12px 24px;
                             background: linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1));
                             border: 1px solid rgba(205,92,92,0.3);
                             border-radius: 8px;
                             color: #CD5C5C;
                             font-weight: 600;
                             cursor: pointer;
-                        ">📥 Download PDF</button>
+                            font-size: 15px;
+                        ">📥 Download Instead</button>
                     </div>
                 `;
-                console.error('❌ Failed to load PDF');
-            };
+                
+            } else {
+                // Desktop: Use iframe viewer with fallback
+                console.log('💻 Desktop detected - using iframe viewer');
+                
+                const pdfIframe = document.createElement('iframe');
+                pdfIframe.src = `${config.filePath}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
+                pdfIframe.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                    background: white;
+                `;
+                pdfIframe.setAttribute('loading', 'eager');
+                pdfIframe.setAttribute('allow', 'fullscreen');
 
-            viewerContainer.appendChild(pdfIframe);
+                pdfIframe.onload = () => {
+                    setTimeout(() => loadingDiv.remove(), 500);
+                    console.log('✅ PDF loaded successfully');
+                };
+
+                pdfIframe.onerror = () => {
+                    loadingDiv.innerHTML = `
+                        <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                        <div style="font-size: 16px; font-weight: 700; color: rgba(200,200,200,0.9); margin-bottom: 8px;">Failed to load PDF</div>
+                        <div style="font-size: 13px; color: rgba(150,150,150,0.7); margin-bottom: 16px;">Your browser may not support PDF viewing</div>
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button onclick="window.open('${config.filePath}','_blank')" style="
+                                padding: 10px 20px;
+                                background: linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1));
+                                border: 1px solid rgba(205,92,92,0.3);
+                                border-radius: 8px;
+                                color: #CD5C5C;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">🔗 Open in Browser</button>
+                            <button onclick="downloadDocument('${config.filePath}','${config.downloadName}')" style="
+                                padding: 10px 20px;
+                                background: linear-gradient(135deg, rgba(205,92,92,0.2), rgba(205,92,92,0.1));
+                                border: 1px solid rgba(205,92,92,0.3);
+                                border-radius: 8px;
+                                color: #CD5C5C;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">📥 Download PDF</button>
+                        </div>
+                    `;
+                    console.error('❌ Failed to load PDF');
+                };
+
+                viewerContainer.appendChild(pdfIframe);
+            }
         }
 
         // Assemble modal

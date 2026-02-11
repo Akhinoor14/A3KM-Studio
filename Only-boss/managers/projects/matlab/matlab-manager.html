@@ -895,6 +895,84 @@
             color: #90EE90;
         }
 
+        /* Individual Image Upload Boxes */
+        .image-upload-box {
+            background: rgba(0, 118, 168, 0.05);
+            border: 2px solid rgba(0, 118, 168, 0.25);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .file-upload-area-small {
+            border: 2px dashed rgba(0, 118, 168, 0.4);
+            border-radius: 8px;
+            padding: 20px 15px;
+            text-align: center;
+            background: rgba(0, 118, 168, 0.03);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area-small:hover {
+            border-color: var(--matlab-blue);
+            background: rgba(0, 118, 168, 0.1);
+        }
+
+        .file-upload-area-small i {
+            font-size: 2rem;
+            color: var(--matlab-blue);
+            margin-bottom: 8px;
+        }
+
+        .file-upload-area-small p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .image-preview-box {
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-preview-box img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 118, 168, 0.3);
+        }
+
+        .image-preview-box .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(204, 0, 0, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview-box .filename {
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.75rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .main-layout {
@@ -1154,14 +1232,160 @@
                             </div>
 
                             <div class="form-group full-width">
-                                <label><i class="fas fa-image"></i> Results/Plots (PNG, JPG)</label>
-                                <div class="file-upload-area" id="imageDropZone" onclick="document.getElementById('imageFiles').click()">
-                                    <i class="fas fa-images"></i>
-                                    <p>Click or drag & drop images</p>
-                                    <small style="color: var(--text-secondary);">PNG, JPG, JPEG formats • Max 100MB per file</small>
-                                    <input type="file" id="imageFiles" multiple accept=".png,.jpg,.jpeg">
-                                    <div id="imagePreviews" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px;"></div>
+                                <label><i class="fas fa-chart-line"></i> Result Images/Plots (Optional - Upload any that you have)</label>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                                    
+                                    <!-- I-V Curve -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-chart-area"></i> I-V Characteristics
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('ivCurve').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">I-V Curve</p>
+                                        </div>
+                                        <input type="file" id="ivCurve" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'ivPreview')" style="display: none;">
+                                        <div id="ivPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- P-V Curve -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-chart-line"></i> P-V Power Curve
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('pvCurve').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">P-V Curve</p>
+                                        </div>
+                                        <input type="file" id="pvCurve" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'pvPreview')" style="display: none;">
+                                        <div id="pvPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Efficiency Graph -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-chart-bar"></i> Efficiency
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('efficiencyGraph').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Efficiency Graph</p>
+                                        </div>
+                                        <input type="file" id="efficiencyGraph" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'effPreview')" style="display: none;">
+                                        <div id="effPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Temperature Effect -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-thermometer-half"></i> Temperature Effect
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('tempEffect').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Temperature Plot</p>
+                                        </div>
+                                        <input type="file" id="tempEffect" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'tempPreview')" style="display: none;">
+                                        <div id="tempPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Irradiance Variation -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-sun"></i> Irradiance Variation
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('irradianceVar').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Irradiance Plot</p>
+                                        </div>
+                                        <input type="file" id="irradianceVar" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'irrPreview')" style="display: none;">
+                                        <div id="irrPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- 3D Surface Plot -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-cube"></i> 3D Surface Plot
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('surface3d').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">3D Plot</p>
+                                        </div>
+                                        <input type="file" id="surface3d" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'surfPreview')" style="display: none;">
+                                        <div id="surfPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Comparison Plot -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-not-equal"></i> Comparison
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('comparison').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Comparison Plot</p>
+                                        </div>
+                                        <input type="file" id="comparison" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'compPreview')" style="display: none;">
+                                        <div id="compPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Simulink Diagram -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-project-diagram"></i> Simulink Model
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('simulink').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Block Diagram</p>
+                                        </div>
+                                        <input type="file" id="simulink" accept=".png,.jpg,.jpeg" onchange="previewSingleImage(this, 'simPreview')" style="display: none;">
+                                        <div id="simPreview" class="image-preview-box"></div>
+                                    </div>
+
+                                    <!-- Other Results -->
+                                    <div class="image-upload-box">
+                                        <label style="color: var(--matlab-blue); font-weight: 600; margin-bottom: 8px; display: block;">
+                                            <i class="fas fa-images"></i> Other Results
+                                        </label>
+                                        <div class="file-upload-area-small" onclick="document.getElementById('otherResults').click()">
+                                            <i class="fas fa-image"></i>
+                                            <p style="font-size: 0.85rem;">Any Other Plot</p>
+                                        </div>
+                                        <input type="file" id="otherResults" accept=".png,.jpg,.jpeg" multiple onchange="previewMultipleImages(this, 'otherPreview')" style="display: none;">
+                                        <div id="otherPreview" class="image-preview-box"></div>
+                                    </div>
+
                                 </div>
+                                <small style="color: var(--text-secondary); margin-top: 10px; display: block;">
+                                    <i class="fas fa-info-circle"></i> Upload only the plots you have generated. All are optional.
+                                </small>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label><i class="fas fa-file-pdf"></i> Documentation (PDF)</label>
+                                <div class="file-upload-area" onclick="document.getElementById('pdfFile').click()">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <p>Click to upload documentation PDF</p>
+                                    <small style="color: var(--text-secondary);">Optional: Detailed project report or documentation</small>
+                                    <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                                </div>
+                                <div id="pdfPreview" style="margin-top: 10px;"></div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label><i class="fab fa-markdown"></i> README File</label>
+                                <div class="file-upload-area" onclick="document.getElementById('readmeFile').click()">
+                                    <i class="fab fa-markdown"></i>
+                                    <p>Click to upload README.md file</p>
+                                    <small style="color: var(--text-secondary);">Optional: Quick start guide or instructions</small>
+                                    <input type="file" id="readmeFile" accept=".md,.txt" style="display: none;">
+                                </div>
+                                <div id="readmePreview" style="margin-top: 10px;"></div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label><i class="fab fa-youtube"></i> YouTube Video URL</label>
+                                <input type="url" id="youtubeUrl" placeholder="https://youtube.com/watch?v=... (Optional)">
+                                <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                                    <i class="fas fa-info-circle"></i> Add tutorial or demonstration video link
+                                </small>
                             </div>
 
                             <div class="form-group full-width">
@@ -1567,19 +1791,61 @@
                 return;
             }
 
+            // Collect individual image uploads
+            const imageFileMapping = {
+                'ivCurve': 'iv_curve.png',
+                'pvCurve': 'pv_curve.png',
+                'efficiencyGraph': 'efficiency.png',
+                'tempEffect': 'temp_effect.png',
+                'irradianceVar': 'irradiance_variation.png',
+                'surface3d': 'surface_3d.png',
+                'comparison': 'comparison.png',
+                'simulink': 'simulink_model.png'
+            };
+
+            const imageFiles = [];
+            Object.keys(imageFileMapping).forEach(inputId => {
+                const fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files.length > 0) {
+                    imageFiles.push(imageFileMapping[inputId]);
+                }
+            });
+
+            // Add other results (multiple files)
+            const otherResults = document.getElementById('otherResults');
+            if (otherResults && otherResults.files.length > 0) {
+                Array.from(otherResults.files).forEach(file => {
+                    imageFiles.push(file.name);
+                });
+            }
+
             // Validate file sizes
             const allFiles = [
                 ...document.getElementById('codeFiles').files,
-                ...document.getElementById('imageFiles').files,
-                ...Array.from(document.getElementById('zipFile').files)
+                ...Array.from(document.getElementById('zipFile').files),
+                ...Array.from(document.getElementById('pdfFile').files),
+                ...Array.from(document.getElementById('readmeFile').files)
             ];
+            
+            // Add all image files for validation
+            Object.keys(imageFileMapping).forEach(inputId => {
+                const fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files.length > 0) {
+                    allFiles.push(...fileInput.files);
+                }
+            });
+            if (otherResults && otherResults.files.length > 0) {
+                allFiles.push(...otherResults.files);
+            }
+
             for (const file of allFiles) {
                 if (!validateFileSize(file)) return;
             }
 
             const codeFiles = Array.from(document.getElementById('codeFiles').files).map(f => f.name);
-            const imageFiles = Array.from(document.getElementById('imageFiles').files).map(f => f.name);
             const zipFile = document.getElementById('zipFile').files[0]?.name || '';
+            const pdfFile = document.getElementById('pdfFile').files[0]?.name || '';
+            const readmeFile = document.getElementById('readmeFile').files[0]?.name || '';
 
             const nextId = projectsData.projects.length + 1;
             const folderName = generateFolderName(nextId, title);
@@ -1604,6 +1870,8 @@
                 files: {
                     code: codeFiles.length > 0 ? codeFiles[0] : '',
                     images: imageFiles,
+                    pdf: pdfFile,
+                    readme: readmeFile,
                     zip: zipFile,
                     youtubeVideo: youtubeUrl
                 },
@@ -1632,10 +1900,24 @@
                 'simulink': '📊 Simulink Models'
             }[category] || category;
 
-            alert(`✅ Project Created Successfully!\n\n📊 Project Details:\n🆔 ID: ${newProject.id}\n📁 Folder: "${folderName}"\n📂 Category: ${categoryName}\n🎯 Difficulty: ${difficulty}\n🔧 Toolboxes: ${selectedToolboxes.length}\n📝 Code Files: ${codeFiles.length}\n🖼️ Images: ${imageFiles.length}\n\n🛠️ MATLAB Tools Used:\n${toolboxList}\n\n📋 Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder: "Projects Storage/MATLAB Projects/${folderName}/"\n3. Upload .m files, plots, and ZIP via GitHub\n4. Update matlab-data.json in repository\n5. Project will appear on matlab-projects.html`);
+            // Build image upload instructions
+            const imageInstructions = imageFiles.length > 0 
+                ? `\n📸 Result Images (${imageFiles.length}):\n${imageFiles.map(img => `   • ${img}`).join('\n')}`
+                : '\n⚠️ No result images selected (upload later if needed)';
+            
+            const docsInstructions = pdfFile || readmeFile 
+                ? `\n📄 Documentation: ${[pdfFile && `PDF: ${pdfFile}`, readmeFile && `README: ${readmeFile}`].filter(Boolean).join(', ')}`
+                : '';
+
+            alert(`✅ Project Created Successfully!\n\n📊 Project Details:\n🆔 ID: ${newProject.id}\n📁 Folder: "${folderName}"\n📂 Category: ${categoryName}\n🎯 Difficulty: ${difficulty}\n🔧 Toolboxes: ${selectedToolboxes.length}\n📝 Code Files: ${codeFiles.length}${imageInstructions}${docsInstructions}\n\n🛠️ MATLAB Tools Used:\n${toolboxList}\n\n📋 Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder: "Projects Storage/MATLAB Projects/${folderName}/"\n3. Upload files to the folder:\n   - .m code files\n   - Result images (with exact names shown above)\n   ${pdfFile ? `- PDF documentation: ${pdfFile}\n   ` : ''}${readmeFile ? `- README file: ${readmeFile}\n   ` : ''}- ZIP file (if any)\n4. Update matlab-data.json in repository\n5. Project will appear on matlab-projects.html`);
 
             this.reset();
-            document.getElementById('imagePreviews').innerHTML = '';
+            // Clear all previews
+            ['ivPreview', 'pvPreview', 'effPreview', 'tempPreview', 'irrPreview', 
+             'surfPreview', 'compPreview', 'simPreview', 'otherPreview', 'pdfPreview', 'readmePreview'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
             document.getElementById('codeFilesList').innerHTML = '';
             
             // Switch to manage tab
@@ -2015,6 +2297,66 @@
             });
         }
 
+        // Single image preview (for labeled uploads)
+        function previewSingleImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const file = input.files[0];
+            
+            if (!file) {
+                preview.innerHTML = '';
+                return;
+            }
+            
+            if (!validateFileSize(file)) {
+                input.value = '';
+                return;
+            }
+            
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button class="remove-btn" onclick="removeImage('${input.id}', '${previewId}')" title="Remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="filename">${file.name}</div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Multiple images preview (for "Other Results")
+        function previewMultipleImages(input, previewId) {
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            
+            Array.from(input.files).forEach((file, index) => {
+                if (!validateFileSize(file)) return;
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position: relative; margin-bottom: 8px;';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview ${index + 1}">
+                            <div class="filename">${file.name}</div>
+                        `;
+                        preview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Remove image
+        function removeImage(inputId, previewId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(previewId).innerHTML = '';
+        }
+
         // Code files list handler
         function handleCodeFiles(files) {
             const container = document.getElementById('codeFilesList');
@@ -2245,6 +2587,45 @@ Useful for understanding [concept] in [field/application].`
             });
             document.getElementById('codeFiles').addEventListener('change', (e) => {
                 handleCodeFiles(e.target.files);
+            });
+            
+            // PDF and README preview handlers
+            document.getElementById('pdfFile').addEventListener('change', (e) => {
+                const preview = document.getElementById('pdfPreview');
+                const file = e.target.files[0];
+                if (file) {
+                    preview.innerHTML = `
+                        <div style="padding: 10px; background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-file-pdf" style="color: #CC0000; font-size: 20px;"></i>
+                            <div style="flex: 1;">
+                                <strong style="color: var(--text-primary);">${file.name}</strong>
+                                <small style="display: block; color: var(--text-secondary);">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                            </div>
+                            <button type="button" onclick="document.getElementById('pdfFile').value=''; document.getElementById('pdfPreview').innerHTML='';" style="background: rgba(204,0,0,0.2); border: none; color: #CC0000; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+            
+            document.getElementById('readmeFile').addEventListener('change', (e) => {
+                const preview = document.getElementById('readmePreview');
+                const file = e.target.files[0];
+                if (file) {
+                    preview.innerHTML = `
+                        <div style="padding: 10px; background: rgba(0,118,168,0.1); border: 1px solid rgba(0,118,168,0.3); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fab fa-markdown" style="color: #0076A8; font-size: 20px;"></i>
+                            <div style="flex: 1;">
+                                <strong style="color: var(--text-primary);">${file.name}</strong>
+                                <small style="display: block; color: var(--text-secondary);">${(file.size / 1024).toFixed(2)} KB</small>
+                            </div>
+                            <button type="button" onclick="document.getElementById('readmeFile').value=''; document.getElementById('readmePreview').innerHTML='';" style="background: rgba(0,118,168,0.2); border: none; color: #0076A8; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                }
             });
         });
     </script>

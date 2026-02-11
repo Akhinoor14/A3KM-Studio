@@ -175,7 +175,7 @@
         const grid = document.getElementById('projectsGrid');
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(0, 150, 136, 0.2); border-top-color: #009688; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(204, 0, 0, 0.2); border-top-color: #CC0000; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <p style="margin-top: 20px; color: var(--text-secondary);">Loading Arduino projects...</p>
             </div>
         `;

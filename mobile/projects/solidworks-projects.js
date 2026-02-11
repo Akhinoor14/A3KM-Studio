@@ -125,21 +125,48 @@
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         
-        grid.innerHTML = projects.map(project => `
+        grid.innerHTML = projects.map(project => {
+            // Check if GLB file exists
+            const hasGlb = project.glbFile && project.glbFile.trim() !== '';
+            
+            return `
             <a href="project-viewer.html?id=${project.id}&category=solidworks" class="project-card">
                 <div class="project-thumbnail solidworks-model">
-                    ${project.thumbnail ? 
-                        `<img src="${project.thumbnail}" alt="${project.title}" onerror="this.parentElement.innerHTML='<div style=\\'display:flex;flex-direction:column;align-items:center;gap:8px\\'><i class=\\'fas fa-cube\\' style=\\'font-size:56px;color:#CC0000;opacity:0.4\\'></i><span style=\\'font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px\\'>3D Model</span></div>'">` : 
-                        `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    ${hasGlb ? 
+                        `<model-viewer 
+                            src="${project.glbFile}" 
+                            alt="${project.title}"
+                            loading="lazy"
+                            camera-controls 
+                            touch-action="pan-y"
+                            disable-zoom
+                            auto-rotate
+                            auto-rotate-delay="1000"
+                            rotation-per-second="30deg"
+                            camera-orbit="0deg 75deg 80%"
+                            field-of-view="22deg"
+                            min-field-of-view="18deg"
+                            max-field-of-view="28deg"
+                            interpolation-decay="200"
+                            style="width:100%;height:140px;--poster-color:transparent;background:transparent;"
+                        >
+                            <div slot="poster" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;background:linear-gradient(135deg,rgba(204,0,0,0.08),rgba(0,0,0,0.95));">
+                                <div style="width:40px;height:40px;border:3px solid rgba(204,0,0,0.3);border-top-color:#CC0000;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                                <span style="font-size:10px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Loading 3D</span>
+                            </div>
+                        </model-viewer>
+                        <div class="glb-indicator" style="position:absolute;bottom:8px;right:8px;padding:4px 8px;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);border:1px solid rgba(204,0,0,0.4);border-radius:8px;display:flex;align-items:center;gap:4px;z-index:10;pointer-events:none;">
+                            <i class="fas fa-cube" style="font-size:10px;color:#CC0000;"></i>
+                            <span style="font-size:9px;color:rgba(200,200,200,0.9);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">3D View</span>
+                        </div>` 
+                        : project.thumbnail ? 
+                        `<img src="${project.thumbnail}" alt="${project.title}" onerror="this.parentElement.innerHTML='<div style=\\'display:flex;flex-direction:column;align-items:center;gap:8px\\'><i class=\\'fas fa-cube\\' style=\\'font-size:56px;color:#CC0000;opacity:0.4\\'></i><span style=\\'font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px\\'>3D Model</span></div>'>` 
+                        : `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
                             <i class="fas fa-cube" style="font-size:56px;color:#CC0000;opacity:0.4;"></i>
                             <span style="font-size:11px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">3D Model</span>
                         </div>`
                     }
                     <div class="project-badge">${getSubcategoryBadge(project.subcategory)}</div>
-                    <div class="glb-indicator" style="position:absolute;bottom:8px;left:8px;padding:4px 8px;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);border:1px solid rgba(204,0,0,0.3);border-radius:8px;display:flex;align-items:center;gap:4px;z-index:2;">
-                        <i class="fas fa-cube" style="font-size:10px;color:#CC0000;"></i>
-                        <span style="font-size:9px;color:rgba(200,200,200,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">GLB</span>
-                    </div>
                 </div>
                 <div class="project-content">
                     <h3 class="project-title">${project.title}</h3>
@@ -153,9 +180,27 @@
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
-        `).join('');
+        `;
+        }).join('');
         
         addHapticFeedback();
+        
+        // Add CSS for spin animation if not already present
+        if (!document.getElementById('model-spin-animation')) {
+            const style = document.createElement('style');
+            style.id = 'model-spin-animation';
+            style.textContent = `
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                model-viewer {
+                    --progress-bar-color: #CC0000;
+                    --progress-bar-height: 3px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
     
     function getSubcategoryBadge(subcategory) {

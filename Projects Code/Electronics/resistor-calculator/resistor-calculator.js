@@ -22,11 +22,11 @@ const colorData = {
     tempCoeff: {
         brown: 100, red: 50, orange: 15, yellow: 25, blue: 10, violet: 5
     },
-    // RGB values for visual display
+    // RGB values for visual display - IEC 60062 Standard Colors
     rgb: {
-        black: '#000000', brown: '#8B4513', red: '#FF0000', orange: '#FF8C00',
-        yellow: '#FFD700', green: '#008000', blue: '#0000FF', violet: '#8B00FF',
-        grey: '#808080', white: '#FFFFFF', gold: '#FFD700', silver: '#C0C0C0', none: 'transparent'
+        black: '#1a1a1a', brown: '#654321', red: '#ff0000', orange: '#ff6600',
+        yellow: '#ffff00', green: '#00a550', blue: '#0066ff', violet: '#9933ff',
+        grey: '#808080', white: '#ffffff', gold: '#ffd700', silver: '#c8c8c8', none: 'transparent'
     }
 };
 

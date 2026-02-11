@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="projects.css">
     <link rel="manifest" href="../manifest.json">
     
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    
     <style>
         .category-hero {
             position: relative;
@@ -93,6 +96,138 @@
             box-shadow: 
                 inset 0 1px 0 rgba(255, 255, 255, 0.08),
                 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Filter chip 2-line format */
+        .filter-chip {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            min-height: 54px;
+        }
+        .filter-chip-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+        .filter-main {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .filter-sub {
+            font-size: 11px;
+            color: rgba(150, 150, 150, 0.8);
+            font-weight: 500;
+            line-height: 1;
+        }
+        .filter-chip.active .filter-sub {
+            color: rgba(200, 200, 200, 0.9);
+        }
+        
+        /* MATLAB model viewer */
+        .project-thumbnail model-viewer {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .glb-indicator {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 2;
+        }
+        .glb-indicator i {
+            font-size: 10px;
+            color: #CC0000;
+        }
+        .glb-indicator span {
+            font-size: 9px;
+            color: rgba(200, 200, 200, 0.8);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* MATLAB result image badge */
+        .matlab-result-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 2;
+        }
+        .matlab-result-badge i {
+            font-size: 10px;
+            color: #CC0000;
+        }
+        .matlab-result-badge span {
+            font-size: 9px;
+            color: rgba(200, 200, 200, 0.8);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* MATLAB Image Carousel */
+        .matlab-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .carousel-image {
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        /* Carousel Indicators (dots) */
+        .carousel-indicators {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(204, 0, 0, 0.3);
+        }
+        
+        .carousel-indicators .indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(200, 200, 200, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .carousel-indicators .indicator.active {
+            background: #CC0000;
+            width: 20px;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(204, 0, 0, 0.6);
         }
         
         /* Enhanced card styling */
@@ -213,19 +348,39 @@
             <div class="mobile-container">
                 <div class="filter-scroll">
                     <button class="filter-chip active" data-filter="all">
-                        <i class="fas fa-th"></i> All
+                        <i class="fas fa-th"></i>
+                        <div class="filter-chip-text">
+                            <span class="filter-main">All</span>
+                            <span class="filter-sub">Projects</span>
+                        </div>
                     </button>
                     <button class="filter-chip" data-filter="Renewable Energy">
-                        <i class="fas fa-solar-panel"></i> Renewable
+                        <i class="fas fa-solar-panel"></i>
+                        <div class="filter-chip-text">
+                            <span class="filter-main">Renewable</span>
+                            <span class="filter-sub">Solar PV</span>
+                        </div>
                     </button>
                     <button class="filter-chip" data-filter="Power Systems">
-                        <i class="fas fa-bolt"></i> Power
+                        <i class="fas fa-bolt"></i>
+                        <div class="filter-chip-text">
+                            <span class="filter-main">Power</span>
+                            <span class="filter-sub">Systems</span>
+                        </div>
                     </button>
                     <button class="filter-chip" data-filter="Heat Transfer">
-                        <i class="fas fa-fire"></i> Heat
+                        <i class="fas fa-fire"></i>
+                        <div class="filter-chip-text">
+                            <span class="filter-main">Heat</span>
+                            <span class="filter-sub">Transfer</span>
+                        </div>
                     </button>
                     <button class="filter-chip" data-filter="Control Systems">
-                        <i class="fas fa-sliders-h"></i> Control
+                        <i class="fas fa-sliders-h"></i>
+                        <div class="filter-chip-text">
+                            <span class="filter-main">Control</span>
+                            <span class="filter-sub">Systems</span>
+                        </div>
                     </button>
                 </div>
             </div>

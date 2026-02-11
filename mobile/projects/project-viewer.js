@@ -210,6 +210,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlCategory = urlParams.get('category') || currentProject.category;
         
+        // Detect project type: check URL category OR project-specific properties
+        const isMATLAB = urlCategory === 'matlab' || 
+                        currentProject.id?.startsWith('matlab-') || 
+                        currentProject.toolboxes || 
+                        currentProject.matlabVersion ||
+                        (currentProject.files?.code && currentProject.files.code.endsWith('.m'));
+        const isArduino = urlCategory === 'arduino' || currentProject.id?.startsWith('arduino-');
+        const isElectronics = urlCategory === 'electronics';
+        
         const hasGLB = currentProject.glbFile && urlCategory === 'solidworks';
         const hasCode = currentProject.code || currentProject.codePath || currentProject.codeFile;
         const hasREADME = currentProject.readmePath || currentProject.files?.readme;
@@ -217,11 +226,24 @@
         const hasTinkercad = currentProject.tinkercad || currentProject.tinkercadLink;
         const hasSteps = currentProject.steps && currentProject.steps.length > 0;
         const hasComponents = currentProject.components && currentProject.components.length > 0;
-        const hasImages = currentProject.images && currentProject.images.length > 0;
+        
+        // Check for images: support both top-level 'images' array and 'files.images' (MATLAB)
+        const topLevelImages = currentProject.images && currentProject.images.length > 0;
+        const nestedImages = currentProject.files?.images && currentProject.files.images.length > 0;
+        const hasImages = topLevelImages || nestedImages;
+        
+        // Build proper image URLs
+        let imageUrls = [];
+        if (isMATLAB && nestedImages) {
+            // MATLAB: Build paths from files.images array
+            const basePath = `../../Projects Storage/MATLAB Projects/${currentProject.folder || currentProject.id}/`;
+            imageUrls = currentProject.files.images.map(img => basePath + img);
+        } else if (topLevelImages) {
+            // Arduino/SolidWorks: Use direct URLs
+            imageUrls = currentProject.images;
+        }
+        
         const hasTopics = currentProject.topics && currentProject.topics.length > 0;
-        const isArduino = urlCategory === 'arduino';
-        const isMATLAB = urlCategory === 'matlab';
-        const isElectronics = urlCategory === 'electronics';
         const hasToolLink = currentProject.toolLink;
         const hasFeatures = currentProject.features && currentProject.features.length > 0;
         
@@ -269,9 +291,12 @@
                         shadow-intensity="1.2"
                         environment-image="neutral"
                         exposure="1.2"
-                        camera-orbit="45deg 75deg 1.2m"
-                        min-camera-orbit="auto auto 0.5m"
-                        max-camera-orbit="auto auto 5m"
+                        camera-orbit="0deg 75deg 80%"
+                        field-of-view="22deg"
+                        min-field-of-view="18deg"
+                        max-field-of-view="28deg"
+                        min-camera-orbit="auto auto 60%"
+                        max-camera-orbit="auto auto 120%"
                     >
                         <div class="glb-controls" slot="progress-bar">
                             <div class="loading-progress"></div>
@@ -558,20 +583,118 @@
             </section>
             ` : ''}
 
+            ${isMATLAB && currentProject.toolboxes && currentProject.toolboxes.length > 0 ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-toolbox"></i> Required MATLAB Toolboxes</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;">
+                    ${currentProject.toolboxes.map(toolbox => `
+                        <div style="padding: 12px 16px; background: rgba(0,118,168,0.1); border: 1px solid rgba(0,118,168,0.3); border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-cog" style="color: #0076A8; font-size: 16px;"></i>
+                            <span style="color: var(--text-primary); font-size: 0.85rem; font-weight: 500;">${toolbox}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+            ` : ''}
+
             ${hasImages && isMATLAB ? `
             <section>
                 <h2 class="section-title"><i class="fas fa-chart-line"></i> Results & Visualizations</h2>
                 <div class="images-gallery" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                    ${currentProject.images.map((imgPath, idx) => `
-                        <div class="result-image" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); overflow: hidden;">
-                            <img src="${imgPath}" alt="Result ${idx + 1}" style="width: 100%; height: auto; display: block;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:var(--text-secondary)\\'><i class=\\'fas fa-image\\' style=\\'font-size:32px;margin-bottom:12px;\\'></i><p>Image will be available soon</p></div>'">
-                            <div style="padding: 12px; background: rgba(0,0,0,0.5);">
-                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
-                                    Result ${idx + 1}
+                    ${imageUrls.map((imgUrl, idx) => `
+                        <div class="result-image" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); overflow: hidden; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">
+                            <img src="${imgUrl}" alt="Result ${idx + 1}" style="width: 100%; height: auto; display: block;" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:var(--text-secondary)\\'><i class=\\'fas fa-image\\' style=\\'font-size:32px;margin-bottom:12px;opacity:0.5;\\'></i><p style=\\'margin:0;font-size:13px;\\'>Image not found</p><p style=\\'margin:4px 0 0;font-size:11px;opacity:0.7;\\'>${imgUrl.split('/').pop()}</p></div>'">
+                            <div style="padding: 12px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between;">
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">
+                                    <i class="fas fa-image" style="margin-right: 6px; color: #CC0000;"></i>
+                                    Result ${idx + 1} of ${imageUrls.length}
                                 </p>
+                                <i class="fas fa-expand-alt" style="color: rgba(200,200,200,0.5); font-size: 12px;"></i>
                             </div>
                         </div>
                     `).join('')}
+                </div>
+                <p style="margin-top: 12px; color: var(--text-secondary); font-size: 0.85rem; text-align: center;">
+                    <i class="fas fa-info-circle"></i> Click on any image to view full size
+                </p>
+            </section>
+            ` : ''}
+
+            ${isMATLAB && currentProject.files?.code ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-code"></i> MATLAB Code</h2>
+                <div style="background: rgba(0,0,0,0.4); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; overflow: hidden;">
+                    <div style="padding: 14px 16px; background: rgba(204,0,0,0.1); border-bottom: 2px solid rgba(204,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-primary); font-weight: 600; font-size: 0.9rem;">
+                            <i class="fas fa-file-code" style="color: #CC0000; margin-right: 8px;"></i>
+                            ${currentProject.files.code}
+                        </span>
+                        <button onclick="window.projectViewer.toggleMatlabCode()" style="background: rgba(204,0,0,0.2); border: 1px solid rgba(204,0,0,0.4); color: var(--text-primary); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i id="codeToggleIcon" class="fas fa-chevron-down"></i>
+                            <span id="codeToggleText">Show Code</span>
+                        </button>
+                    </div>
+                    <div id="matlabCodeContainer" style="display: none; max-height: 400px; overflow-y: auto; padding: 16px; background: rgba(0,0,0,0.6);">
+                        <div style="position: relative;">
+                            <button onclick="window.projectViewer.copyMatlabCode()" style="position: absolute; top: 8px; right: 8px; background: rgba(204,0,0,0.8); border: none; color: white; padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; z-index: 10; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <pre id="matlabCodeBlock" style="margin: 0; padding: 24px 16px 16px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow-x: auto; color: #e6e6e6; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; white-space: pre;">% Loading MATLAB code...</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            ` : ''}
+
+            ${isMATLAB ? `
+            <section>
+                <h2 class="section-title"><i class="fas fa-book"></i> Documentation</h2>
+                <div style="background: rgba(0,0,0,0.3); border: 2px solid rgba(204,0,0,0.3); border-radius: 12px; padding: 20px;">
+                    <h3 style="color: var(--text-primary); font-size: 1rem; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-info-circle" style="color: #CC0000;"></i>
+                        Project Overview
+                    </h3>
+                    <p style="margin: 0 0 20px 0; color: var(--text-secondary); line-height: 1.7;">
+                        ${currentProject.description || 'Comprehensive MATLAB analysis and simulation project.'}
+                    </p>
+                    
+                    ${currentProject.topics && currentProject.topics.length > 0 ? `
+                    <h3 style="color: var(--text-primary); font-size: 1rem; margin: 20px 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-bullseye" style="color: #CC0000;"></i>
+                        Analysis Objectives
+                    </h3>
+                    <ul style="margin: 0 0 20px 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                        ${currentProject.topics.slice(0, 4).map(topic => `<li>Analyze and visualize ${topic}</li>`).join('')}
+                        ${currentProject.topics.length > 4 ? `<li>And ${currentProject.topics.length - 4} more analysis topics</li>` : ''}
+                    </ul>
+                    ` : ''}
+                    
+                    ${currentProject.files?.pdf || currentProject.files?.readme ? `
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(204,0,0,0.3);">
+                        <p style="margin: 0 0 12px 0; color: var(--text-secondary); font-size: 0.9rem;">
+                            <i class="fas fa-file-alt" style="color: #CC0000; margin-right: 6px;"></i>
+                            Full documentation available in ${currentProject.files.pdf ? 'PDF format' : 'README file'}
+                        </p>
+                        <button onclick="window.projectViewer.downloadFullDocs()" style="padding: 10px 18px; background: rgba(204,0,0,0.2); border: 1px solid rgba(204,0,0,0.4); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-download"></i> Download Full Documentation
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            </section>
+            ` : ''}
+
+            ${isMATLAB && currentProject.files?.youtubeVideo ? `
+            <section>
+                <h2 class="section-title"><i class="fab fa-youtube" style="color: #FF0000;"></i> Video Demonstration</h2>
+                <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: rgba(0,0,0,0.5); border-radius: 12px; overflow: hidden; border: 2px solid rgba(204,0,0,0.3);">
+                    <iframe 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                        src="${currentProject.files.youtubeVideo.includes('youtube.com') || currentProject.files.youtubeVideo.includes('youtu.be') ? currentProject.files.youtubeVideo.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/') : currentProject.files.youtubeVideo}"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                    ></iframe>
                 </div>
             </section>
             ` : ''}
@@ -613,8 +736,11 @@
                 ` : ''}
 
                 ${isMATLAB && currentProject.files && currentProject.files.zip ? `
-                <button class="action-btn" onclick="window.projectViewer.downloadMATLABZip()" style="padding: 14px 24px; background: linear-gradient(135deg, #CC0000, #8B0000); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(204,0,0,0.3);">
-                    <i class="fas fa-download"></i> Download MATLAB Files (.zip)
+                <button class="action-btn" onclick="window.projectViewer.downloadMATLABZip()" style="padding: 14px 24px; background: linear-gradient(135deg, #CC0000, #8B0000); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(204,0,0,0.3);">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-download"></i> Download MATLAB Files (.zip)
+                    </span>
+                    <small style="font-size: 0.75rem; opacity: 0.85; font-weight: 400;">Includes: Code, Images, Documentation</small>
                 </button>
                 ` : ''}
 
@@ -664,25 +790,48 @@
         
         // Setup model-viewer load event to hide loading state
         if (hasGLB) {
-            setTimeout(() => {
+            // Wait for model-viewer element to be defined and rendered
+            const waitForModelViewer = () => {
                 const modelViewer = document.getElementById('modelViewer');
                 const loadingEl = document.querySelector('.glb-loading');
                 
                 if (modelViewer && loadingEl) {
-                    modelViewer.addEventListener('load', () => {
+                    // Hide loading immediately if already loaded
+                    if (modelViewer.loaded) {
                         loadingEl.style.display = 'none';
+                        console.log('✅ 3D Model already loaded');
+                        return;
+                    }
+                    
+                    // Listen for load event
+                    modelViewer.addEventListener('load', () => {
+                        loadingEl.style.transition = 'opacity 0.3s ease';
+                        loadingEl.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingEl.style.display = 'none';
+                        }, 300);
                         console.log('✅ 3D Model loaded successfully');
                     });
                     
+                    // Listen for error event
                     modelViewer.addEventListener('error', (error) => {
-                        console.error('❌ Model loading error:', error);
+                        console.error('❌ Model loading failed:', error);
                         loadingEl.innerHTML = `
-                            <i class="fas fa-exclamation-triangle" style="font-size:32px;color:#CC0000;margin-bottom:12px;"></i>
-                            <p style="color:rgba(200,200,200,0.8);">Failed to load 3D model</p>
+                            <div style="text-align:center;">
+                                <i class="fas fa-exclamation-triangle" style="font-size:32px;color:#CC0000;margin-bottom:12px;"></i>
+                                <p style="color:rgba(200,200,200,0.8);margin:0;">Failed to load 3D model</p>
+                                <p style="font-size:11px;color:rgba(150,150,150,0.6);margin-top:6px;">Check file path or try again later</p>
+                            </div>
                         `;
                     });
+                } else {
+                    // Retry if elements not found yet
+                    setTimeout(waitForModelViewer, 200);
                 }
-            }, 500);
+            };
+            
+            // Start waiting for model-viewer after a short delay
+            setTimeout(waitForModelViewer, 100);
         }
 
         // Load Arduino/MATLAB code - construct paths properly for projects
@@ -747,7 +896,7 @@
     }
 
     /**
-     * Load Arduino code from file
+     * Load Arduino code from file with enhanced rendering
      */
     async function loadArduinoCode(codePath) {
         const codeContent = document.getElementById('codeContent');
@@ -759,8 +908,74 @@
             
             const codeText = await response.text();
             
+            // Detect language from file extension
+            const fileExt = codePath.split('.').pop().toLowerCase();
+            const language = fileExt === 'ino' ? 'arduino' : (fileExt === 'm' ? 'matlab' : fileExt);
+            
+            // Use markdown viewer's syntax highlighting
+            const escapedCode = escapeHtml(codeText);
+            const highlighted = highlightSyntax(escapedCode, language);
+            const lines = codeText.split('\n');
+            const lineNumbers = lines.map((_, i) => `<span class="ino-line-num">${i + 1}</span>`).join('\n');
+            
             codeContent.innerHTML = `
-                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;"><code id="projectCode" style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #e0e0e0; line-height: 1.6;">${escapeHtml(codeText)}</code></pre>
+                <div class="ino-code-viewer">
+                    <div class="ino-line-numbers">${lineNumbers}</div>
+                    <pre class="ino-code-pre"><code id="projectCode" class="ino-code">${highlighted}</code></pre>
+                </div>
+                <style>
+                    .ino-code-viewer {
+                        display: flex;
+                        gap: 0;
+                        background: linear-gradient(135deg, rgba(0,0,0,0.98), rgba(20,0,0,0.92));
+                        border-radius: 6px;
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                    }
+                    .ino-line-numbers {
+                        padding: 12px 8px 12px 12px;
+                        background: rgba(0,0,0,0.5);
+                        border-right: 2px solid rgba(80,80,80,0.3);
+                        text-align: right;
+                        user-select: none;
+                        font-family: 'Courier New', monospace;
+                        font-size: 12px;
+                        line-height: 1.6;
+                        color: rgba(150,150,150,0.5);
+                        min-width: 40px;
+                    }
+                    .ino-line-num {
+                        display: block;
+                    }
+                    .ino-code-pre {
+                        margin: 0;
+                        padding: 12px 16px;
+                        flex: 1;
+                        overflow-x: auto;
+                    }
+                    .ino-code {
+                        font-family: 'Courier New', monospace;
+                        font-size: 13px;
+                        line-height: 1.6;
+                        color: rgba(200,200,200,0.95);
+                        display: block;
+                        white-space: pre;
+                        word-wrap: normal;
+                        overflow-wrap: normal;
+                    }
+                    /* Arduino Syntax Colors */
+                    .ino-code .syntax-keyword { color: #CD5C5C; font-weight: 600; }
+                    .ino-code .syntax-function { color: #BC8F8F; font-weight: 600; }
+                    .ino-code .syntax-constant { color: #DDA0DD; font-weight: 600; }
+                    .ino-code .syntax-serial { color: #87CEEB; }
+                    .ino-code .syntax-type { color: #98FB98; }
+                    .ino-code .syntax-lifecycle { color: #FFD700; font-weight: 700; }
+                    .ino-code .syntax-preprocessor { color: #FFA07A; }
+                    .ino-code .syntax-string { color: #BC8F8F; }
+                    .ino-code .syntax-number { color: #CD5C5C; }
+                    .ino-code .syntax-boolean { color: #CD5C5C; }
+                    .ino-code .syntax-comment { color: rgba(150,150,150,0.7); font-style: italic; }
+                </style>
             `;
         } catch (error) {
             console.error('Error loading code:', error);
@@ -1037,6 +1252,163 @@
             
             showToast('Downloading MATLAB files...');
             if (navigator.vibrate) navigator.vibrate(30);
+        },
+        downloadFullDocs: function() {
+            if (!currentProject || !currentProject.files) {
+                showToast('Documentation not available');
+                return;
+            }
+            
+            const folderName = currentProject.folder || currentProject.id;
+            let docFile = null;
+            let docPath = null;
+            
+            // Check for PDF first, then README
+            if (currentProject.files.pdf) {
+                docFile = currentProject.files.pdf;
+                docPath = `../../Projects Storage/MATLAB Projects/${folderName}/${docFile}`;
+            } else if (currentProject.files.readme) {
+                docFile = currentProject.files.readme;
+                docPath = `../../Projects Storage/MATLAB Projects/${folderName}/${docFile}`;
+            }
+            
+            if (!docFile) {
+                showToast('Documentation not available');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = docPath;
+            link.download = docFile;
+            link.click();
+            
+            showToast('Downloading documentation...');
+            if (navigator.vibrate) navigator.vibrate(30);
+        },
+        toggleMatlabCode: function() {
+            const codeContainer = document.getElementById('matlabCodeContainer');
+            const toggleIcon = document.getElementById('codeToggleIcon');
+            const toggleText = document.getElementById('codeToggleText');
+            
+            if (!codeContainer || !toggleIcon || !toggleText) return;
+            
+            if (codeContainer.style.display === 'none') {
+                codeContainer.style.display = 'block';
+                toggleIcon.className = 'fas fa-chevron-up';
+                toggleText.textContent = 'Hide Code';
+                
+                // Load code if not already loaded
+                const codeBlock = document.getElementById('matlabCodeBlock');
+                if (codeBlock && codeBlock.textContent.includes('Loading MATLAB code')) {
+                    this.loadMatlabCode();
+                }
+            } else {
+                codeContainer.style.display = 'none';
+                toggleIcon.className = 'fas fa-chevron-down';
+                toggleText.textContent = 'Show Code';
+            }
+            
+            if (navigator.vibrate) navigator.vibrate(10);
+        },
+        loadMatlabCode: async function() {
+            if (!currentProject || !currentProject.files || !currentProject.files.code) {
+                return;
+            }
+            
+            const codeBlock = document.getElementById('matlabCodeBlock');
+            if (!codeBlock) return;
+            
+            try {
+                const folderName = currentProject.folder || currentProject.id;
+                const codePath = `../../Projects Storage/MATLAB Projects/${folderName}/${currentProject.files.code}`;
+                
+                const response = await fetch(codePath);
+                if (!response.ok) throw new Error('Code file not found');
+                
+                const codeText = await response.text();
+                
+                // Apply basic MATLAB syntax highlighting
+                const highlightedCode = this.highlightMatlabCode(codeText);
+                codeBlock.innerHTML = highlightedCode;
+                
+                showToast('Code loaded successfully');
+            } catch (error) {
+                console.error('Error loading MATLAB code:', error);
+                codeBlock.innerHTML = `<span style="color: rgba(255,100,100,0.8);">% Failed to load code file\n% File may not be uploaded yet\n% Please download the ZIP package instead</span>`;
+            }
+        },
+        highlightMatlabCode: function(code) {
+            // Basic MATLAB syntax highlighting for mobile
+            const keywords = ['function', 'end', 'if', 'else', 'elseif', 'for', 'while', 'switch', 'case', 'otherwise', 'return', 'break', 'continue'];
+            const functions = ['disp', 'plot', 'figure', 'xlabel', 'ylabel', 'title', 'legend', 'grid', 'hold', 'fprintf', 'sprintf', 'input'];
+            
+            let highlighted = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Highlight comments
+            highlighted = highlighted.replace(/(%.*)/g, '<span style="color: rgba(150,150,150,0.7); font-style: italic;">$1</span>');
+            
+            // Highlight strings
+            highlighted = highlighted.replace(/('(?:[^'\\]|\\.)*')/g, '<span style="color: #BC8F8F;">$1</span>');
+            
+            // Highlight keywords
+            keywords.forEach(keyword => {
+                const regex = new RegExp('\\b(' + keyword + ')\\b', 'g');
+                highlighted = highlighted.replace(regex, '<span style="color: #CD5C5C; font-weight: 600;">$1</span>');
+            });
+            
+            // Highlight functions
+            functions.forEach(func => {
+                const regex = new RegExp('\\b(' + func + ')\\b', 'g');
+                highlighted = highlighted.replace(regex, '<span style="color: #87CEEB; font-weight: 600;">$1</span>');
+            });
+            
+            // Highlight numbers
+            highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, '<span style="color: #DDA0DD;">$1</span>');
+            
+            return highlighted;
+        },
+        copyMatlabCode: function() {
+            const codeBlock = document.getElementById('matlabCodeBlock');
+            if (!codeBlock) {
+                showToast('Code not loaded');
+                return;
+            }
+            
+            // Get plain text from code block
+            const codeText = codeBlock.innerText || codeBlock.textContent;
+            
+            // Copy to clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    showToast('Code copied to clipboard!');
+                    if (navigator.vibrate) navigator.vibrate(30);
+                }).catch(() => {
+                    this.fallbackCopyCode(codeText);
+                });
+            } else {
+                this.fallbackCopyCode(codeText);
+            }
+        },
+        fallbackCopyCode: function(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast('Code copied to clipboard!');
+                if (navigator.vibrate) navigator.vibrate(30);
+            } catch (err) {
+                showToast('Failed to copy code');
+            }
+            
+            document.body.removeChild(textarea);
         },
         openReadmeFullscreen: function() {
             if (!loadedReadmeMarkdown) {
