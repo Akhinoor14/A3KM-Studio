@@ -947,29 +947,38 @@
         // Load videos from JSON
         async function loadVideos() {
             try {
-                const response = await fetch('videos.json');
+                const response = await fetch('../../Content Code/content.json');
                 const data = await response.json();
                 
-                // Process ONLY video-blog videos (NOT educational)
-                if (data.categories && data.categories['video-blog']) {
-                    categories = data.categories['video-blog'];
-                    allVideos = [];
-                    
-                    // Iterate through video-blog categories only
-                    Object.entries(data.categories['video-blog']).forEach(([categoryName, categoryData]) => {
-                        if (categoryData.videos && Array.isArray(categoryData.videos)) {
-                            categoryData.videos.forEach(video => {
-                                allVideos.push({
-                                    ...video,
-                                    category: categoryName,
-                                    categoryName: categoryData.name || categoryName,
-                                    categoryIcon: categoryData.icon || '📹',
-                                    categoryColor: categoryData.color || '#FF0000'
-                                });
-                            });
-                        }
-                    });
-                }
+                // Load videos from flat array structure
+                allVideos = data['video-blogs'] || [];
+                
+                // Extract unique categories from subcategory field and build category structure
+                const uniqueCategories = [...new Set(allVideos.map(v => v.subcategory))].filter(Boolean);
+                
+                // Build categories object for compatibility with existing code
+                categories = {};
+                uniqueCategories.forEach(subcategory => {
+                    const categorySlug = subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    categories[categorySlug] = {
+                        name: subcategory,
+                        icon: '📹',
+                        color: '#CC0000',
+                        videos: allVideos.filter(v => v.subcategory === subcategory)
+                    };
+                });
+                
+                // Add category info to each video for display
+                allVideos = allVideos.map(video => {
+                    const categorySlug = video.subcategory ? video.subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'other';
+                    return {
+                        ...video,
+                        category: categorySlug,
+                        categoryName: video.subcategory || 'Other',
+                        categoryIcon: '📹',
+                        categoryColor: '#CC0000'
+                    };
+                });
                 
                 console.log('Loaded video-blog videos:', allVideos.length);
                 console.log('Categories:', Object.keys(categories).length);

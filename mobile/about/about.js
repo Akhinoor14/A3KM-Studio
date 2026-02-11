@@ -39,11 +39,6 @@
             preview.style.display = 'none';
             full.style.display = 'block';
             btn.innerHTML = '<i class="fas fa-chevron-up"></i> See Less';
-            
-            // Haptic feedback
-            if (navigator.vibrate) {
-                navigator.vibrate(10);
-            }
         } else {
             // Collapse
             preview.style.display = 'block';

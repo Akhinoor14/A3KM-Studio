@@ -33,27 +33,44 @@
     });
 
     /**
-     * Load videos from central content.json
+     * Load videos directly from videos.json (just like desktop!)
+     * This ensures mobile automatically shows new videos without manual sync
      */
     async function loadVideosFromJSON() {
         try {
             showLoadingState();
             
-            const response = await fetch('../../../Content Code/content.json');
+            // ✅ Load directly from desktop JSON file
+            const response = await fetch('../../../Content Studio/video-content/videos.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            allVideos = data['video-blogs'] || [];
+            
+            // Extract videos from all categories
+            allVideos = [];
+            if (data.categories && data.categories['video-blog']) {
+                Object.values(data.categories['video-blog']).forEach(category => {
+                    if (category.videos && Array.isArray(category.videos)) {
+                        allVideos.push(...category.videos);
+                    }
+                });
+            }
+            if (data.categories && data.categories['educational']) {
+                Object.values(data.categories['educational']).forEach(category => {
+                    if (category.videos && Array.isArray(category.videos)) {
+                        allVideos.push(...category.videos);
+                    }
+                });
+            }
             
             // Extract unique categories
-            const uniqueCategories = [...new Set(allVideos.map(v => v.subcategory))].sort();
+            const uniqueCategories = [...new Set(allVideos.map(v => v.subcategory || v.category))].filter(Boolean).sort();
             categories = ['All', ...uniqueCategories];
             
-            console.log(`📺 Loaded ${allVideos.length} videos from content.json`);
+            console.log(`📺 Loaded ${allVideos.length} videos from videos.json`);
             console.log(`📂 Categories: ${categories.join(', ')}`);
-            console.log(`📊 Total content: ${data.statistics.totalContent} items`);
             
             // Enhance videos with YouTube data in background
             if (window.youtubeFetcher && allVideos.length > 0) {
@@ -227,11 +244,6 @@
                 
                 // Re-render videos
                 renderVideos();
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
             });
         });
     }
@@ -313,10 +325,9 @@
             <a href="video-viewer.html?id=${video.id}" class="content-item">
                 <div class="content-thumbnail">
                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                    <i class="fab fa-youtube" style="display:none; font-size: 48px; color: rgba(255,0,0,0.6);"></i>
+                    <i class="fab fa-youtube" style="display:none; font-size: 48px; color: #CC0000;"></i>
                     <span class="content-duration">${video.duration || 'N/A'}</span>
                     ${video.language === 'bn' ? '<span class="content-language">🇧🇩 বাংলা</span>' : ''}
-                    ${video.apiEnhanced ? '<span class="content-live-badge" style="position: absolute; top: 8px; left: 8px; background: rgba(76,175,80,0.9); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; backdrop-filter: blur(4px);"><i class="fas fa-signal"></i> LIVE</span>' : ''}
                 </div>
                 <div class="content-info-wrap">
                     <h3 class="content-item-title">${video.title}</h3>

@@ -873,13 +873,6 @@
   </style>
 </head>
 <body>
-  <!-- LOCK SCREEN OVERLAY -->
-  <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(10px); z-index: 999999; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 30px;">
-    <i class="fas fa-lock" style="font-size: 5rem; color: #CC0000;"></i>
-    <h1 style="font-size: 3rem; color: #FFFFFF; font-weight: 800; text-align: center;">Under Development</h1>
-    <p style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); text-align: center; max-width: 600px;">This section is currently being updated with new features. Please check back later.</p>
-    <a href="../hub.html" style="margin-top: 20px; padding: 15px 40px; background: #CC0000; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 1.1rem; transition: all 0.3s;">← Back to Content Studio</a>
-  </div>
   <!-- Back Button -->
   <div class="back-to-hub">
     <a href="../hub.html" class="back-btn">
@@ -1059,13 +1052,16 @@
       'Workspace Setup': 'fa-chair'
     };
 
-    // Load posts data - INSTANT (includes localStorage posts!)
+    // Load posts data - INSTANT (includes localStorage + GitHub sync!)
     async function loadPosts() {
       try {
+        // 🚀 NEW: Pull latest posts from GitHub first (get posts from other devices!)
+        await syncFromGitHub();
+
         const response = await fetch('posts.json');
         postsData = await response.json();
         
-        // 🚀 NEW: Load posts from localStorage (from simple creator!)
+        // 🚀 Load posts from localStorage (from simple creator!)
         const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
         
         if (localPosts.length > 0) {
@@ -1087,6 +1083,61 @@
         document.getElementById('loadingState').innerHTML = 
           '<i class="fas fa-exclamation-triangle" style="color: var(--primary-red); font-size: 3rem;"></i>' +
           '<p class="loading-text">Failed to load posts</p>';
+      }
+    }
+
+    // 🚀 NEW: Background sync from GitHub to get posts from all devices
+    async function syncFromGitHub() {
+      try {
+        const token = localStorage.getItem('github_api_token');
+        if (!token) {
+          console.log('⚠️ No GitHub token - skipping cloud sync');
+          return;
+        }
+
+        console.log('⬇️  Syncing posts from cloud...');
+        
+        const owner = 'Akhinoor14';
+        const repo = 'A3KM-Studio';
+        const path = 'Content Studio/written-posts/posts.json';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const content = atob(data.content);
+          const githubPosts = JSON.parse(content);
+          
+          // Merge with localStorage
+          const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+          const localIds = new Set(localPosts.map(p => p.id));
+          
+          let newCount = 0;
+          if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+            githubPosts.posts.forEach(post => {
+              if (!localIds.has(post.id)) {
+                localPosts.push(post);
+                newCount++;
+              }
+            });
+          }
+          
+          if (newCount > 0) {
+            localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+            console.log(`✅ Synced ${newCount} new posts from cloud to this device!`);
+          } else {
+            console.log('✅ Already up to date with cloud');
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Cloud sync failed:', error);
+        // Don't block page load if sync fails
       }
     }
 

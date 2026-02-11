@@ -25,6 +25,10 @@
     
     <!-- Dashboard Specific Styles -->
     <link rel="stylesheet" href="only-boss-dashboard-new.css">
+    
+    <!-- Mobile Optimization Styles -->
+    <link rel="stylesheet" href="../mobile/only-boss-global-mobile.css">
+    <link rel="stylesheet" href="../mobile/dashboard-mobile.css">
 </head>
 <body>
     <!-- Single Line Only Boss Header -->
@@ -44,7 +48,11 @@
                 </div>
                 <div class="dashboard-text">
                     <h1 class="dashboard-title">Administrator Control Panel</h1>
-                    <p class="dashboard-session">Session Active • Last Login: <span id="lastLogin">--</span></p>
+                    <p class="dashboard-session">
+                        <span class="session-status" id="sessionStatus">Session Active</span> • 
+                        <span class="session-timer" id="sessionTimer">--:--</span> • 
+                        Last Login: <span id="lastLogin">--</span>
+                    </p>
                 </div>
             </div>
             
@@ -106,12 +114,6 @@
                 <p class="card-description">Auto-sync videos between Desktop & Mobile platforms</p>
             </div>
 
-            <div class="admin-card" onclick="window.location.href='../managers/content-editing/content-editor.html'">
-                <i class="fas fa-edit card-icon"></i>
-                <h3 class="card-title">Smart CMS Panel</h3>
-                <p class="card-description">Professional content management system</p>
-            </div>
-
             <div class="admin-card" onclick="window.location.href='../managers/projects/project-creator/project-manager.html'">
                 <i class="fas fa-magic card-icon"></i>
                 <h3 class="card-title">AI Project Creator</h3>
@@ -130,46 +132,10 @@
                 <p class="card-description">Configure website settings, colors, and API keys</p>
             </div>
 
-            <div class="admin-card" onclick="window.location.href='../managers/settings/media-library.html'">
-                <i class="fas fa-image card-icon"></i>
-                <h3 class="card-title">Media Library</h3>
-                <p class="card-description">Upload, organize, and manage all media files</p>
-            </div>
-
-            <div class="admin-card" onclick="window.location.href='../managers/settings/global-analytics.html'">
-                <i class="fas fa-chart-line card-icon"></i>
-                <h3 class="card-title">Analytics Dashboard</h3>
-                <p class="card-description">View content statistics and activity analytics</p>
-            </div>
-
             <div class="admin-card" onclick="window.location.href='../managers/settings/backup-restore.html'">
                 <i class="fas fa-shield-alt card-icon"></i>
                 <h3 class="card-title">Backup & Restore</h3>
                 <p class="card-description">Create backups and restore website data</p>
-            </div>
-
-            <div class="admin-card" onclick="window.location.href='../managers/settings/navigation-editor.html'">
-                <i class="fas fa-bars card-icon"></i>
-                <h3 class="card-title">Navigation Editor</h3>
-                <p class="card-description">Manage website navigation menus</p>
-            </div>
-
-            <div class="admin-card" onclick="window.location.href='../managers/settings/seo-manager.html'">
-                <i class="fas fa-search card-icon"></i>
-                <h3 class="card-title">SEO Manager</h3>
-                <p class="card-description">Optimize website for search engines</p>
-            </div>
-
-            <div class="admin-card" onclick="window.location.href='../managers/settings/activity-log.html'">
-                <i class="fas fa-history card-icon"></i>
-                <h3 class="card-title">Activity Log</h3>
-                <p class="card-description">Track all system activities and changes</p>
-            </div>
-
-            <div class="admin-card" onclick="window.location.href='../managers/settings/form-builder.html'">
-                <i class="fas fa-wpforms card-icon"></i>
-                <h3 class="card-title">Form Builder</h3>
-                <p class="card-description">Create custom forms without coding</p>
             </div>
 
             <div class="admin-card api-config-card" onclick="window.location.href='../managers/shared/api-config-manager.html'">
@@ -339,9 +305,57 @@
             }
         }
 
+        // Update session timer display (from mobile)
+        let sessionWarningShown = false;
+        function updateSessionTimer() {
+            const authTime = sessionStorage.getItem('authTime');
+            if (!authTime) return;
+            
+            const elapsed = Date.now() - parseInt(authTime);
+            const remaining = (30 * 60 * 1000) - elapsed; // 30 min session
+            
+            if (remaining <= 0) {
+                logout();
+                return;
+            }
+            
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            
+            const timerElement = document.getElementById('sessionTimer');
+            if (timerElement) {
+                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Color coding based on time remaining
+                if (remaining <= 5 * 60 * 1000) {
+                    timerElement.style.color = '#FF6B6B';
+                    timerElement.style.fontWeight = '600';
+                } else if (remaining <= 10 * 60 * 1000) {
+                    timerElement.style.color = '#FFA500';
+                } else {
+                    timerElement.style.color = 'inherit';
+                }
+            }
+            
+            // Warning at 5 minutes (from mobile)
+            if (remaining <= 5 * 60 * 1000 && !sessionWarningShown) {
+                sessionWarningShown = true;
+                const statusElement = document.getElementById('sessionStatus');
+                if (statusElement) {
+                    statusElement.textContent = '⚠️ Session Expiring Soon';
+                    statusElement.style.color = '#FF6B6B';
+                }
+                alert('⚠️ Session expires in 5 minutes. Save your work!');
+            }
+        }
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', async () => {
             await checkAuthentication();
+            
+            // Start session timer (update every second)
+            updateSessionTimer();
+            setInterval(updateSessionTimer, 1000);
             
             // Logout button
             const logoutBtn = document.getElementById('logoutBtn');
@@ -375,6 +389,18 @@
                     }
                 }
             }, 30 * 1000);
+            
+            // Tab visibility re-validation (from mobile - important security feature)
+            document.addEventListener('visibilitychange', async () => {
+                if (!document.hidden) {
+                    // User returned to tab - revalidate session
+                    const isValid = await checkAuthentication();
+                    if (!isValid) {
+                        alert('Session expired while you were away.');
+                        redirectToLogin();
+                    }
+                }
+            });
         });
 
         // Prevent going back after logout

@@ -1769,6 +1769,11 @@
     // Load PDF using PDF.js
     async function loadPDF(pdfUrl) {
       try {
+        // Check if PDF URL is valid
+        if (!pdfUrl || pdfUrl === '#' || pdfUrl === '') {
+          throw new Error('PDF URL not available');
+        }
+        
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         pdfDoc = await loadingTask.promise;
         totalPagesNum = pdfDoc.numPages;
@@ -1783,10 +1788,21 @@
       } catch (error) {
         console.error('Error loading PDF:', error);
         document.getElementById('loadingState').innerHTML = `
-          <i class="fas fa-exclamation-triangle"></i>
-          <div class="loading-text">Error loading PDF</div>
+          <i class="fas fa-info-circle" style="font-size: 64px; color: #B22222; margin-bottom: 20px;"></i>
+          <div class="loading-text" style="font-size: 20px; margin-bottom: 12px;">PDF Not Available</div>
+          <div style="color: var(--text-secondary); font-size: 14px; max-width: 500px; margin: 0 auto 20px; line-height: 1.6;">
+            This research paper's PDF needs to be uploaded through the <strong>Only-Boss Manager</strong>.
+          </div>
+          <div style="padding: 16px 24px; background: rgba(178, 34, 34, 0.1); border: 2px solid rgba(178, 34, 34, 0.3); border-radius: 12px; max-width: 600px; margin: 0 auto;">
+            <p style="color: var(--text-dim); font-size: 13px; line-height: 1.6;">
+              <i class="fas fa-upload" style="color: #DC143C;"></i> 
+              Use <strong>Only-Boss → Content Studio Manager → Papers Manager</strong> to upload PDF files.
+              <br>All PDFs are stored in GitHub and will be accessible across desktop and mobile.
+            </p>
+          </div>
         `;
-        showToast('Error loading PDF file');
+        // Disable toolbar buttons
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.disabled = true);
       }
     }
 
@@ -2328,5 +2344,7 @@
     }
   </script>
   <script src="../../Optimization/navbar-autohide.js"></script>
+  <!-- Universal PDF Viewer for Desktop (optional alternative to built-in canvas viewer) -->
+  <script src="../../mobile/shared/pdf-viewer.js"></script>
 </body>
 </html>

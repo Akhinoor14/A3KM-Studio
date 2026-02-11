@@ -72,15 +72,19 @@
   }
 
   /* ============================================
-     LOAD POSTS DATA (includes localStorage!)
+     LOAD POSTS DATA (includes localStorage + Cloud!)
      ============================================ */
   async function loadPosts() {
     try {
+      // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
+      await syncFromGitHubCloud();
+      
+      // STEP 2: Load posts from posts.json
       const response = await fetch('posts.json');
       const data = await response.json();
       allPosts = data.posts || [];
       
-      // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+      // STEP 3: Load posts from localStorage (Simple Creator!)
       const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
       
       if (localPosts.length > 0) {
@@ -95,9 +99,68 @@
           }
         });
       }
+      
+      console.log(`📝 Total ${allPosts.length} posts loaded (posts.json + localStorage + Cloud)`);
     } catch (error) {
       console.error('Error loading posts:', error);
       throw error;
+    }
+  }
+
+  /* ============================================
+     🚀 SYNC FROM GITHUB CLOUD
+     ============================================ */
+  async function syncFromGitHubCloud() {
+    try {
+      const token = localStorage.getItem('github_api_token');
+      if (!token) {
+        console.log('⚠️ No GitHub token - skipping cloud sync');
+        return;
+      }
+
+      console.log('⬇️  Syncing posts from cloud...');
+      
+      const owner = 'Akhinoor14';
+      const repo = 'A3KM-Studio';
+      const path = 'Content Studio/written-posts/posts.json';
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = atob(data.content);
+        const githubPosts = JSON.parse(content);
+        
+        // Merge with localStorage
+        const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+        const localIds = new Set(localPosts.map(p => p.id));
+        
+        let newCount = 0;
+        if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+          githubPosts.posts.forEach(post => {
+            if (!localIds.has(post.id)) {
+              localPosts.push(post);
+              newCount++;
+            }
+          });
+        }
+        
+        if (newCount > 0) {
+          localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+          console.log(`✅ Synced ${newCount} new posts from cloud to desktop viewer!`);
+        } else {
+          console.log('✅ Desktop viewer already up to date with cloud');
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Cloud sync failed:', error);
+      // Don't block page load if sync fails
     }
   }
 

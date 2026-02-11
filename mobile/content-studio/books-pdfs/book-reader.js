@@ -6,47 +6,8 @@
 (function() {
     'use strict';
 
-    // ========== BOOK DATABASE (same as book-listing.js) ==========
-    const books = [
-        {
-            id: 1,
-            title: "Arduino Programming Handbook - Complete Guide",
-            thumbnail: "",
-            pages: 243,
-            size: "12.5 MB",
-            category: "Arduino",
-            description: "Comprehensive guide to Arduino programming covering basics to advanced topics. Includes practical projects and code examples.",
-            tags: ["Arduino", "Programming", "Electronics"],
-            downloadUrl: "#",
-            pdfUrl: "https://example.com/arduino-handbook.pdf" // Replace with actual PDF URL
-        },
-        {
-            id: 2,
-            title: "SOLIDWORKS 2023 - Mastering 3D Design",
-            thumbnail: "",
-            pages: 486,
-            size: "28.3 MB",
-            category: "CAD",
-            description: "Professional SOLIDWORKS training manual. Learn sketching, part modeling, assemblies, and drawing creation.",
-            tags: ["SOLIDWORKS", "CAD", "3D Modeling"],
-            downloadUrl: "#",
-            pdfUrl: "https://example.com/solidworks-2023.pdf"
-        },
-        {
-            id: 3,
-            title: "Electronics Components Encyclopedia",
-            thumbnail: "",
-            pages: 356,
-            size: "18.7 MB",
-            category: "Electronics",
-            description: "Complete reference guide for electronic components. Datasheets, pinouts, and practical applications included.",
-            tags: ["Electronics", "Components", "Reference"],
-            downloadUrl: "#",
-            pdfUrl: "https://example.com/electronics-encyclopedia.pdf"
-        }
-    ];
-
     // ========== STATE ==========
+    let allBooks = [];
     let currentBook = null;
     let currentPage = 1;
     let isBookmarked = false;
@@ -64,25 +25,49 @@
     const infoBtn = document.getElementById('infoBtn');
     const bookmarkBtn = document.getElementById('bookmarkBtn');
 
+    // ========== LOAD BOOKS FROM JSON ==========
+    async function loadBooksFromJSON() {
+        try {
+            const response = await fetch('../../../Content Code/content.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            allBooks = data['books-pdfs'] || [];
+            console.log(`📚 Loaded ${allBooks.length} books from content.json`);
+            
+            // Load the current book
+            loadBook();
+        } catch (error) {
+            console.error('❌ Failed to load books:', error);
+            pdfViewerContainer.innerHTML = `
+                <div style="padding: 60px 20px; text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 56px; color: #CC0000; margin-bottom: 20px;"></i>
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">Failed to Load</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 24px;">Could not load book data. Please check your connection.</p>
+                    <button onclick="location.reload()" style="padding: 12px 24px; background: #CC0000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Retry</button>
+                </div>
+            `;
+        }
+    }
+
     // ========== GET BOOK ID FROM URL ==========
     function getBookIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        return id ? parseInt(id) : 1; // Default to first book
+        return urlParams.get('id') || allBooks[0]?.id; // Default to first book
     }
 
     // ========== LOAD BOOK ==========
     function loadBook() {
         const bookId = getBookIdFromUrl();
-        currentBook = books.find(b => b.id === bookId);
+        currentBook = allBooks.find(b => b.id === bookId);
 
         if (!currentBook) {
             pdfViewerContainer.innerHTML = `
                 <div style="padding: 60px 20px; text-align: center;">
-                    <i class="fas fa-exclamation-circle" style="font-size: 56px; color: var(--primary-red); margin-bottom: 20px;"></i>
+                    <i class="fas fa-exclamation-circle" style="font-size: 56px; color: #CC0000; margin-bottom: 20px;"></i>
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">Book Not Found</h3>
                     <p style="color: var(--text-dim); margin-bottom: 24px;">The book you're looking for doesn't exist.</p>
-                    <a href="book-listing.html" style="display: inline-block; padding: 12px 24px; background: var(--primary-red); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Back to Library</a>
+                    <a href="book-listing.html" style="display: inline-block; padding: 12px 24px; background: #CC0000; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Back to Library</a>
                 </div>
             `;
             return;
@@ -116,7 +101,7 @@
                 <p style="margin-top: 16px; max-width: 300px; margin-left: auto; margin-right: auto; line-height: 1.5;">
                     Tap below to open this book in the mobile-optimized PDF viewer with pinch-to-zoom and touch gestures.
                 </p>
-                <button id="openPDFBtn" style="margin-top: 24px; padding: 14px 28px; background: linear-gradient(135deg, rgba(205,92,92,0.3), rgba(205,92,92,0.2)); border: 1px solid rgba(205,92,92,0.5); color: #fff; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);">
+                <button id="openPDFBtn" style="margin-top: 24px; padding: 14px 28px; background: linear-gradient(135deg, rgba(204,0,0,0.3), rgba(139,0,0,0.2)); border: 1px solid rgba(204,0,0,0.5); color: #fff; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);">
                     <i class="fas fa-book-reader"></i> Read Book
                 </button>
             </div>
@@ -126,15 +111,22 @@
         const openPDFBtn = document.getElementById('openPDFBtn');
         if (openPDFBtn) {
             openPDFBtn.addEventListener('click', () => {
-                if (navigator.vibrate) navigator.vibrate(10);
-                openMobilePDFViewer({
-                    filePath: currentBook.pdfUrl,
-                    fileType: 'pdf',
-                    title: currentBook.title,
-                    downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-                    showDownload: true,
-                    allowZoom: true
-                });
+                // Use downloadUrl from content.json
+                const pdfPath = currentBook.downloadUrl || currentBook.pdfUrl || '#';
+                
+                if (window.openMobilePDFViewer) {
+                    openMobilePDFViewer({
+                        filePath: pdfPath,
+                        fileType: 'pdf',
+                        title: currentBook.title,
+                        downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+                        showDownload: false, // Don't prompt for download when reading
+                        allowZoom: true
+                    });
+                } else {
+                    // Fallback: Open PDF in new tab for inline viewing
+                    window.open(pdfPath, '_blank');
+                }
             });
         }
     }
@@ -181,9 +173,6 @@
         const downloadBookBtn = document.getElementById('downloadBookBtn');
         if (downloadBookBtn) {
             downloadBookBtn.addEventListener('click', handleDownload);
-            downloadBookBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) navigator.vibrate(10);
-            });
         }
     }
 
@@ -199,8 +188,6 @@
             currentPage--;
             updatePageInfo();
             
-            if (navigator.vibrate) navigator.vibrate(10);
-            
             // Reload PDF with new page
             // In production: pdfViewer.goToPage(currentPage);
             saveReadingProgress();
@@ -212,8 +199,6 @@
             currentPage++;
             updatePageInfo();
             
-            if (navigator.vibrate) navigator.vibrate(10);
-            
             // Reload PDF with new page
             // In production: pdfViewer.goToPage(currentPage);
             saveReadingProgress();
@@ -224,8 +209,6 @@
     function toggleInfoPanel() {
         isInfoPanelOpen = !isInfoPanelOpen;
         bookInfoPanel.classList.toggle('active', isInfoPanelOpen);
-        
-        if (navigator.vibrate) navigator.vibrate(10);
     }
 
     function toggleBookmark() {
@@ -247,8 +230,6 @@
     }
 
     function handleDownload() {
-        if (navigator.vibrate) navigator.vibrate([10, 20, 10]);
-        
         // In production, trigger actual download
         showToast('Download started...');
         
@@ -306,21 +287,8 @@
     }
 
     function addHapticFeedback() {
-        const buttons = [prevPageBtn, nextPageBtn, infoBtn, bookmarkBtn];
-        buttons.forEach(btn => {
-            btn.addEventListener('touchstart', () => {
-                if (navigator.vibrate && !btn.disabled) {
-                    navigator.vibrate(10);
-                }
-            });
-        });
-
-        const backBtn = document.querySelector('.back-btn');
-        if (backBtn) {
-            backBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) navigator.vibrate(10);
-            });
-        }
+        // Removed excessive vibration feedback
+        // Only keeping vibration for bookmark action (important)
     }
 
     // ========== KEYBOARD NAVIGATION ==========
@@ -334,8 +302,8 @@
 
     // ========== INITIALIZATION ==========
     function init() {
-        // Load book
-        loadBook();
+        // Load books from JSON first, then load current book
+        loadBooksFromJSON();
 
         // Event listeners
         prevPageBtn.addEventListener('click', goToPreviousPage);

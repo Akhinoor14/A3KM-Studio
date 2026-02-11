@@ -62,8 +62,6 @@
                 chip.classList.add('active');
                 currentFilter = chip.dataset.filter;
                 filterAndRenderProjects();
-                
-                if (navigator.vibrate) navigator.vibrate(10);
             });
         });
     }

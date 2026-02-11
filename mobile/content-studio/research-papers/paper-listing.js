@@ -139,7 +139,6 @@
 
     // ========== OPEN PAPER VIEWER ==========
     window.openPaper = function(paperId) {
-        if (navigator.vibrate) navigator.vibrate(10);
         window.location.href = `paper-viewer.html?id=${paperId}`;
     };
 

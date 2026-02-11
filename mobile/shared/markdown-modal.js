@@ -297,7 +297,6 @@ function createToolbar(config) {
         const content = document.getElementById('md-modal-content');
         if (content) {
             content.scrollTo({ top: 0, behavior: 'smooth' });
-            if (navigator.vibrate) navigator.vibrate(10);
         }
     }, true);
     toolbar.appendChild(scrollTop);

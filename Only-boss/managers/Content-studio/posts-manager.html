@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- Load Unified Token Manager -->
   <script src="../shared/unified-token-manager.js"></script>
+  
+  <!-- Mobile Optimization Styles -->
+  <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
+  <link rel="stylesheet" href="../../mobile/manager-mobile.css">
+  
   <style>
     :root {
       --primary-color: #8B0000;
@@ -1019,11 +1024,75 @@
       margin-top: 10px;
       font-size: 13px;
       color: var(--text-secondary);
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .word-counter span {
       font-weight: 600;
       color: var(--primary-color);
+    }
+
+    /* Format Toolbar Buttons */
+    .format-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(139, 0, 0, 0.2);
+      border-radius: 6px;
+      color: #333;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .format-btn:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(139, 0, 0, 0.3);
+    }
+
+    .format-btn i {
+      font-size: 13px;
+    }
+
+    .format-btn span {
+      font-size: 11px;
+    }
+
+    /* Media Upload Buttons */
+    .media-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      border: 2px solid #4CAF50;
+      border-radius: 6px;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .media-upload-btn:hover {
+      background: linear-gradient(135deg, #45a049, #4CAF50);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(76, 175, 80, 0.4);
+    }
+
+    .media-upload-btn i {
+      font-size: 13px;
+    }
+
+    .media-upload-btn span {
+      font-size: 11px;
     }
 
     .seo-score {
@@ -1151,9 +1220,9 @@
           <i class="fas fa-arrow-left"></i>
           <span>Back to Hub</span>
         </a>
-        <button class="btn-save" onclick="window.location.href='../posts/create-post.html'" style="background: linear-gradient(135deg, #4CAF50, #388E3C); margin-right: 10px;">
-          <i class="fas fa-pen-fancy"></i>
-          <span>Simple Creator</span>
+        <button class="btn-save" onclick="window.location.href='../posts/create-post.html'" style="background: linear-gradient(135deg, #4CAF50, #388E3C); margin-right: 10px;" title="Ultra-fast posting with minimal fields, images & videos">
+          <i class="fas fa-bolt"></i>
+          <span>Quick Post</span>
         </button>
         <button class="btn-save" onclick="saveToGitHub()">
           <i class="fas fa-save"></i>
@@ -1176,8 +1245,8 @@
           <span>Dashboard</span>
         </div>
         <div class="tab-item" onclick="switchTab('upload')">
-          <i class="fas fa-upload"></i>
-          <span>Upload New</span>
+          <i class="fas fa-pen-fancy"></i>
+          <span>Create New</span>
         </div>
         <div class="tab-item" onclick="switchTab('manage')">
           <i class="fas fa-list"></i>
@@ -1251,7 +1320,7 @@
           </h3>
           <ul style="list-style: none; padding: 0;">
             <li style="padding: 12px; margin-bottom: 10px; background: white; border-left: 4px solid #8B0000; border-radius: 8px; color: #333;">
-              <strong style="color: #8B0000;">Upload New:</strong> Create new posts with 25+ personalized fields including SEO, difficulty levels, and audience targeting
+              <strong style="color: #8B0000;">Create New:</strong> Professional post editor with rich formatting, 25+ fields, SEO optimization, and audience targeting
             </li>
             <li style="padding: 12px; margin-bottom: 10px; background: white; border-left: 4px solid #8B0000; border-radius: 8px; color: #333;">
               <strong style="color: #8B0000;">Manage:</strong> Edit, delete, or organize existing posts with advanced filtering and bulk operations
@@ -1384,17 +1453,119 @@
           <input type="text" id="keywords" placeholder="engineering, tutorial, guide, MATLAB, projects">
         </div>
 
-        <div class="markdown-help">
-          💡 <strong>Markdown Supported:</strong> **bold**, *italic*, # Heading, [link](url), ![image](url), \`code\`, ```code block```, > quote
-        </div>
-
+        <!-- Rich Text Formatting Toolbar -->
         <div class="form-group full-width">
-          <label>✍️ Content (Markdown)</label>
-          <textarea id="content" placeholder="Write your post content in Markdown..." required></textarea>
-          <div class="word-counter">
-            <span>Words: <span id="wordCount">0</span></span>
-            <span>Characters: <span id="charCount">0</span></span>
-            <span>Estimated Reading: <span id="readTime">0 min</span></span>
+          <label style="margin-bottom: 12px;">✍️ Write Your Post Content</label>
+          
+          <div style="background: rgba(139, 0, 0, 0.05); border: 2px solid rgba(139, 0, 0, 0.2); border-radius: 12px 12px 0 0; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <span style="color: var(--primary-color); font-weight: 600; font-size: 13px; margin-right: 10px;">📝 Format:</span>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('**', '**', 'Bold text')" title="Bold (Ctrl+B)">
+              <i class="fas fa-bold"></i> <span>Bold</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('*', '*', 'Italic text')" title="Italic (Ctrl+I)">
+              <i class="fas fa-italic"></i> <span>Italic</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('# ', '', 'Heading text')" title="Heading">
+              <i class="fas fa-heading"></i> <span>Heading</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('> ', '', 'Quote text')" title="Quote">
+              <i class="fas fa-quote-right"></i> <span>Quote</span>
+            </button>
+            
+            <div style="width: 1px; height: 24px; background: rgba(139, 0, 0, 0.2); margin: 0 5px;"></div>
+            
+            <button type="button" class="format-btn" onclick="insertLink()" title="Insert Link">
+              <i class="fas fa-link"></i> <span>Link</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertImage()" title="Insert Image">
+              <i class="fas fa-image"></i> <span>Image</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('\`', '\`', 'code')" title="Inline Code">
+              <i class="fas fa-code"></i> <span>Code</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertCodeBlock()" title="Code Block">
+              <i class="fas fa-file-code"></i> <span>Block</span>
+            </button>
+            
+            <div style="width: 1px; height: 24px; background: rgba(139, 0, 0, 0.2); margin: 0 5px;"></div>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('- ', '', 'List item')" title="Bullet List">
+              <i class="fas fa-list-ul"></i> <span>List</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('1. ', '', 'Numbered item')" title="Numbered List">
+              <i class="fas fa-list-ol"></i> <span>Numbers</span>
+            </button>
+            
+            <button type="button" class="format-btn" onclick="insertMarkdown('---\n', '', '')" title="Horizontal Line">
+              <i class="fas fa-minus"></i> <span>Line</span>
+            </button>
+            
+            <div style="flex: 1;"></div>
+            
+            <button type="button" class="format-btn" onclick="togglePreview()" title="Toggle Preview" style="background: rgba(33, 150, 243, 0.1); border-color: #2196F3; color: #2196F3;">
+              <i class="fas fa-eye"></i> <span>Preview</span>
+            </button>
+          </div>
+          
+          <!-- Media Upload Toolbar (NEW!) -->
+          <div style="background: rgba(76, 175, 80, 0.05); border: 2px solid rgba(76, 175, 80, 0.2); border-left: none; border-right: none; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <span style="color: #4CAF50; font-weight: 600; font-size: 13px; margin-right: 5px;">📎 Media:</span>
+            
+            <button type="button" class="media-upload-btn" onclick="uploadInlineImage()" title="Upload images from device">
+              <i class="fas fa-image"></i> <span>Upload Images</span>
+            </button>
+            
+            <button type="button" class="media-upload-btn" onclick="embedYouTube()" title="Embed YouTube video">
+              <i class="fab fa-youtube"></i> <span>YouTube Video</span>
+            </button>
+            
+            <input type="file" id="inlineImageInput" accept="image/*" multiple style="display: none;">
+            
+            <span style="margin-left: auto; font-size: 11px; color: #666;">💡 Images will be embedded as Base64</span>
+          </div>
+          
+          <textarea 
+            id="content" 
+            placeholder="তোমার post এর content লিখো...
+
+✨ Formatting Tips:
+• **Bold text** = Bold
+• *Italic text* = Italic  
+• # Heading 1
+• ## Heading 2
+• [Link text](https://url.com)
+• ![Image](image-url.jpg)
+• \`inline code\`
+• > Quote
+• - Bullet point
+• 1. Numbered list
+
+অথবা উপরের buttons ব্যবহার করো 👆" 
+            required
+            style="border-radius: 0 0 12px 12px; border-top: none; min-height: 450px; font-family: 'Noto Sans Bengali', 'Inter', 'Courier New', monospace; font-size: 15px; line-height: 1.8; padding: 20px; resize: vertical;">
+          </textarea>
+          
+          <!-- Preview Area (Hidden by default) -->
+          <div id="markdownPreview" style="display: none; padding: 25px; background: rgba(255, 255, 255, 0.98); border: 2px solid rgba(139, 0, 0, 0.2); border-radius: 0 0 12px 12px; border-top: 2px dashed rgba(139, 0, 0, 0.3); min-height: 200px; color: #333; margin-top: -12px;">
+            <div style="background: rgba(139, 0, 0, 0.1); padding: 8px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; color: var(--primary-color); font-weight: 600;">
+              <i class="fas fa-eye"></i> Live Preview
+            </div>
+            <div id="previewContent" style="font-family: 'Noto Sans Bengali', 'Inter', 'Georgia', serif; line-height: 1.8;"></div>
+          </div>
+          
+          <div class="word-counter" style="margin-top: 12px;">
+            <span><i class="fas fa-font"></i> Words: <strong><span id="wordCount">0</span></strong></span>
+            <span><i class="fas fa-text-width"></i> Characters: <strong><span id="charCount">0</span></strong></span>
+            <span><i class="fas fa-clock"></i> Reading Time: <strong><span id="readTime">0 min</span></strong></span>
+            <span id="autoSaveIndicator" style="color: #4CAF50; display: none;"><i class="fas fa-check-circle"></i> Auto-saved</span>
           </div>
         </div>
 
@@ -2054,6 +2225,308 @@
       document.getElementById('slug').value = slug;
     });
 
+    // ==================== RICH TEXT FORMATTING FUNCTIONS ====================
+    
+    // Insert markdown formatting
+    function insertMarkdown(before, after, placeholder) {
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      const textToInsert = selectedText || placeholder;
+      const newText = before + textToInsert + after;
+      
+      textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+      
+      // Set cursor position
+      const newCursorPos = start + before.length + textToInsert.length;
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      
+      // Trigger input event to update counters
+      textarea.dispatchEvent(new Event('input'));
+    }
+
+    // Insert link
+    function insertLink() {
+      const url = prompt('Enter URL:');
+      if (!url) return;
+      
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end) || 'Link text';
+      
+      const linkMarkdown = `[${selectedText}](${url})`;
+      textarea.value = textarea.value.substring(0, start) + linkMarkdown + textarea.value.substring(end);
+      
+      textarea.focus();
+      textarea.setSelectionRange(start + linkMarkdown.length, start + linkMarkdown.length);
+      textarea.dispatchEvent(new Event('input'));
+    }
+
+    // Insert image
+    function insertImage() {
+      const url = prompt('Enter image URL:');
+      if (!url) return;
+      
+      const alt = prompt('Enter image description (alt text):') || 'Image';
+      
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const imageMarkdown = `![${alt}](${url})`;
+      
+      textarea.value = textarea.value.substring(0, start) + imageMarkdown + textarea.value.substring(start);
+      
+      textarea.focus();
+      textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+      textarea.dispatchEvent(new Event('input'));
+    }
+
+    // Insert code block
+    function insertCodeBlock() {
+      const language = prompt('Enter programming language (or leave blank):', 'javascript') || '';
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end) || 'Your code here';
+      
+      const codeBlock = `\`\`\`${language}\n${selectedText}\n\`\`\`\n`;
+      textarea.value = textarea.value.substring(0, start) + codeBlock + textarea.value.substring(end);
+      
+      textarea.focus();
+      textarea.setSelectionRange(start + 3 + language.length + 1, start + 3 + language.length + 1 + selectedText.length);
+      textarea.dispatchEvent(new Event('input'));
+    }
+
+    // Toggle markdown preview
+    let previewVisible = false;
+    function togglePreview() {
+      const preview = document.getElementById('markdownPreview');
+      const content = document.getElementById('content');
+      const previewContent = document.getElementById('previewContent');
+      
+      previewVisible = !previewVisible;
+      
+      if (previewVisible) {
+        // Simple markdown to HTML conversion
+        let html = content.value;
+        
+        // Code blocks
+        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+        
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Bold
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        
+        // Italic
+        html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        
+        // Headings
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+        
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        // Images
+        html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; border-radius: 8px; margin: 15px 0;">');
+        
+        // Quotes
+        html = html.replace(/^> (.+)$/gm, '<blockquote style="border-left: 4px solid #8B0000; padding-left: 15px; color: #666; margin: 15px 0;">$1</blockquote>');
+        
+        // Lists
+        html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul style="margin: 15px 0;">$1</ul>');
+        
+        html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+        
+        // Line breaks
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<p>' + html + '</p>';
+        html = html.replace(/<p><\/p>/g, '');
+        
+        previewContent.innerHTML = html;
+        preview.style.display = 'block';
+        content.style.borderRadius = '0 12px 0 0';
+      } else {
+        preview.style.display = 'none';
+        content.style.borderRadius = '0 0 12px 12px';
+      }
+    }
+
+    // Auto-save draft to localStorage
+    let autoSaveTimeout;
+    function autoSaveDraft() {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        const title = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+        
+        if (title || content) {
+          localStorage.setItem('draft_post_title', title);
+          localStorage.setItem('draft_post_content', content);
+          localStorage.setItem('draft_post_timestamp', Date.now());
+          
+          // Show saved indicator
+          const indicator = document.getElementById('autoSaveIndicator');
+          indicator.style.display = 'inline';
+          setTimeout(() => {
+            indicator.style.display = 'none';
+          }, 2000);
+        }
+      }, 3000); // Save after 3 seconds of no typing
+    }
+
+    // Load auto-saved draft on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const draftTitle = localStorage.getItem('draft_post_title');
+      const draftContent = localStorage.getItem('draft_post_content');
+      const draftTime = localStorage.getItem('draft_post_timestamp');
+      
+      if (draftTitle || draftContent) {
+        const timeSince = Date.now() - parseInt(draftTime || 0);
+        const minutes = Math.floor(timeSince / 60000);
+        
+        if (confirm(`📝 Found auto-saved draft from ${minutes} minutes ago.\n\nRestore it?`)) {
+          if (draftTitle) document.getElementById('title').value = draftTitle;
+          if (draftContent) {
+            document.getElementById('content').value = draftContent;
+            document.getElementById('content').dispatchEvent(new Event('input'));
+          }
+        }
+      }
+    });
+    
+    // Listen for changes to trigger auto-save
+    document.getElementById('title').addEventListener('input', autoSaveDraft);
+    document.getElementById('content').addEventListener('input', autoSaveDraft);
+
+    // ==================== END OF FORMATTING FUNCTIONS ====================
+    
+    // ==================== MEDIA UPLOAD FUNCTIONS ====================
+    
+    // Upload inline images (convert to Base64)
+    function uploadInlineImage() {
+      document.getElementById('inlineImageInput').click();
+    }
+
+    // Handle image file selection and conversion to Base64
+    document.getElementById('inlineImageInput').addEventListener('change', async function(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      const textarea = document.getElementById('content');
+      const insertPos = textarea.selectionStart;
+      let insertText = '\n\n';
+      
+      // Process each selected image
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Validate image type
+        if (!file.type.startsWith('image/')) {
+          alert(`❌ "${file.name}" is not an image file!`);
+          continue;
+        }
+        
+        // Show loading indicator
+        const indicator = document.getElementById('autoSaveIndicator');
+        indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting image...';
+        indicator.style.display = 'inline';
+        indicator.style.color = '#2196F3';
+        
+        // Convert to Base64
+        const reader = new FileReader();
+        await new Promise((resolve) => {
+          reader.onload = function(event) {
+            const base64 = event.target.result;
+            const altText = file.name.split('.')[0]; // Use filename without extension as alt text
+            insertText += `![${altText}](${base64})\n\n`;
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      // Insert all images at cursor position
+      textarea.value = textarea.value.substring(0, insertPos) + insertText + textarea.value.substring(insertPos);
+      
+      // Move cursor to end of inserted content
+      const newPos = insertPos + insertText.length;
+      textarea.focus();
+      textarea.setSelectionRange(newPos, newPos);
+      textarea.dispatchEvent(new Event('input'));
+      
+      // Reset file input
+      e.target.value = '';
+      
+      // Hide loading indicator
+      const indicator = document.getElementById('autoSaveIndicator');
+      indicator.innerHTML = '<i class="fas fa-check-circle"></i> Images added!';
+      indicator.style.color = '#4CAF50';
+      setTimeout(() => {
+        indicator.style.display = 'none';
+        indicator.innerHTML = '<i class="fas fa-check-circle"></i> Auto-saved';
+      }, 2000);
+    });
+
+    // Embed YouTube video
+    function embedYouTube() {
+      const url = prompt('📹 Paste YouTube URL:\n\nExample:\nhttps://www.youtube.com/watch?v=VIDEO_ID\nhttps://youtu.be/VIDEO_ID');
+      if (!url) return;
+      
+      const videoId = extractYouTubeId(url);
+      if (!videoId) {
+        alert('❌ Invalid YouTube URL!\n\nPlease use a valid URL like:\n• https://www.youtube.com/watch?v=VIDEO_ID\n• https://youtu.be/VIDEO_ID');
+        return;
+      }
+      
+      // Create responsive YouTube embed code
+      const embedCode = `\n\n<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 12px; margin: 20px 0;">
+  <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>\n\n`;
+      
+      const textarea = document.getElementById('content');
+      const pos = textarea.selectionStart;
+      textarea.value = textarea.value.substring(0, pos) + embedCode + textarea.value.substring(pos);
+      
+      // Move cursor to end
+      const newPos = pos + embedCode.length;
+      textarea.focus();
+      textarea.setSelectionRange(newPos, newPos);
+      textarea.dispatchEvent(new Event('input'));
+      
+      // Show success indicator
+      const indicator = document.getElementById('autoSaveIndicator');
+      indicator.innerHTML = '<i class="fab fa-youtube"></i> YouTube video added!';
+      indicator.style.display = 'inline';
+      indicator.style.color = '#FF0000';
+      setTimeout(() => {
+        indicator.style.display = 'none';
+        indicator.innerHTML = '<i class="fas fa-check-circle"></i> Auto-saved';
+        indicator.style.color = '#4CAF50';
+      }, 2000);
+    }
+
+    // Extract YouTube video ID from various URL formats
+    function extractYouTubeId(url) {
+      // Handle different YouTube URL formats:
+      // 1. https://www.youtube.com/watch?v=VIDEO_ID
+      // 2. https://youtu.be/VIDEO_ID
+      // 3. https://www.youtube.com/embed/VIDEO_ID
+      // 4. https://www.youtube.com/v/VIDEO_ID
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // ==================== END OF MEDIA UPLOAD FUNCTIONS ====================
+    
+
     // Live word counter and reading time calculator
     document.getElementById('content').addEventListener('input', function() {
       const text = this.value.trim();
@@ -2295,6 +2768,63 @@ ${content}`;
       }
     });
 
+    // ========================================
+    // 🚀 CLOUD SYNC FUNCTION
+    // ========================================
+    async function syncFromGitHubCloud() {
+      try {
+        const token = localStorage.getItem('github_api_token');
+        if (!token) {
+          console.log('⚠️ No GitHub token - skipping cloud sync');
+          return;
+        }
+
+        console.log('⬇️  Syncing posts from cloud to Posts Manager...');
+        
+        const owner = 'Akhinoor14';
+        const repo = 'A3KM-Studio';
+        const path = 'Content Studio/written-posts/posts.json';
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const content = atob(data.content);
+          const githubPosts = JSON.parse(content);
+          
+          // Merge with localStorage
+          const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+          const localIds = new Set(localPosts.map(p => p.id));
+          
+          let newCount = 0;
+          if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+            githubPosts.posts.forEach(post => {
+              if (!localIds.has(post.id)) {
+                localPosts.push(post);
+                newCount++;
+              }
+            });
+          }
+          
+          if (newCount > 0) {
+            localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+            console.log(`✅ Synced ${newCount} new posts from cloud to Posts Manager!`);
+          } else {
+            console.log('✅ Posts Manager already up to date with cloud');
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Cloud sync failed:', error);
+        // Don't block page load if sync fails
+      }
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
@@ -2309,10 +2839,29 @@ ${content}`;
     // Dashboard Stats Loading
     async function loadDashboardStats() {
       try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        const items = contentManager.getItemsFromData(data, CONTENT_TYPE) || [];
+        // 🚀 STEP 1: Pull latest posts from GitHub Cloud first!
+        await syncFromGitHubCloud();
         
-        console.log('Posts Dashboard - Loaded posts:', items.length, 'items');
+        const data = await contentManager.loadContent(CONTENT_TYPE);
+        let items = contentManager.getItemsFromData(data, CONTENT_TYPE) || [];
+        
+        // 🚀 STEP 2: Load posts from localStorage (Quick Post Creator!)
+        const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+        
+        if (localPosts.length > 0) {
+          console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator!`);
+          
+          // Merge with existing posts (avoid duplicates by ID)
+          localPosts.forEach(localPost => {
+            const exists = items.find(p => p.id === localPost.id);
+            if (!exists) {
+              items.push(localPost);
+              console.log(`✅ Added localStorage post: ${localPost.id}`);
+            }
+          });
+        }
+        
+        console.log('Posts Dashboard - Total posts:', items.length, '(GitHub + localStorage)');
         
         const total = items.length;
         const published = items.filter(i => i.status === 'published').length;
@@ -2340,8 +2889,33 @@ ${content}`;
       const grid = document.getElementById('contentGrid');
       grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">Loading...</p>';
       try {
+        // 🚀 STEP 1: Pull latest posts from GitHub Cloud first!
+        await syncFromGitHubCloud();
+        
         const data = await contentManager.loadContent(CONTENT_TYPE);
-        currentContent = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        let items = contentManager.getItemsFromData(data, CONTENT_TYPE);
+        
+        // 🚀 STEP 2: Load posts from localStorage (Quick Post Creator!)
+        const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+        
+        if (localPosts.length > 0) {
+          console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator in Manage tab!`);
+          
+          // Merge with existing posts (avoid duplicates by ID)
+          localPosts.forEach(localPost => {
+            const exists = items.find(p => p.id === localPost.id);
+            if (!exists) {
+              // Add source flag to identify localStorage posts
+              localPost._source = 'localStorage';
+              items.push(localPost);
+              console.log(`✅ Added localStorage post to Manage: ${localPost.id}`);
+            }
+          });
+        }
+        
+        console.log(`📋 Manage Tab - Total posts: ${items.length} (GitHub + localStorage)`);
+        
+        currentContent = items;
         renderContent(currentContent);
       } catch (error) {
         grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load posts</p>';
@@ -2390,6 +2964,9 @@ ${content}`;
         const card = document.createElement('div');
         card.className = 'content-card';
         
+        // Check if post is from localStorage
+        const isLocalStoragePost = item._source === 'localStorage';
+        
         // Status badge
         const statusClass = item.status === 'published' ? 'status-published' : item.status === 'draft' ? 'status-draft' : 'status-scheduled';
         const statusText = item.status || 'published';
@@ -2418,6 +2995,11 @@ ${content}`;
           <div style="position: absolute; top: 10px; left: 10px; z-index: 10;">
             <input type="checkbox" class="post-checkbox" value="${item.id}" style="width: 18px; height: 18px; cursor: pointer;">
           </div>
+          ${isLocalStoragePost ? `
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10; background: linear-gradient(135deg, #FF9800, #F57C00); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3);">
+              💾 localStorage
+            </div>
+          ` : ''}
           <img src="${thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📝%3C/text%3E%3C/svg%3E'}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📝%3C/text%3E%3C/svg%3E'">
           <div class="card-body">
             <div style="margin-bottom: 10px;">
@@ -2625,22 +3207,38 @@ ${content}`;
       const post = currentContent.find(p => p.id === id);
       if (!post) return;
       
-      const confirmMessage = `🗑️ Delete "${post.title}"?\n\nThis will delete:\n- Post data from JSON\n- Markdown file (if exists)\n\nThis action cannot be undone!`;
+      // Check if post is from localStorage
+      const isLocalStoragePost = post._source === 'localStorage';
+      
+      const confirmMessage = isLocalStoragePost 
+        ? `🗑️ Delete "${post.title}"?\n\n⚠️ This post is from Quick Post Creator (localStorage).\n\nThis will delete:\n- Post from browser storage only\n\nThis action cannot be undone!`
+        : `🗑️ Delete "${post.title}"?\n\nThis will delete:\n- Post data from GitHub JSON\n- Markdown file (if exists)\n\nThis action cannot be undone!`;
       
       if (confirm(confirmMessage)) {
         try {
-          // Delete from JSON
-          await contentManager.deleteContent(CONTENT_TYPE, id);
-          
-          // Try to delete the markdown file
-          try {
-            const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
-            await contentManager.deleteMarkdownFile(mdPath);
-          } catch (mdError) {
-            console.warn('Markdown file not found or already deleted:', mdError);
+          if (isLocalStoragePost) {
+            // Delete from localStorage
+            let localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+            localPosts = localPosts.filter(p => p.id !== id);
+            localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+            console.log(`✅ Deleted localStorage post: ${id}`);
+            
+            alert('✅ Post deleted from localStorage successfully!');
+          } else {
+            // Delete from GitHub JSON
+            await contentManager.deleteContent(CONTENT_TYPE, id);
+            
+            // Try to delete the markdown file
+            try {
+              const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
+              await contentManager.deleteMarkdownFile(mdPath);
+            } catch (mdError) {
+              console.warn('Markdown file not found or already deleted:', mdError);
+            }
+            
+            alert('✅ Post deleted from GitHub successfully!');
           }
           
-          alert('✅ Post deleted successfully!');
           loadManageContent();
           loadDashboardStats();
         } catch (err) {
@@ -2839,6 +3437,10 @@ ${content}`;
       e.preventDefault();
       const id = document.getElementById('editPostId').value;
       
+      // Check if editing a localStorage post
+      const post = currentContent.find(p => p.id === id);
+      const isLocalStoragePost = post && post._source === 'localStorage';
+      
       // Get selected audiences
       const selectedAudiences = Array.from(document.querySelectorAll('#editModal input[name="editAudience"]:checked'))
         .map(cb => cb.value);
@@ -2864,48 +3466,68 @@ ${content}`;
       };
       
       try {
-        // Check if new thumbnail was selected
-        if (editThumbnailFileToUpload) {
-          if (!confirm('📤 Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
+        if (isLocalStoragePost) {
+          // Update post in localStorage
+          let localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+          const index = localPosts.findIndex(p => p.id === id);
+          
+          if (index !== -1) {
+            // Merge updated fields with existing post
+            localPosts[index] = { ...localPosts[index], ...updatedPost };
+            localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+            console.log(`✅ Updated localStorage post: ${id}`);
+            
+            alert('✅ Post updated in localStorage successfully!');
+          } else {
+            alert('❌ Post not found in localStorage!');
             return;
+          }
+        } else {
+          // Update post in GitHub
+          // Check if new thumbnail was selected
+          if (editThumbnailFileToUpload) {
+            if (!confirm('📤 Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
+              return;
+            }
+            
+            try {
+              const category = document.getElementById('editCategory').value;
+              const fileName = editThumbnailFileToUpload.name;
+              const fileExtension = fileName.split('.').pop();
+              const thumbnailPath = `Content Storage/written-posts/${category}/${id}/thumbnail.${fileExtension}`;
+              
+              // Upload thumbnail to GitHub
+              await contentManager.uploadFile(thumbnailPath, editThumbnailFileToUpload, `Upload thumbnail: ${fileName} for post ${id}`);
+              
+              // Update post with new thumbnail path
+              updatedPost.thumbnailPath = thumbnailPath;
+              updatedPost.thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
+              
+              alert('✅ Thumbnail uploaded successfully!');
+              editThumbnailFileToUpload = null;
+            } catch (uploadError) {
+              alert('❌ Failed to upload thumbnail: ' + uploadError.message);
+              return;
+            }
           }
           
-          try {
-            const category = document.getElementById('editCategory').value;
-            const fileName = editThumbnailFileToUpload.name;
-            const fileExtension = fileName.split('.').pop();
-            const thumbnailPath = `Content Storage/written-posts/${category}/${id}/thumbnail.${fileExtension}`;
-            
-            // Upload thumbnail to GitHub
-            await contentManager.uploadFile(thumbnailPath, editThumbnailFileToUpload, `Upload thumbnail: ${fileName} for post ${id}`);
-            
-            // Update post with new thumbnail path
-            updatedPost.thumbnailPath = thumbnailPath;
-            updatedPost.thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
-            
-            alert('✅ Thumbnail uploaded successfully!');
-            editThumbnailFileToUpload = null;
-          } catch (uploadError) {
-            alert('❌ Failed to upload thumbnail: ' + uploadError.message);
-            return;
+          await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
+          
+          // Also save the markdown file content if it was edited
+          const mdContent = document.getElementById('editContent').value;
+          if (mdContent && mdContent.trim()) {
+            try {
+              const post = currentContent.find(p => p.id === id);
+              const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
+              await contentManager.saveMarkdownFile(mdPath, mdContent);
+            } catch (mdError) {
+              console.warn('Could not save markdown file:', mdError);
+            }
           }
+          
+          alert('✅ Post updated in GitHub successfully!');
         }
         
-        await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
-        
-        // Also save the markdown file content if it was edited
-        const mdContent = document.getElementById('editContent').value;
-        if (mdContent && mdContent.trim()) {
-          try {
-            const post = currentContent.find(p => p.id === id);
-            const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
-            await contentManager.saveMarkdownFile(mdPath, mdContent);
-          } catch (mdError) {
-            console.warn('Could not save markdown file:', mdError);
-          }
-        }
-        
-        alert('✅ Post updated successfully!');
         closeEditModal();
         loadManageContent();
         loadStatistics(); // Refresh statistics

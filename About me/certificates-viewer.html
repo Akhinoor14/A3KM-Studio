@@ -991,43 +991,36 @@
     // Open modal
     function openModal(cert) {
       currentCertificate = cert;
-      const modal = document.getElementById('certificateModal');
       
+      // Use Universal PDF Viewer for all document types
+      const certPath = cert.filePath;
+      const fileExt = cert.fileType.toLowerCase();
+      
+      // Close any open modal first
+      closeModal();
+      
+      // Open in Universal PDF Viewer
+      if (typeof openUniversalPDFViewer === 'function') {
+        openUniversalPDFViewer({
+          filePath: certPath,
+          fileType: fileExt,
+          title: `📄 ${cert.title}`,
+          downloadName: `${cert.title.replace(/[^a-z0-9]/gi, '_')}.${fileExt}`,
+          showDownload: true,
+          allowZoom: true
+        });
+        return;
+      }
+      
+      // Fallback to modal for non-universal viewer support
+      const modal = document.getElementById('certificateModal');
       document.getElementById('modalTitle').textContent = cert.title;
       
-      // Fix path - add ../ prefix if not already present
-      const certPath = cert.filePath;
-      
-      // Handle different file types
       const modalContent = document.querySelector('.modal-image-container');
-      const isPDF = cert.fileType.toLowerCase() === 'pdf';
-      const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(cert.fileType.toLowerCase());
+      const isPDF = fileExt === 'pdf';
+      const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
       
-      if (isPDF) {
-        // Mobile-friendly PDF viewer with fallback
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          // Use iframe for better mobile support
-          modalContent.innerHTML = `
-            <iframe id="modalPDF" 
-                    src="${certPath}#view=FitH&toolbar=0&navpanes=0" 
-                    type="application/pdf"
-                    frameborder="0"
-                    scrolling="auto"
-                    style="width: 100%; height: 100%; border: none; border-radius: 8px; background: white;">
-            </iframe>
-          `;
-        } else {
-          // Desktop: Use embed tag
-          modalContent.innerHTML = `
-            <embed id="modalPDF" 
-                   src="${certPath}#toolbar=0&navpanes=0&scrollbar=1" 
-                   type="application/pdf"
-                   style="width: 100%; height: 100%; border: none; border-radius: 8px; filter: drop-shadow(0 0 15px rgba(204, 0, 0, 0.2));">
-          `;
-        }
-      } else if (isImage) {
+      if (isImage) {
         // Show image with premium styling
         modalContent.innerHTML = `
           <img class="modal-image" id="modalImage" src="${certPath}" alt="${cert.title}">
@@ -1163,5 +1156,7 @@
   </script>
 
   <script src="../Optimization/navbar-autohide.js"></script>
+  <!-- Universal PDF Viewer for Desktop Certificates -->
+  <script src="../mobile/shared/pdf-viewer.js"></script>
 </body>
 </html>

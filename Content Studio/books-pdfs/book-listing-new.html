@@ -742,10 +742,11 @@
 
     async function loadBooks() {
       try {
-        const response = await fetch('books.json');
+        const response = await fetch('../../Content Code/content.json');
         const data = await response.json();
-        allBooks = data.books || [];
-        categoryGroups = data.categoryGroups || [];
+        allBooks = data['books-pdfs'] || [];
+        categoryGroups = []; // No category groups in content.json, will display flat
+        console.log(`📚 Desktop: Loaded ${allBooks.length} books from content.json`);
         renderBooks();
       } catch (error) {
         console.error('Error loading books:', error);
@@ -775,42 +776,28 @@
       }
 
       let html = '';
-      let totalDisplayed = 0;
-      let totalCategories = 0;
+      
+      // Group books by category
+      const booksByCategory = {};
+      allBooks.forEach(book => {
+        const category = book.category || 'Other';
+        if (!booksByCategory[category]) {
+          booksByCategory[category] = [];
+        }
+        booksByCategory[category].push(book);
+      });
 
-      // Render by domain groups
-      categoryGroups.forEach(group => {
-        const groupBooks = allBooks.filter(book => 
-          group.categories.includes(book.category)
-        );
-
-        if (groupBooks.length === 0) return;
+      // Render by categories
+      Object.keys(booksByCategory).sort().forEach(category => {
+        const categoryBooks = booksByCategory[category];
+        const slug = category.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
         html += `
           <div style="margin-bottom: 60px;">
-            <div style="margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid var(--border-red);">
-              <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-white); display: flex; align-items: center; gap: 15px;">
-                <span style="font-size: 2.5rem;">${group.icon}</span>
-                ${group.name}
-                <span style="font-size: 1rem; color: var(--text-dim); font-weight: 500;">(${groupBooks.length} ${groupBooks.length === 1 ? 'book' : 'books'})</span>
-              </h2>
-            </div>
-        `;
-
-        // Render categories within this domain
-        group.categories.forEach(categoryName => {
-          const categoryBooks = allBooks.filter(book => book.category === categoryName);
-          if (categoryBooks.length === 0) return;
-
-          totalCategories++;
-          totalDisplayed += categoryBooks.length;
-          const slug = categoryName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-
-          html += `
             <div class="category-section" data-category="${slug}">
               <div class="category-header" onclick="toggleCategory('${slug}')">
                 <div class="category-title-wrapper">
-                  <h3 class="category-title" style="font-size: 1.3rem; font-weight: 600;">${categoryName}</h3>
+                  <h3 class="category-title" style="font-size: 1.5rem; font-weight: 700;">${category}</h3>
                 </div>
                 <div class="category-meta">
                   <span class="book-count-badge">${categoryBooks.length} ${categoryBooks.length === 1 ? 'book' : 'books'}</span>
@@ -823,14 +810,12 @@
                 ${categoryBooks.map(book => createBookCard(book)).join('')}
               </div>
             </div>
-          `;
-        });
-
-        html += `</div>`;
+          </div>
+        `;
       });
 
       container.innerHTML = html;
-      document.getElementById('totalCount').textContent = `${allBooks.length} ${allBooks.length === 1 ? 'Book' : 'Books'} in ${totalCategories} ${totalCategories === 1 ? 'Category' : 'Categories'}`;
+      document.getElementById('totalCount').textContent = `${allBooks.length} ${allBooks.length === 1 ? 'Book' : 'Books'}`;
     }
 
     function createBookCard(book) {

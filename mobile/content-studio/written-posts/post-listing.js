@@ -25,25 +25,29 @@
     });
 
     /**
-     * Load posts from central content.json + localStorage
+     * Load posts from central posts.json + localStorage + GitHub Cloud
      */
     async function loadPostsFromJSON() {
         try {
             showLoadingState();
             
-            const response = await fetch('../../../Content Code/content.json');
+            // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
+            await syncFromGitHubCloud();
+            
+            // STEP 2: Load posts from GitHub posts.json (Professional Manager)
+            const response = await fetch('../../../Content Studio/written-posts/posts.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            allPosts = data['written-posts'] || [];
+            allPosts = data.posts || [];
             
-            // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+            // STEP 3: Load posts from localStorage (Quick Post Creator!)
             const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
             
             if (localPosts.length > 0) {
-                console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+                console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator!`);
                 
                 // Normalize and merge with existing posts (avoid duplicates)
                 localPosts.forEach(localPost => {
@@ -56,7 +60,7 @@
                 });
             }
             
-            console.log(`📝 Total ${allPosts.length} posts loaded`);
+            console.log(`📝 Total ${allPosts.length} posts loaded (GitHub + localStorage + Cloud)`);
             
             hideLoadingState();
             renderPosts();
@@ -64,6 +68,64 @@
         } catch (error) {
             console.error('❌ Failed to load posts:', error);
             showErrorState();
+        }
+    }
+
+    /**
+     * 🚀 NEW: Sync posts from GitHub Cloud to localStorage
+     * This ensures posts created on other devices appear automatically!
+     */
+    async function syncFromGitHubCloud() {
+        try {
+            const token = localStorage.getItem('github_api_token');
+            if (!token) {
+                console.log('⚠️ No GitHub token - skipping cloud sync');
+                return;
+            }
+
+            console.log('⬇️  Syncing posts from cloud...');
+            
+            const owner = 'Akhinoor14';
+            const repo = 'A3KM-Studio';
+            const path = 'Content Studio/written-posts/posts.json';
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const content = atob(data.content);
+                const githubPosts = JSON.parse(content);
+                
+                // Merge with localStorage
+                const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+                const localIds = new Set(localPosts.map(p => p.id));
+                
+                let newCount = 0;
+                if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+                    githubPosts.posts.forEach(post => {
+                        if (!localIds.has(post.id)) {
+                            localPosts.push(post);
+                            newCount++;
+                        }
+                    });
+                }
+                
+                if (newCount > 0) {
+                    localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+                    console.log(`✅ Synced ${newCount} new posts from cloud to mobile!`);
+                } else {
+                    console.log('✅ Mobile already up to date with cloud');
+                }
+            }
+        } catch (error) {
+            console.error('⚠️ Cloud sync failed:', error);
+            // Don't block page load if sync fails
         }
     }
 
@@ -125,11 +187,6 @@
         // Filter chips
         filterChips.forEach(chip => {
             chip.addEventListener('click', () => {
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-                
                 // Update active state
                 filterChips.forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
@@ -191,7 +248,8 @@
             <a href="post-reader.html?id=${post.id}" class="content-item post-item">
                 <div class="content-thumbnail post-thumbnail">
                     ${post.thumbnail ? 
-                        `<img src="${post.thumbnail}" alt="${post.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : 
+                        `<img src="${post.thumbnail}" alt="${post.title}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" onerror="this.style.display='none'; this.parentElement.querySelector('i').style.display='flex'">
+                         <i class="${post.icon || 'fas fa-file-alt'}" style="display:none;"></i>` : 
                         `<i class="${post.icon || 'fas fa-file-alt'}" style="display:flex;"></i>`
                     }
                     <span class="post-language">${getLanguageDisplay(post.language)}</span>
@@ -203,9 +261,11 @@
                         <span><i class="fas fa-calendar"></i> ${formatDate(post.publishDate)}</span>
                     </div>
                     <p class="content-item-desc">${truncateText(post.description, 120)}</p>
-                    <div class="content-tags">
-                        ${post.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
-                    </div>
+                    ${post.tags && post.tags.length > 0 ? `
+                        <div class="content-tags">
+                            ${post.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             </a>
         `).join('');
@@ -273,14 +333,19 @@
             title: post.title || 'Untitled Post',
             category: 'written-posts',
             subcategory: post.category || 'General',
-            description: post.summary || fallbackText || 'No description available',
-            mdFilePath: post.mdFilePath || '',
-            thumbnail: post.coverImage || '',
+            description: post.summary || fallbackText.substring(0, 200) || 'No description available',
+            mdFilePath: post.content || post.contentPath || post.markdownFile || '',
+            thumbnail: post.coverImage || post.thumbnail || post.thumbnailUrl || '',
             readingTime: `${readTime} min`,
             publishDate: post.date || new Date().toISOString().split('T')[0],
             language: post.language || 'en',
             tags: Array.isArray(post.tags) ? post.tags : [],
-            icon: 'fa-pen-fancy'
+            icon: 'fa-pen-fancy',
+            // Pass through additional fields
+            status: post.status || 'published',
+            author: post.author || 'Md Akhinoor Islam',
+            views: post.views || 0,
+            _source: 'localStorage' // Tag to identify source
         };
     }
 
@@ -302,14 +367,8 @@
      * Add haptic feedback to items
      */
     function addHapticFeedback() {
-        const items = document.querySelectorAll('.post-item');
-        items.forEach(item => {
-            item.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            }, { passive: true });
-        });
+        // Removed excessive vibration feedback
+        // Only keeping vibrations for important actions
     }
 
 })();

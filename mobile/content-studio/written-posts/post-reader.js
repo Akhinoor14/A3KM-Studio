@@ -19,21 +19,25 @@
     });
 
     /**
-     * Load posts from central content.json + localStorage
+     * Load posts from GitHub posts.json + localStorage + Cloud
      */
     async function loadPostsFromJSON() {
         try {
-            const response = await fetch('../../../Content Code/content.json');
+            // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
+            await syncFromGitHubCloud();
+            
+            // STEP 2: Load posts from GitHub posts.json (Professional Manager)
+            const response = await fetch('../../../Content Studio/written-posts/posts.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
-            allPosts = data['written-posts'] || [];
+            allPosts = data.posts || [];
             
-            // 🚀 NEW: Load posts from localStorage (Simple Creator!)
+            // STEP 3: Load posts from localStorage (Quick Post Creator!)
             const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
             
             if (localPosts.length > 0) {
-                console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+                console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator!`);
                 
                 // Normalize and merge with existing posts (avoid duplicates)
                 localPosts.forEach(localPost => {
@@ -45,12 +49,70 @@
                 });
             }
             
-            console.log(`📝 Loaded ${allPosts.length} posts`);
+            console.log(`📝 Loaded ${allPosts.length} posts (GitHub + localStorage + Cloud)`);
             
             loadPost();
         } catch (error) {
             console.error('❌ Failed to load posts:', error);
             showError('Failed to load posts. Please check your connection.');
+        }
+    }
+
+    /**
+     * 🚀 NEW: Sync posts from GitHub Cloud to localStorage
+     * This ensures posts created on other devices appear automatically!
+     */
+    async function syncFromGitHubCloud() {
+        try {
+            const token = localStorage.getItem('github_api_token');
+            if (!token) {
+                console.log('⚠️ No GitHub token - skipping cloud sync');
+                return;
+            }
+
+            console.log('⬇️  Syncing posts from cloud...');
+            
+            const owner = 'Akhinoor14';
+            const repo = 'A3KM-Studio';
+            const path = 'Content Studio/written-posts/posts.json';
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const content = atob(data.content);
+                const githubPosts = JSON.parse(content);
+                
+                // Merge with localStorage
+                const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+                const localIds = new Set(localPosts.map(p => p.id));
+                
+                let newCount = 0;
+                if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+                    githubPosts.posts.forEach(post => {
+                        if (!localIds.has(post.id)) {
+                            localPosts.push(post);
+                            newCount++;
+                        }
+                    });
+                }
+                
+                if (newCount > 0) {
+                    localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+                    console.log(`✅ Synced ${newCount} new posts from cloud to mobile viewer!`);
+                } else {
+                    console.log('✅ Mobile viewer already up to date with cloud');
+                }
+            }
+        } catch (error) {
+            console.error('⚠️ Cloud sync failed:', error);
+            // Don't block page load if sync fails
         }
     }
 
@@ -79,19 +141,35 @@
         console.log(`📖 Loading post: ${currentPost.title}`);
         
         try {
-            // If inline HTML content exists (from Simple Creator)
-            if (currentPost.content && (currentPost.content.startsWith('<') || currentPost.content.includes('<p>'))) {
-                renderPost(currentPost.content);
+            // Check if post is from localStorage (has inline content or _source flag)
+            const isLocalStoragePost = currentPost._source === 'localStorage' || 
+                                       (currentPost.content && !currentPost.content.startsWith('../../'));
+            
+            if (isLocalStoragePost) {
+                console.log(`💾 Rendering localStorage post: ${currentPost.id}`);
+                
+                // For localStorage posts, content is already HTML or plain text
+                const htmlContent = currentPost.content || currentPost.summary || 'No content available';
+                
+                // Simple markdown-like conversion if it's plain text
+                let processedContent = htmlContent;
+                if (!htmlContent.includes('<')) {
+                    processedContent = simpleMarkdownToHTML(htmlContent);
+                }
+                
+                renderPost(processedContent);
                 checkBookmarkState();
                 return;
             }
 
-            // Fetch markdown content from file path
-            const mdPath = currentPost.mdFilePath || currentPost.content;
+            // For GitHub posts, fetch markdown file
+            const mdPath = currentPost.content || currentPost.contentPath || currentPost.markdownFile;
             if (!mdPath) {
-                throw new Error('Missing markdown path');
+                throw new Error('Missing markdown path for GitHub post');
             }
-            const mdResponse = await fetch(mdPath);
+            
+            console.log(`📄 Fetching markdown from: ${mdPath}`);
+            const mdResponse = await fetch(`../../../${mdPath}`);
             if (!mdResponse.ok) throw new Error(`Failed to load markdown: ${mdResponse.status}`);
             
             const markdownContent = await mdResponse.text();
@@ -110,6 +188,36 @@
             console.error('❌ Failed to load post content:', error);
             showError('Failed to load post content. Please try again.');
         }
+    }
+    
+    /**
+     * Simple markdown to HTML converter for localStorage posts
+     */
+    function simpleMarkdownToHTML(text) {
+        let html = text;
+        
+        // Convert line breaks to paragraphs
+        html = html.split('\n\n').map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('');
+        
+        // Bold
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        
+        // Italic
+        html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        // Images
+        html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; border-radius: 8px; margin: 15px 0;">');
+        
+        // Code blocks
+        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+        
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        return html;
     }
 
     /**

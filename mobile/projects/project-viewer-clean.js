@@ -496,7 +496,6 @@
     }
 
     function handleShare() {
-        if (navigator.vibrate) navigator.vibrate(10);
         if (navigator.share) {
             navigator.share({
                 title: currentProject.title,

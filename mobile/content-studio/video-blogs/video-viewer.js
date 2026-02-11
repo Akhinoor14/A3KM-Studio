@@ -148,38 +148,57 @@
     }
 
     // ========== RENDER RELATED VIDEOS ==========
-    function renderRelatedVideos() {
+    async function renderRelatedVideos() {
         // Show other videos except current one
-        const relatedVideos = allVideos.filter(v => v.id !== currentVideo.id).slice(0, 5);
+        let relatedVideos = allVideos.filter(v => v.id !== currentVideo.id).slice(0, 5);
 
-        relatedList.innerHTML = relatedVideos.map(video => `
-            <a href="video-viewer.html?id=${video.id}" class="related-item">
-                <div class="related-thumb">
-                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">
-                    <i class="fab fa-youtube"></i>
-                    <span class="related-duration">${video.duration}</span>
-                </div>
-                <div class="related-info">
-                    <h4>${video.title}</h4>
-                    <p>${formatDate(video.publishDate)}</p>
-                </div>
-            </a>
-        `).join('');
+        // Enhance related videos with YouTube data
+        if (window.youtubeFetcher && relatedVideos.length > 0) {
+            console.log('🔄 Enhancing related videos with YouTube data...');
+            try {
+                relatedVideos = await window.youtubeFetcher.enhanceMultipleVideos(relatedVideos);
+                console.log('✅ Related videos enhanced with YouTube data');
+            } catch (err) {
+                console.warn('⚠️ Failed to enhance related videos:', err);
+            }
+        }
+
+        relatedList.innerHTML = relatedVideos.map(video => {
+            // Format views if available
+            const viewsText = video.views && video.views > 0 
+                ? (window.youtubeFetcher?.formatViews(video.views) || `${video.views} views`)
+                : '';
+            
+            return `
+                <a href="video-viewer.html?id=${video.id}" class="related-item">
+                    <div class="related-thumb">
+                        <img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">
+                        <i class="fab fa-youtube"></i>
+                        <span class="related-duration">${video.duration || 'N/A'}</span>
+                    </div>
+                    <div class="related-info">
+                        <h4>${video.title}</h4>
+                        <p>${formatDate(video.publishDate)}${viewsText ? ' • ' + viewsText : ''}</p>
+                    </div>
+                </a>
+            `;
+        }).join('');
 
         addRelatedVideoHaptic();
     }
 
     // ========== EVENT HANDLERS ==========
     function handleLike() {
-        isLiked = !isLiked;
-        likeBtn.classList.toggle('liked', isLiked);
+        if (navigator.vibrate) navigator.vibrate(10);
         
-        if (navigator.vibrate) {
-            navigator.vibrate(isLiked ? 30 : 10);
+        // Open YouTube video page so user can like on YouTube
+        if (currentVideo.youtubeUrl) {
+            window.open(currentVideo.youtubeUrl, '_blank');
+        } else if (currentVideo.videoId) {
+            window.open(`https://www.youtube.com/watch?v=${currentVideo.videoId}`, '_blank');
+        } else {
+            showToast('YouTube link not available');
         }
-
-        // Save to localStorage
-        localStorage.setItem(`video_${currentVideo.id}_liked`, isLiked);
     }
 
     function handleShare() {
@@ -215,8 +234,16 @@
     function handleDownload() {
         if (navigator.vibrate) navigator.vibrate([10, 20, 10]);
         
-        // In production, this would link to download endpoint
-        alert('Download feature coming soon! Video will be available for offline viewing.');
+        // Open YouTube video page in new tab for download options
+        if (currentVideo.youtubeUrl) {
+            window.open(currentVideo.youtubeUrl, '_blank');
+            showToast('Opening YouTube to download');
+        } else if (currentVideo.videoId) {
+            window.open(`https://www.youtube.com/watch?v=${currentVideo.videoId}`, '_blank');
+            showToast('Opening YouTube to download');
+        } else {
+            showToast('YouTube link not available');
+        }
     }
 
     function toggleDescription() {
@@ -288,10 +315,9 @@
     }
 
     function checkSavedState() {
-        isLiked = localStorage.getItem(`video_${currentVideo.id}_liked`) === 'true';
+        // Only check saved state (like is now a direct YouTube action)
         isSaved = localStorage.getItem(`video_${currentVideo.id}_saved`) === 'true';
         
-        if (isLiked) likeBtn.classList.add('liked');
         if (isSaved) {
             saveBtn.classList.add('liked');
             saveBtn.querySelector('span').textContent = 'Saved';

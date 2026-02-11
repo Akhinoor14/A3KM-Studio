@@ -142,19 +142,8 @@
      * Add haptic feedback on supported devices
      */
     function addHapticFeedback() {
-        // Check if Vibration API is supported
-        if (!('vibrate' in navigator)) {
-            return;
-        }
-        
-        const navItems = document.querySelectorAll('.mobile-nav-item');
-        
-        navItems.forEach(item => {
-            item.addEventListener('touchstart', function(e) {
-                // Light haptic feedback (10ms vibration)
-                navigator.vibrate(10);
-            }, { passive: true });
-        });
+        // Removed excessive vibration feedback
+        // Only keeping vibrations for important actions like save/bookmark
     }
     
     /**

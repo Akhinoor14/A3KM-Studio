@@ -1024,7 +1024,79 @@
         }
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', initGitHubSync);
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initGitHubSync();
+            await initBackgroundSync();
+        });
+
+        // ========================================
+        // BACKGROUND AUTO-SYNC SYSTEM
+        // ========================================
+        let syncInterval = null;
+
+        async function initBackgroundSync() {
+            console.log('🔄 Initializing background sync system...');
+
+            // 1. Pull posts from GitHub on page load (get posts from other devices!)
+            if (githubSync && githubSync.token) {
+                try {
+                    console.log('⬇️  Pulling posts from other devices...');
+                    const result = await githubSync.pullFromGitHub();
+                    if (result.success) {
+                        console.log(`✅ Synced ${result.total} posts from cloud`);
+                        updateSyncStatus('✅ Synced with cloud', true);
+                    }
+                } catch (error) {
+                    console.error('⚠️ Initial sync failed:', error);
+                }
+            }
+
+            // 2. Set up automatic background sync every 5 minutes
+            if (githubSync && githubSync.token) {
+                syncInterval = setInterval(async () => {
+                    try {
+                        console.log('🔄 Background sync running...');
+                        const result = await githubSync.fullSync();
+                        if (result.success) {
+                            console.log(`✅ Background sync complete: ${result.mergedCount} posts`);
+                            updateSyncStatus('✅ Auto-synced', true);
+                        }
+                    } catch (error) {
+                        console.error('⚠️ Background sync failed:', error);
+                        updateSyncStatus('⚠️ Sync pending', false);
+                    }
+                }, 5 * 60 * 1000); // Every 5 minutes
+
+                console.log('✅ Background sync scheduled (every 5 minutes)');
+            }
+
+            // 3. Sync before page unload (save changes before closing)
+            window.addEventListener('beforeunload', async () => {
+                if (githubSync && githubSync.token) {
+                    try {
+                        await githubSync.pushToGitHub();
+                        console.log('✅ Final sync before page close');
+                    } catch (error) {
+                        console.error('⚠️ Final sync failed:', error);
+                    }
+                }
+            });
+        }
+
+        function updateSyncStatus(message, success = true) {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                const color = success ? '#90EE90' : '#FFA500';
+                statusEl.innerHTML = `<i class="fas ${success ? 'fa-check-circle' : 'fa-clock'}"></i> <span style="color: ${color};">${message}</span>`;
+            }
+        }
+
+        // Clean up interval on page unload
+        window.addEventListener('unload', () => {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+        });
     </script>
     <script src="github-sync.js" defer></script>
 </body>

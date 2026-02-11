@@ -21,18 +21,20 @@
     });
 
     /**
-     * Load courses from central content.json
+     * Load courses directly from courses.json (just like desktop!)
+     * This ensures mobile automatically shows new courses without manual sync
      */
     async function loadCoursesFromJSON() {
         try {
             showLoadingState();
             
-            const response = await fetch('../../../Content Code/content.json');
+            // ✅ Load directly from desktop JSON file
+            const response = await fetch('../../../Content Studio/educational-videos/courses.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
-            allCourses = data['educational-courses'] || [];
-            console.log(`📚 Loaded ${allCourses.length} courses`);
+            allCourses = data.courses || [];
+            console.log(`📚 Loaded ${allCourses.length} courses from courses.json`);
             
             hideLoadingState();
             renderCourses(allCourses);
@@ -238,21 +240,14 @@
         const backBtn = document.querySelector('.back-btn');
         if (backBtn) {
             backBtn.addEventListener('touchstart', () => {
-                if (navigator.vibrate) navigator.vibrate(10);
+                // Removed unnecessary vibration
             });
         }
     }
 
     // ========== HELPER FUNCTIONS ==========
     function addHapticFeedback() {
-        const courseItems = document.querySelectorAll('.course-item');
-        courseItems.forEach(item => {
-            item.addEventListener('touchstart', () => {
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
-        });
+        // Removed excessive vibration feedback
     }
 
     // ========== EVENT HANDLERS ==========
