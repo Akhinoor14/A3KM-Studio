@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#CC0000">
+    
+    <meta name="description" content="Documentation Viewer - A3KM Studio">
+    <meta name="author" content="Md Akhinoor Islam">
+    
+    <title id="page-title">Documentation - A3KM Studio</title>
+    
+    <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Highlight.js for Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    
+    <!-- Mobile Common Styles -->
+    <link rel="stylesheet" href="../../mobile/shared/mobile-common.css">
+    
+    <style>
+        body {
+            padding-bottom: 0;
+            background: var(--bg-dark);
+        }
+        
+        /* ============================================================================
+           TOP NAVIGATION BAR
+           ============================================================================ */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-dark);
+            border-bottom: 2px solid var(--border-primary);
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-back:active {
+            background: var(--primary-red);
+            color: white;
+            transform: scale(0.95);
+        }
+        
+        .nav-category {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .nav-category i {
+            font-size: 0.7rem;
+            color: var(--primary-red);
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:active:not(:disabled) {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+            transform: scale(0.92);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .nav-btn.toc-btn:active:not(:disabled) {
+            background: rgba(204, 0, 0, 0.2);
+            color: var(--primary-red);
+        }
+        
+        /* ============================================================================
+           DOCUMENT HEADER CARD
+           ============================================================================ */
+        .doc-header {
+            background: linear-gradient(135deg, 
+                rgba(204, 0, 0, 0.25) 0%, 
+                rgba(139, 0, 0, 0.15) 100%
+            );
+            padding: 25px 20px;
+            border-bottom: 2px solid var(--border-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .doc-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 20px,
+                    rgba(204, 0, 0, 0.05) 20px,
+                    rgba(204, 0, 0, 0.05) 21px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 20px,
+                    rgba(139, 0, 0, 0.05) 20px,
+                    rgba(139, 0, 0, 0.05) 21px
+                );
+            pointer-events: none;
+        }
+        
+        .doc-header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .doc-category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(204, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+        
+        .doc-category-badge i {
+            color: var(--primary-red);
+            font-size: 0.9rem;
+        }
+        
+        .doc-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .doc-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .doc-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .doc-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .doc-meta-item i {
+            color: var(--primary-red);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        
+        .doc-meta-item span {
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        
+        .doc-meta-item strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+        
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .doc-tag {
+            padding: 6px 12px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* ============================================================================
+           TABLE OF CONTENTS MODAL
+           ============================================================================ */
+        .toc-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .toc-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .toc-content {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 85%;
+            max-width: 350px;
+            height: 100%;
+            background: var(--bg-card);
+            border-left: 2px solid var(--border-primary);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .toc-modal.show .toc-content {
+            transform: translateX(0);
+        }
+        
+        .toc-header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        
+        .toc-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toc-header-title i {
+            color: var(--primary-red);
+            font-size: 1.3rem;
+        }
+        
+        .toc-header-title h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .toc-close {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toc-close:active {
+            background: var(--primary-red);
+            color: white;
+            transform: scale(0.92);
+        }
+        
+        .toc-list {
+            padding: 20px;
+            list-style: none;
+        }
+        
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        
+        .toc-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .toc-link i {
+            font-size: 0.6rem;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+        
+        .toc-link:active,
+        .toc-link.active {
+            background: rgba(204, 0, 0, 0.2);
+            border-left-color: var(--primary-red);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .toc-link.h3 {
+            font-size: 0.85rem;
+            padding-left: 28px;
+            color: rgba(160, 160, 160, 0.8);
+        }
+        
+        /* ============================================================================
+           ARCHIVE SECTION
+           ============================================================================ */
+        .archive-section {
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--border-primary);
+            padding: 20px;
+        }
+        
+        .archive-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .archive-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, 
+                rgba(204, 0, 0, 0.3) 0%, 
+                rgba(139, 0, 0, 0.2) 100%
+            );
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--primary-red);
+        }
+        
+        .archive-title-block h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+        
+        .archive-title-block p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .archive-docs-list {
+            list-style: none;
+            display: grid;
+            gap: 10px;
+        }
+        
+        .archive-doc-item {
+            /* Display: block for list items */
+        }
+        
+        .archive-doc-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .archive-doc-link:active {
+            background: rgba(204, 0, 0, 0.15);
+            border-color: var(--primary-red);
+            transform: scale(0.98);
+        }
+        
+        .archive-doc-link.current {
+            background: rgba(204, 0, 0, 0.25);
+            border: 2px solid var(--primary-red);
+            pointer-events: none;
+        }
+        
+        .archive-doc-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+        
+        .archive-doc-link.current .archive-doc-number {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .archive-doc-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .archive-doc-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .archive-doc-info p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .archive-doc-info i {
+            font-size: 0.65rem;
+        }
+        
+        /* ============================================================================
+           DOCUMENT CONTENT
+           ============================================================================ */
+        .doc-content {
+            padding: 25px 20px;
+        }
+        
+        /* ============================================================================
+           MARKDOWN BODY STYLES
+           ============================================================================ */
+        .markdown-body {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+        
+        .markdown-body h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 40px 0 20px;
+            color: var(--text-primary);
+            border-bottom: 3px solid var(--primary-red);
+            padding-bottom: 12px;
+        }
+        
+        .markdown-body h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 35px 0 18px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .markdown-body h2::before {
+            content: '';
+            width: 5px;
+            height: 24px;
+            background: var(--primary-red);
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        
+        .markdown-body h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 28px 0 15px;
+            color: var(--text-primary);
+        }
+        
+        .markdown-body h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 22px 0 12px;
+            color: var(--text-primary);
+        }
+        
+        .markdown-body p {
+            margin-bottom: 18px;
+            line-height: 1.8;
+        }
+        
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+        
+        .markdown-body li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+        
+        .markdown-body li::marker {
+            color: var(--primary-red);
+            font-weight: 700;
+        }
+        
+        .markdown-body a {
+            color: var(--primary-red);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .markdown-body a:active {
+            border-bottom-color: var(--primary-red);
+        }
+        
+        .markdown-body code {
+            background: rgba(30, 30, 30, 0.8);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #ff6b6b;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .markdown-body pre {
+            background: rgba(20, 20, 20, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .markdown-body pre code {
+            background: transparent;
+            color: #abb2bf;
+            padding: 0;
+            font-size: 0.9rem;
+            border: none;
+        }
+        
+        .markdown-body blockquote {
+            border-left: 4px solid var(--primary-red);
+            padding: 15px 18px;
+            margin: 25px 0;
+            background: rgba(204, 0, 0, 0.1);
+            border-radius: 0 10px 10px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .markdown-body blockquote p {
+            margin-bottom: 8px;
+        }
+        
+        .markdown-body blockquote p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .markdown-body table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--border-primary);
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .markdown-body thead {
+            background: linear-gradient(135deg, 
+                rgba(204, 0, 0, 0.3) 0%, 
+                rgba(139, 0, 0, 0.25) 100%
+            );
+        }
+        
+        .markdown-body th {
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-weight: 700;
+            text-align: left;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--primary-red);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: top;
+        }
+        
+        .markdown-body th:last-child {
+            border-right: none;
+        }
+        
+        .markdown-body td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-primary);
+            border-right: 1px solid var(--border-primary);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+        
+        .markdown-body td:last-child {
+            border-right: none;
+        }
+        
+        .markdown-body tbody tr:nth-child(even) td {
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .markdown-body tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Table content styling - better alignment */
+        .markdown-body td strong {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .markdown-body td code {
+            background: rgba(204, 0, 0, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: var(--primary-red);
+            border: 1px solid rgba(204, 0, 0, 0.25);
+        }
+        
+        .markdown-body hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                var(--border-primary), 
+                transparent
+            );
+            margin: 40px 0;
+        }
+        
+        .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 25px 0;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+        
+        .markdown-body em {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        /* ============================================================================
+           BOTTOM NAVIGATION
+           ============================================================================ */
+        .bottom-nav {
+            padding: 20px;
+            display: grid;
+            gap: 12px;
+            border-top: 2px solid var(--border-primary);
+            background: var(--bg-card);
+        }
+        
+        .bottom-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border-primary);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .bottom-nav-btn:active:not(.disabled) {
+            background: rgba(204, 0, 0, 0.2);
+            border-color: var(--primary-red);
+            transform: scale(0.98);
+        }
+        
+        .bottom-nav-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        .bottom-nav-btn.next {
+            justify-content: flex-end;
+            text-align: right;
+        }
+        
+        .bottom-nav-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(204, 0, 0, 0.2);
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            flex-shrink: 0;
+        }
+        
+        .bottom-nav-text {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .bottom-nav-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bottom-nav-text h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        /* ============================================================================
+           LOADING STATE
+           ============================================================================ */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(80, 80, 80, 0.3);
+            border-top-color: var(--primary-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Scroll to top button */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .scroll-top-btn.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .scroll-top-btn:active {
+            transform: scale(0.92);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-header">
+            <a href="/Documentation/mobile/docs-hub.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
+            
+            <div class="nav-actions">
+                <button class="nav-btn toc-btn" id="toc-btn">
+                    <i class="fas fa-list-ul"></i>
+                </button>
+                <button class="nav-btn" id="btn-prev-top" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="nav-btn" id="btn-next-top" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="nav-category" id="nav-category">
+            <i class="fas fa-circle"></i>
+            <span>Loading...</span>
+        </div>
+    </nav>
+    
+    <!-- Table of Contents Modal -->
+    <div class="toc-modal" id="toc-modal">
+        <div class="toc-content">
+            <div class="toc-header">
+                <div class="toc-header-title">
+                    <i class="fas fa-list-ul"></i>
+                    <h3>Contents</h3>
+                </div>
+                <button class="toc-close" id="toc-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <ul class="toc-list" id="toc-list">
+                <!-- Dynamically populated -->
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <main id="main-content">
+        <div id="markdown-content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading documentation...</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top-btn" id="scroll-top-btn">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <script>
+        let docsData = null;
+        let currentDocPath = null;
+        let currentCategory = null;
+        let currentDoc = null;
+        
+        // Get URL parameters
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Load docs data
+        async function loadDocsData() {
+            try {
+                const response = await fetch('/Documentation/docs-data.json');
+                docsData = await response.json();
+                
+                const docPath = getUrlParam('doc');
+                if (docPath) {
+                    loadDocument(docPath);
+                } else {
+                    showError('No document specified.');
+                }
+            } catch (error) {
+                console.error('Error loading docs data:', error);
+                showError('Error loading documentation data.');
+            }
+        }
+        
+        // Load and render markdown document
+        async function loadDocument(docPath) {
+            currentDocPath = docPath;
+            
+            try {
+                // Find current doc and category
+                for (const category of docsData.categories) {
+                    const doc = category.docs.find(d => d.path === docPath);
+                    if (doc) {
+                        currentCategory = category;
+                        currentDoc = doc;
+                        break;
+                    }
+                }
+                
+                if (!currentDoc || !currentCategory) {
+                    showError('Document not found.');
+                    return;
+                }
+                
+                // Fetch markdown content
+                const response = await fetch(`/Documentation/${docPath}`);
+                const markdown = await response.text();
+                
+                // Parse frontmatter
+                const frontmatterData = parseFrontmatter(markdown);
+                
+                // Remove frontmatter from content
+                const content = markdown.replace(/^---[\s\S]*?---\n/, '');
+                
+                // Configure marked
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            return hljs.highlight(code, { language: lang }).value;
+                        }
+                        return hljs.highlightAuto(code).value;
+                    },
+                    breaks: true,
+                    gfm: true
+                });
+                
+                // Render markdown with enhanced header
+                const html = renderDocumentHeader(frontmatterData, currentCategory) + 
+                            renderArchiveNav() + 
+                            `<div class="doc-content"><div class="markdown-body">` + 
+                            marked.parse(content) + 
+                            `</div></div>` +
+                            renderBottomNav();
+                
+                document.getElementById('markdown-content').innerHTML = html;
+                
+                // Update navigation
+                updateNavigation();
+                
+                // Generate TOC
+                generateTOC();
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Setup navigation
+                setupNavButtons();
+                
+                // Smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error loading document:', error);
+                showError('Error loading document. Please try again.');
+            }
+        }
+        
+        // Parse YAML frontmatter
+        function parseFrontmatter(markdown) {
+            const frontmatterMatch = markdown.match(/^---\n([\s\S]*?)\n---/);
+            if (!frontmatterMatch) return {};
+            
+            const yamlText = frontmatterMatch[1];
+            const data = {};
+            
+            const lines = yamlText.split('\n');
+            let currentKey = null;
+            let arrayMode = false;
+            
+            lines.forEach(line => {
+                if (line.trim().startsWith('- ')) {
+                    if (arrayMode && currentKey) {
+                        const value = line.trim().substring(2).replace(/^["']|["']$/g, '');
+                        data[currentKey].push(value);
+                    }
+                } else if (line.includes(':')) {
+                    const colonIndex = line.indexOf(':');
+                    const key = line.substring(0, colonIndex).trim();
+                    let value = line.substring(colonIndex + 1).trim();
+                    value = value.replace(/^["']|["']$/g, '');
+                    
+                    if (value === '' && lines[lines.indexOf(line) + 1]?.trim().startsWith('- ')) {
+                        data[key] = [];
+                        currentKey = key;
+                        arrayMode = true;
+                    } else {
+                        data[key] = value;
+                        arrayMode = false;
+                        currentKey = null;
+                    }
+                }
+            });
+            
+            return data;
+        }
+        
+        // Render document header card with enhanced metadata
+        function renderDocumentHeader(metadata, category) {
+            const difficultyColors = {
+                'beginner': '#10b981',
+                'intermediate': '#f59e0b',
+                'advanced': '#ef4444'
+            };
+            
+            return `
+                <div class="doc-header">
+                    <div class="doc-header-content">
+                        <div class="doc-category-badge">
+                            <i class="${category.icon}"></i>
+                            <span>${category.title}</span>
+                        </div>
+                        
+                        <h1 class="doc-title">${metadata.title || currentDoc.title}</h1>
+                        
+                        ${metadata.description ? `<p class="doc-description">${metadata.description}</p>` : ''}
+                        
+                        <div class="doc-meta-grid">
+                            <div class="doc-meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>${metadata.author || currentDoc.author}</span>
+                            </div>
+                            ${metadata.version ? `
+                            <div class="doc-meta-item">
+                                <i class="fas fa-code-branch"></i>
+                                <span>v${metadata.version}</span>
+                            </div>
+                            ` : ''}
+                            <div class="doc-meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>${formatDate(metadata.lastUpdated || currentDoc.lastUpdated)}</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <i class="fas fa-book"></i>
+                                <span><strong>${metadata.wordCount || currentDoc.words}</strong> Words</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>${metadata.readTime || currentDoc.readTime}</strong> Read</span>
+                            </div>
+                            ${metadata.difficulty ? `
+                            <div class="doc-meta-item">
+                                <i class="fas fa-signal"></i>
+                                <span style="color: ${difficultyColors[metadata.difficulty] || '#6b7280'}">${metadata.difficulty}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${metadata.prerequisites && metadata.prerequisites.length > 0 ? `
+                            <div style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; border-radius: 6px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 600; color: #f59e0b; font-size: 0.85rem;">
+                                    <i class="fas fa-exclamation-triangle"></i> Prerequisites:
+                                </p>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem; color: var(--text-secondary);">
+                                    ${metadata.prerequisites.map(prereq => `<li style="margin: 4px 0;">${prereq}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        ${metadata.tags || currentDoc.tags ? `
+                            <div class="doc-tags">
+                                ${(metadata.tags ? metadata.tags.split(',').map(t => t.trim().replace(/[\[\]]/g, '')) : currentDoc.tags).map(tag => `<span class="doc-tag">#${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${metadata.relatedDocs && metadata.relatedDocs.length > 0 ? `
+                            <div style="margin-top: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 600; color: #3b82f6; font-size: 0.85rem;">
+                                    <i class="fas fa-link"></i> Related Docs:
+                                </p>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem;">
+                                    ${metadata.relatedDocs.map(relDoc => {
+                                        const docName = relDoc.split('/').pop().replace('.md', '');
+                                        return `<li style="margin: 4px 0;"><a href="/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent('new-docs/' + relDoc.replace('../', ''))}" style="color: #60a5fa; text-decoration: none;">${docName}</a></li>`;
+                                    }).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render archive navigation
+        function renderArchiveNav() {
+            return `
+                <div class="archive-section">
+                    <div class="archive-header">
+                        <div class="archive-icon">
+                            <i class="${currentCategory.icon}"></i>
+                        </div>
+                        <div class="archive-title-block">
+                            <h3>${currentCategory.title}</h3>
+                            <p>${currentCategory.totalDocs} Documents in this category</p>
+                        </div>
+                    </div>
+                    
+                    <ul class="archive-docs-list">
+                        ${currentCategory.docs.map((doc, index) => `
+                            <li class="archive-doc-item">
+                                <a href="/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent(doc.path)}" 
+                                   class="archive-doc-link ${doc.path === currentDocPath ? 'current' : ''}">
+                                    <div class="archive-doc-number">${index + 1}</div>
+                                    <div class="archive-doc-info">
+                                        <h4>${doc.title}</h4>
+                                        <p>
+                                            <i class="fas fa-clock"></i>
+                                            <span>${doc.readTime}</span>
+                                            <i class="fas fa-circle" style="font-size: 4px;"></i>
+                                            <span>${doc.words} words</span>
+                                        </p>
+                                    </div>
+                                </a>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Render bottom navigation
+        function renderBottomNav() {
+            const currentDocIndex = currentCategory.docs.findIndex(d => d.path === currentDocPath);
+            
+            let prevDoc = null;
+            let nextDoc = null;
+            
+            if (currentDocIndex > 0) {
+                prevDoc = currentCategory.docs[currentDocIndex - 1];
+            } else {
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex > 0) {
+                    const prevCategory = docsData.categories[currentCategoryIndex - 1];
+                    prevDoc = prevCategory.docs[prevCategory.docs.length - 1];
+                }
+            }
+            
+            if (currentDocIndex < currentCategory.docs.length - 1) {
+                nextDoc = currentCategory.docs[currentDocIndex + 1];
+            } else {
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex < docsData.categories.length - 1) {
+                    const nextCategory = docsData.categories[currentCategoryIndex + 1];
+                    nextDoc = nextCategory.docs[0];
+                }
+            }
+            
+            return `
+                <div class="bottom-nav">
+                    <a href="${prevDoc ? `/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent(prevDoc.path)}` : '#'}" 
+                       class="bottom-nav-btn ${!prevDoc ? 'disabled' : ''}">
+                        <div class="bottom-nav-icon">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <div class="bottom-nav-text">
+                            <p>Previous</p>
+                            <h3>${prevDoc ? prevDoc.title : '—'}</h3>
+                        </div>
+                    </a>
+                    
+                    <a href="${nextDoc ? `/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent(nextDoc.path)}` : '#'}" 
+                       class="bottom-nav-btn next ${!nextDoc ? 'disabled' : ''}">
+                        <div class="bottom-nav-text">
+                            <p>Next</p>
+                            <h3>${nextDoc ? nextDoc.title : '—'}</h3>
+                        </div>
+                        <div class="bottom-nav-icon">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+                </div>
+            `;
+        }
+        
+        // Update navigation breadcrumb
+        function updateNavigation() {
+            document.getElementById('nav-category').innerHTML = `
+                <i class="fas fa-circle"></i>
+                <span>${currentCategory.title}</span>
+            `;
+            document.getElementById('page-title').textContent = `${currentDoc.title} - A3KM Studio`;
+        }
+        
+        // Generate Table of Contents
+        function generateTOC() {
+            const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = '';
+            
+            headings.forEach((heading, index) => {
+                const id = `heading-${index}`;
+                heading.id = id;
+                
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                
+                const link = document.createElement('a');
+                link.className = `toc-link ${heading.tagName.toLowerCase()}`;
+                link.href = `#${id}`;
+                link.innerHTML = `
+                    <i class="fas fa-circle"></i>
+                    <span>${heading.textContent}</span>
+                `;
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    closeTOC();
+                });
+                
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+        }
+        
+        // Setup navigation buttons
+        function setupNavButtons() {
+            if (!docsData || !currentCategory) return;
+            
+            const currentDocIndex = currentCategory.docs.findIndex(d => d.path === currentDocPath);
+            
+            let prevDoc = null;
+            let nextDoc = null;
+            
+            if (currentDocIndex > 0) {
+                prevDoc = currentCategory.docs[currentDocIndex - 1];
+            } else {
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex > 0) {
+                    const prevCategory = docsData.categories[currentCategoryIndex - 1];
+                    prevDoc = prevCategory.docs[prevCategory.docs.length - 1];
+                }
+            }
+            
+            if (currentDocIndex < currentCategory.docs.length - 1) {
+                nextDoc = currentCategory.docs[currentDocIndex + 1];
+            } else {
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex < docsData.categories.length - 1) {
+                    const nextCategory = docsData.categories[currentCategoryIndex + 1];
+                    nextDoc = nextCategory.docs[0];
+                }
+            }
+            
+            const btnPrev = document.getElementById('btn-prev-top');
+            const btnNext = document.getElementById('btn-next-top');
+            
+            if (prevDoc) {
+                btnPrev.disabled = false;
+                btnPrev.onclick = () => {
+                    window.location.href = `/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent(prevDoc.path)}`;
+                };
+            }
+            
+            if (nextDoc) {
+                btnNext.disabled = false;
+                btnNext.onclick = () => {
+                    window.location.href = `/Documentation/mobile/docs-viewer-enhanced.html?doc=${encodeURIComponent(nextDoc.path)}`;
+                };
+            }
+        }
+        
+        // TOC Modal functionality
+        const tocModal = document.getElementById('toc-modal');
+        const tocBtn = document.getElementById('toc-btn');
+        const tocClose = document.getElementById('toc-close');
+        
+        tocBtn.addEventListener('click', () => {
+            tocModal.classList.add('show');
+            if (navigator.vibrate) navigator.vibrate(10);
+        });
+        
+        tocClose.addEventListener('click', closeTOC);
+        
+        tocModal.addEventListener('click', (e) => {
+            if (e.target === tocModal) {
+                closeTOC();
+            }
+        });
+        
+        function closeTOC() {
+            tocModal.classList.remove('show');
+        }
+        
+        // Scroll to top button
+        const scrollTopBtn = document.getElementById('scroll-top-btn');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollTopBtn.classList.add('show');
+            } else {
+                scrollTopBtn.classList.remove('show');
+            }
+        });
+        
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (navigator.vibrate) navigator.vibrate(10);
+        });
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        // Show error
+        function showError(message) {
+            document.getElementById('markdown-content').innerHTML = `
+                <div class="loading">
+                    <p style="color: var(--primary-red);">${message}</p>
+                </div>
+            `;
+        }
+        
+        // Initialize
+        loadDocsData();
+    </script>
+</body>
+</html>

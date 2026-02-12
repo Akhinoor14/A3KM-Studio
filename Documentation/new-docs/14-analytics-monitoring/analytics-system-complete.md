@@ -1,28 +1,65 @@
 ---
-title: "Analytics & Monitoring System"
+title: "Analytics & Monitoring System - User Behavior Tracking"
+description: "Comprehensive privacy-first analytics system with page view tracking, search history analysis, content engagement metrics, device statistics, AI-powered recommendations, and local storage-based data collection without third-party tracking"
 date: 2026-02-12
+lastUpdated: 2026-02-12
+version: "1.8.0"
 author: Md Akhinoor Islam
+authorEmail: mdakhinoorislam@gmail.com
 organization: A3KM Studio | Noor Academy
-category: analytics
-tags: [analytics, tracking, monitoring, statistics, insights]
+category: analytics-monitoring
+difficulty: advanced
+readTime: "18 min"
+wordCount: 3200
+tags: [analytics, tracking, monitoring, statistics, insights, privacy, local-storage, behavior-analysis]
+status: complete
+featured: false
+prerequisites:
+  - "JavaScript knowledge"
+  - "Understanding of localStorage"
+  - "Basic statistics concepts"
+relatedDocs:
+  - "../04-content-management/content-studio-system.md"
+  - "../09-projects-portfolio/projects-complete-guide.md"
+  - "../11-performance-optimization/pwa-system-guide.md"
 ---
 
-# Analytics & Monitoring
+# 📊 Analytics & Monitoring System
 
-## Website Analytics System
+> **🔍 Overview:** A sophisticated, privacy-first analytics platform tracking user behavior, content engagement, search patterns, and device statistics entirely through local storage without any third-party data transmission, featuring AI-powered content recommendations.
+
+---
+
+## 📋 Table of Contents
+
+- [🎯 Analytics System Overview](#analytics-overview)
+- [📊 Core Analytics Manager](#core-analytics)
+- [🔍 Search History Tracking](#search-tracking)
+- [🤖 AI Recommendations](#ai-recommendations)
+- [📝 Comments & Engagement](#comments-system)
+- [📊 Analytics Dashboard](#analytics-dashboard)
+- [🔒 Privacy & Data Storage](#privacy-storage)
+- [⚠️ Troubleshooting](#troubleshooting)
+
+---
+
+## 🎯 Analytics System Overview {#analytics-overview}
 
 আমার website এ **built-in analytics system** আছে user behavior track করার জন্য।
 
-**Tracking Features:**
-- 📊 Page views & visits
-- 🔍 Search history & popular queries
-- 👤 User behavior patterns
-- 📱 Device & browser statistics
-- 🌍 Geographic location (country/city)
-- 🤖 AI-powered content recommendations
-- 💬 Comments & engagement tracking
+### 🌟 **Tracking Features**
 
-**Privacy:** সব data **locally stored** (localStorage), কোনো third-party server এ send করা হয় না।
+| Feature | Description | Storage Method |
+|---------|-------------|----------------|
+| 📊 **Page Views** | Track all page visits | localStorage |
+| 🔍 **Search History** | Popular queries & patterns | localStorage |
+| 👤 **User Behavior** | Click patterns, time spent | sessionStorage |
+| 📱 **Device Stats** | Browser, OS, screen size | localStorage |
+| 🌍 **Location** | Country/city (IP-based) | Not tracked |
+| 🤖 **AI Recommendations** | Content suggestions | localStorage |
+| 💬 **Comments** | User engagement | localStorage |
+
+> **🔒 Privacy First:** সব data **locally stored** (localStorage), কোনো third-party server এ send করা হয় না।
 
 ## Analytics Core System
 

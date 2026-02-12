@@ -70,7 +70,7 @@
         try {
             showLoadingState();
             
-            const response = await fetch('../../Projects Code/Arduino/arduino-data.json');
+            const response = await fetch('../../Projects%20Code/Arduino/arduino-data.json');
             if (!response.ok) throw new Error('Failed to load');
             
             const data = await response.json();
@@ -123,7 +123,7 @@
         
         grid.innerHTML = projects.map(project => {
             const circuitPath = project.files && project.files.circuit 
-                ? `../../Projects Storage/Arduino UNO Projects with Tinkercad/${project.folder}/${project.files.circuit}`
+                ? `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(project.folder)}/${project.files.circuit}`
                 : null;
             
             return `

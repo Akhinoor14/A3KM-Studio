@@ -72,7 +72,7 @@
         try {
             showLoadingState();
             
-            const response = await fetch('../../Projects Code/MATLAB/matlab-data.json');
+            const response = await fetch('../../Projects%20Code/MATLAB/matlab-data.json');
             if (!response.ok) throw new Error('Failed to load');
             
             const data = await response.json();
@@ -131,7 +131,7 @@
             
             // Build image paths (assuming images are in Projects Storage/MATLAB Projects/folder/)
             const imageUrls = images.map(img => 
-                `../../Projects Storage/MATLAB Projects/${project.folder || project.id}/${img}`
+                `../../Projects%20Storage/MATLAB%20Projects/${encodeURIComponent(project.folder || project.id)}/${img}`
             );
             
             return `

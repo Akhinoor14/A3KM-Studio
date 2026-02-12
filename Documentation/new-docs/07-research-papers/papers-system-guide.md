@@ -1,22 +1,67 @@
 ---
 title: "Research Papers Management System"
+description: "Academic paper management system with PDF storage, citation generation, DOI integration, and metadata organization for engineering and electronics research publications"
 date: 2026-02-12
+lastUpdated: 2026-02-12
+version: "1.5.0"
 author: Md Akhinoor Islam
+authorEmail: mdakhinoorislam@gmail.com
 organization: A3KM Studio | Noor Academy
 category: research-papers
-tags: [academic, research, papers, pdf, citations]
+difficulty: intermediate
+readTime: "8 min"
+wordCount: 2200
+tags: [academic, research, papers, pdf, citations, DOI, scholarly, publications]
+status: complete
+featured: false
+prerequisites:
+  - "Understanding of academic paper structure"
+  - "Only Boss admin access"
+  - "PDF files of research papers"
+relatedDocs:
+  - "../04-content-management/content-studio-system.md"
+  - "../08-books-pdfs/books-library-system.md"
+  - "../03-only-boss-admin/dashboard-complete-guide.md"
+changelog:
+  - version: "1.5.0"
+    date: "2026-02-12"
+    changes: "Enhanced documentation with citation examples and workflow diagrams"
+  - version: "1.0.0"
+    date: "2026-02-08"
+    changes: "Initial research paper system documentation"
 ---
 
-# Research Papers Management
+# 📝 Research Papers Management System
 
-## Academic Papers System
+> **🎯 Overview:** Dedicated academic paper management system for engineering and electronics research. Features PDF storage, citation generation, DOI integration, abstract management, and keyword indexing for scholarly publications.
+
+---
+
+## 📋 Table of Contents
+
+- [🎓 Academic Papers System](#papers-system)
+- [📊 Paper Structure & Metadata](#structure)
+- [📝 Citation Management](#citations)
+- [🚀 Upload Workflow](#upload)
+- [⚠️ Troubleshooting](#troubleshooting)
+- [📚 Related Documentation](#related-docs)
+
+---
+
+## 🎓 Academic Papers System {#papers-system}
 
 আমার website এ **research papers** এর জন্য dedicated system আছে academic content manage করার জন্য।
 
-**Current Status:**
-- Total Papers: **0** (system ready, content coming soon)
-- Categories: Engineering, Electronics, Embedded Systems, Manufacturing
-- Format: PDF with metadata (title, authors, abstract, keywords)
+### 📊 Current Status
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| **Total Papers** | 0 (system ready) | 🟡 Ready for content |
+| **Categories** | 4+ | Engineering, Electronics, Embedded, Manufacturing |
+| **Format** | PDF + Metadata | ✅ Configured |
+| **Citation Support** | Yes | ✅ Auto-generation |
+
+> **💡 Coming Soon:** Research papers will be added as academic work progresses
 
 ## Papers Data Structure
 

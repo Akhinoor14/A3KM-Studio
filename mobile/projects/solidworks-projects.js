@@ -70,7 +70,7 @@
         try {
             showLoadingState();
             
-            const response = await fetch('../../Projects Code/projects.json');
+            const response = await fetch('../../Projects%20Code/projects.json');
             if (!response.ok) throw new Error('Failed to load');
             
             const data = await response.json();

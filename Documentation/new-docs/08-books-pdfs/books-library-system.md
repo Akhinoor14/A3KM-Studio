@@ -1,45 +1,75 @@
 ---
 title: "Books & PDFs Library System"
+description: "Digital library management system for engineering books and PDFs featuring 3+ technical books on SOLIDWORKS, Arduino, and engineering drawing with preview, download, and viewer capabilities"
 date: 2026-02-12
+lastUpdated: 2026-02-12
+version: "2.0.0"
 author: Md Akhinoor Islam
+authorEmail: mdakhinoorislam@gmail.com
 organization: A3KM Studio | Noor Academy
 category: books-pdfs
-tags: [books, pdfs, library, ebooks, engineering]
+difficulty: beginner
+readTime: "10 min"
+wordCount: 2600
+tags: [books, pdfs, library, ebooks, engineering, SOLIDWORKS, Arduino, technical-books]
+status: complete
+featured: true
+prerequisites:
+  - "Basic understanding of PDF viewers"
+  - "Only Boss access for uploads"
+relatedDocs:
+  - "../04-content-management/content-studio-system.md"
+  - "../07-research-papers/papers-system-guide.md"
+  - "../09-projects-portfolio/projects-complete-guide.md"
+changelog:
+  - version: "2.0.0"
+    date: "2026-02-12"
+    changes: "Enhanced with library catalog tables and reader features"
+  - version: "1.0.0"
+    date: "2026-02-08"
+    changes: "Initial books library documentation"
 ---
 
-# Books & PDFs Library
+# 📚 Books & PDFs Library System
 
-## Digital Library System
+> **🎯 Overview:** Comprehensive digital library featuring 3+ engineering books covering SOLIDWORKS, Arduino, and technical drawing. Includes advanced PDF viewer, download capabilities, and metadata management for complete book organization.
+
+---
+
+## 📋 Table of Contents
+
+- [🏗️ Digital Library Overview](#library-overview)
+- [📚 Current Book Collection](#collection)
+- [📝 Book Data Structure](#data-structure)
+- [📱 PDF Viewer Features](#pdf-viewer)
+- [⚠️ Troubleshooting](#troubleshooting)
+- [📚 Related Documentation](#related-docs)
+
+---
+
+## 🏗️ Digital Library System {#library-overview}
 
 আমার website এ **engineering books** এর complete library system আছে।
 
-**Current Collection:**
-- Total Books: **3**
-- Categories: Engineering Design, CAD Software, Mechanical Engineering
-- Format: PDF with metadata & preview
+### 📊 Library Statistics
 
-### Active Books:
+| Metric | Value | Format |
+|--------|-------|--------|
+| **Total Books** | 3 | PDF with metadata |
+| **Total Pages** | 830+ | Combined |
+| **Total Size** | 36.6 MB | Optimized |
+| **Languages** | 2 | 🇧🇩 Bangla + 🇬🇧 English |
+| **Categories** | 3 | CAD, Electronics, Engineering |
 
-1. **SolidWorks Essentials Training Manual**
-   - File: `Content Studio/books-pdfs/solidworks-guide.pdf`
-   - Size: 15.8 MB
-   - Pages: 350+
-   - Language: English
-   - Topic: 3D CAD Design
+### 📚 Active Books Catalog
 
-2. **Engineering Drawing & Design Handbook**
-   - File: `Content Studio/books-pdfs/engineering-drawing-handbook.pdf`
-   - Size: 12.3 MB
-   - Pages: 280+
-   - Language: English/Bangla
-   - Topic: Technical Drawing
+| № | Book Title | Pages | Size | Language | Topic |
+|---|-----------|-------|------|----------|-------|
+| 1 | SolidWorks Essentials Training Manual | 350+ | 15.8 MB | 🇬🇧 English | 3D CAD Design |
+| 2 | Engineering Drawing & Design Handbook | 280+ | 12.3 MB | Mixed | Technical Drawing |
+| 3 | Arduino Project Handbook | 200+ | 8.5 MB | 🇧🇩 Bangla | Electronics |
 
-3. **Arduino Project Handbook - Beginner to Advanced**
-   - File: `Content Studio/books-pdfs/arduino-projects-handbook.pdf`
-   - Size: 8.5 MB
-   - Pages: 200+
-   - Language: Bangla
-   - Topic: Electronics & Embedded Systems
+> **✨ Feature:** All PDFs optimized for web viewing with fast page loading
 
 ## Books Data Structure
 

@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A3KM Studio Documentation Viewer">
+    <meta name="author" content="Md Akhinoor Islam">
+    
+    <title id="page-title">Documentation Viewer - A3KM Studio</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Highlight.js for Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-red: #CC0000;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --text-muted: #a0aec0;
+            --bg-light: #f7fafc;
+            --bg-gray: #edf2f7;
+            --code-bg: #282c34;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* ============================================================================
+           TOP NAVIGATION BAR
+           ============================================================================ */
+        .top-nav {
+            background: white;
+            padding: 18px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .top-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .nav-back:hover {
+            background: var(--bg-light);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateX(-3px);
+        }
+        
+        .nav-center {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-breadcrumb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        
+        .nav-breadcrumb i {
+            font-size: 0.7rem;
+        }
+        
+        .nav-title-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            padding: 10px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: white;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* ============================================================================
+           MAIN CONTAINER
+           ============================================================================ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 40px 80px;
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 30px;
+            align-items: start;
+        }
+        
+        /* ============================================================================
+           LEFT SIDEBAR - TABLE OF CONTENTS
+           ============================================================================ */
+        .sidebar-left {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .toc-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        
+        .toc-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-gray);
+        }
+        
+        .toc-header i {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+        
+        .toc-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .toc-list {
+            list-style: none;
+        }
+        
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        
+        .toc-link {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border-left: 3px solid transparent;
+        }
+        
+        .toc-link i {
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+        
+        .toc-link:hover {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.08);
+            border-left-color: var(--primary-color);
+            padding-left: 18px;
+        }
+        
+        .toc-link.active {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.12);
+            border-left-color: var(--primary-color);
+            font-weight: 600;
+            padding-left: 18px;
+        }
+        
+        .toc-link.h3 {
+            font-size: 0.85rem;
+            padding-left: 28px;
+            color: var(--text-muted);
+        }
+        
+        .toc-link.h3:hover,
+        .toc-link.h3.active {
+            padding-left: 32px;
+        }
+        
+        /* Quick Jump */
+        .quick-jump {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--bg-gray);
+        }
+        
+        .quick-jump-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .quick-jump-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+        
+        .quick-jump-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateX(3px);
+        }
+        
+        .quick-jump-btn i {
+            font-size: 0.9rem;
+        }
+        
+        /* ============================================================================
+           MAIN CONTENT AREA
+           ============================================================================ */
+        .content-main {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        /* Document Header Card */
+        .doc-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .doc-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
+        .doc-header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .doc-category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .doc-category-badge i {
+            font-size: 1rem;
+        }
+        
+        .doc-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .doc-description {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+        
+        .doc-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .doc-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+        
+        .doc-meta-item i {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        .doc-meta-item strong {
+            font-weight: 700;
+        }
+        
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .doc-tag {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .doc-tag:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+        
+        /* Document Content */
+        .doc-content {
+            padding: 50px;
+        }
+        
+        /* ============================================================================
+           MARKDOWN BODY STYLES
+           ============================================================================ */
+        .markdown-body {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 50px 0 25px;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+            position: relative;
+        }
+        
+        .markdown-body h1::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100px;
+            height: 3px;
+            background: var(--accent-red);
+        }
+        
+        .markdown-body h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 45px 0 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .markdown-body h2::before {
+            content: '';
+            width: 6px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+        
+        .markdown-body h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 35px 0 18px;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 28px 0 15px;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body p {
+            margin-bottom: 20px;
+            line-height: 1.9;
+        }
+        
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 25px;
+            padding-left: 35px;
+        }
+        
+        .markdown-body li {
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
+        
+        .markdown-body li::marker {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .markdown-body a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .markdown-body a:hover {
+            border-bottom-color: var(--primary-color);
+            color: var(--accent-red);
+        }
+        
+        .markdown-body code {
+            background: var(--bg-gray);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #c7254e;
+            border: 1px solid  var(--border-color);
+            font-weight: 500;
+        }
+        
+        .markdown-body pre {
+            background: var(--code-bg);
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .markdown-body pre code {
+            background: transparent;
+            color: #abb2bf;
+            padding: 0;
+            font-size: 0.95rem;
+            border: none;
+        }
+        
+        .markdown-body blockquote {
+            border-left: 5px solid var(--primary-color);
+            padding: 20px 25px;
+            margin: 30px 0;
+            background: var(--bg-light);
+            border-radius: 0 12px 12px 0;
+            color: var(--text-dark);
+            font-style: italic;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .markdown-body blockquote p {
+            margin-bottom: 10px;
+        }
+        
+        .markdown-body blockquote p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .markdown-body table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 30px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border-color);
+        }
+        
+        .markdown-body th {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            text-align: left;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .markdown-body th:last-child {
+            border-right: none;
+        }
+        
+        .markdown-body td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            background: white;
+            vertical-align: top;
+        }
+        
+        .markdown-body td:last-child {
+            border-right: none;
+        }
+        
+        .markdown-body tbody tr:nth-child(even) td {
+            background: var(--bg-light);
+        }
+        
+        .markdown-body tbody tr:hover td {
+            background: rgba(102, 126, 234, 0.08);
+            transition: background-color 0.2s ease;
+        }
+        
+        .markdown-body tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Table with emojis and icons - better alignment */
+        .markdown-body td strong {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body td code {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #5a67d8;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .markdown-body hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 50px 0;
+        }
+        
+        .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .markdown-body strong {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        
+        .markdown-body em {
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        /* ============================================================================
+           RIGHT SIDEBAR - ARCHIVE & RELATED DOCS
+           ============================================================================ */
+        .sidebar-right {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .archive-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+        
+        .archive-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-gray);
+        }
+        
+        .archive-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .archive-title-block h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+        
+        .archive-title-block p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .archive-docs-list {
+            list-style: none;
+        }
+        
+        .archive-doc-item {
+            margin-bottom: 12px;
+        }
+        
+        .archive-doc-link {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .archive-doc-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .archive-doc-link.current {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            border-color: var(--primary-color);
+            pointer-events: none;
+        }
+        
+        .archive-doc-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .archive-doc-link.current .archive-doc-number {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .archive-doc-info {
+            flex: 1;
+        }
+        
+        .archive-doc-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .archive-doc-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .archive-doc-info i {
+            font-size: 0.7rem;
+        }
+        
+        /* Stats Card */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        
+        .stats-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+        
+        .stat-info h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+        
+        .stat-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        /* ============================================================================
+           BOTTOM NAVIGATION
+           ============================================================================ */
+        .bottom-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .bottom-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 25px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border-color);
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+        
+        .bottom-nav-btn:hover:not(.disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .bottom-nav-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .bottom-nav-btn.next {
+            justify-content: flex-end;
+            text-align: right;
+        }
+        
+        .bottom-nav-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: rgba(102, 126, 234, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .bottom-nav-btn:hover:not(.disabled) .bottom-nav-icon {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .bottom-nav-text {
+            flex: 1;
+        }
+        
+        .bottom-nav-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bottom-nav-text h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        
+        /* ============================================================================
+           LOADING STATE
+           ============================================================================ */
+        .loading {
+            text-align: center;
+            padding: 100px 40px;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 25px;
+            border: 5px solid var(--bg-gray);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        /* ============================================================================
+           RESPONSIVE DESIGN
+           ============================================================================ */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 30px 25px 60px;
+            }
+            
+            .sidebar-left,
+            .sidebar-right {
+                display: none;
+            }
+            
+            .doc-content {
+                padding: 40px 30px;
+            }
+            
+            .bottom-nav {
+                padding: 0 25px 30px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-nav-content {
+                padding: 0 20px;
+                flex-wrap: wrap;
+            }
+            
+            .nav-title-text {
+                font-size: 1rem;
+            }
+            
+            .nav-breadcrumb {
+                font-size: 0.75rem;
+            }
+            
+            .container {
+                padding: 20px 15px 40px;
+            }
+            
+            .doc-header {
+                padding: 30px 25px;
+            }
+            
+            .doc-title {
+                font-size: 2rem;
+            }
+            
+            .doc-description {
+                font-size: 1rem;
+            }
+            
+            .doc-content {
+                padding: 30px 20px;
+            }
+            
+            .markdown-body {
+                font-size: 1rem;
+            }
+            
+            .markdown-body h1 {
+                font-size: 2rem;
+            }
+            
+            .markdown-body h2 {
+                font-size: 1.6rem;
+            }
+            
+            .markdown-body h3 {
+                font-size: 1.3rem;
+            }
+            
+            .bottom-nav {
+                padding: 0 15px 30px;
+                grid-template-columns: 1fr;
+            }
+            
+            .bottom-nav-btn {
+                padding: 20px;
+            }
+            
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="top-nav-content">
+            <a href="/Documentation/" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Hub</span>
+            </a>
+            
+            <div class="nav-center">
+                <div class="nav-breadcrumb" id="nav-breadcrumb">
+                    <span>Documentation</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span id="category-name">Loading...</span>
+                </div>
+                <div class="nav-title-text" id="doc-title-nav">Loading...</div>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="nav-btn" id="btn-prev-top" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="hide-mobile">Previous</span>
+                </button>
+                <button class="nav-btn" id="btn-next-top" disabled>
+                    <span class="hide-mobile">Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Sidebar - Table of Contents -->
+        <aside class="sidebar-left">
+            <div class="toc-card">
+                <div class="toc-header">
+                    <i class="fas fa-list-ul"></i>
+                    <h3>Table of Contents</h3>
+                </div>
+                <ul class="toc-list" id="toc-list">
+                    <!-- Dynamically populated -->
+                </ul>
+                
+                <div class="quick-jump">
+                    <div class="quick-jump-title">Quick Jump</div>
+                    <a href="#top" class="quick-jump-btn">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Back to Top</span>
+                    </a>
+                    <a href="/Documentation/" class="quick-jump-btn">
+                        <i class="fas fa-home"></i>
+                        <span>Documentation Hub</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="content-main" id="content-main">
+            <div id="markdown-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading documentation...</p>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Right Sidebar - Archive & Related Docs -->
+        <aside class="sidebar-right">
+            <div class="archive-card" id="archive-card">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-title">Document Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="stat-words">—</h4>
+                            <p>Words</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="stat-read-time">—</h4>
+                            <p>Read Time</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4 id="stat-updated">—</h4>
+                            <p>Last Updated</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="bottom-nav-btn disabled" id="btn-prev-bottom">
+            <div class="bottom-nav-icon">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="bottom-nav-text">
+                <p>Previous</p>
+                <h3>—</h3>
+            </div>
+        </a>
+        
+        <a href="#" class="bottom-nav-btn next disabled" id="btn-next-bottom">
+            <div class="bottom-nav-text">
+                <p>Next</p>
+                <h3>—</h3>
+            </div>
+            <div class="bottom-nav-icon">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </a>
+    </div>
+    
+    <script>
+        let docsData = null;
+        let currentDocPath = null;
+        let currentCategory = null;
+        let currentDoc = null;
+        
+        // Get URL parameters
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Load docs data
+        async function loadDocsData() {
+            try {
+                const response = await fetch('/Documentation/docs-data.json');
+                docsData = await response.json();
+                
+                const docPath = getUrlParam('doc');
+                if (docPath) {
+                    loadDocument(docPath);
+                } else {
+                    showError('No document specified.');
+                }
+            } catch (error) {
+                console.error('Error loading docs data:', error);
+                showError('Error loading documentation data.');
+            }
+        }
+        
+        // Load and render markdown document
+        async function loadDocument(docPath) {
+            currentDocPath = docPath;
+            
+            try {
+                // Find current doc and category
+                for (const category of docsData.categories) {
+                    const doc = category.docs.find(d => d.path === docPath);
+                    if (doc) {
+                        currentCategory = category;
+                        currentDoc = doc;
+                        break;
+                    }
+                }
+                
+                if (!currentDoc || !currentCategory) {
+                    showError('Document not found.');
+                    return;
+                }
+                
+                // Fetch markdown content
+                const response = await fetch(`/Documentation/${docPath}`);
+                const markdown = await response.text();
+                
+                // Parse frontmatter
+                const frontmatterData = parseFrontmatter(markdown);
+                
+                // Remove frontmatter from content
+                const content = markdown.replace(/^---[\s\S]*?---\n/, '');
+                
+                // Configure marked
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            return hljs.highlight(code, { language: lang }).value;
+                        }
+                        return hljs.highlightAuto(code).value;
+                    },
+                    breaks: true,
+                    gfm: true
+                });
+                
+                // Render markdown with enhanced header
+                const html = renderDocumentHeader(frontmatterData, currentCategory) + marked.parse(content);
+                
+                document.getElementById('markdown-content').innerHTML = html;
+                
+                // Update navigation
+                updateNavigation();
+                
+                // Generate TOC
+                generateTOC();
+                
+                // Render archive navigation
+                renderArchiveNav();
+                
+                // Update stats with enhanced data
+                updateStats(frontmatterData);
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Setup navigation
+                setupNavButtons();
+                
+                // Smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error loading document:', error);
+                showError('Error loading document. Please try again.');
+            }
+        }
+        
+        // Parse YAML frontmatter
+        function parseFrontmatter(markdown) {
+            const frontmatterMatch = markdown.match(/^---\n([\s\S]*?)\n---/);
+            if (!frontmatterMatch) return {};
+            
+            const yamlText = frontmatterMatch[1];
+            const data = {};
+            
+            // Parse YAML manually (simple parser)
+            const lines = yamlText.split('\n');
+            let currentKey = null;
+            let arrayMode = false;
+            
+            lines.forEach(line => {
+                // Array items
+                if (line.trim().startsWith('- ')) {
+                    if (arrayMode && currentKey) {
+                        const value = line.trim().substring(2).replace(/^["']|["']$/g, '');
+                        data[currentKey].push(value);
+                    }
+                }
+                // Key-value pairs
+                else if (line.includes(':')) {
+                    const colonIndex = line.indexOf(':');
+                    const key = line.substring(0, colonIndex).trim();
+                    let value = line.substring(colonIndex + 1).trim();
+                    
+                    // Remove quotes
+                    value = value.replace(/^["']|["']$/g, '');
+                    
+                    // Check if this starts an array
+                    if (value === '' && lines[lines.indexOf(line) + 1]?.trim().startsWith('- ')) {
+                        data[key] = [];
+                        currentKey = key;
+                        arrayMode = true;
+                    } else {
+                        data[key] = value;
+                        arrayMode = false;
+                        currentKey = null;
+                    }
+                }
+            });
+            
+            return data;
+        }
+        
+        // Render document header card with enhanced metadata
+        function renderDocumentHeader(metadata, category) {
+            const difficultyColors = {
+                'beginner': '#10b981',
+                'intermediate': '#f59e0b',
+                'advanced': '#ef4444'
+            };
+            
+            const statusColors = {
+                'complete': '#10b981',
+                'in-progress': '#f59e0b',
+                'planned': '#6b7280'
+            };
+            
+            return `
+                <div class="doc-header">
+                    <div class="doc-header-content">
+                        <div class="doc-category-badge">
+                            <i class="${category.icon}"></i>
+                            <span>${category.title}</span>
+                        </div>
+                        
+                        <h1 class="doc-title">${metadata.title || currentDoc.title}</h1>
+                        
+                        ${metadata.description ? `<p class="doc-description">${metadata.description}</p>` : ''}
+                        
+                        <div class="doc-meta-row">
+                            <div class="doc-meta-item">
+                                <i class="fas fa-user"></i>
+                                <span><strong>Author:</strong> ${metadata.author || currentDoc.author}</span>
+                            </div>
+                            ${metadata.version ? `
+                            <div class="doc-meta-item">
+                                <i class="fas fa-code-branch"></i>
+                                <span><strong>Version:</strong> ${metadata.version}</span>
+                            </div>
+                            ` : ''}
+                            <div class="doc-meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span><strong>Updated:</strong> ${formatDate(metadata.lastUpdated || currentDoc.lastUpdated)}</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <i class="fas fa-book"></i>
+                                <span><strong>Words:</strong> ${metadata.wordCount || currentDoc.words}</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Read:</strong> ${metadata.readTime || currentDoc.readTime}</span>
+                            </div>
+                            ${metadata.difficulty ? `
+                            <div class="doc-meta-item">
+                                <i class="fas fa-signal"></i>
+                                <span style="color: ${difficultyColors[metadata.difficulty] || '#6b7280'}"><strong>Level:</strong> ${metadata.difficulty}</span>
+                            </div>
+                            ` : ''}
+                            ${metadata.status ? `
+                            <div class="doc-meta-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span style="color: ${statusColors[metadata.status] || '#6b7280'}"><strong>Status:</strong> ${metadata.status}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${metadata.prerequisites && metadata.prerequisites.length > 0 ? `
+                            <div class="doc-prerequisites" style="margin-top: 20px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 600; color: #92400e;">
+                                    <i class="fas fa-exclamation-triangle"></i> Prerequisites:
+                                </p>
+                                <ul style="margin: 0; padding-left: 25px; color: #78350f;">
+                                    ${metadata.prerequisites.map(prereq => `<li>${prereq}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        ${metadata.tags || currentDoc.tags ? `
+                            <div class="doc-tags">
+                                ${(metadata.tags ? metadata.tags.split(',').map(t => t.trim().replace(/[\[\]]/g, '')) : currentDoc.tags).map(tag => `<span class="doc-tag">#${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${metadata.relatedDocs && metadata.relatedDocs.length > 0 ? `
+                            <div class="doc-related" style="margin-top: 20px; padding: 15px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 8px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">
+                                    <i class="fas fa-link"></i> Related Documentation:
+                                </p>
+                                <ul style="margin: 0; padding-left: 25px; color: #1e3a8a;">
+                                    ${metadata.relatedDocs.map(relDoc => {
+                                        const docName = relDoc.split('/').pop().replace('.md', '');
+                                        return `<li><a href="/Documentation/viewer-enhanced.html?doc=${encodeURIComponent('new-docs/' + relDoc.replace('../', ''))}" style="color: #2563eb; text-decoration: none; hover: underline;">${docName}</a></li>`;
+                                    }).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="doc-content">
+                    <div class="markdown-body">
+            `;
+        }
+        
+        // Update navigation breadcrumb and title
+        function updateNavigation() {
+            document.getElementById('category-name').textContent = currentCategory.title;
+            document.getElementById('doc-title-nav').textContent = currentDoc.title;
+            document.getElementById('page-title').textContent = `${currentDoc.title} - A3KM Studio`;
+        }
+        
+        // Generate Table of Contents
+        function generateTOC() {
+            const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = '';
+            
+            headings.forEach((heading, index) => {
+                const id = `heading-${index}`;
+                heading.id = id;
+                
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                
+                const link = document.createElement('a');
+                link.className = `toc-link ${heading.tagName.toLowerCase()}`;
+                link.href = `#${id}`;
+                link.innerHTML = `
+                    <i class="fas fa-circle"></i>
+                    <span>${heading.textContent}</span>
+                `;
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            
+            // Active TOC on scroll
+            window.addEventListener('scroll', updateActiveTOC);
+        }
+        
+        // Update active TOC link
+        function updateActiveTOC() {
+            const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top < 200) {
+                    current = heading.id;
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Render archive navigation
+        function renderArchiveNav() {
+            const archiveCard = document.getElementById('archive-card');
+            
+            const html = `
+                <div class="archive-header">
+                    <div class="archive-icon">
+                        <i class="${currentCategory.icon}"></i>
+                    </div>
+                    <div class="archive-title-block">
+                        <h3>${currentCategory.title}</h3>
+                        <p>${currentCategory.totalDocs} Documents</p>
+                    </div>
+                </div>
+                
+                <ul class="archive-docs-list">
+                    ${currentCategory.docs.map((doc, index) => `
+                        <li class="archive-doc-item">
+                            <a href="/Documentation/viewer-enhanced.html?doc=${encodeURIComponent(doc.path)}" 
+                               class="archive-doc-link ${doc.path === currentDocPath ? 'current' : ''}">
+                                <div class="archive-doc-number">${index + 1}</div>
+                                <div class="archive-doc-info">
+                                    <h4>${doc.title}</h4>
+                                    <p>
+                                        <i class="fas fa-clock"></i>
+                                        <span>${doc.readTime}</span>
+                                        <i class="fas fa-circle" style="font-size: 4px; margin: 0 4px;"></i>
+                                        <span>${doc.words} words</span>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            archiveCard.innerHTML = html;
+        }
+        
+        // Update stats
+        function updateStats(metadata = null) {
+            const words = metadata?.wordCount || currentDoc.words;
+            const readTime = metadata?.readTime || currentDoc.readTime;
+            const updated = metadata?.lastUpdated || currentDoc.lastUpdated;
+            
+            document.getElementById('stat-words').textContent = typeof words === 'number' ? words.toLocaleString() : words;
+            document.getElementById('stat-read-time').textContent = readTime;
+            document.getElementById('stat-updated').textContent = formatDate(updated);
+        }
+        
+        // Setup navigation buttons
+        function setupNavButtons() {
+            if (!docsData || !currentCategory) return;
+            
+            // Find current doc index
+            const currentDocIndex = currentCategory.docs.findIndex(d => d.path === currentDocPath);
+            
+            // Find prev/next docs
+            let prevDoc = null;
+            let nextDoc = null;
+            
+            if (currentDocIndex > 0) {
+                prevDoc = currentCategory.docs[currentDocIndex - 1];
+            } else {
+                // Check previous category
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex > 0) {
+                    const prevCategory = docsData.categories[currentCategoryIndex - 1];
+                    prevDoc = prevCategory.docs[prevCategory.docs.length - 1];
+                }
+            }
+            
+            if (currentDocIndex < currentCategory.docs.length - 1) {
+                nextDoc = currentCategory.docs[currentDocIndex + 1];
+            } else {
+                // Check next category
+                const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+                if (currentCategoryIndex < docsData.categories.length - 1) {
+                    const nextCategory = docsData.categories[currentCategoryIndex + 1];
+                    nextDoc = nextCategory.docs[0];
+                }
+            }
+            
+            // Update buttons
+            updateNavButton('btn-prev-top', 'btn-prev-bottom', prevDoc);
+            updateNavButton('btn-next-top', 'btn-next-bottom', nextDoc);
+        }
+        
+        // Update navigation button
+        function updateNavButton(topId, bottomId, doc) {
+            const topBtn = document.getElementById(topId);
+            const bottomBtn = document.getElementById(bottomId);
+            
+            if (doc) {
+                topBtn.disabled = false;
+                bottomBtn.classList.remove('disabled');
+                bottomBtn.querySelector('h3').textContent = doc.title;
+                
+                const clickHandler = (e) => {
+                    e.preventDefault();
+                    window.location.href = `/Documentation/viewer-enhanced.html?doc=${encodeURIComponent(doc.path)}`;
+                };
+                
+                topBtn.onclick = clickHandler;
+                bottomBtn.onclick = clickHandler;
+            } else {
+                topBtn.disabled = true;
+                bottomBtn.classList.add('disabled');
+                bottomBtn.querySelector('h3').textContent = '—';
+            }
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        // Show error
+        function showError(message) {
+            document.getElementById('markdown-content').innerHTML = `
+                <div class="loading">
+                    <p style="color: var(--accent-red);">${message}</p>
+                </div>
+            `;
+        }
+        
+        // Initialize
+        loadDocsData();
+    </script>
+</body>
+</html>

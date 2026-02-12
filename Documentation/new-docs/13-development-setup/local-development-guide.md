@@ -1,29 +1,67 @@
 ---
-title: "Development Setup & Local Environment"
+title: "Development Setup & Local Environment Configuration"
+description: "Complete local development guide covering project setup, folder structure, running local servers, VS Code configuration, Git workflow, testing procedures, and deployment process for contributing to A3KM Studio"
 date: 2026-02-12
+lastUpdated: 2026-02-12
+version: "1.5.0"
 author: Md Akhinoor Islam
+authorEmail: mdakhinoorislam@gmail.com
 organization: A3KM Studio | Noor Academy
 category: development-setup
-tags: [development, local-setup, folder-structure, deployment]
+difficulty: beginner
+readTime: "12 min"
+wordCount: 2400
+tags: [development, local-setup, folder-structure, deployment, vs-code, git, testing, workflow]
+status: complete
+featured: true
+prerequisites:
+  - "Basic command line knowledge"
+  - "Text editor installed (VS Code recommended)"
+  - "Git basics (optional)"
+relatedDocs:
+  - "../01-website-overview/website-architecture.md"
+  - "../12-github-integration/github-sync-complete.md"
+  - "../11-performance-optimization/pwa-system-guide.md"
 ---
 
-# Development Setup Guide
+# 🛠️ Development Setup & Local Environment
 
-## Local Development করা
+> **👨‍💻 Overview:** A comprehensive development guide for setting up A3KM Studio locally on your computer, including installation, folder structure, running local servers, testing, and deployment workflows for seamless development experience.
+
+---
+
+## 📋 Table of Contents
+
+- [🏁 Getting Started](#getting-started)
+- [📦 Project Setup Steps](#project-setup)
+- [📂 Complete Folder Structure](#folder-structure)
+- [🚀 Running Local Server](#local-server)
+- [🧪 Testing Procedures](#testing)
+- [🔧 Development Tools](#dev-tools)
+- [🌐 Deployment Process](#deployment)
+- [⚠️ Common Setup Issues](#setup-issues)
+
+---
+
+## 🏁 Getting Started {#getting-started}
 
 আমার website টা তোমার নিজের computer এ run করতে চাও? খুব সহজ!
 
-### Requirements:
+### 📝 **System Requirements**
 
-**Minimum:**
-- কোন specific server দরকার নেই
-- শুধু একটা web browser (Chrome/Edge recommended)
-- Text editor (VS Code recommended)
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| **OS** | Windows 10+ / macOS / Linux | Any modern OS |
+| **Browser** | Chrome 90+ | Chrome/Edge latest |
+| **Disk Space** | 500 MB | 2 GB |
+| **RAM** | 2 GB | 4 GB+ |
+| **Text Editor** | Any | VS Code |
 
-**Optional (Better Experience):**
-- Local web server (Live Server extension)
-- Git installed
-- Node.js (for future tooling)
+### 🧩 **Optional Tools**
+
+- **Git:** Version control (`git --version` to check)
+- **Node.js:** Future tooling support
+- **Python 3:** Alternative local server
 
 ## Project Setup Steps
 
