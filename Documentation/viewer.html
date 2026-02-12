@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A3KM Studio Documentation Viewer">
+    <meta name="author" content="Md Akhinoor Islam">
+    
+    <title id="page-title">Documentation Viewer - A3KM Studio</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Highlight.js for Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --bg-light: #f7fafc;
+            --code-bg: #282c34;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+        
+        /* Top Navigation Bar */
+        .top-nav {
+            background: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .top-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-back:hover {
+            background: var(--bg-light);
+            color: var(--primary-color);
+        }
+        
+        .nav-title {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-title h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .nav-title p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Main Content Container */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+            display: flex;
+            gap: 30px;
+        }
+        
+        /* Sidebar (Desktop only) */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-sticky {
+            position: sticky;
+            top: 100px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .toc-list {
+            list-style: none;
+        }
+        
+        .toc-item {
+            margin-bottom: 10px;
+        }
+        
+        .toc-link {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .toc-link:hover, .toc-link.active {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Main Content */
+        .content {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            min-height: 70vh;
+        }
+        
+        /* Markdown Styles */
+        .markdown-body h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+        
+        .markdown-body h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+        
+        .markdown-body p {
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-size: 1.05rem;
+        }
+        
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+        
+        .markdown-body li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+        
+        .markdown-body a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .markdown-body a:hover {
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .markdown-body code {
+            background: #f7fafc;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        .markdown-body pre {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-bottom: 25px;
+        }
+        
+        .markdown-body pre code {
+            background: transparent;
+            color: #abb2bf;
+            padding: 0;
+            font-size: 0.95rem;
+        }
+        
+        .markdown-body blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 20px;
+            margin: 25px 0;
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .markdown-body tbody {
+            display: table;
+            width: 100%;
+        }
+        
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            text-align: left;
+            white-space: nowrap;
+        }
+        
+        .markdown-body th {
+            background: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid #cbd5e0;
+        }
+        
+        .markdown-body td {
+            background: white;
+        }
+        
+        .markdown-body tbody tr:nth-child(even) td {
+            background: #f9fafb;
+        }
+        
+        .markdown-body tbody tr:hover td {
+            background: #f0f4f8;
+        }
+        
+        .markdown-body hr {
+            border: none;
+            border-top: 2px solid #e2e8f0;
+            margin: 40px 0;
+        }
+        
+        .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .markdown-body strong {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        
+        .markdown-body em {
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .bottom-nav-btn {
+            flex: 1;
+            padding: 20px 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .bottom-nav-btn:hover:not(.disabled) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .bottom-nav-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .bottom-nav-btn.next {
+            justify-content: flex-end;
+            text-align: right;
+        }
+        
+        .bottom-nav-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .bottom-nav-text p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        
+        .bottom-nav-text h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 100px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .container {
+                padding: 0 15px;
+                margin: 20px auto;
+            }
+            
+            .content {
+                padding: 25px;
+            }
+            
+            .top-nav-content {
+                padding: 0 15px;
+                flex-wrap: wrap;
+            }
+            
+            .nav-title h1 {
+                font-size: 1.1rem;
+            }
+            
+            .nav-title p {
+                display: none;
+            }
+            
+            .markdown-body h1 {
+                font-size: 1.8rem;
+            }
+            
+            .markdown-body h2 {
+                font-size: 1.5rem;
+            }
+            
+            .markdown-body table {
+                font-size: 0.9rem;
+            }
+            
+            .markdown-body th, .markdown-body td {
+                padding: 10px 12px;
+            }
+            
+            .bottom-nav {
+                flex-direction: column;
+                padding: 0 15px;
+            }
+            
+            .bottom-nav-btn {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="top-nav-content">
+            <a href="/Documentation/" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Hub</span>
+            </a>
+            
+            <div class="nav-title">
+                <h1 id="doc-title">Loading...</h1>
+                <p id="doc-meta"></p>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="nav-btn" id="btn-prev" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="hide-mobile">Previous</span>
+                </button>
+                <button class="nav-btn" id="btn-next" disabled>
+                    <span class="hide-mobile">Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar (Desktop only) -->
+        <aside class="sidebar">
+            <div class="sidebar-sticky">
+                <h3 class="sidebar-title">Table of Contents</h3>
+                <ul class="toc-list" id="toc-list">
+                    <!-- Will be populated dynamically -->
+                </ul>
+            </div>
+        </aside>
+        
+        <!-- Content -->
+        <main class="content">
+            <div id="markdown-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading documentation...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="bottom-nav-btn disabled" id="btn-prev-bottom">
+            <div class="bottom-nav-icon">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="bottom-nav-text">
+                <p>Previous</p>
+                <h3>—</h3>
+            </div>
+        </a>
+        
+        <a href="#" class="bottom-nav-btn disabled" id="btn-next-bottom">
+            <div class="bottom-nav-text">
+                <p>Next</p>
+                <h3>—</h3>
+            </div>
+            <div class="bottom-nav-icon">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </a>
+    </div>
+    
+    <script>
+        let docsData = null;
+        let currentDocPath = null;
+        
+        // Get URL parameters
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Load docs data
+        async function loadDocsData() {
+            try {
+                const response = await fetch('/Documentation/docs-data.json');
+                docsData = await response.json();
+                
+                const docPath = getUrlParam('doc');
+                if (docPath) {
+                    loadDocument(docPath);
+                } else {
+                    document.getElementById('markdown-content').innerHTML = '<div class="loading"><p>No document specified.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading docs data:', error);
+                document.getElementById('markdown-content').innerHTML = '<div class="loading"><p>Error loading documentation data.</p></div>';
+            }
+        }
+        
+        // Load and render markdown document
+        async function loadDocument(docPath) {
+            currentDocPath = docPath;
+            
+            try {
+                const response = await fetch(`/Documentation/${docPath}`);
+                const markdown = await response.text();
+                
+                // Remove frontmatter
+                const content = markdown.replace(/^---[\s\S]*?---\n/, '');
+                
+                // Configure marked
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            return hljs.highlight(code, { language: lang }).value;
+                        }
+                        return hljs.highlightAuto(code).value;
+                    },
+                    breaks: true,
+                    gfm: true
+                });
+                
+                // Render markdown
+                const html = marked.parse(content);
+                document.getElementById('markdown-content').innerHTML = `<div class="markdown-body">${html}</div>`;
+                
+                // Update title
+                const title = getUrlParam('title') || 'Documentation';
+                document.getElementById('doc-title').textContent = title;
+                document.getElementById('page-title').textContent = `${title} - A3KM Studio`;
+                
+                // Generate TOC
+                generateTOC();
+                
+                // Setup navigation
+                setupNavigation();
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error loading document:', error);
+                document.getElementById('markdown-content').innerHTML = '<div class="loading"><p>Error loading document. Please try again.</p></div>';
+            }
+        }
+        
+        // Generate Table of Contents
+        function generateTOC() {
+            const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = '';
+            
+            headings.forEach((heading, index) => {
+                const id = `heading-${index}`;
+                heading.id = id;
+                
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                
+                const link = document.createElement('a');
+                link.className = 'toc-link';
+                link.href = `#${id}`;
+                link.textContent = heading.textContent;
+                link.style.paddingLeft = heading.tagName === 'H3' ? '20px' : '0';
+                
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            
+            // Active TOC on scroll
+            window.addEventListener('scroll', updateActiveTOC);
+        }
+        
+        // Update active TOC link
+        function updateActiveTOC() {
+            const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            let current = '';
+            headings.forEach(heading => {
+                const top = heading.getBoundingClientRect().top;
+                if (top < 200) {
+                    current = heading.id;
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Setup navigation buttons
+        function setupNavigation() {
+            if (!docsData) return;
+            
+            // Find current doc and category
+            let currentCategory = null;
+            let currentDocIndex = -1;
+            
+            docsData.categories.forEach(category => {
+                category.docs.forEach((doc, index) => {
+                    if (doc.path === currentDocPath) {
+                        currentCategory = category;
+                        currentDocIndex = index;
+                    }
+                });
+            });
+            
+            if (!currentCategory) return;
+            
+            // Find prev/next docs
+            const prevDoc = currentDocIndex > 0 ? currentCategory.docs[currentDocIndex - 1] : null;
+            const nextDoc = currentDocIndex < currentCategory.docs.length - 1 ? currentCategory.docs[currentDocIndex + 1] : null;
+            
+            // If no prev/next in same category, check other categories
+            const currentCategoryIndex = docsData.categories.findIndex(c => c.id === currentCategory.id);
+            
+            const finalPrevDoc = prevDoc || (currentCategoryIndex > 0 ? docsData.categories[currentCategoryIndex - 1].docs.slice(-1)[0] : null);
+            const finalNextDoc = nextDoc || (currentCategoryIndex < docsData.categories.length - 1 ? docsData.categories[currentCategoryIndex + 1].docs[0] : null);
+            
+            // Update buttons
+            updateNavButton('btn-prev', 'btn-prev-bottom', finalPrevDoc);
+            updateNavButton('btn-next', 'btn-next-bottom', finalNextDoc);
+        }
+        
+        // Update navigation button
+        function updateNavButton(topId, bottomId, doc) {
+            const topBtn = document.getElementById(topId);
+            const bottomBtn = document.getElementById(bottomId);
+            
+            if (doc) {
+                topBtn.disabled = false;
+                bottomBtn.classList.remove('disabled');
+                bottomBtn.querySelector('h3').textContent = doc.title;
+                
+                const clickHandler = (e) => {
+                    e.preventDefault();
+                    window.location.href = `/Documentation/viewer.html?doc=${encodeURIComponent(doc.path)}&title=${encodeURIComponent(doc.title)}`;
+                };
+                
+                topBtn.onclick = clickHandler;
+                bottomBtn.onclick = clickHandler;
+            } else {
+                topBtn.disabled = true;
+                bottomBtn.classList.add('disabled');
+            }
+        }
+        
+        // Initialize
+        loadDocsData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#CC0000">
+    
+    <meta name="description" content="Complete website documentation - A3KM Studio">
+    <meta name="author" content="Md Akhinoor Islam">
+    
+    <title>📚 Documentation Hub - A3KM Studio</title>
+    
+    <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Mobile Common Styles -->
+    <link rel="stylesheet" href="../../mobile/shared/mobile-common.css">
+    <link rel="stylesheet" href="../../mobile/shared/mobile-navbar.css">
+    
+    <style>
+        /* Header Section */
+        .docs-header {
+            position: relative;
+            padding: 30px 20px 20px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.1) 0%, rgba(139, 0, 0, 0.1) 100%);
+            border-bottom: 2px solid var(--border-primary);
+        }
+        
+        .docs-header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(90deg, rgba(204, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(204, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: gridMove 20s linear infinite;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 30px); }
+        }
+        
+        .docs-header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        .docs-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .docs-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .docs-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        /* Stats */
+        .docs-stats {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .stat-badge i {
+            color: var(--primary-red);
+        }
+        
+        /* Controls */
+        .docs-controls {
+            padding: 15px 20px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
+        }
+        
+        .search-box::placeholder {
+            color: var(--text-dim);
+        }
+        
+        .search-wrapper {
+            position: relative;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+        
+        /* Filter Tags */
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 20px;
+            background: var(--bg-dark);
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .filter-tags::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-tag {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .filter-tag.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        /* Documentation Grid */
+        .docs-grid {
+            padding: 20px;
+            display: grid;
+            gap: 15px;
+        }
+        
+        /* Documentation Card */
+        .doc-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-red), var(--dark-red));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .doc-card:active {
+            transform: scale(0.98);
+            background: var(--bg-card-hover);
+        }
+        
+        .doc-card:active::before {
+            opacity: 1;
+        }
+        
+        .card-header {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .card-icon-wrapper {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-icon-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.15;
+        }
+        
+        .card-title-section {
+            flex: 1;
+        }
+        
+        .card-number {
+            font-size: 0.75rem;
+            color: var(--primary-red);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .card-title-bn {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .card-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .meta-item i {
+            color: var(--primary-red);
+            font-size: 0.75rem;
+        }
+        
+        .card-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .card-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(204, 0, 0, 0.2);
+            border-top-color: var(--primary-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Main Page Wrapper -->
+    <div class="mobile-page-wrapper">
+        
+        <!-- Header Section -->
+        <header class="docs-header">
+            <div class="docs-header-bg"></div>
+            <div class="docs-header-content">
+                <div class="docs-icon">📚</div>
+                <h1 class="docs-title">Documentation Hub</h1>
+                <p class="docs-subtitle">A3KM Studio - Complete Website Documentation</p>
+                
+                <div class="docs-stats">
+                    <div class="stat-badge">
+                        <i class="fas fa-folder"></i>
+                        <span><span id="total-categories">0</span> Categories</span>
+                    </div>
+                    <div class="stat-badge">
+                        <i class="fas fa-file-alt"></i>
+                        <span><span id="total-docs">0</span> Documents</span>
+                    </div>
+                    <div class="stat-badge">
+                        <i class="fas fa-book"></i>
+                        <span><span id="total-words">0</span>+ Words</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Controls -->
+        <div class="docs-controls">
+            <div class="search-wrapper">
+                <input type="text" id="search-input" class="search-box" placeholder="Search documentation...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+        
+        <!-- Filter Tags -->
+        <div class="filter-tags">
+            <button class="filter-tag active" data-filter="all">All</button>
+            <button class="filter-tag" data-filter="admin">Admin & Security</button>
+            <button class="filter-tag" data-filter="content">Content & Media</button>
+            <button class="filter-tag" data-filter="technical">Technical & Dev</button>
+            <button class="filter-tag" data-filter="mobile">Mobile & PWA</button>
+        </div>
+        
+        <!-- Documentation Grid -->
+        <div id="docs-grid" class="docs-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading documentation...</p>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="mobile-bottom-nav" role="navigation" aria-label="Main mobile navigation">
+        <div class="mobile-nav-container">
+            <a href="../../mobile/home/index.html" class="mobile-nav-item">
+                <i class="fas fa-home"></i>
+                <span class="mobile-nav-label">Home</span>
+            </a>
+            <a href="../../mobile/about/about.html" class="mobile-nav-item">
+                <i class="fas fa-user-circle"></i>
+                <span class="mobile-nav-label">About</span>
+            </a>
+            <a href="../../mobile/projects/projects.html" class="mobile-nav-item">
+                <i class="fas fa-folder-open"></i>
+                <span class="mobile-nav-label">Projects</span>
+            </a>
+            <a href="../../mobile/content-studio/hub.html" class="mobile-nav-item">
+                <i class="fas fa-layer-group"></i>
+                <span class="mobile-nav-label">Studio</span>
+            </a>
+            <a href="../../mobile/contact/contact.html" class="mobile-nav-item">
+                <i class="fas fa-envelope"></i>
+                <span class="mobile-nav-label">Contact</span>
+            </a>
+        </div>
+    </nav>
+    
+    <script>
+        let docsData = null;
+        
+        // Load documentation data
+        async function loadDocsData() {
+            try {
+                const response = await fetch('/Documentation/docs-data.json');
+                docsData = await response.json();
+                
+                updateStats(docsData);
+                renderDocCards(docsData.categories);
+            } catch (error) {
+                console.error('Error loading docs data:', error);
+                document.getElementById('docs-grid').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error loading documentation data.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update stats
+        function updateStats(data) {
+            document.getElementById('total-categories').textContent = data.totalCategories || 15;
+            document.getElementById('total-docs').textContent = data.totalDocs || 15;
+            document.getElementById('total-words').textContent = (data.totalWords || 28000).toLocaleString();
+        }
+        
+        // Render documentation cards
+        function renderDocCards(categories) {
+            const grid = document.getElementById('docs-grid');
+            grid.innerHTML = '';
+            
+            if (!categories || categories.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <p>No documentation found.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            categories.forEach(category => {
+                const card = createDocCard(category);
+                grid.appendChild(card);
+            });
+        }
+        
+        // Create documentation card
+        function createDocCard(category) {
+            const card = document.createElement('div');
+            card.className = 'doc-card';
+            card.dataset.category = category.id;
+            card.dataset.tags = category.docs ? category.docs[0].tags.join(',') : '';
+            
+            const totalReadTime = category.docs ? category.docs.reduce((sum, doc) => {
+                const time = parseInt(doc.readTime);
+                return sum + (isNaN(time) ? 0 : time);
+            }, 0) : 0;
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-icon-wrapper" style="${category.gradient ? `background: ${category.gradient}` : ''}">
+                        <div>${category.emoji || '📄'}</div>
+                    </div>
+                    <div class="card-title-section">
+                        <div class="card-number">${String(category.number).padStart(2, '0')}.</div>
+                        <h3 class="card-title">${category.title}</h3>
+                        <p class="card-title-bn">${category.titleBn || ''}</p>
+                    </div>
+                </div>
+                
+                <p class="card-description">${category.descriptionBn || category.description}</p>
+                
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span>${category.totalDocs || 1} document${category.totalDocs > 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>${totalReadTime} min read</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Complete</span>
+                    </div>
+                </div>
+                
+                <button class="card-button" onclick="openDoc('${category.docs[0].path}', '${category.docs[0].title}')">
+                    <span>Read Documentation</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            `;
+            
+            return card;
+        }
+        
+        // Open documentation
+        function openDoc(path, title) {
+            window.location.href = `/Documentation/mobile/docs-viewer.html?doc=${encodeURIComponent(path)}&title=${encodeURIComponent(title)}`;
+        }
+        
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.doc-card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const titleBn = card.querySelector('.card-title-bn').textContent.toLowerCase();
+                const description = card.querySelector('.card-description').textContent.toLowerCase();
+                const tags = card.dataset.tags.toLowerCase();
+                
+                const matches = title.includes(searchTerm) || 
+                               titleBn.includes(searchTerm) || 
+                               description.includes(searchTerm) ||
+                               tags.includes(searchTerm);
+                
+                card.style.display = matches ? 'block' : 'none';
+            });
+        });
+        
+        // Filter functionality
+        const filterTags = document.querySelectorAll('.filter-tag');
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                // Update active state
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                
+                const filter = tag.dataset.filter;
+                const cards = document.querySelectorAll('.doc-card');
+                
+                if (filter === 'all') {
+                    cards.forEach(card => card.style.display = 'block');
+                    return;
+                }
+                
+                // Filter categories
+                const categoryMap = {
+                    'admin': ['02-authentication-security', '03-only-boss-admin'],
+                    'content': ['04-content-management', '05-blog-posts', '06-video-media', '07-research-papers', '08-books-pdfs'],
+                    'technical': ['01-website-overview', '09-projects-portfolio', '12-github-integration', '13-development-setup', '14-analytics-monitoring', '15-troubleshooting'],
+                    'mobile': ['10-mobile-experience', '11-performance-optimization']
+                };
+                
+                cards.forEach(card => {
+                    const categoryId = card.dataset.category;
+                    const shouldShow = categoryMap[filter] && categoryMap[filter].includes(categoryId);
+                    card.style.display = shouldShow ? 'block' : 'none';
+                });
+            });
+        });
+        
+        // Initialize
+        loadDocsData();
+        
+        // Active navbar item
+        document.addEventListener('DOMContentLoaded', () => {
+            // If you want to highlight a nav item, do it here
+        });
+    </script>
+    
+</body>
+</html>
