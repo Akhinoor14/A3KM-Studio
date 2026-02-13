@@ -246,6 +246,50 @@
                 renderVideos();
             });
         });
+        
+        // Setup scroll indicator for category tabs
+        setupCategoryScrollIndicator();
+    }
+    
+    /**
+     * Setup category tabs scroll fade indicators
+     */
+    function setupCategoryScrollIndicator() {
+        const scrollContainer = document.querySelector('.category-tabs-scroll');
+        if (!scrollContainer) return;
+        
+        function updateScrollIndicators() {
+            const scrollLeft = scrollContainer.scrollLeft;
+            const scrollWidth = scrollContainer.scrollWidth;
+            const clientWidth = scrollContainer.clientWidth;
+            const maxScroll = scrollWidth - clientWidth;
+            
+            // Remove all scroll state classes
+            scrollContainer.classList.remove('scrollable', 'scroll-start', 'scroll-middle', 'scroll-end');
+            
+            // Check if scrollable
+            if (scrollWidth > clientWidth) {
+                scrollContainer.classList.add('scrollable');
+                
+                // Determine scroll position
+                if (scrollLeft <= 5) {
+                    scrollContainer.classList.add('scroll-start');
+                } else if (scrollLeft >= maxScroll - 5) {
+                    scrollContainer.classList.add('scroll-end');
+                } else {
+                    scrollContainer.classList.add('scroll-middle');
+                }
+            }
+        }
+        
+        // Update on scroll
+        scrollContainer.addEventListener('scroll', updateScrollIndicators);
+        
+        // Update on load
+        setTimeout(updateScrollIndicators, 100);
+        
+        // Update on window resize
+        window.addEventListener('resize', updateScrollIndicators);
     }
 
     /**
@@ -327,7 +371,6 @@
                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                     <i class="fab fa-youtube" style="display:none; font-size: 48px; color: #CC0000;"></i>
                     <span class="content-duration">${video.duration || 'N/A'}</span>
-                    ${video.language === 'bn' ? '<span class="content-language">🇧🇩 বাংলা</span>' : ''}
                 </div>
                 <div class="content-info-wrap">
                     <h3 class="content-item-title">${video.title}</h3>

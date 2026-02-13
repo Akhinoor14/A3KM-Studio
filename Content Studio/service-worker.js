@@ -5,7 +5,7 @@
  * A3KM Studio
  */
 
-const CACHE_VERSION = 'a3km-studio-v1.0.0';
+const CACHE_VERSION = 'a3km-studio-v2.0.0';
 const CACHE_NAME = `content-studio-${CACHE_VERSION}`;
 
 // Files to cache immediately (static assets)

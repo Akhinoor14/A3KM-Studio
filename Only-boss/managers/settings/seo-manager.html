@@ -14,10 +14,6 @@
     <title>SEO Manager - A3KM Studio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Mobile Optimization Styles -->
-    <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
-    <link rel="stylesheet" href="../../mobile/manager-mobile.css">
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #fbb034 0%, #f7ce38 100%); min-height: 100vh; padding: 20px; }
@@ -97,6 +93,10 @@
             .live-score-indicator { display: none; }
         }
     </style>
+
+    <!-- Mobile Optimization Styles (Loaded AFTER desktop styles to override) -->
+    <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
+    <link rel="stylesheet" href="../../mobile/manager-mobile.css">
 </head>
 <body>
     <div class="container">
@@ -1261,5 +1261,35 @@ ${canonical ? `<meta property="og:url" content="${canonical}">\n` : ''}`;
             document.getElementById('seoScoreSection').style.display = 'block';
         }
     </script>
+
+<!-- Mobile CSS Priority Enforcer -->
+<script>
+    (function() {
+        const forceMobile = sessionStorage.getItem('forceMobileView') === 'true' || 
+                           /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                           window.innerWidth <= 768;
+        
+        if (forceMobile) {
+            document.body.classList.add('mobile-device');
+            
+            let viewport = document.querySelector('meta[name="viewport"]');
+            if (!viewport) {
+                viewport = document.createElement('meta');
+                viewport.name = 'viewport';
+                document.head.appendChild(viewport);
+            }
+            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            
+            const desktopStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+            desktopStylesheets.forEach(link => {
+                if (!link.href.includes('mobile') && !link.href.includes('global')) {
+                    link.media = 'only screen and (min-width: 769px)';
+                }
+            });
+            
+            console.log('✅ Mobile CSS enforced for SEO Manager');
+        }
+    })();
+</script>
 </body>
 </html>

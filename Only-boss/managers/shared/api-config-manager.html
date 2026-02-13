@@ -12,10 +12,6 @@
     <!-- Load Unified Token Manager -->
     <script src="unified-token-manager.js"></script>
     
-    <!-- Mobile Optimization Styles -->
-    <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
-    <link rel="stylesheet" href="../../mobile/manager-mobile.css">
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -728,6 +724,10 @@
             }
         }
     </style>
+
+    <!-- Mobile Optimization Styles (Loaded AFTER desktop styles to override) -->
+    <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
+    <link rel="stylesheet" href="../../mobile/manager-mobile.css">
 </head>
 <body>
     <div class="container">
@@ -1884,5 +1884,35 @@
 
     <!-- Activity Logger Integration -->
     <script src="../../shared/activity-logger.js"></script>
+
+<!-- Mobile CSS Priority Enforcer -->
+<script>
+    (function() {
+        const forceMobile = sessionStorage.getItem('forceMobileView') === 'true' || 
+                           /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                           window.innerWidth <= 768;
+        
+        if (forceMobile) {
+            document.body.classList.add('mobile-device');
+            
+            let viewport = document.querySelector('meta[name="viewport"]');
+            if (!viewport) {
+                viewport = document.createElement('meta');
+                viewport.name = 'viewport';
+                document.head.appendChild(viewport);
+            }
+            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            
+            const desktopStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+            desktopStylesheets.forEach(link => {
+                if (!link.href.includes('mobile') && !link.href.includes('global')) {
+                    link.media = 'only screen and (min-width: 769px)';
+                }
+            });
+            
+            console.log('✅ Mobile CSS enforced for API Config Manager');
+        }
+    })();
+</script>
 </body>
 </html>

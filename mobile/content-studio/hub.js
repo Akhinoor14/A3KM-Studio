@@ -14,6 +14,9 @@
     }
     
     function init() {
+        // Load real-time counts from JSON
+        loadContentCounts();
+        
         // Add touch feedback
         addTouchFeedback();
         
@@ -22,6 +25,56 @@
         
         // Add section animations
         animateSections();
+    }
+    
+    /**
+     * Load content counts from JSON files (Mobile)
+     * Ensures counts are always accurate after Manager uploads
+     */
+    async function loadContentCounts() {
+        try {
+            // Load all JSON files in parallel
+            const [videosData, postsData, booksData, coursesData] = await Promise.all([
+                fetch('../../../Content Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
+                fetch('../../../Content Studio/written-posts/posts.json').then(r => r.json()).catch(() => ({posts: []})),
+                fetch('../../../Content Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
+                fetch('../../../Content Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []}))
+            ]);
+            
+            // Count videos from all groups
+            let videoCount = 0;
+            if (videosData.videoGroups && Array.isArray(videosData.videoGroups)) {
+                videosData.videoGroups.forEach(group => {
+                    if (group.videos && Array.isArray(group.videos)) {
+                        videoCount += group.videos.length;
+                    }
+                });
+            }
+            
+            const postCount = (postsData.posts || []).length;
+            const bookCount = (booksData.books || []).length;
+            const courseCount = (coursesData.courses || []).length;
+            
+            // Update stat numbers
+            const statElements = document.querySelectorAll('.stat-number');
+            statElements.forEach(el => {
+                const type = el.getAttribute('data-type');
+                let count = 0;
+                
+                switch(type) {
+                    case 'videos': count = videoCount; break;
+                    case 'posts': count = postCount; break;
+                    case 'books': count = bookCount; break;
+                    case 'courses': count = courseCount; break;
+                }
+                
+                el.textContent = count;
+            });
+            
+            console.log('📊 Mobile Hub Counts:', { videos: videoCount, posts: postCount, books: bookCount, courses: courseCount });
+        } catch (error) {
+            console.error('❌ Failed to load content counts:', error);
+        }
     }
     
     /**

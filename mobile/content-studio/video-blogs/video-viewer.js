@@ -30,11 +30,21 @@
     // ========== LOAD VIDEOS FROM JSON ==========
     async function loadVideosFromJSON() {
         try {
-            const response = await fetch('../../../Content Code/content.json');
+            const response = await fetch('../../../Content Studio/video-content/videos.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
-            allVideos = data['video-blogs'] || [];
+            
+            // Extract videos from all categories
+            allVideos = [];
+            if (data.categories && data.categories['video-blog']) {
+                Object.values(data.categories['video-blog']).forEach(category => {
+                    if (category.videos && Array.isArray(category.videos)) {
+                        allVideos.push(...category.videos);
+                    }
+                });
+            }
+            
             console.log(`📺 Loaded ${allVideos.length} videos`);
             
             loadVideo();
@@ -129,14 +139,14 @@
                 <span><i class="fas fa-clock"></i> ${currentVideo.duration || 'N/A'}</span>
             </div>
             ${(currentVideo.views > 0 || currentVideo.likes > 0) ? `
-            <div class="video-stats" style="display: flex; gap: 16px; padding: 12px 0; border-top: 1px solid rgba(205,92,92,0.2); border-bottom: 1px solid rgba(205,92,92,0.2); margin: 12px 0;">
+            <div class="video-stats" style="display: flex; gap: 16px; padding: 12px 0; border-top: 1px solid rgba(204,0,0,0.2); border-bottom: 1px solid rgba(204,0,0,0.2); margin: 12px 0;">
                 <span style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
-                    <i class="fas fa-eye" style="color: #CD5C5C;"></i> ${viewsText}
+                    <i class="fas fa-eye" style="color: #CC0000;"></i> ${viewsText}
                 </span>
                 <span style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
-                    <i class="fas fa-thumbs-up" style="color: #CD5C5C;"></i> ${likesText}
+                    <i class="fas fa-thumbs-up" style="color: #CC0000;"></i> ${likesText}
                 </span>
-                ${currentVideo.apiEnhanced ? '<span style="color: rgba(76,175,80,0.8); font-size: 0.7rem; margin-left: auto;"><i class="fas fa-check-circle"></i> Live Data</span>' : ''}
+            </div>
             </div>
             ` : ''}
             <div class="video-tags">
@@ -157,13 +167,18 @@
             console.log('🔄 Enhancing related videos with YouTube data...');
             try {
                 relatedVideos = await window.youtubeFetcher.enhanceMultipleVideos(relatedVideos);
-                console.log('✅ Related videos enhanced with YouTube data');
+                console.log('✅ Related videos enhanced:', relatedVideos.map(v => ({ id: v.id, duration: v.duration, enhanced: v.apiEnhanced })));
             } catch (err) {
                 console.warn('⚠️ Failed to enhance related videos:', err);
             }
         }
 
         relatedList.innerHTML = relatedVideos.map(video => {
+            // Use enhanced duration if available, fallback to original
+            const displayDuration = video.apiEnhanced && video.duration 
+                ? video.duration 
+                : (video.duration || 'N/A');
+            
             // Format views if available
             const viewsText = video.views && video.views > 0 
                 ? (window.youtubeFetcher?.formatViews(video.views) || `${video.views} views`)
@@ -174,7 +189,7 @@
                     <div class="related-thumb">
                         <img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">
                         <i class="fab fa-youtube"></i>
-                        <span class="related-duration">${video.duration || 'N/A'}</span>
+                        <span class="related-duration">${displayDuration}</span>
                     </div>
                     <div class="related-info">
                         <h4>${video.title}</h4>
@@ -189,8 +204,6 @@
 
     // ========== EVENT HANDLERS ==========
     function handleLike() {
-        if (navigator.vibrate) navigator.vibrate(10);
-        
         // Open YouTube video page so user can like on YouTube
         if (currentVideo.youtubeUrl) {
             window.open(currentVideo.youtubeUrl, '_blank');
@@ -202,8 +215,6 @@
     }
 
     function handleShare() {
-        if (navigator.vibrate) navigator.vibrate(10);
-        
         if (navigator.share) {
             navigator.share({
                 title: currentVideo.title,
@@ -223,17 +234,11 @@
         saveBtn.classList.toggle('liked', isSaved);
         saveBtn.querySelector('span').textContent = isSaved ? 'Saved' : 'Save';
         
-        if (navigator.vibrate) {
-            navigator.vibrate(isSaved ? 30 : 10);
-        }
-
         // Save to localStorage
         localStorage.setItem(`video_${currentVideo.id}_saved`, isSaved);
     }
 
     function handleDownload() {
-        if (navigator.vibrate) navigator.vibrate([10, 20, 10]);
-        
         // Open YouTube video page in new tab for download options
         if (currentVideo.youtubeUrl) {
             window.open(currentVideo.youtubeUrl, '_blank');

@@ -46,6 +46,22 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Enhanced form validation
+            const inputs = form.querySelectorAll('.input-wrapper input, .input-wrapper textarea');
+            let isFormValid = true;
+            
+            inputs.forEach(input => {
+                const wrapper = input.closest('.input-wrapper');
+                if (!validateInput(input, wrapper)) {
+                    isFormValid = false;
+                }
+            });
+            
+            if (!isFormValid) {
+                showStatus('error', '⚠ Please fix the errors in the form');
+                return;
+            }
+            
             // Get form data
             const formData = new FormData(form);
             const data = {
@@ -56,12 +72,6 @@
                 to_email: 'mdakhinoorislam.official.2005@gmail.com'
             };
             
-            // Validate form
-            if (!data.from_name || !data.from_email || !data.subject || !data.message) {
-                showStatus('error', 'Please fill in all fields');
-                return;
-            }
-            
             // Show loading state
             const btnText = submitBtn.querySelector('.btn-text');
             const btnSpinner = submitBtn.querySelector('.btn-spinner');
@@ -70,11 +80,6 @@
             btnSpinner.style.display = 'inline';
             submitBtn.disabled = true;
             formStatus.style.display = 'none';
-            
-            // Haptic feedback
-            if ('vibrate' in navigator) {
-                navigator.vibrate(10);
-            }
             
             try {
                 // Send main email to you
@@ -110,16 +115,20 @@
                     // Don't show error to user for auto-reply failure
                 }
                 
+                // Show success confetti
+                showSuccessConfetti();
+                
                 // Show success message
                 showStatus('success', '✓ Message sent successfully! I\'ll get back to you soon.');
                 
                 // Reset form
                 form.reset();
                 
-                // Haptic feedback for success
-                if ('vibrate' in navigator) {
-                    navigator.vibrate([50, 30, 50]);
-                }
+                // Remove validation classes
+                inputs.forEach(input => {
+                    const wrapper = input.closest('.input-wrapper');
+                    wrapper.classList.remove('valid', 'invalid', 'filled');
+                });
                 
             } catch (error) {
                 console.error('Error sending email:', error);
@@ -211,7 +220,7 @@
     }
     
     /**
-     * Setup input validation and effects
+     * Setup input validation and effects - ENHANCED
      */
     function setupInputEffects() {
         const inputs = document.querySelectorAll('.input-wrapper input, .input-wrapper textarea');
@@ -221,11 +230,6 @@
             input.addEventListener('focus', function() {
                 const wrapper = this.closest('.input-wrapper');
                 wrapper.classList.add('focused');
-                
-                // Haptic feedback on focus
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(5);
-                }
             });
             
             input.addEventListener('blur', function() {
@@ -235,6 +239,7 @@
                 // Validate on blur
                 if (this.value.trim()) {
                     wrapper.classList.add('filled');
+                    validateInput(input, wrapper);
                 } else {
                     wrapper.classList.remove('filled');
                 }
@@ -248,12 +253,131 @@
                     
                     if (this.value && !emailPattern.test(this.value)) {
                         wrapper.classList.add('invalid');
+                        wrapper.classList.remove('valid');
+                    } else if (this.value) {
+                        wrapper.classList.remove('invalid');
+                        wrapper.classList.add('valid');
+                    } else {
+                        wrapper.classList.remove('invalid', 'valid');
+                    }
+                });
+            }
+            
+            // Real-time validation for other inputs
+            if (input.name === 'from_name') {
+                input.addEventListener('input', function() {
+                    const wrapper = this.closest('.input-wrapper');
+                    if (this.value.trim().length < 2) {
+                        wrapper.classList.add('invalid');
+                        wrapper.classList.remove('valid');
                     } else {
                         wrapper.classList.remove('invalid');
+                        wrapper.classList.add('valid');
+                    }
+                });
+            }
+            
+            if (input.name === 'subject') {
+                input.addEventListener('input', function() {
+                    const wrapper = this.closest('.input-wrapper');
+                    if (this.value.trim().length < 3) {
+                        wrapper.classList.add('invalid');
+                        wrapper.classList.remove('valid');
+                    } else {
+                        wrapper.classList.remove('invalid');
+                        wrapper.classList.add('valid');
+                    }
+                });
+            }
+            
+            if (input.name === 'message') {
+                input.addEventListener('input', function() {
+                    const wrapper = this.closest('.input-wrapper');
+                    if (this.value.trim().length < 10) {
+                        wrapper.classList.add('invalid');
+                        wrapper.classList.remove('valid');
+                    } else {
+                        wrapper.classList.remove('invalid');
+                        wrapper.classList.add('valid');
                     }
                 });
             }
         });
+    }
+    
+    /**
+     * Validate individual input
+     */
+    function validateInput(input, wrapper) {
+        let isValid = false;
+        
+        if (input.type === 'email') {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            isValid = emailPattern.test(input.value);
+        } else if (input.name === 'from_name') {
+            isValid = input.value.trim().length >= 2;
+        } else if (input.name === 'subject') {
+            isValid = input.value.trim().length >= 3;
+        } else if (input.name === 'message') {
+            isValid = input.value.trim().length >= 10;
+        } else {
+            isValid = input.value.trim().length > 0;
+        }
+        
+        if (isValid) {
+            wrapper.classList.remove('invalid');
+            wrapper.classList.add('valid');
+        } else {
+            wrapper.classList.add('invalid');
+            wrapper.classList.remove('valid');
+            
+            // Shake animation on invalid
+            shakeElement(wrapper);
+        }
+        
+        return isValid;
+    }
+    
+    /**
+     * Shake animation for invalid inputs
+     */
+    function shakeElement(element) {
+        element.style.animation = 'none';
+        setTimeout(() => {
+            element.style.animation = 'inputShake 0.4s cubic-bezier(.36,.07,.19,.97)';
+        }, 10);
+    }
+    
+    /**
+     * Success confetti animation
+     */
+    function showSuccessConfetti() {
+        const form = document.getElementById('contactForm');
+        if (!form) return;
+        
+        const confettiCount = 30;
+        const colors = ['#CC0000', '#8B0000', '#FF0000', '#FFFFFF', 'rgba(255,255,255,0.8)'];
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.cssText = `
+                position: fixed;
+                width: ${Math.random() * 10 + 5}px;
+                height: ${Math.random() * 10 + 5}px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                left: ${Math.random() * 100}%;
+                top: -20px;
+                opacity: 1;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                z-index: 10000;
+                animation: confettiFall ${Math.random() * 2 + 2}s linear forwards;
+            `;
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 4000);
+        }
     }
     
 })();

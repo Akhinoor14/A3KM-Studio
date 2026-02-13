@@ -681,19 +681,19 @@
         <p>Explore our comprehensive collection of videos, books, posts, papers, and educational courses</p>
         <div class="hub-stats">
             <div class="stat-item">
-                <span class="stat-number">50+</span>
+                <span class="stat-number" data-type="videos">0</span>
                 <span class="stat-label">Videos</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">100+</span>
+                <span class="stat-number" data-type="books-papers">0</span>
                 <span class="stat-label">Books & Papers</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">50+</span>
+                <span class="stat-number" data-type="posts">0</span>
                 <span class="stat-label">Articles</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">20+</span>
+                <span class="stat-number" data-type="courses">0</span>
                 <span class="stat-label">Courses</span>
             </div>
         </div>
@@ -706,12 +706,12 @@
             <div class="content-icon" style="color: #FF0000;">
                 <i class="fab fa-youtube"></i>
             </div>
-            <h2 class="content-title">Video Blogs</h2>
+            <h2 class="content-title">Vlogs</h2>
             <p class="content-description">
                 Explore our collection of tutorial videos, vlogs, and educational content on YouTube. From engineering tutorials to project walkthroughs.
             </p>
             <div class="content-stats">
-                <span class="stat"><i class="fas fa-video"></i> 50+ Videos</span>
+                <span class="stat" id="videoCardCount"><i class="fas fa-video"></i> 0 Videos</span>
                 <span class="stat"><i class="fas fa-eye"></i> Watch Now</span>
             </div>
         </a>
@@ -736,7 +736,7 @@
             <div class="content-icon" style="color: #8B0000;">
                 <i class="fas fa-pen-fancy"></i>
             </div>
-            <h2 class="content-title">Written Posts</h2>
+            <h2 class="content-title">Blog Posts</h2>
             <p class="content-description">
                 Read our blog articles, tutorials, and personal experiences. Available in both Bengali and English for wider accessibility.
             </p>
@@ -777,6 +777,92 @@
         </a>
     </div>
     </div> <!-- End content-wrapper -->
+
+    <!-- Automated Content Count Loader -->
+    <script>
+    (function() {
+        'use strict';
+        
+        /**
+         * Load real-time content counts from JSON files (Desktop)
+         * Ensures counts update automatically after Manager uploads
+         */
+        async function loadContentCounts() {
+            try {
+                // Load all JSON files in parallel
+                const [videosData, postsData, booksData, coursesData, papersData] = await Promise.all([
+                    fetch('./video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
+                    fetch('./written-posts/posts.json').then(r => r.json()).catch(() => ({posts: []})),
+                    fetch('./books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
+                    fetch('./educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []})),
+                    fetch('./research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
+                ]);
+                
+                // Count videos from all groups
+                let videoCount = 0;
+                if (videosData.videoGroups && Array.isArray(videosData.videoGroups)) {
+                    videosData.videoGroups.forEach(group => {
+                        if (group.videos && Array.isArray(group.videos)) {
+                            videoCount += group.videos.length;
+                        }
+                    });
+                }
+                
+                const postCount = (postsData.posts || []).length;
+                const bookCount = (booksData.books || []).length;
+                const courseCount = (coursesData.courses || []).length;
+                const paperCount = (papersData.papers || []).length;
+                
+                // Update stat numbers in hero section
+                const statElements = document.querySelectorAll('.hub-stats .stat-number');
+                statElements.forEach(el => {
+                    const type = el.getAttribute('data-type');
+                    let count = 0;
+                    
+                    switch(type) {
+                        case 'videos': 
+                            count = videoCount; 
+                            break;
+                        case 'books-papers': 
+                            count = bookCount + paperCount; 
+                            break;
+                        case 'posts': 
+                            count = postCount; 
+                            break;
+                        case 'courses': 
+                            count = courseCount; 
+                            break;
+                    }
+                    
+                    el.textContent = count;
+                });
+                
+                // Update video card count
+                const videoCard = document.getElementById('videoCardCount');
+                if (videoCard) {
+                    videoCard.innerHTML = `<i class=\"fas fa-video\"></i> ${videoCount} Video${videoCount !== 1 ? 's' : ''}`;
+                }
+                
+                console.log('📊 Desktop Hub Counts:', { 
+                    videos: videoCount, 
+                    posts: postCount, 
+                    books: bookCount, 
+                    papers: paperCount, 
+                    courses: courseCount 
+                });
+            } catch (error) {
+                console.error('❌ Failed to load content counts:', error);
+            }
+        }
+        
+        // Load counts on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadContentCounts);
+        } else {
+            loadContentCounts();
+        }
+    })();
+    </script>
 
 </body>
 </html>

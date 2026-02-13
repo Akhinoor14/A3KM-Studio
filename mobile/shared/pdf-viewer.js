@@ -18,10 +18,11 @@ const UniversalPDFViewer = {
     pageNumPending: null,
     
     // Zoom & pan
-    scale: 1.0,
+    scale: 1.4,
     minScale: 0.5,
-    maxScale: 3.0,
-    defaultScale: 1.0,
+    maxScale: 4.0,
+    defaultScale: 1.4,
+    isFullscreen: false,
     
     // Touch gestures
     initialPinchDistance: 0,
@@ -186,12 +187,50 @@ function createViewerUI() {
                 flex: 1;
                 overflow: auto;
                 -webkit-overflow-scrolling: touch;
-                background: #2a2a2a;
+                background: linear-gradient(135deg, 
+                    rgba(10, 0, 0, 0.95), 
+                    rgba(0, 0, 0, 0.98),
+                    rgba(20, 0, 0, 0.90)
+                );
                 display: flex;
                 justify-content: center;
                 align-items: flex-start;
                 padding: 20px;
                 position: relative;
+            }
+            
+            #universal-pdf-viewer.fullscreen .pdf-header,
+            #universal-pdf-viewer.fullscreen .pdf-controls {
+                display: none;
+            }
+            
+            #universal-pdf-viewer.fullscreen .pdf-canvas-wrapper {
+                padding: 0;
+            }
+            
+            .fullscreen-hint {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 999999;
+                padding: 12px 24px;
+                background: rgba(0, 0, 0, 0.95);
+                border: 1px solid rgba(204, 0, 0, 0.5);
+                border-radius: 25px;
+                color: #FFFFFF;
+                font-size: 13px;
+                font-weight: 600;
+                box-shadow: 0 4px 20px rgba(204, 0, 0, 0.4);
+                animation: fadeInOut 3s ease-in-out;
+                pointer-events: none;
+            }
+            
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+                10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
             }
             
             #pdf-canvas {
@@ -363,6 +402,9 @@ function createViewerUI() {
         <div class="pdf-header">
             <div class="pdf-title" id="pdf-viewer-title"></div>
             <div class="pdf-buttons">
+                <button class="pdf-btn" id="pdf-fullscreen-btn" title="Toggle Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
                 <button class="pdf-btn" id="pdf-download-btn" title="Download">
                     <i class="fas fa-download"></i>
                 </button>
@@ -461,17 +503,29 @@ async function renderPage(pageNum) {
     try {
         const page = await UniversalPDFViewer.pdfDoc.getPage(pageNum);
         
-        // Calculate viewport
+        // High-DPI rendering for sharp quality
+        const pixelRatio = window.devicePixelRatio || 2;
+        const outputScale = pixelRatio;
+        
+        // Calculate viewport with higher quality
         const viewport = page.getViewport({ scale: UniversalPDFViewer.scale });
         
-        // Set canvas dimensions
-        UniversalPDFViewer.canvas.width = viewport.width;
-        UniversalPDFViewer.canvas.height = viewport.height;
+        // Set canvas dimensions with pixel ratio for crisp rendering
+        UniversalPDFViewer.canvas.width = Math.floor(viewport.width * outputScale);
+        UniversalPDFViewer.canvas.height = Math.floor(viewport.height * outputScale);
+        UniversalPDFViewer.canvas.style.width = Math.floor(viewport.width) + 'px';
+        UniversalPDFViewer.canvas.style.height = Math.floor(viewport.height) + 'px';
         
-        // Render
+        // Scale context for high-DPI
+        const transform = outputScale !== 1
+            ? [outputScale, 0, 0, outputScale, 0, 0]
+            : null;
+        
+        // Render with high quality
         const renderContext = {
             canvasContext: UniversalPDFViewer.ctx,
-            viewport: viewport
+            viewport: viewport,
+            transform: transform
         };
         
         await page.render(renderContext).promise;
@@ -587,6 +641,38 @@ function fitToScreen() {
 }
 
 /**
+ * Toggle Fullscreen Mode
+ */
+function toggleFullscreen() {
+    const modal = UniversalPDFViewer.currentModal;
+    const btn = document.getElementById('pdf-fullscreen-btn');
+    const icon = btn.querySelector('i');
+    
+    UniversalPDFViewer.isFullscreen = !UniversalPDFViewer.isFullscreen;
+    
+    if (UniversalPDFViewer.isFullscreen) {
+        modal.classList.add('fullscreen');
+        icon.className = 'fas fa-compress';
+        
+        // Show fullscreen hint
+        const hint = document.createElement('div');
+        hint.className = 'fullscreen-hint';
+        hint.innerHTML = '<i class="fas fa-expand-arrows-alt"></i> Double-tap or press ESC to exit fullscreen';
+        document.body.appendChild(hint);
+        
+        setTimeout(() => hint.remove(), 3000);
+        
+        console.log('📺 Fullscreen mode enabled');
+    } else {
+        modal.classList.remove('fullscreen');
+        icon.className = 'fas fa-expand';
+        console.log('📺 Fullscreen mode disabled');
+    }
+    
+    if (navigator.vibrate) navigator.vibrate(10);
+}
+
+/**
  * Setup Event Listeners
  */
 function setupEventListeners() {
@@ -598,6 +684,9 @@ function setupEventListeners() {
     document.getElementById('pdf-zoom-in-btn').onclick = zoomIn;
     document.getElementById('pdf-zoom-out-btn').onclick = zoomOut;
     document.getElementById('pdf-fit-btn').onclick = fitToScreen;
+    
+    // Fullscreen button
+    document.getElementById('pdf-fullscreen-btn').onclick = toggleFullscreen;
     
     // Close button
     document.getElementById('pdf-close-btn').onclick = closeUniversalPDFViewer;
@@ -656,8 +745,17 @@ function handleKeyPress(e) {
             fitToScreen();
             e.preventDefault();
             break;
+        case 'f':
+        case 'F':
+            toggleFullscreen();
+            e.preventDefault();
+            break;
         case 'Escape':
-            closeUniversalPDFViewer();
+            if (UniversalPDFViewer.isFullscreen) {
+                toggleFullscreen();
+            } else {
+                closeUniversalPDFViewer();
+            }
             e.preventDefault();
             break;
     }
@@ -668,6 +766,25 @@ function handleKeyPress(e) {
  */
 function setupTouchGestures() {
     const canvas = UniversalPDFViewer.canvas;
+    
+    // Double-tap to toggle fullscreen
+    let lastTapTime = 0;
+    const doubleTapDelay = 300; // milliseconds
+    
+    canvas.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length === 1) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            
+            if (tapLength < doubleTapDelay && tapLength > 0) {
+                // Double-tap detected
+                toggleFullscreen();
+                e.preventDefault();
+            }
+            
+            lastTapTime = currentTime;
+        }
+    });
     
     // Pinch to zoom
     let initialDistance = 0;

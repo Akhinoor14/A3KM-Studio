@@ -3111,5 +3111,35 @@ This part is designed for [specific application] in [industry/system].`
             </form>
         </div>
     </div>
+
+<!-- Mobile CSS Priority Enforcer -->
+<script>
+    (function() {
+        const forceMobile = sessionStorage.getItem('forceMobileView') === 'true' || 
+                           /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                           window.innerWidth <= 768;
+        
+        if (forceMobile) {
+            document.body.classList.add('mobile-device');
+            
+            let viewport = document.querySelector('meta[name="viewport"]');
+            if (!viewport) {
+                viewport = document.createElement('meta');
+                viewport.name = 'viewport';
+                document.head.appendChild(viewport);
+            }
+            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            
+            const desktopStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+            desktopStylesheets.forEach(link => {
+                if (!link.href.includes('mobile') && !link.href.includes('global')) {
+                    link.media = 'only screen and (min-width: 769px)';
+                }
+            });
+            
+            console.log('✅ Mobile CSS enforced for SolidWorks Manager');
+        }
+    })();
+</script>
 </body>
 </html>

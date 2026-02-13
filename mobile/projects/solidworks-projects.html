@@ -124,6 +124,83 @@
         .project-thumbnail model-viewer {
             pointer-events: none;
         }
+        
+        /* Option 5 Chip Styling */
+        .filter-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            min-width: auto;
+        }
+        .filter-chip .chip-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .filter-chip .chip-count {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 2px 8px;
+            background: rgba(204, 0, 0, 0.2);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.85);
+            min-width: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .filter-chip.active .chip-count {
+            background: rgba(255, 255, 255, 0.15);
+            color: #FFFFFF;
+        }
+        
+        /* Scroll Indicators */
+        .filter-scroll {
+            position: relative;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .filter-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .filter-scroll::before,
+        .filter-scroll::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .filter-scroll::before {
+            left: 0;
+            background: linear-gradient(90deg, 
+                rgba(0, 0, 0, 0.9) 0%, 
+                rgba(0, 0, 0, 0.7) 30%,
+                rgba(0, 0, 0, 0.4) 60%,
+                transparent 100%);
+        }
+        .filter-scroll::after {
+            right: 0;
+            background: linear-gradient(-90deg, 
+                rgba(0, 0, 0, 0.9) 0%, 
+                rgba(0, 0, 0, 0.7) 30%,
+                rgba(0, 0, 0, 0.4) 60%,
+                transparent 100%);
+        }
+        .filter-scroll.scrollable::after {
+            opacity: 1;
+        }
+        .filter-scroll.scroll-middle::before,
+        .filter-scroll.scroll-middle::after {
+            opacity: 1;
+        }
+        .filter-scroll.scroll-end::after {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -149,10 +226,10 @@
                 <div class="hero-icon">
                     <i class="fas fa-cube"></i>
                 </div>
-                <h1 class="hero-title">SolidWorks Models</h1>
+                <h1 class="hero-title" id="categoryHeading">All SolidWorks Models</h1>
                 <p class="hero-subtitle">3D CAD Designs & Assemblies</p>
                 <div class="category-badge">
-                    <span id="projectCount">35+ Models</span>
+                    <span id="projectCount">35 Models</span>
                 </div>
             </div>
         </section>
@@ -174,40 +251,26 @@
         <section class="filter-section">
             <div class="mobile-container">
                 <div class="filter-scroll">
-                    <button class="filter-chip active" data-filter="all">
+                    <button class="filter-chip active" data-filter="all" data-name="All SolidWorks Models">
                         <i class="fas fa-th"></i>
-                        <div class="filter-chip-text">
-                            <span class="filter-main">All</span>
-                            <span class="filter-sub">Levels</span>
-                        </div>
+                        <span class="chip-text">All</span>
+                        <span class="chip-count" data-category="all">35</span>
                     </button>
-                    <button class="filter-chip" data-filter="Basic Models">
+                    <button class="filter-chip" data-filter="Basic Models" data-name="Basic Models">
                         <i class="fas fa-layer-group"></i>
-                        <div class="filter-chip-text">
-                            <span class="filter-main">Basic</span>
-                            <span class="filter-sub">Practice</span>
-                        </div>
+                        <span class="chip-count" data-category="Basic Models">0</span>
                     </button>
-                    <button class="filter-chip" data-filter="Intermediate Models">
+                    <button class="filter-chip" data-filter="Intermediate Models" data-name="Assembly Models">
                         <i class="fas fa-cubes"></i>
-                        <div class="filter-chip-text">
-                            <span class="filter-main">Intermediate</span>
-                            <span class="filter-sub">Assembly</span>
-                        </div>
+                        <span class="chip-count" data-category="Intermediate Models">0</span>
                     </button>
-                    <button class="filter-chip" data-filter="Professional Models">
+                    <button class="filter-chip" data-filter="Professional Models" data-name="Professional Models">
                         <i class="fas fa-star"></i>
-                        <div class="filter-chip-text">
-                            <span class="filter-main">Professional</span>
-                            <span class="filter-sub">Complex</span>
-                        </div>
+                        <span class="chip-count" data-category="Professional Models">0</span>
                     </button>
-                    <button class="filter-chip" data-filter="Commercial Projects">
-                        <i class="fas fa-crown"></i>
-                        <div class="filter-chip-text">
-                            <span class="filter-main">Commercial</span>
-                            <span class="filter-sub">Industry</span>
-                        </div>
+                    <button class="filter-chip" data-filter="Commercial Projects" data-name="Industrial Models">
+                        <i class="fas fa-industry"></i>
+                        <span class="chip-count" data-category="Commercial Projects">0</span>
                     </button>
                 </div>
             </div>
@@ -216,7 +279,6 @@
         <!-- Projects Grid -->
         <section class="mobile-section projects-section">
             <div class="mobile-container">
-                <h2 class="mobile-section-title">All SolidWorks Models</h2>
                 <div id="projectsGrid" class="projects-grid">
                     <!-- Projects loaded by JavaScript -->
                 </div>

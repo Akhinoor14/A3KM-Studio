@@ -13,10 +13,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="../../../Optimization/mobile-universal.js" defer></script>
   
-  <!-- Mobile Optimization Styles -->
-  <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
-  <link rel="stylesheet" href="../../mobile/manager-mobile.css">
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 0, 0, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
@@ -156,6 +152,10 @@
     
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
+  
+  <!-- Mobile Optimization Styles (Loaded AFTER desktop styles to override) -->
+  <link rel="stylesheet" href="../../mobile/only-boss-global-mobile.css">
+  <link rel="stylesheet" href="../../mobile/manager-mobile.css">
 </head>
 <body>
   <div class="container">
@@ -1195,5 +1195,31 @@
       loadDashboard();
     });
   </script>
+  
+  <!-- Mobile Mode Optimizer -->
+  <script>
+    (function() {
+      const forceMobile = sessionStorage.getItem('forceMobileView') === 'true' || 
+                         /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                         window.innerWidth <= 768;
+      
+      if (forceMobile) {
+        document.body.classList.add('mobile-device');
+        document.documentElement.classList.add('mobile-view');
+        
+        // Force mobile viewport
+        let viewport = document.querySelector('meta[name="viewport"]');
+        if (!viewport) {
+          viewport = document.createElement('meta');
+          viewport.name = 'viewport';
+          document.head.appendChild(viewport);
+        }
+        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        
+        console.log('✅ Mobile mode active for Certificates Manager');
+      }
+    })();
+  </script>
 </body>
 </html>
+

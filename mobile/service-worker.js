@@ -3,8 +3,8 @@
 // Offline caching and performance optimization
 // ============================================================================
 
-const CACHE_NAME = 'a3km-mobile-v1.0.0';
-const RUNTIME_CACHE = 'a3km-runtime-v1.0.0';
+const CACHE_NAME = 'a3km-mobile-v2.0.0';
+const RUNTIME_CACHE = 'a3km-runtime-v2.0.0';
 
 // Files to cache immediately on install
 const PRECACHE_URLS = [

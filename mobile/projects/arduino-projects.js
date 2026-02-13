@@ -54,16 +54,26 @@
             });
         }
         
-        // Filter chips
+        // Filter chips with dynamic heading
         const filterChips = document.querySelectorAll('.filter-chip');
         filterChips.forEach(chip => {
             chip.addEventListener('click', () => {
                 filterChips.forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
                 currentFilter = chip.dataset.filter;
+                
+                // Update dynamic heading
+                const heading = document.getElementById('categoryHeading');
+                if (heading && chip.dataset.name) {
+                    heading.textContent = chip.dataset.name;
+                }
+                
                 filterAndRenderProjects();
             });
         });
+        
+        // Setup scroll indicator
+        setupScrollIndicator();
     }
     
     async function loadArduinoProjects() {
@@ -106,6 +116,7 @@
         }
         
         renderProjects(filtered);
+        updateProjectCount();
     }
     
     function renderProjects(projects) {
@@ -164,9 +175,35 @@
     
     function updateProjectCount() {
         const countEl = document.getElementById('projectCount');
-        if (countEl) {
-            countEl.textContent = `${allProjects.length} Projects`;
+        
+        // Update main count badge (filtered count)
+        let filtered = allProjects;
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(p => p.category === currentFilter);
         }
+        if (searchQuery) {
+            filtered = filtered.filter(p => {
+                return p.title.toLowerCase().includes(searchQuery) ||
+                       p.description.toLowerCase().includes(searchQuery) ||
+                       (p.components && p.components.some(c => c.toLowerCase().includes(searchQuery)));
+            });
+        }
+        
+        if (countEl) {
+            countEl.textContent = `${filtered.length} Project${filtered.length !== 1 ? 's' : ''}`;
+        }
+        
+        // Update individual chip counts
+        const chipCounts = document.querySelectorAll('.chip-count');
+        chipCounts.forEach(countBadge => {
+            const category = countBadge.dataset.category;
+            if (category === 'all') {
+                countBadge.textContent = allProjects.length;
+            } else {
+                const count = allProjects.filter(p => p.category === category).length;
+                countBadge.textContent = count;
+            }
+        });
     }
     
     function showLoadingState() {
@@ -218,5 +255,36 @@
             });
         });
     }
-    
-})();
+        /**
+     * Setup scroll indicator (Video Blogs style)
+     */
+    function setupScrollIndicator() {
+        const scrollContainer = document.querySelector('.filter-scroll');
+        if (!scrollContainer) return;
+        
+        function updateScrollIndicators() {
+            const scrollLeft = scrollContainer.scrollLeft;
+            const scrollWidth = scrollContainer.scrollWidth;
+            const clientWidth = scrollContainer.clientWidth;
+            const maxScroll = scrollWidth - clientWidth;
+            
+            scrollContainer.classList.remove('scrollable', 'scroll-start', 'scroll-middle', 'scroll-end');
+            
+            if (scrollWidth > clientWidth) {
+                scrollContainer.classList.add('scrollable');
+                
+                if (scrollLeft <= 5) {
+                    scrollContainer.classList.add('scroll-start');
+                } else if (scrollLeft >= maxScroll - 5) {
+                    scrollContainer.classList.add('scroll-end');
+                } else {
+                    scrollContainer.classList.add('scroll-middle');
+                }
+            }
+        }
+        
+        scrollContainer.addEventListener('scroll', updateScrollIndicators);
+        setTimeout(updateScrollIndicators, 100);
+        window.addEventListener('resize', updateScrollIndicators);
+    }
+    })();
