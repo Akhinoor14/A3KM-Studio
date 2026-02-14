@@ -14,6 +14,9 @@
     <title>SolidWorks Manager - A3KM Studio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    
     <!-- Mobile Optimization Styles -->
     <link rel="stylesheet" href="../../../mobile/only-boss-global-mobile.css">
     <link rel="stylesheet" href="../../../mobile/manager-mobile.css">
@@ -462,7 +465,7 @@
             padding: 20px;
             transition: all 0.3s ease;
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: auto 140px 1fr auto;
             gap: 20px;
             align-items: center;
         }
@@ -471,6 +474,69 @@
             background: rgba(255, 69, 0, 0.1);
             transform: translateX(5px);
             box-shadow: 0 5px 15px rgba(255, 69, 0, 0.2);
+        }
+        
+        /* Project Thumbnail */
+        .project-thumbnail {
+            width: 140px;
+            height: 140px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 69, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .project-thumbnail model-viewer {
+            width: 100%;
+            height: 100%;
+            --progress-bar-color: #FF4500;
+            --progress-bar-height: 3px;
+        }
+        
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .thumbnail-fallback {
+            font-size: 3rem;
+            color: rgba(255, 69, 0, 0.4);
+        }
+        
+        .glb-indicator {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 69, 0, 0.4);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
+            pointer-events: none;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: rgba(200, 200, 200, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .glb-indicator i {
+            font-size: 10px;
+            color: #FF4500;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .project-info h3 {
@@ -2085,9 +2151,58 @@
                 }
             }
 
-            container.innerHTML = pageProjects.map(project => `
+            container.innerHTML = pageProjects.map(project => {
+                // Check for GLB file
+                const hasGlb = project.glbPath && project.glbPath.trim() !== '';
+                
+                // Check for thumbnail image
+                const thumbnailPath = project.thumbnailPath || 
+                    (project.files?.images && project.files.images.length > 0 
+                        ? `../../../../Projects%20Storage/Solidwork%20Projects/${encodeURIComponent(project.folder)}/${encodeURIComponent(project.files.images[0])}` 
+                        : '');
+                
+                return `
                 <div class="project-item" data-id="${project.id}">
                     <input type="checkbox" onchange="toggleSelection(${project.id})" style="width: 20px; height: 20px; cursor: pointer;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    
+                    <div class="project-thumbnail">
+                        ${hasGlb ? `
+                            <model-viewer 
+                                src="${project.glbPath}" 
+                                alt="${sanitizeInput(project.title)}"
+                                loading="lazy"
+                                camera-controls 
+                                touch-action="pan-y"
+                                disable-zoom
+                                auto-rotate
+                                auto-rotate-delay="1000"
+                                rotation-per-second="30deg"
+                                camera-orbit="0deg 75deg 85%"
+                                field-of-view="30deg"
+                                style="width: 100%; height: 100%;">
+                                <div slot="poster" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); color: #ff4500;">
+                                    <div style="text-align: center;">
+                                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                                        <div style="font-size: 0.8rem; font-weight: 600;">Loading 3D</div>
+                                    </div>
+                                </div>
+                            </model-viewer>
+                            <div class="glb-indicator">
+                                <i class="fas fa-cube"></i>
+                                <span>3D View</span>
+                            </div>
+                        ` : thumbnailPath ? `
+                            <img src="${thumbnailPath}" alt="${sanitizeInput(project.title)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="thumbnail-fallback" style="display: none;">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                        ` : `
+                            <div class="thumbnail-fallback">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                        `}
+                    </div>
+                    
                     <div class="project-info">
                         <h3>${sanitizeInput(project.title)}</h3>
                         <p><i class="fas fa-folder"></i> ${sanitizeInput(project.folder)}</p>
@@ -2103,7 +2218,8 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // Check for duplicate projects with similarity detection

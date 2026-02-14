@@ -526,7 +526,7 @@
             <section>
                 <h2 class="section-title"><i class="fas fa-book-open"></i> README & Documentation</h2>
                 <div class="readme-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="readmeContent" style="max-height: 300px; overflow: hidden; position: relative;">
+                    <div id="readmeContent" class="markdown-content" style="max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading README...</p>
@@ -550,7 +550,7 @@
             <section>
                 <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Code Explanation (For Beginners)</h2>
                 <div class="explanation-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="explanationContent" style="max-height: 300px; overflow: hidden; position: relative;">
+                    <div id="explanationContent" class="markdown-content" style="max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading explanation...</p>
@@ -1007,10 +1007,9 @@
             const htmlContent = convertMarkdownToHTML(readmeText, readmePath);
             
             readmeContent.innerHTML = `
-                <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
+                <div class="markdown-content" style="color: var(--text-secondary); line-height: 1.8; max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                     ${htmlContent}
                 </div>
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: none;"></div>
             `;
         } catch (error) {
             console.error('Error loading README:', error);
@@ -1042,10 +1041,9 @@
             const htmlContent = convertMarkdownToHTML(explanationText, explanationPath);
             
             explanationContent.innerHTML = `
-                <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
+                <div class="markdown-content" style="color: var(--text-secondary); line-height: 1.8; max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                     ${htmlContent}
                 </div>
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: none;"></div>
             `;
         } catch (error) {
             console.error('Error loading explanation:', error);

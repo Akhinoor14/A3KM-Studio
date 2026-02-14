@@ -1003,9 +1003,35 @@
                     }
                 }
                 
+                // If not found in docs-data (e.g., Archive docs), create minimal metadata
                 if (!currentDoc || !currentCategory) {
-                    showError('Document not found.');
-                    return;
+                    // Check if it's an Archive document
+                    if (docPath.startsWith('Archive/')) {
+                        const fileName = docPath.split('/').pop().replace('.md', '');
+                        const categoryFolder = docPath.split('/')[1];
+                        
+                        // Create minimal category and doc metadata
+                        currentCategory = {
+                            id: 'archive',
+                            title: 'Archive Documentation',
+                            titleBn: 'আর্কাইভ ডকুমেন্টেশন',
+                            icon: 'fa-archive',
+                            emoji: '📦'
+                        };
+                        
+                        currentDoc = {
+                            id: fileName.toLowerCase(),
+                            title: fileName.replace(/_/g, ' '),
+                            titleBn: fileName.replace(/_/g, ' '),
+                            path: docPath,
+                            author: 'A3KM Studio',
+                            readTime: '5 min',
+                            words: 0
+                        };
+                    } else {
+                        showError('Document not found.');
+                        return;
+                    }
                 }
                 
                 // Fetch markdown content
@@ -1030,15 +1056,26 @@
                     gfm: true
                 });
                 
+                // Render markdown
+                let renderedHTML = marked.parse(content);
+                
+                // Fix relative image paths
+                const docBasePath = `/Documentation/${docPath.substring(0, docPath.lastIndexOf('/') + 1)}`;
+                renderedHTML = renderedHTML.replace(/(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi,
+                    (match, prefix, src, suffix) => prefix + docBasePath + src + suffix);
+                
                 // Render markdown with enhanced header
                 const html = renderDocumentHeader(frontmatterData, currentCategory) + 
                             renderArchiveNav() + 
                             `<div class="doc-content"><div class="markdown-body">` + 
-                            marked.parse(content) + 
+                            renderedHTML + 
                             `</div></div>` +
                             renderBottomNav();
                 
                 document.getElementById('markdown-content').innerHTML = html;
+                
+                // Fix heading IDs for custom anchors
+                fixHeadingIDs();
                 
                 // Update navigation
                 updateNavigation();
@@ -1100,6 +1137,29 @@
             });
             
             return data;
+        }
+        
+        // Fix heading IDs for custom anchors
+        function fixHeadingIDs() {
+            const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6');
+            
+            headings.forEach((heading, index) => {
+                const originalText = heading.textContent;
+                const idMatch = originalText.match(/\s*\{#([a-zA-Z0-9_-]+)\}\s*$/);
+                
+                if (idMatch) {
+                    const customID = idMatch[1];
+                    const cleanText = originalText.replace(/\s*\{#[a-zA-Z0-9_-]+\}\s*$/, '').trim();
+                    heading.id = customID;
+                    heading.textContent = cleanText;
+                } else if (!heading.id) {
+                    // Generate slug-based ID as fallback
+                    const slug = originalText.toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/\s+/g, '-');
+                    heading.id = slug || `heading-${index}`;
+                }
+            });
         }
         
         // Render document header card with enhanced metadata
@@ -1190,6 +1250,23 @@
         
         // Render archive navigation
         function renderArchiveNav() {
+            // Skip navigation if no docs array (e.g., Archive documents)
+            if (!currentCategory.docs || currentCategory.docs.length === 0) {
+                return `
+                    <div class="archive-section">
+                        <div class="archive-header">
+                            <div class="archive-icon">
+                                <i class="${currentCategory.icon || 'fa-file'}"></i>
+                            </div>
+                            <div class="archive-title-block">
+                                <h3>${currentCategory.title}</h3>
+                                <p>${currentCategory.titleBn || ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             return `
                 <div class="archive-section">
                     <div class="archive-header">
@@ -1198,7 +1275,7 @@
                         </div>
                         <div class="archive-title-block">
                             <h3>${currentCategory.title}</h3>
-                            <p>${currentCategory.totalDocs} Documents in this category</p>
+                            <p>${currentCategory.totalDocs || currentCategory.docs.length} Documents in this category</p>
                         </div>
                     </div>
                     
@@ -1227,6 +1304,11 @@
         
         // Render bottom navigation
         function renderBottomNav() {
+            // Skip bottom nav if no docs array (e.g., Archive documents)
+            if (!currentCategory.docs || currentCategory.docs.length === 0) {
+                return '';
+            }
+            
             const currentDocIndex = currentCategory.docs.findIndex(d => d.path === currentDocPath);
             
             let prevDoc = null;
@@ -1323,6 +1405,11 @@
         // Setup navigation buttons
         function setupNavButtons() {
             if (!docsData || !currentCategory) return;
+            
+            // Skip navigation setup if no docs array (e.g., Archive documents)
+            if (!currentCategory.docs || currentCategory.docs.length === 0) {
+                return;
+            }
             
             const currentDocIndex = currentCategory.docs.findIndex(d => d.path === currentDocPath);
             

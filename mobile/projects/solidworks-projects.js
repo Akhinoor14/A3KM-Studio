@@ -102,9 +102,20 @@
     function filterAndRenderProjects() {
         let filtered = allProjects;
         
-        // Apply subcategory filter
+        // Apply subcategory filter with proper mapping
         if (currentFilter !== 'all') {
-            filtered = filtered.filter(p => p.subcategory === currentFilter);
+            // Map filter value to actual subcategory format
+            const subcategoryMap = {
+                'basic-models': 'Basic Models',
+                'intermediate-models': 'Intermediate Models',
+                'professional-models': 'Professional Models',
+                'commercial-projects': 'Commercial Projects'
+            };
+            
+            const targetSubcategory = subcategoryMap[currentFilter] || currentFilter;
+            filtered = filtered.filter(p => p.subcategory === targetSubcategory);
+            
+            console.log(`🔍 Filtering by: ${currentFilter} → ${targetSubcategory}, Found: ${filtered.length}`);
         }
         
         // Apply search filter
@@ -235,10 +246,19 @@
     function updateProjectCount() {
         const countEl = document.getElementById('projectCount');
         
+        // Subcategory mapping
+        const subcategoryMap = {
+            'basic-models': 'Basic Models',
+            'intermediate-models': 'Intermediate Models',
+            'professional-models': 'Professional Models',
+            'commercial-projects': 'Commercial Projects'
+        };
+        
         // Update main count badge (filtered count)
         let filtered = allProjects;
         if (currentFilter !== 'all') {
-            filtered = filtered.filter(p => p.subcategory === currentFilter);
+            const targetSubcategory = subcategoryMap[currentFilter] || currentFilter;
+            filtered = filtered.filter(p => p.subcategory === targetSubcategory);
         }
         if (searchQuery) {
             filtered = filtered.filter(p => {
@@ -260,7 +280,8 @@
             if (category === 'all') {
                 countBadge.textContent = allProjects.length;
             } else {
-                const count = allProjects.filter(p => p.subcategory === category).length;
+                const targetSubcategory = subcategoryMap[category] || category;
+                const count = allProjects.filter(p => p.subcategory === targetSubcategory).length;
                 countBadge.textContent = count;
             }
         });

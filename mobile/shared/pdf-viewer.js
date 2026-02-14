@@ -690,19 +690,26 @@ function toggleFullscreen() {
  */
 function setupEventListeners() {
     // Navigation buttons
-    document.getElementById('pdf-prev-btn').onclick = goToPrevPage;
-    document.getElementById('pdf-next-btn').onclick = goToNextPage;
+    const prevBtn = document.getElementById('pdf-prev-btn');
+    const nextBtn = document.getElementById('pdf-next-btn');
+    if (prevBtn) prevBtn.onclick = goToPrevPage;
+    if (nextBtn) nextBtn.onclick = goToNextPage;
     
     // Zoom buttons
-    document.getElementById('pdf-zoom-in-btn').onclick = zoomIn;
-    document.getElementById('pdf-zoom-out-btn').onclick = zoomOut;
-    document.getElementById('pdf-fit-btn').onclick = fitToScreen;
+    const zoomInBtn = document.getElementById('pdf-zoom-in-btn');
+    const zoomOutBtn = document.getElementById('pdf-zoom-out-btn');
+    const fitBtn = document.getElementById('pdf-fit-btn');
+    if (zoomInBtn) zoomInBtn.onclick = zoomIn;
+    if (zoomOutBtn) zoomOutBtn.onclick = zoomOut;
+    if (fitBtn) fitBtn.onclick = fitToScreen;
     
     // Fullscreen button
-    document.getElementById('pdf-fullscreen-btn').onclick = toggleFullscreen;
+    const fullscreenBtn = document.getElementById('pdf-fullscreen-btn');
+    if (fullscreenBtn) fullscreenBtn.onclick = toggleFullscreen;
     
     // Close button
-    document.getElementById('pdf-close-btn').onclick = closeUniversalPDFViewer;
+    const closeBtn = document.getElementById('pdf-close-btn');
+    if (closeBtn) closeBtn.onclick = closeUniversalPDFViewer;
     
     // Download button
     const downloadBtn = document.getElementById('pdf-download-btn');

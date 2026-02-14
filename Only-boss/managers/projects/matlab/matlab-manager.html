@@ -484,9 +484,34 @@
             padding: 25px;
             transition: all 0.3s ease;
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: auto 130px 1fr auto;
             gap: 25px;
             align-items: center;
+        }
+        
+        /* Project Thumbnail */
+        .project-thumbnail {
+            width: 130px;
+            height: 130px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 118, 168, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .thumbnail-fallback {
+            font-size: 3rem;
+            color: rgba(0, 118, 168, 0.4);
         }
 
         .project-item:hover {
@@ -1958,9 +1983,40 @@
             document.getElementById('nextBtn').disabled = currentPage === totalPages;
             document.getElementById('paginationControls').style.display = totalPages > 1 ? 'flex' : 'none';
 
-            container.innerHTML = pageProjects.map(project => `
+            container.innerHTML = pageProjects.map(project => {
+                // Build all result image paths from files.images array
+                const hasImages = project.folder && project.files && project.files.images && project.files.images.length > 0;
+                const images = hasImages ? project.files.images : [];
+                const imageUrls = images.map(img => 
+                    `../../Projects%20Storage/MATLAB%20Projects/${encodeURIComponent(project.folder)}/${img}`
+                );
+                
+                return `
                 <div class="project-item" data-id="${project.id}">
-                    <input type="checkbox" onchange="toggleSelection('${project.id}')" style="width: 20px; height: 20px; cursor: pointer; margin-right: 15px;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    <input type="checkbox" onchange="toggleSelection('${project.id}')" style="width: 20px; height: 20px; cursor: pointer;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    <div class="project-thumbnail">
+                        ${imageUrls.length > 0 ? `
+                            <div class="matlab-carousel-manager" data-images='${JSON.stringify(imageUrls)}' style="position:relative;width:100%;height:100%;">
+                                ${imageUrls.map((url, imgIndex) => `
+                                    <img 
+                                        src="${url}" 
+                                        alt="${sanitizeInput(project.title)} - Result ${imgIndex + 1}"
+                                        class="carousel-img ${imgIndex === 0 ? 'active' : ''}"
+                                        style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:${imgIndex === 0 ? '1' : '0'};transition:opacity 0.8s ease;border-radius:6px;"
+                                        onerror="this.style.display='none'"
+                                    />
+                                `).join('')}
+                                ${imageUrls.length > 1 ? `
+                                    <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5;">
+                                        ${imageUrls.map((_, i) => `<span class="carousel-dot ${i === 0 ? 'active' : ''}" style="width:6px;height:6px;border-radius:50%;background:${i === 0 ? 'var(--matlab-blue)' : 'rgba(255,255,255,0.5)'};transition:all 0.3s;"></span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        <div class="thumbnail-fallback" ${imageUrls.length > 0 ? 'style="display:none;"' : ''}>
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
                     <div class="project-info">
                         <h3>${sanitizeInput(project.title)}</h3>
                         <p><i class="fas fa-folder"></i> ${project.folder || project.id}</p>
@@ -1976,7 +2032,46 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+            
+            // Initialize carousels after rendering
+            setTimeout(initializeManagerCarousels, 100);
+        }
+        
+        // Initialize auto-rotating carousels in manager
+        function initializeManagerCarousels() {
+            const carousels = document.querySelectorAll('.matlab-carousel-manager');
+            
+            carousels.forEach(carousel => {
+                try {
+                    const images = JSON.parse(carousel.dataset.images);
+                    if (images.length <= 1) return;
+                    
+                    let currentIdx = 0;
+                    const imgs = carousel.querySelectorAll('.carousel-img');
+                    const dots = carousel.querySelectorAll('.carousel-dot');
+                    
+                    // Auto-rotate every 3 seconds
+                    setInterval(() => {
+                        // Fade out current
+                        imgs[currentIdx].style.opacity = '0';
+                        if (dots[currentIdx]) {
+                            dots[currentIdx].style.background = 'rgba(255,255,255,0.5)';
+                        }
+                        
+                        // Next index
+                        currentIdx = (currentIdx + 1) % images.length;
+                        
+                        // Fade in next
+                        imgs[currentIdx].style.opacity = '1';
+                        if (dots[currentIdx]) {
+                            dots[currentIdx].style.background = 'var(--matlab-blue)';
+                        }
+                    }, 3000);
+                } catch (e) {
+                    console.error('Carousel init error:', e);
+                }
+            });
         }
 
         // Search functionality

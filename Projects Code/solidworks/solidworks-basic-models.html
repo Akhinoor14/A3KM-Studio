@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
     <script defer src="solidworks-models-data.js"></script>
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     
     <style>
         :root {
@@ -168,7 +170,7 @@
             background: var(--bg-card);
             border: 2px solid var(--border-primary);
             border-radius: 16px;
-            padding: 24px;
+            padding: 0;
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -177,6 +179,91 @@
             overflow: hidden;
             transition: all 0.3s ease;
             cursor: pointer;
+        }
+
+        .model-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 190px;
+            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(0, 0, 0, 0.7));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        /* Model viewer styling */
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            --progress-bar-color: var(--primary-red);
+            --progress-bar-height: 3px;
+        }
+
+        .model-thumbnail img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .model-card:hover .model-thumbnail img {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+
+        .thumbnail-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            color: var(--primary-red);
+            font-size: 3.2rem;
+            opacity: 0.35;
+            z-index: 0;
+        }
+
+        .glb-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(204, 0, 0, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+            pointer-events: none;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(200, 200, 200, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .glb-indicator i {
+            font-size: 12px;
+            color: var(--primary-red);
+        }
+
+        .model-card-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
         }
 
         .model-card::after {
@@ -221,16 +308,7 @@
         }
 
         .model-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--primary-red);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: #fff;
-            margin-bottom: 16px;
+            display: none;
         }
 
         .model-title {
@@ -271,6 +349,7 @@
             align-items: center;
             padding-top: 12px;
             border-top: 1px solid var(--border-primary);
+            margin-top: auto;
         }
 
         .difficulty {
@@ -338,6 +417,11 @@
             }
             .page-title { font-size: 2rem; }
             .models-grid { grid-template-columns: 1fr; }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -451,23 +535,61 @@
                 const hasZip = model.files.some(f => f.toLowerCase().endsWith('.zip'));
                 const zipBadge = hasZip ? '<div class="zip-badge"><i class="fas fa-file-archive"></i> ZIP Available</div>' : '';
                 
+                // Check if GLB file exists
+                const hasGlb = model.glbPath && model.glbPath.trim() !== '';
+                
                 return `
                     <a href="solidworks-model-viewer.html?id=${model.id}" class="model-card">
                         ${zipBadge}
-                        <span class="model-number">${String(index + 1).padStart(2, '0')} / ${models.length}</span>
-                        <div class="model-icon">
-                            <i class="fas ${fileIcon}"></i>
+                        <div class="model-thumbnail">
+                            ${hasGlb ? `
+                                <model-viewer 
+                                    src="${model.glbPath}" 
+                                    alt="${model.name}"
+                                    loading="lazy"
+                                    camera-controls 
+                                    touch-action="pan-y"
+                                    disable-zoom
+                                    auto-rotate
+                                    auto-rotate-delay="1000"
+                                    rotation-per-second="30deg"
+                                    camera-orbit="0deg 75deg 85%"
+                                    field-of-view="25deg"
+                                    min-field-of-view="20deg"
+                                    max-field-of-view="35deg"
+                                    interpolation-decay="200"
+                                    style="width:100%;height:100%;--poster-color:transparent;background:transparent;"
+                                >
+                                    <div slot="poster" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;background:linear-gradient(135deg,rgba(204,0,0,0.08),rgba(0,0,0,0.95));">
+                                        <div style="width:35px;height:35px;border:3px solid rgba(204,0,0,0.3);border-top-color:#CC0000;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                                        <span style="font-size:10px;color:rgba(200,200,200,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Loading 3D</span>
+                                    </div>
+                                </model-viewer>
+                                <div class="glb-indicator">
+                                    <i class="fas fa-cube"></i>
+                                    <span>3D View</span>
+                                </div>
+                            ` : model.thumbnailPath ? `
+                                <img src="${model.thumbnailPath}" alt="${model.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            ` : ''}
+                            <div class="thumbnail-fallback" ${hasGlb ? 'style="display:none;"' : ''}>
+                                <i class="fas ${fileIcon}"></i>
+                                <span style="font-size: 12px; font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7;">3D Model</span>
+                            </div>
                         </div>
-                        <h3 class="model-title">${model.name.replace(/^Model \\d+\\s*-?\\s*/, '')}</h3>
-                        <p class="model-description">${model.description}</p>
-                        <div class="model-tags">
-                            ${model.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
-                        </div>
-                        <div class="model-footer">
-                            <span class="difficulty">${model.difficulty}</span>
-                            <span class="file-count">
-                                <i class="fas fa-file"></i> ${fileCount} ${fileCount === 1 ? 'file' : 'files'}
-                            </span>
+                        <div class="model-card-content">
+                            <span class="model-number">${String(index + 1).padStart(2, '0')} / ${models.length}</span>
+                            <h3 class="model-title">${model.name.replace(/^Model \\d+\\s*-?\\s*/, '')}</h3>
+                            <p class="model-description">${model.description}</p>
+                            <div class="model-tags">
+                                ${model.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                            <div class="model-footer">
+                                <span class="difficulty">${model.difficulty}</span>
+                                <span class="file-count">
+                                    <i class="fas fa-file"></i> ${fileCount} ${fileCount === 1 ? 'file' : 'files'}
+                                </span>
+                            </div>
                         </div>
                         <div class="view-badge">
                             <i class="fas fa-eye"></i> View Details

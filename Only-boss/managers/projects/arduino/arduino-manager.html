@@ -450,10 +450,35 @@
             border: 2px solid rgba(0, 137, 123, 0.2);
             border-radius: 12px;
             display: grid;
-            grid-template-columns: auto 60px 1fr auto;
+            grid-template-columns: auto 120px 60px 1fr auto;
             gap: 20px;
             align-items: center;
             transition: all 0.3s ease;
+        }
+        
+        /* Project Thumbnail */
+        .project-thumbnail {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 137, 123, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .thumbnail-fallback {
+            font-size: 2.5rem;
+            color: rgba(0, 137, 123, 0.4);
         }
 
         .project-item:hover {
@@ -1967,9 +1992,23 @@ This project combines [technology 1] with [technology 2] to create a fully funct
                 }
             }
 
-            container.innerHTML = pageProjects.map(project => `
+            container.innerHTML = pageProjects.map(project => {
+                // Build circuit thumbnail path
+                const circuitPath = project.files && project.files.circuit && project.folder
+                    ? `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(project.folder)}/${project.files.circuit}`
+                    : '';
+                
+                return `
                 <div class="project-item">
-                    <input type="checkbox" onchange="toggleSelection(${project.id})" style="width: 20px; height: 20px; cursor: pointer; margin-right: 15px;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    <input type="checkbox" onchange="toggleSelection(${project.id})" style="width: 20px; height: 20px; cursor: pointer;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
+                    <div class="project-thumbnail">
+                        ${circuitPath ? `
+                            <img src="${circuitPath}" alt="${sanitizeInput(project.title)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        ` : ''}
+                        <div class="thumbnail-fallback" ${circuitPath ? 'style="display:none;"' : ''}>
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                    </div>
                     <div class="project-number">${project.id}</div>
                     <div class="project-info">
                         <h4>${sanitizeInput(project.title)}</h4>
@@ -1984,7 +2023,7 @@ This project combines [technology 1] with [technology 2] to create a fully funct
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Pagination functions
