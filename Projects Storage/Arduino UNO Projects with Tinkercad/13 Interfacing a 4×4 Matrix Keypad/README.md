@@ -5,19 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Intermediate-yellow?style=for-the-badge)
 ![Input](https://img.shields.io/badge/Input-4×4%20Keypad-blue?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [Matrix Keypad Basics](#-matrix-keypad-basics)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

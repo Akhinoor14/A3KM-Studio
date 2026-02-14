@@ -5,20 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 ![Sensor](https://img.shields.io/badge/TMP36-Temperature-red?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [TMP36 Sensor Basics](#-tmp36-sensor-basics)
-- [16×2 LCD Basics](#-162-lcd-basics)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

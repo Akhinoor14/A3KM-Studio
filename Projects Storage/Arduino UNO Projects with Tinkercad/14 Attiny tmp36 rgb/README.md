@@ -8,26 +8,6 @@
 
 ---
 
-## 📚 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Components Required](#-components-required)
-- [ATtiny85 Architecture](#-attiny85-architecture)
-- [TMP36 Temperature Sensor](#-tmp36-temperature-sensor)
-- [RGB LED Color Theory](#-rgb-led-color-theory)
-- [Temperature Color Zones](#-temperature-color-zones)
-- [Circuit Diagram](#-circuit-diagram)
-- [Pin Configuration](#-pin-configuration)
-- [Working Principle](#-working-principle)
-- [Code Explanation](#-code-explanation)
-- [Power Management](#-power-management)
-- [Calibration Guide](#-calibration-guide)
-- [Troubleshooting](#-troubleshooting)
-- [Applications](#-applications)
-- [Learning Outcomes](#-learning-outcomes)
-
----
-
 ## 🎯 Project Overview
 
 This project creates a **portable, battery-operated temperature indicator** using the ATtiny85 microcontroller, TMP36 temperature sensor, and a common cathode RGB LED. The system displays **five distinct color zones** corresponding to different temperature ranges, making it perfect for wearable thermometers, environmental monitoring, or refrigerator temperature indicators.
@@ -377,6 +357,8 @@ else {
 ---
 
 ## 🔌 Circuit Diagram
+
+![ATtiny85 TMP36 RGB Circuit](circuit.png)
 
 ### Complete Circuit:
 

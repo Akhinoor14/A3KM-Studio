@@ -8,24 +8,6 @@
 
 ---
 
-## 📚 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Components Required](#-components-required)
-- [Musical Note Theory](#-musical-note-theory)
-- [Piezo Buzzer Theory](#-piezo-buzzer-theory)
-- [Circuit Diagram](#-circuit-diagram)
-- [Pin Configuration](#-pin-configuration)
-- [Working Principle](#-working-principle)
-- [Code Explanation](#-code-explanation)
-- [Musical Scales](#-musical-scales)
-- [Playing Songs](#-playing-songs)
-- [Troubleshooting](#-troubleshooting)
-- [Applications](#-applications)
-- [Learning Outcomes](#-learning-outcomes)
-
----
-
 ## 🎯 Project Overview
 
 This project creates a **functional 8-key piano** using Arduino UNO, 8 push buttons, and a piezo buzzer. Each button plays a different musical note from the **C Major scale** (C4 to C5). Press a button to hear its corresponding note - creating melodies, playing songs, or experimenting with music theory. Perfect for beginners learning digital input, sound generation, and interactive electronics!
@@ -285,6 +267,8 @@ Note: Buzzer is loudest at resonant frequency!
 ---
 
 ## 🔌 Circuit Diagram
+
+![Arduino Piano Circuit](circuit.png)
 
 ### Complete System Circuit:
 

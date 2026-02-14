@@ -1004,7 +1004,7 @@
             loadedReadmeMarkdown = readmeText; // Store for fullscreen
             
             // Advanced markdown rendering with tables, code, etc.
-            const htmlContent = convertMarkdownToHTML(readmeText);
+            const htmlContent = convertMarkdownToHTML(readmeText, readmePath);
             
             readmeContent.innerHTML = `
                 <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
@@ -1039,7 +1039,7 @@
             loadedExplanationMarkdown = explanationText; // Store for fullscreen
             
             // Advanced markdown rendering with tables, code, etc.
-            const htmlContent = convertMarkdownToHTML(explanationText);
+            const htmlContent = convertMarkdownToHTML(explanationText, explanationPath);
             
             explanationContent.innerHTML = `
                 <div style="color: var(--text-secondary); line-height: 1.8; max-height: 300px; overflow: hidden;">
@@ -1061,10 +1061,12 @@
 
     /**
      * Advanced markdown to HTML converter using renderMarkdown library
+     * @param {string} markdown - The markdown text to convert
+     * @param {string} filePath - Path to the markdown file (used to resolve relative image paths)
      */
-    function convertMarkdownToHTML(markdown) {
+    function convertMarkdownToHTML(markdown, filePath = '') {
         // Use advanced markdown viewer with all features
-        return renderMarkdown(markdown, {
+        let html = renderMarkdown(markdown, {
             generateTOC: false, // TOC shown in fullscreen only
             syntaxHighlight: true,
             showLineNumbers: false, // Compact view
@@ -1072,6 +1074,26 @@
             sanitize: true,
             theme: 'dark-red'
         });
+        
+        // Fix relative image paths if filePath is provided
+        if (filePath) {
+            // Extract base directory from file path
+            // e.g., "../../Projects Storage/Arduino.../01 Project/README.md" -> "../../Projects Storage/Arduino.../01 Project/"
+            const lastSlashIndex = filePath.lastIndexOf('/');
+            if (lastSlashIndex !== -1) {
+                const baseDir = filePath.substring(0, lastSlashIndex + 1);
+                
+                // Replace relative image paths (src="filename.ext") with absolute paths
+                // Only fix paths that don't start with http://, https://, or /
+                html = html.replace(/(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi, (match, prefix, src, suffix) => {
+                    // Resolve relative path
+                    const resolvedPath = baseDir + src;
+                    return prefix + resolvedPath + suffix;
+                });
+            }
+        }
+        
+        return html;
     }
 
     /**

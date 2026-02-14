@@ -5,20 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 ![Concept](https://img.shields.io/badge/Concept-RGB_PWM-purple?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [RGB LED Basics](#-rgb-led-basics)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Color Mixing Theory](#-color-mixing-theory)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

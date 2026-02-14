@@ -10,29 +10,6 @@ A sophisticated digital voltmeter using the compact **ATtiny85 microcontroller**
 
 ---
 
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Learning Objectives](#-learning-objectives)
-- [Components Required](#-components-required)
-- [ATtiny85 Architecture](#-attiny85-architecture)
-- [Circuit Diagram](#-circuit-diagram)
-- [Circuit Connections](#-circuit-connections)
-- [74HC595 Shift Register](#-74hc595-shift-register)
-- [7-Segment Display Multiplexing](#-7-segment-display-multiplexing)
-- [Code Explanation](#-code-explanation)
-- [How It Works](#-how-it-works)
-- [Timer Interrupt System](#-timer-interrupt-system)
-- [ADC Operation](#-adc-operation)
-- [Current Limiting & Power](#-current-limiting--power)
-- [Troubleshooting](#-troubleshooting)
-- [Real-World Applications](#-real-world-applications)
-- [Project Extensions](#-project-extensions)
-- [Challenges](#-challenges)
-- [Author](#-author)
-
----
-
 ## 🎯 Overview
 
 This project builds a **3-digit digital voltmeter** that can measure and display voltages from **0.00V to 5.00V** with two decimal precision. The system uses:

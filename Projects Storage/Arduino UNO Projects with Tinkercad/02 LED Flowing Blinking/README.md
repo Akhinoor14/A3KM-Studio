@@ -4,19 +4,6 @@
 ![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Project Files](#-project-files)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

@@ -8,24 +8,6 @@
 
 ---
 
-## 📚 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Components Required](#-components-required)
-- [7-Segment Display Theory](#-7-segment-display-theory)
-- [74HC595 Shift Register](#-74hc595-shift-register)
-- [Circuit Diagram](#-circuit-diagram)
-- [Pin Configuration](#-pin-configuration)
-- [Working Principle](#-working-principle)
-- [Code Explanation](#-code-explanation)
-- [Dice Animation](#-dice-animation)
-- [Random Number Generation](#-random-number-generation)
-- [Troubleshooting](#-troubleshooting)
-- [Applications](#-applications)
-- [Learning Outcomes](#-learning-outcomes)
-
----
-
 ## 🎯 Project Overview
 
 This project creates a **digital dice** using ATtiny85 microcontroller, 74HC595 shift register, and a common cathode 7-segment display. Press a button to "roll" the dice - it shows a smooth animation (1→6→5→2) and displays a random number between 1 and 6. Perfect for board games, decision making, or learning shift register control!
@@ -313,6 +295,8 @@ Sends 8 bits automatically!
 ---
 
 ## 🔌 Circuit Diagram
+
+![Electronic Dice Circuit](circuit.png)
 
 ### Complete System Circuit:
 

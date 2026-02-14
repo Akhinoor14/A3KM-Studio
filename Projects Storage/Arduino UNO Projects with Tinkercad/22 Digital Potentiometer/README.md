@@ -9,27 +9,6 @@ A comprehensive Arduino project that demonstrates **voltage divider principles**
 
 ---
 
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Learning Objectives](#-learning-objectives)
-- [Components Required](#-components-required)
-- [Voltage Divider Theory](#-voltage-divider-theory)
-- [Circuit Diagram](#-circuit-diagram)
-- [Circuit Connections](#-circuit-connections)
-- [Code Explanation](#-code-explanation)
-- [How It Works](#-how-it-works)
-- [Mathematical Analysis](#-mathematical-analysis)
-- [LCD Display Format](#-lcd-display-format)
-- [Calibration & Testing](#-calibration--testing)
-- [Troubleshooting](#-troubleshooting)
-- [Real-World Applications](#-real-world-applications)
-- [Project Extensions](#-project-extensions)
-- [Challenges](#-challenges)
-- [Author](#-author)
-
----
-
 ## 🎯 Overview
 
 This project demonstrates the fundamental electronics concept of **voltage division** using two resistors in series. The Arduino measures the voltage at the divider's midpoint and reverse-calculates the input voltage using the divider formula. This technique is essential for:
@@ -201,6 +180,8 @@ Current Through Divider:
 ---
 
 ## 📐 Circuit Diagram
+
+![Voltage Divider Circuit](circuit.png)
 
 ### Complete System Schematic:
 

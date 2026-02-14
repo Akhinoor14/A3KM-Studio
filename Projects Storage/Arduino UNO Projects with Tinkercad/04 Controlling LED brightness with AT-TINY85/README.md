@@ -5,19 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Intermediate-orange?style=for-the-badge)
 ![Power](https://img.shields.io/badge/Power-3V_Battery-blue?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [ATtiny85 Overview](#-attiny85-overview)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

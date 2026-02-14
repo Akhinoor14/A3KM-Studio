@@ -5,19 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 ![Sensor](https://img.shields.io/badge/PIR-Motion%20Sensor-orange?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [PIR Sensor Basics](#-pir-sensor-basics)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview
@@ -326,7 +313,7 @@ Breadboard Setup:
 ```
 
 ### 🖼️ Circuit Diagram:
-![PIR Motion Sensor Circuit](Circuit.png)
+![PIR Motion Sensor Circuit](circuit.png)
 
 ---
 

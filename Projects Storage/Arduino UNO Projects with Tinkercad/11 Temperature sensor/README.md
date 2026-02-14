@@ -5,19 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 ![Sensor](https://img.shields.io/badge/TMP36-Temperature-red?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [TMP36 Sensor Basics](#-tmp36-sensor-basics)
-- [Circuit Diagram](#-circuit-diagram)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview
@@ -235,7 +222,7 @@ Simple 3-wire connection:
 ```
 
 ### 🖼️ Circuit Diagram:
-![TMP36 Circuit](Circuit.png)
+![TMP36 Circuit](circuit.png)
 
 ---
 

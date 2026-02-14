@@ -9,28 +9,6 @@ A comprehensive Arduino project that measures ambient light intensity using an *
 
 ---
 
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Learning Objectives](#-learning-objectives)
-- [Components Required](#-components-required)
-- [LDR Sensor Theory](#-ldr-sensor-theory)
-- [Voltage Divider Circuit](#-voltage-divider-circuit)
-- [Circuit Diagram](#-circuit-diagram)
-- [Circuit Connections](#-circuit-connections)
-- [Code Explanation](#-code-explanation)
-- [How It Works](#-how-it-works)
-- [Serial Monitor Output](#-serial-monitor-output)
-- [PWM LED Control](#-pwm-led-control)
-- [Calibration & Testing](#-calibration--testing)
-- [Troubleshooting](#-troubleshooting)
-- [Real-World Applications](#-real-world-applications)
-- [Project Extensions](#-project-extensions)
-- [Challenges](#-challenges)
-- [Author](#-author)
-
----
-
 ## 🎯 Overview
 
 This project demonstrates how to use an **LDR (Light Dependent Resistor)** photoresistor to measure ambient light intensity. The Arduino reads the analog voltage from a voltage divider circuit, calculates the actual voltage, and provides visual feedback through a PWM-controlled LED whose brightness varies with light levels.
@@ -209,6 +187,8 @@ For general use: 10kΩ is standard
 ---
 
 ## 📐 Circuit Diagram
+
+![LDR Light Sensor Circuit](circuit.png)
 
 ### Complete Circuit Schematic:
 

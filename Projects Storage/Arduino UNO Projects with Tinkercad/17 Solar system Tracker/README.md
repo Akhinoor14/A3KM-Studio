@@ -8,24 +8,6 @@
 
 ---
 
-## 📚 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Components Required](#-components-required)
-- [LDR Sensor Theory](#-ldr-sensor-theory)
-- [Dual-Axis Tracking](#-dual-axis-tracking)
-- [Circuit Diagram](#-circuit-diagram)
-- [Pin Configuration](#-pin-configuration)
-- [Working Principle](#-working-principle)
-- [Code Explanation](#-code-explanation)
-- [Tracking Algorithm](#-tracking-algorithm)
-- [Calibration Guide](#-calibration-guide)
-- [Troubleshooting](#-troubleshooting)
-- [Applications](#-applications)
-- [Learning Outcomes](#-learning-outcomes)
-
----
-
 ## 🎯 Project Overview
 
 This project implements an **automated dual-axis solar tracking system** using Arduino UNO, 4 LDR sensors, and 2 servo motors. The system continuously monitors light intensity from four directions (top-left, top-right, bottom-left, bottom-right) and adjusts the solar panel position to face the brightest light source - maximizing solar energy capture throughout the day!
@@ -277,6 +259,8 @@ Combined Movement:
 ---
 
 ## 🔌 Circuit Diagram
+
+![Solar Tracker Circuit](circuit.png)
 
 ### Complete System Circuit:
 

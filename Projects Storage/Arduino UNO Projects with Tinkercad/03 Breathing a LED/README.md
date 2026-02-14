@@ -5,20 +5,6 @@
 ![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-green?style=for-the-badge)
 ![PWM](https://img.shields.io/badge/Concept-PWM-blue?style=for-the-badge)
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Components Required](#-components-required)
-- [Circuit Diagram](#-circuit-diagram)
-- [PWM Concept](#-pwm-concept-explained)
-- [How It Works](#-how-it-works)
-- [Step-by-Step Guide](#-step-by-step-guide)
-- [Code Explanation](#-code-explanation)
-- [Simulation](#-simulation)
-- [Troubleshooting](#-troubleshooting)
-- [Learning Outcomes](#-learning-outcomes)
-- [Project Files](#-project-files)
-- [Author](#-author)
-
 ---
 
 ## 🎯 Overview

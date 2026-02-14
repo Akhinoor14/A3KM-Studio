@@ -8,25 +8,6 @@
 
 ---
 
-## 📚 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Components Required](#-components-required)
-- [16×2 LCD Display Architecture](#-162-lcd-display-architecture)
-- [4-Bit vs 8-Bit Mode](#-4-bit-vs-8-bit-mode)
-- [Step-Up Converter Theory](#-step-up-converter-theory)
-- [Circuit Diagram](#-circuit-diagram)
-- [Pin Configuration](#-pin-configuration)
-- [Working Principle](#-working-principle)
-- [Code Explanation](#-code-explanation)
-- [Display Output](#-display-output)
-- [Power Management](#-power-management)
-- [Troubleshooting](#-troubleshooting)
-- [Applications](#-applications)
-- [Learning Outcomes](#-learning-outcomes)
-
----
-
 ## 🎯 Project Overview
 
 This advanced project demonstrates **16×2 LCD interfacing with ATtiny85** microcontroller running on a **1.5V battery with step-up converter**. The system displays a **static message** on Line 1 and a **real-time clock (mm:ss)** on Line 2, all controlled via a DIP switch. This project combines low-power design, voltage boosting, and LCD control in 4-bit mode.
@@ -331,6 +312,8 @@ Battery capacity:
 ---
 
 ## 🔌 Circuit Diagram
+
+![ATtiny85 16×2 LCD Circuit](circuit.png)
 
 ### Complete System Circuit:
 

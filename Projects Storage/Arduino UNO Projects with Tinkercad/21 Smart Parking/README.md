@@ -10,28 +10,6 @@ A comprehensive **Smart Parking System** that uses IR sensors to detect vehicle 
 
 ---
 
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Learning Objectives](#-learning-objectives)
-- [System Architecture](#-system-architecture)
-- [Components Required](#-components-required)
-- [IR Sensor Theory](#-ir-sensor-theory)
-- [Servo Motor Control](#-servo-motor-control)
-- [Circuit Diagram](#-circuit-diagram)
-- [Circuit Connections](#-circuit-connections)
-- [Code Explanation](#-code-explanation)
-- [How It Works](#-how-it-works)
-- [System States](#-system-states)
-- [LCD Display Modes](#-lcd-display-modes)
-- [Troubleshooting](#-troubleshooting)
-- [Real-World Applications](#-real-world-applications)
-- [Project Extensions](#-project-extensions)
-- [Challenges](#-challenges)
-- [Author](#-author)
-
----
-
 ## 🎯 Overview
 
 This **Smart Parking System** automates parking lot management by:
@@ -291,6 +269,8 @@ Arduino Code:
 ---
 
 ## 📐 Circuit Diagram
+
+![Smart Parking System Circuit](circuit.png)
 
 ### Complete System Schematic:
 

@@ -671,15 +671,19 @@ function initMarkdownStyles() {
         
         .md-table-cell {
             padding: 12px 16px;
-            border-right: 1px solid rgba(80, 80, 80, 0.2);
-            border-bottom: 1px solid rgba(80, 80, 80, 0.2);
+            border: 1px solid rgba(80, 80, 80, 0.2);
             font-size: 14px;
             color: rgba(200, 200, 200, 0.95);
         }
         
+        .md-table-cell:first-child,
+        .md-table-header:first-child {
+            border-left: 1px solid rgba(80, 80, 80, 0.3);
+        }
+        
         .md-table-cell:last-child,
         .md-table-header:last-child {
-            border-right: none;
+            border-right: 1px solid rgba(80, 80, 80, 0.3);
         }
         
         /* Blockquotes */

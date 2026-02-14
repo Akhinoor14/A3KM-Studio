@@ -3129,7 +3129,8 @@
                     const response = await fetch(filePath);
                     if (response.ok) {
                         const text = await response.text();
-                        explanationContent.innerHTML = convertMarkdown(text);
+                        // Pass filePath to fix relative image paths
+                        explanationContent.innerHTML = convertMarkdown(text, filePath);
                         console.log('✅ Explanation loaded');
                         
                         // Generate TOC after content loaded
@@ -3155,7 +3156,8 @@
                 const response = await fetch(filePath);
                 if (response.ok) {
                     const text = await response.text();
-                    readmeContent.innerHTML = convertMarkdown(text);
+                    // Pass filePath to fix relative image paths
+                    readmeContent.innerHTML = convertMarkdown(text, filePath);
                     console.log('✅ README loaded');
                     
                     // Extract Tinkercad link from README
@@ -3222,7 +3224,7 @@
         }
 
         // Enhanced markdown converter using marked.js with syntax highlighting
-        function convertMarkdown(text) {
+        function convertMarkdown(text, filePath = '') {
             if (!text) return '';
             
             // Wait for marked.js to load
@@ -3256,7 +3258,24 @@
                 });
                 
                 // Parse markdown with marked.js
-                const html = marked.parse(text);
+                let html = marked.parse(text);
+                
+                // Fix relative image paths if filePath is provided
+                if (filePath) {
+                    // Extract base directory from file path
+                    const lastSlashIndex = filePath.lastIndexOf('/');
+                    if (lastSlashIndex !== -1) {
+                        const baseDir = filePath.substring(0, lastSlashIndex + 1);
+                        
+                        // Replace relative image paths (src="filename.ext") with absolute paths
+                        // Only fix paths that don't start with http://, https://, or /
+                        html = html.replace(/(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi, (match, prefix, src, suffix) => {
+                            // Resolve relative path
+                            const resolvedPath = baseDir + src;
+                            return prefix + resolvedPath + suffix;
+                        });
+                    }
+                }
                 
                 // Apply syntax highlighting to code blocks after rendering
                 setTimeout(() => {
