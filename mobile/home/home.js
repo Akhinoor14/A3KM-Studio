@@ -179,4 +179,27 @@
         }, 16);
     }
     
+    // ========== RESET ACTIVE STATES ON PAGE VISIBILITY ==========
+    // Fix: Prevent buttons from staying "clicked" after navigating back
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            // Reset all potentially active elements
+            document.querySelectorAll('.quick-link-card, .featured-item, .social-link').forEach(el => {
+                el.style.transform = '';
+                el.blur(); // Remove focus
+            });
+        }
+    });
+    
+    // Also reset on page show (back/forward navigation)
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was cached (back button used)
+            document.querySelectorAll('.quick-link-card, .featured-item, .social-link').forEach(el => {
+                el.style.transform = '';
+                el.blur();
+            });
+        }
+    });
+
 })();

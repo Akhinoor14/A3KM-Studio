@@ -38,19 +38,19 @@ function renderMarkdown(markdown, options = {}) {
 
     // IMPORTANT: Process in correct order to avoid conflicts
     
-    // 1. INLINE CODE (before other processing to protect code from formatting)
+    // 1. CODE BLOCKS FIRST (with syntax highlighting) - must be before inline code!
+    const codeBlockPlaceholders = [];
+    html = html.replace(/```(\w+)?\r?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const placeholder = `___CODE_BLOCK_${codeBlockPlaceholders.length}___`;
+        codeBlockPlaceholders.push(renderCodeBlock(code.trim(), lang || 'plaintext', config));
+        return placeholder;
+    });
+
+    // 2. INLINE CODE (after code blocks to avoid interfering with backticks inside code blocks)
     const inlineCodePlaceholders = [];
     html = html.replace(/`([^`]+)`/g, (match, code) => {
         const placeholder = `___INLINE_CODE_${inlineCodePlaceholders.length}___`;
         inlineCodePlaceholders.push(`<code class="md-inline-code">${escapeHtml(code)}</code>`);
-        return placeholder;
-    });
-
-    // 2. CODE BLOCKS (with syntax highlighting)
-    const codeBlockPlaceholders = [];
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const placeholder = `___CODE_BLOCK_${codeBlockPlaceholders.length}___`;
-        codeBlockPlaceholders.push(renderCodeBlock(code.trim(), lang || 'plaintext', config));
         return placeholder;
     });
 
@@ -128,22 +128,7 @@ function renderMarkdown(markdown, options = {}) {
         return `<ul class="md-list">${match}</ul>`;
     });
 
-    // 13. PARAGRAPHS
-    const lines = html.split('\n\n');
-    html = lines.map(block => {
-        block = block.trim();
-        if (!block) return '';
-        
-        // Skip if already wrapped in HTML tag
-        if (block.match(/^<(div|h[1-6]|ul|ol|pre|blockquote|table|hr|___)/)) {
-            return block;
-        }
-        
-        // Wrap in paragraph
-        return `<p class="md-paragraph">${block}</p>`;
-    }).join('\n');
-
-    // 14. RESTORE CODE BLOCKS AND INLINE CODE
+    // 13. RESTORE CODE BLOCKS AND INLINE CODE (BEFORE paragraph processing)
     codeBlockPlaceholders.forEach((codeBlock, i) => {
         html = html.replace(`___CODE_BLOCK_${i}___`, codeBlock);
     });
@@ -151,6 +136,24 @@ function renderMarkdown(markdown, options = {}) {
     inlineCodePlaceholders.forEach((inlineCode, i) => {
         html = html.replace(`___INLINE_CODE_${i}___`, inlineCode);
     });
+
+    // 14. PARAGRAPHS (after restoring placeholders)
+    const lines = html.split('\n\n');
+    html = lines.map(block => {
+        block = block.trim();
+        if (!block) return '';
+        
+        // Skip if already wrapped in HTML tag, contains HTML tags, or is a placeholder
+        if (block.match(/^<(div|h[1-6]|ul|ol|pre|blockquote|table|hr|code|strong|em|img|a)/i) || 
+            block.includes('</') ||
+            block.includes('___CODE_BLOCK_') ||
+            block.includes('___INLINE_CODE_')) {
+            return block;
+        }
+        
+        // Wrap in paragraph
+        return `<p class="md-paragraph">${block}</p>`;
+    }).join('\n');
 
     // 15. EMOJI SUPPORT (basic)
     html = replaceEmojis(html);
@@ -546,9 +549,10 @@ function initMarkdownStyles() {
             border: 1px solid rgba(205, 92, 92, 0.25);
             padding: 2px 6px;
             border-radius: 4px;
-            font-family: 'Courier New', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', 'Courier', monospace;
             font-size: 0.9em;
             color: #CD5C5C;
+            white-space: nowrap;
         }
         
         /* Code Blocks */
@@ -599,15 +603,41 @@ function initMarkdownStyles() {
             margin: 0;
             padding: 16px;
             overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', 'Courier', monospace;
+            font-size: 14px;
+            line-height: 1.5;
             color: rgba(200, 200, 200, 0.95);
             -webkit-overflow-scrolling: touch;
+            white-space: pre;
+            word-wrap: normal;
+            overflow-wrap: normal;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(205, 92, 92, 0.4) rgba(0, 0, 0, 0.3);
+        }
+        
+        .md-code-pre::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .md-code-pre::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        
+        .md-code-pre::-webkit-scrollbar-thumb {
+            background: rgba(205, 92, 92, 0.4);
+            border-radius: 4px;
+        }
+        
+        .md-code-pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(205, 92, 92, 0.6);
         }
         
         .md-code {
             display: block;
+            white-space: pre;
+            word-break: keep-all;
+            overflow-wrap: normal;
         }
         
         .line-numbers {
@@ -638,15 +668,39 @@ function initMarkdownStyles() {
         .syntax-boolean { color: #CD5C5C; }
         .syntax-comment { color: rgba(150, 150, 150, 0.7); font-style: italic; }
         
-        /* Tables - Enhanced with Perfect Borders */
+        /* Tables - Premium Engineering Theme with Grid Pattern */
         .md-table-wrapper {
+            position: relative;
             overflow-x: auto;
-            margin: 20px 0;
+            margin: 24px 0;
             -webkit-overflow-scrolling: touch;
-            border: 2px solid rgba(205, 92, 92, 0.4);
-            border-radius: 10px;
-            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.85));
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 92, 92, 0.1);
+            border: 2px solid rgba(205, 92, 92, 0.5);
+            border-radius: 12px;
+            background: 
+                repeating-linear-gradient(0deg, rgba(139,0,0,0.03) 0 1px, transparent 1px 20px),
+                repeating-linear-gradient(90deg, rgba(139,0,0,0.03) 0 1px, transparent 1px 20px),
+                linear-gradient(135deg, rgba(0,0,0,0.98), rgba(20,0,0,0.92));
+            background-size: 20px 20px, 20px 20px, 100% 100%;
+            box-shadow: 
+                0 8px 24px rgba(0, 0, 0, 0.6),
+                0 0 40px rgba(205, 92, 92, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .md-table-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(205, 92, 92, 0.3) 20%, 
+                rgba(205, 92, 92, 0.6) 50%, 
+                rgba(205, 92, 92, 0.3) 80%, 
+                transparent 100%);
+            border-radius: 12px 12px 0 0;
         }
         
         .md-table {
@@ -664,16 +718,28 @@ function initMarkdownStyles() {
         }
         
         .md-table-header {
-            padding: 14px 16px;
-            background: linear-gradient(135deg, rgba(205, 92, 92, 0.2), rgba(139, 0, 0, 0.15));
-            border: 1px solid rgba(205, 92, 92, 0.4);
-            border-bottom: 3px solid rgba(205, 92, 92, 0.6);
+            position: relative;
+            padding: 16px 18px;
+            background: 
+                linear-gradient(135deg, rgba(205, 92, 92, 0.25), rgba(139, 0, 0, 0.18)),
+                repeating-linear-gradient(45deg, 
+                    rgba(255,255,255,0.02) 0px, 
+                    rgba(255,255,255,0.02) 2px, 
+                    transparent 2px, 
+                    transparent 4px);
+            border-right: 1px solid rgba(80, 80, 80, 0.3);
+            border-bottom: 3px solid rgba(205, 92, 92, 0.7);
             font-weight: 700;
-            font-size: 14px;
-            color: #CD5C5C;
+            font-size: 13px;
+            color: #FF6B6B;
             text-align: left;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .md-table-header:last-child {
+            border-right: none;
         }
         
         .md-table-header:first-child {
@@ -709,13 +775,29 @@ function initMarkdownStyles() {
         }
         
         .md-table-cell {
-            padding: 12px 16px;
-            border-right: 1px solid rgba(80, 80, 80, 0.3);
-            border-bottom: 1px solid rgba(80, 80, 80, 0.25);
+            position: relative;
+            padding: 14px 18px;
+            border-right: 1px solid rgba(100, 100, 100, 0.25);
+            border-bottom: 1px solid rgba(90, 90, 90, 0.2);
             font-size: 14px;
-            line-height: 1.6;
-            color: rgba(220, 220, 220, 0.95);
+            line-height: 1.7;
+            color: rgba(230, 230, 230, 0.95);
             vertical-align: top;
+            transition: background 0.2s ease;
+        }
+        
+        .md-table-cell::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 60%;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                rgba(139, 0, 0, 0.2), 
+                transparent);
         }
         
         .md-table-cell:last-child {
@@ -805,24 +887,43 @@ function initMarkdownStyles() {
             border: 1px solid rgba(80, 80, 80, 0.3);
         }
         
-        /* Table of Contents */
+        /* Table of Contents - Default Hidden */
         .md-toc {
+            display: none;
             margin: 24px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, rgba(205, 92, 92, 0.08), rgba(0, 0, 0, 0.3));
-            border: 1px solid rgba(205, 92, 92, 0.3);
-            border-radius: 8px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            background: 
+                repeating-linear-gradient(45deg, 
+                    rgba(139,0,0,0.02) 0px, 
+                    rgba(139,0,0,0.02) 10px, 
+                    transparent 10px, 
+                    transparent 20px),
+                linear-gradient(135deg, rgba(205, 92, 92, 0.1), rgba(0, 0, 0, 0.4));
+            border: 2px solid rgba(205, 92, 92, 0.35);
+            border-left: 4px solid rgba(205, 92, 92, 0.6);
+            border-radius: 10px;
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            opacity: 1;
+            transition: opacity 0.3s ease;
         }
         
         .md-toc-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
-            color: #CD5C5C;
-            margin-bottom: 16px;
+            color: #FF6B6B;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .md-toc-title i {
+            color: #CD5C5C;
+            font-size: 18px;
         }
         
         .md-toc-list {

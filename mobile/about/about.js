@@ -106,4 +106,27 @@
         });
     }
     
+    // ========== RESET ACTIVE STATES ON PAGE VISIBILITY ==========
+    // Fix: Prevent buttons from staying "clicked" after navigating back
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            // Reset all potentially active elements
+            document.querySelectorAll('.info-item, .contact-item, .skill-chip, .hobby-card, .club-card, .location-card, .contact-link').forEach(el => {
+                el.style.transform = '';
+                el.blur(); // Remove focus
+            });
+        }
+    });
+    
+    // Also reset on page show (back/forward navigation)
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was cached (back button used)
+            document.querySelectorAll('.info-item, .contact-item, .skill-chip, .hobby-card, .club-card, .location-card, .contact-link').forEach(el => {
+                el.style.transform = '';
+                el.blur();
+            });
+        }
+    });
+    
 })();

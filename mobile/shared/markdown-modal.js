@@ -94,13 +94,14 @@ function createMarkdownModal(config) {
     const contentContainer = document.createElement('div');
     contentContainer.id = 'md-modal-content';
     contentContainer.style.cssText = `
-        flex: 1;
+        max-height: 250px;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         padding: 24px 16px;
         font-size: ${MarkdownModal.fontSize}px;
         transition: font-size 0.2s ease;
+        flex: 1;
     `;
 
     // Loading state
@@ -493,7 +494,17 @@ function renderMarkdownContent(markdown, config) {
 function toggleTOC() {
     const toc = document.querySelector('.md-toc');
     if (toc) {
-        toc.style.display = toc.style.display === 'none' ? 'block' : 'none';
+        const isHidden = toc.style.display === 'none';
+        toc.style.display = isHidden ? 'block' : 'none';
+        toc.style.opacity = isHidden ? '0' : '1';
+        
+        if (isHidden) {
+            // Slide in animation
+            setTimeout(() => {
+                toc.style.opacity = '1';
+            }, 10);
+        }
+        
         if (navigator.vibrate) navigator.vibrate(10);
     }
 }

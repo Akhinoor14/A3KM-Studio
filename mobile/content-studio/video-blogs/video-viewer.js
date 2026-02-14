@@ -184,10 +184,13 @@
                 ? (window.youtubeFetcher?.formatViews(video.views) || `${video.views} views`)
                 : '';
             
+            // Construct YouTube thumbnail URL as fallback
+            const thumbnailUrl = video.thumbnail || (video.videoId ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` : '');
+            
             return `
                 <a href="video-viewer.html?id=${video.id}" class="related-item">
                     <div class="related-thumb">
-                        <img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">
+                        <img src="${thumbnailUrl}" alt="${video.title}" onerror="this.style.display='none'">
                         <i class="fab fa-youtube"></i>
                         <span class="related-duration">${displayDuration}</span>
                     </div>

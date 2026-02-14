@@ -51,8 +51,150 @@
             }
         })();
     </script>
+    
+    <!-- Splash Screen Styles -->
+    <style>
+        /* Smooth Splash Screen Animation - Desktop */
+        .app-splash {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            animation: splashFadeOut 0.5s ease forwards 1.5s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .app-splash.removing {
+            pointer-events: none;
+            cursor: default;
+        }
+        
+        .splash-logo {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 35px;
+            animation: logoReveal 1s ease forwards;
+        }
+        
+        .splash-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 40px rgba(139, 0, 0, 0.6));
+        }
+        
+        .splash-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 14px;
+            opacity: 0;
+            animation: textSlideUp 0.8s ease forwards 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .splash-subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: textSlideUp 0.8s ease forwards 0.5s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .splash-loader {
+            margin-top: 45px;
+            width: 55px;
+            height: 55px;
+            border: 3px solid rgba(139, 0, 0, 0.2);
+            border-top-color: #8B0000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            opacity: 0;
+            animation: loaderFadeIn 0.5s ease forwards 0.7s, spin 0.8s linear infinite 0.7s;
+        }
+        
+        .splash-hint {
+            position: absolute;
+            bottom: 50px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 500;
+            opacity: 0;
+            animation: textSlideUp 0.8s ease forwards 1s;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes splashFadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
+        
+        @keyframes logoReveal {
+            from {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+        
+        @keyframes textSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes loaderFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        body.splash-active {
+            overflow: hidden;
+            height: 100vh;
+            max-height: 100vh;
+            position: fixed;
+            width: 100%;
+        }
+    </style>
 </head>
-<body>
+<body class="splash-active">
+    
+    <!-- Smooth Splash Screen - Desktop -->
+    <div class="app-splash" id="appSplash">
+        <div class="splash-logo">
+            <img src="../images/logo.svg" alt="A3KM Studio Logo">
+        </div>
+        <h1 class="splash-title">A3KM Studio</h1>
+        <p class="splash-subtitle">Engineering · Education · Innovation</p>
+        <div class="splash-loader"></div>
+        <p class="splash-hint">Click anywhere to continue</p>
+    </div>
+    
     <!-- CENTRALIZED BACKGROUND SYSTEM -->
     <div class="bg-system-container">
         <!-- Animated Background Elements -->
@@ -495,11 +637,84 @@
 <!-- Premium Background Particle System -->
 <script src="../Optimization/Background/background-system.js"></script>
 
+<!-- Splash Screen Logic -->
+<script>
+(function() {
+    'use strict';
+    
+    // ========== DESKTOP SPLASH SCREEN LOGIC ==========
+    let splashRemoved = false;
+    
+    // Check if splash was already shown in this session
+    const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
+    
+    // Function to remove splash
+    const removeSplashScreen = () => {
+        if (splashRemoved) return;
+        splashRemoved = true;
+        
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.classList.add('removing');
+            splash.style.animation = 'splashFadeOut 0.5s ease forwards';
+        }
+        
+        setTimeout(() => {
+            document.body.classList.remove('splash-active');
+            if (splash) {
+                splash.remove();
+            }
+        }, 500);
+        
+        // Mark splash as shown for this session
+        sessionStorage.setItem('splashShown', 'true');
+    };
+    
+    // If splash already shown, remove immediately
+    if (splashAlreadyShown) {
+        document.body.classList.remove('splash-active');
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.remove();
+        }
+        splashRemoved = true;
+    } else {
+        // Emergency fallback to prevent stuck overflow:hidden
+        setTimeout(() => {
+            document.body.classList.remove('splash-active');
+        }, 3000);
+        
+        // Primary splash handling
+        const removeSplash = () => {
+            setTimeout(removeSplashScreen, 1500); // Show splash for 1.5 seconds
+        };
+        
+        // Allow user to click to skip splash
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.addEventListener('click', removeSplashScreen);
+        }
+        
+        // Use DOMContentLoaded for faster execution
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeSplash);
+        } else {
+            removeSplash();
+        }
+    }
+})();
+</script>
+
 <!-- Mobile Only Boss Floating Button -->
 <a href="../Only-boss/auth/only-boss.html" class="mobile-boss-button" aria-label="Only Boss Dashboard">
     <span class="mobile-boss-icon">👑</span>
     <span class="mobile-boss-tooltip">Only Boss</span>
 </a>
+
+<!-- PWA & Offline Systems -->
+<script src="../Optimization/pwa-install-prompt.js" defer></script>
+<script src="../Optimization/update-notifier.js" defer></script>
+<script src="../Optimization/offline-content-manager.js" defer></script>
 
 </body>
 </html>

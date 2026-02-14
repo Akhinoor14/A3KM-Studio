@@ -495,7 +495,7 @@
                             ` : ''}
                         </div>
                     </div>
-                    <div id="codeContent" style="padding: 16px; max-height: 400px; overflow-y: auto;">
+                    <div id="codeContent" style="padding: 16px; max-height: 250px; overflow-y: auto;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading code...</p>
@@ -531,18 +531,20 @@
 
             ${hasREADME ? `
             <section>
-                <h2 class="section-title"><i class="fas fa-book-open"></i> README & Documentation</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 class="section-title" style="margin: 0;"><i class="fas fa-book-open"></i> README & Documentation</h2>
+                    <button class="action-btn" onclick="window.projectViewer.openReadmeFullscreen()" style="padding: 8px 16px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 8px; color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
                 <div class="readme-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="readmeContent" class="markdown-content" style="max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
+                    <div id="readmeContent" class="markdown-content" style="max-height: 250px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading README...</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
-                        <button class="action-btn" onclick="window.projectViewer.openReadmeFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <i class="fas fa-expand"></i> Open Fullscreen
-                        </button>
                         ${isArduino && currentProject.files && currentProject.folder ? `
                         <button class="action-btn" onclick="window.projectViewer.downloadReadme()" style="padding: 12px 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(205,92,92,0.4); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
                             <i class="fas fa-download"></i> Download README
@@ -555,18 +557,20 @@
 
             ${hasExplanation ? `
             <section>
-                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Code Explanation (For Beginners)</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 class="section-title" style="margin: 0;"><i class="fas fa-graduation-cap"></i> Code Explanation (For Beginners)</h2>
+                    <button class="action-btn" onclick="window.projectViewer.openExplanationFullscreen()" style="padding: 8px 16px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 8px; color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
                 <div class="explanation-section" style="background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid var(--border-primary); padding: 16px;">
-                    <div id="explanationContent" class="markdown-content" style="max-height: 600px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
+                    <div id="explanationContent" class="markdown-content" style="max-height: 250px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px;">
                         <div style="text-align: center; padding: 20px;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(204, 0, 0, 0.3); border-top-color: var(--primary-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             <p style="margin-top: 12px; color: var(--text-secondary);">Loading explanation...</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
-                        <button class="action-btn" onclick="window.projectViewer.openExplanationFullscreen()" style="padding: 12px 24px; background: linear-gradient(135deg, rgba(205,92,92,0.5), rgba(0,0,0,0.8)); border: 1px solid rgba(205,92,92,0.6); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <i class="fas fa-expand"></i> Open Fullscreen
-                        </button>
                         ${isArduino && currentProject.files && currentProject.folder ? `
                         <button class="action-btn" onclick="window.projectViewer.downloadExplanation()" style="padding: 12px 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(205,92,92,0.4); border-radius: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
                             <i class="fas fa-download"></i> Download Explanation

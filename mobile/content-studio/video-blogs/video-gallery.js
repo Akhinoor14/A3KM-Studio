@@ -380,10 +380,13 @@
                 ? (window.youtubeFetcher?.formatLikes(video.likes) || video.likes)
                 : '';
             
+            // Construct YouTube thumbnail URL as fallback
+            const thumbnailUrl = video.thumbnail || (video.videoId ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` : '');
+            
             return `
             <a href="video-viewer.html?id=${video.id}" class="content-item">
                 <div class="content-thumbnail">
-                    <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <img src="${thumbnailUrl}" alt="${video.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                     <i class="fab fa-youtube" style="display:none; font-size: 48px; color: #CC0000;"></i>
                     <span class="content-duration">${video.duration || 'N/A'}</span>
                 </div>
