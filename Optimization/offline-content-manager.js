@@ -326,7 +326,7 @@ class OfflineContentManager {
         
         // Listen for PWA installation - auto-download immediately
         window.addEventListener('appinstalled', () => {
-            console.log('✅ PWA installed - Starting automatic offline content download');
+            // Start silent download
             this.startOfflineContentDownload(true); // true = silent/automatic
         });
         
@@ -335,13 +335,11 @@ class OfflineContentManager {
         const hasDownloaded = this.hasDownloadedContent();
         
         if (hasDownloaded && storedVersion && storedVersion !== this.CONTENT_VERSION) {
-            console.log('🔄 Content update detected:', storedVersion, '->', this.CONTENT_VERSION);
             // Auto-update in background without prompting
             this.startOfflineContentDownload(true);
         }
         // Check if app was recently installed and hasn't downloaded content yet
         else if (this.isInstalledApp() && !hasDownloaded) {
-            console.log('📦 Detected installed PWA without offline content - starting auto-download');
             // Auto-download without prompting
             setTimeout(() => {
                 this.startOfflineContentDownload(true);
@@ -356,7 +354,7 @@ class OfflineContentManager {
                 }
                 
                 if (event.data.type === 'CACHE_COMPLETE') {
-                    console.log(`✅ Cache complete: ${event.data.cached}/${event.data.total} (${event.data.failed} failed)`);
+                    // Silent completion
                     this.showCompletionPopup(event.data.cached, event.data.failed);
                 }
             });
@@ -368,7 +366,7 @@ class OfflineContentManager {
      */
     async fetchLatestVersion() {
         if (!navigator.onLine) {
-            console.log('📱 Offline - skipping version check');
+            // Skip version check
             return;
         }
         
@@ -380,10 +378,10 @@ class OfflineContentManager {
             if (response.ok) {
                 const versionData = await response.json();
                 this.CONTENT_VERSION = versionData.version;
-                console.log('📦 Latest version:', this.CONTENT_VERSION);
+                // Version fetched silently
             }
         } catch (error) {
-            console.warn('⚠️ Could not fetch latest version:', error);
+            // Failed silently
         }
     }
     
@@ -547,13 +545,13 @@ class OfflineContentManager {
                         </div>
                         
                         <!-- Title -->
-                        <h2 style="font-size: 28px; font-weight: 700; color: #ffffff; margin: 0 0 12px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-                            Installing for Offline
+                        <h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 12px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                            Md Akhinoor Islam's Portfolio
                         </h2>
                         
                         <!-- Subtitle -->
-                        <p style="font-size: 16px; color: rgba(255, 255, 255, 0.6); margin: 0 0 32px 0; line-height: 1.5;">
-                            Downloading your projects and content...
+                        <p style="font-size: 14px; color: rgba(255, 255, 255, 0.6); margin: 0 0 32px 0; line-height: 1.5;">
+                            Presented by A3KM Studio | Part of Noor Academy
                         </p>
                         
                         <!-- Progress Bar -->
@@ -562,9 +560,9 @@ class OfflineContentManager {
                         </div>
                         
                         <!-- Progress Stats -->
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; justify-content: center; align-items: center;">
                             <span id="progress-percent" style="font-size: 18px; font-weight: 600; color: #8B0000;">0%</span>
-                            <span id="progress-files" style="font-size: 14px; color: rgba(255, 255, 255, 0.5);">0 / ${total} files</span>
+                            <span id="progress-files" style="display: none; font-size: 14px; color: rgba(255, 255, 255, 0.5);">0 / ${total} files</span>
                         </div>
                         
                     </div>
@@ -650,7 +648,7 @@ class OfflineContentManager {
      */
     async startOfflineContentDownload(silent = false) {
         if (this.isDownloading) {
-            console.log('⚠️ Download already in progress');
+            // Already in progress - skip silently
             return;
         }
         
@@ -661,7 +659,7 @@ class OfflineContentManager {
             const filesToCache = this.getAllCacheableFiles();
             this.totalFiles = filesToCache.length;
             
-            console.log(`📦 Starting download of ${this.totalFiles} files...`);
+            // Silent download - no console output
             
             // Show progress animation with initial state (both silent and non-silent)
             this.showProgressAnimation(0, 0, this.totalFiles);
@@ -682,10 +680,10 @@ class OfflineContentManager {
             localStorage.setItem('a3km_offline_download_date', new Date().toISOString());
             localStorage.setItem(this.VERSION_STORAGE_KEY, this.CONTENT_VERSION);
             
-            console.log(`✅ Offline content version ${this.CONTENT_VERSION} cached successfully`);
+            // Installation complete - silent
             
         } catch (error) {
-            console.error('❌ Offline content download failed:', error);
+            // Failed silently
             this.hideProgressAnimation();
             this.showDownloadError(error);
         } finally {
@@ -722,7 +720,7 @@ class OfflineContentManager {
             try {
                 // Skip external URLs
                 if (this.isExternalContent(file)) {
-                    console.log(`⏭️ Skipping external content: ${file}`);
+                    // Skip silently
                     continue;
                 }
                 
@@ -732,14 +730,14 @@ class OfflineContentManager {
                 if (response.ok) {
                     await cache.put(file, response);
                     this.downloadedFiles++;
-                    console.log(`✅ Cached: ${file} (${this.downloadedFiles}/${this.totalFiles})`);
+                    // Cached silently
                 } else {
-                    console.warn(`⚠️ Failed to cache ${file}: ${response.status}`);
+                    // Failed silently
                     this.failedFiles.push(file);
                 }
                 
             } catch (error) {
-                console.error(`❌ Error caching ${file}:`, error);
+                // Error silently
                 this.failedFiles.push(file);
             }
             
@@ -924,7 +922,7 @@ class OfflineContentManager {
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             ">
                 ${totalFailed === 0 
-                    ? '<strong style="color: #8B0000;">App is ready to open!</strong><br>All content is now accessible offline.' 
+                    ? '<strong style="color: #8B0000;">Portfolio is ready!</strong><br>All content is now accessible offline.<br><span style="font-size: 13px; color: rgba(255,255,255,0.5);">by A3KM Studio | Part of Noor Academy</span>' 
                     : `${totalCached} files cached successfully.${totalFailed > 0 ? `<br><span style="color: #fbbf24;">⚠️ ${totalFailed} files require online access</span>` : ''}`
                 }
             </p>
@@ -1165,4 +1163,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('📦 Offline Content Manager loaded with enhanced UI');
+// Offline Content Manager loaded silently
