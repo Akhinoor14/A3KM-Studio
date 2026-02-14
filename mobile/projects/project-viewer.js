@@ -243,6 +243,13 @@
             imageUrls = currentProject.images;
         }
         
+        // Build circuit image path for Arduino projects
+        let circuitImagePath = currentProject.circuitDiagram || currentProject.thumbnail || currentProject.image;
+        if (isArduino && !circuitImagePath && currentProject.files?.circuit && currentProject.folder) {
+            // Construct full path for Arduino circuit image (no encoding)
+            circuitImagePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.circuit}`;
+        }
+        
         const hasTopics = currentProject.topics && currentProject.topics.length > 0;
         const hasToolLink = currentProject.toolLink;
         const hasFeatures = currentProject.features && currentProject.features.length > 0;
@@ -395,9 +402,9 @@
                     </div>
                 </div>
             </section>
-            ` : (currentProject.thumbnail || currentProject.image || currentProject.circuitDiagram) ? `
+            ` : circuitImagePath ? `
             <div class="project-image">
-                <img src="${currentProject.thumbnail || currentProject.image || currentProject.circuitDiagram}" alt="${currentProject.title}" style="width:100%;border-radius:12px;border:2px solid var(--border-primary);">
+                <img src="${circuitImagePath}" alt="${currentProject.title}" style="width:100%;border-radius:12px;border:2px solid var(--border-primary);" onerror="this.parentElement.style.display='none'; console.error('Failed to load circuit image:', this.src);">
             </div>
             ` : ''}
 
@@ -838,10 +845,10 @@
         if (hasCode) {
             let codePath = currentProject.codePath;
             
-            // For Arduino projects, construct full path from JSON data
+            // For Arduino projects, construct full path from JSON data (no encoding)
             if (isArduino && !codePath && currentProject.files && currentProject.folder) {
                 const codeFile = currentProject.files.code || currentProject.codeFile;
-                codePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${codeFile}`;
+                codePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${codeFile}`;
             }
             
             // For MATLAB projects, construct full path from JSON data
@@ -859,9 +866,9 @@
         if (hasREADME) {
             let readmePath = currentProject.readmePath;
             
-            // For Arduino projects, construct full path
+            // For Arduino projects, construct full path (no encoding - browsers handle spaces correctly)
             if (isArduino && !readmePath && currentProject.files && currentProject.folder) {
-                readmePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.readme}`;
+                readmePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.readme}`;
             }
             
             if (readmePath) {
@@ -872,9 +879,9 @@
         if (hasExplanation) {
             let explanationPath = currentProject.explanationPath;
             
-            // For Arduino projects, construct full path
+            // For Arduino projects, construct full path (no encoding - browsers handle spaces correctly)
             if (isArduino && !explanationPath && currentProject.files && currentProject.folder) {
-                explanationPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.explanation}`;
+                explanationPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${currentProject.folder}/${currentProject.files.explanation}`;
             }
             
             if (explanationPath) {

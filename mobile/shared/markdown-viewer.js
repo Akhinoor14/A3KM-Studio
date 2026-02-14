@@ -186,28 +186,34 @@ function renderCodeBlock(code, language, config) {
 }
 
 /**
- * Render markdown tables with alignment support
+ * Render markdown tables with alignment support - Enhanced for robust matching
  */
 function renderTables(markdown) {
-    const tableRegex = /^\|(.+)\|\n\|([-:\s|]+)\|\n((?:\|.+\|\n?)+)/gim;
+    // More robust regex that handles various table formats and whitespace
+    // Allows optional leading/trailing whitespace and matches multiline tables properly
+    const tableRegex = /^[ \t]*(\|.+\|)[ \t]*\r?\n[ \t]*(\|[-:\s|]+\|)[ \t]*\r?\n(([ \t]*\|.+\|[ \t]*\r?\n?)+)/gm;
     
     return markdown.replace(tableRegex, (match, headerRow, alignRow, bodyRows) => {
-        // Parse header
-        const headers = headerRow.split('|').map(h => h.trim()).filter(h => h);
+        // Parse header - remove leading/trailing pipes and whitespace
+        const headers = headerRow.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(h => h.trim()).filter(h => h);
         
-        // Parse alignment from separator row
-        const alignments = alignRow.split('|').map(a => a.trim()).filter(a => a).map(a => {
+        // Parse alignment from separator row - remove leading/trailing pipes
+        const alignments = alignRow.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(a => a.trim()).filter(a => a).map(a => {
             if (a.startsWith(':') && a.endsWith(':')) return 'center';
             if (a.endsWith(':')) return 'right';
             return 'left';
         });
         
-        // Parse body rows
-        const rows = bodyRows.trim().split('\n').map(row => {
-            return row.split('|').map(cell => cell.trim()).filter(cell => cell);
-        });
+        // Parse body rows - handle each row properly with robust filtering
+        const rows = bodyRows
+            .split(/\r?\n/)
+            .map(row => row.trim())
+            .filter(row => row && row.startsWith('|') && row.endsWith('|'))
+            .map(row => {
+                return row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+            });
 
-        // Generate table HTML with alignment
+        // Generate table HTML with alignment and theme styling
         let tableHtml = '<div class="md-table-wrapper"><table class="md-table">';
         
         // Header
@@ -221,12 +227,15 @@ function renderTables(markdown) {
         // Body
         tableHtml += '<tbody>';
         rows.forEach(row => {
-            tableHtml += '<tr class="md-table-row">';
-            row.forEach((cell, i) => {
-                const align = alignments[i] || 'left';
-                tableHtml += `<td class="md-table-cell" style="text-align:${align};">${cell}</td>`;
-            });
-            tableHtml += '</tr>';
+            // Only add row if it has the correct number of cells or at least some data
+            if (row.filter(c => c).length > 0) {
+                tableHtml += '<tr class="md-table-row">';
+                row.forEach((cell, i) => {
+                    const align = alignments[i] || 'left';
+                    tableHtml += `<td class="md-table-cell" style="text-align:${align};">${cell}</td>`;
+                });
+                tableHtml += '</tr>';
+            }
         });
         tableHtml += '</tbody></table></div>';
         
@@ -629,61 +638,106 @@ function initMarkdownStyles() {
         .syntax-boolean { color: #CD5C5C; }
         .syntax-comment { color: rgba(150, 150, 150, 0.7); font-style: italic; }
         
-        /* Tables */
+        /* Tables - Enhanced with Perfect Borders */
         .md-table-wrapper {
             overflow-x: auto;
             margin: 20px 0;
             -webkit-overflow-scrolling: touch;
-            border: 2px solid rgba(205, 92, 92, 0.3);
-            border-radius: 8px;
+            border: 2px solid rgba(205, 92, 92, 0.4);
+            border-radius: 10px;
             background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,0,0,0.85));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 92, 92, 0.1);
         }
         
         .md-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             background: transparent;
             margin: 0;
         }
         
+        .md-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
         .md-table-header {
-            padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(205, 92, 92, 0.15), rgba(0, 0, 0, 0.3));
-            border: 1px solid rgba(205, 92, 92, 0.3);
-            border-bottom: 2px solid rgba(205, 92, 92, 0.5);
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(205, 92, 92, 0.2), rgba(139, 0, 0, 0.15));
+            border: 1px solid rgba(205, 92, 92, 0.4);
+            border-bottom: 3px solid rgba(205, 92, 92, 0.6);
             font-weight: 700;
             font-size: 14px;
             color: #CD5C5C;
             text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .md-table-header:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        .md-table-header:last-child {
+            border-top-right-radius: 8px;
         }
         
         .md-table-row {
-            border-bottom: 1px solid rgba(80, 80, 80, 0.3);
+            transition: background 0.2s ease;
         }
         
         .md-table-row:nth-child(even) {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(10, 0, 0, 0.4);
+        }
+        
+        .md-table-row:nth-child(odd) {
+            background: rgba(0, 0, 0, 0.2);
         }
         
         .md-table-row:hover {
-            background: rgba(205, 92, 92, 0.05);
+            background: rgba(205, 92, 92, 0.08) !important;
+        }
+        
+        .md-table-row:last-child .md-table-cell:first-child {
+            border-bottom-left-radius: 6px;
+        }
+        
+        .md-table-row:last-child .md-table-cell:last-child {
+            border-bottom-right-radius: 6px;
         }
         
         .md-table-cell {
             padding: 12px 16px;
-            border: 1px solid rgba(80, 80, 80, 0.2);
-            font-size: 14px;
-            color: rgba(200, 200, 200, 0.95);
-        }
-        
-        .md-table-cell:first-child,
-        .md-table-header:first-child {
-            border-left: 1px solid rgba(80, 80, 80, 0.3);
-        }
-        
-        .md-table-cell:last-child,
-        .md-table-header:last-child {
             border-right: 1px solid rgba(80, 80, 80, 0.3);
+            border-bottom: 1px solid rgba(80, 80, 80, 0.25);
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(220, 220, 220, 0.95);
+            vertical-align: top;
+        }
+        
+        .md-table-cell:last-child {
+            border-right: none;
+        }
+        
+        .md-table-row:last-child .md-table-cell {
+            border-bottom: none;
+        }
+        
+        /* Mobile Table Responsiveness */
+        @media (max-width: 640px) {
+            .md-table-wrapper {
+                border-radius: 8px;
+                font-size: 13px;
+            }
+            
+            .md-table-header,
+            .md-table-cell {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
         }
         
         /* Blockquotes */
