@@ -28,6 +28,11 @@
             box-sizing: border-box;
         }
         
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 120px;
+        }
+        
         :root {
             --primary-red: #CC0000;
             --dark-red: #8B0000;
@@ -172,12 +177,12 @@
            MAIN CONTAINER
            ============================================================================ */
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 40px 40px 80px;
             display: grid;
-            grid-template-columns: 280px 1fr 280px;
-            gap: 30px;
+            grid-template-columns: 300px 1fr;
+            gap: 35px;
             align-items: start;
         }
         
@@ -453,20 +458,23 @@
            MARKDOWN BODY STYLES
            ============================================================================ */
         .markdown-body {
-            font-size: 1.05rem;
-            line-height: 1.8;
+            font-size: 1.08rem;
+            line-height: 1.85;
             color: var(--text-primary);
-            padding: 40px;
+            padding: 50px 60px;
+            /* No max-width - content uses full available space */
         }
         
         .markdown-body h1 {
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             font-weight: 800;
             margin: 50px 0 25px;
             color: var(--text-primary);
             border-bottom: 3px solid var(--primary-red);
             padding-bottom: 15px;
             position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .markdown-body h1::before {
@@ -480,13 +488,15 @@
         }
         
         .markdown-body h2 {
-            font-size: 2rem;
+            font-size: 2.1rem;
             font-weight: 700;
             margin: 45px 0 20px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 12px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .markdown-body h2::before {
@@ -563,6 +573,8 @@
             margin: 30px 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: var(--shadow-md);
+            position: relative;
+            will-change: transform;
         }
         
         .markdown-body pre code {
@@ -571,6 +583,7 @@
             padding: 0;
             font-size: 0.95rem;
             border: none;
+            line-height: 1.6;
         }
         
         .markdown-body blockquote {
@@ -670,9 +683,16 @@
             max-width: 100%;
             height: auto;
             border-radius: 12px;
-            margin: 30px 0;
+            margin: 35px 0;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border-primary);
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+        
+        .markdown-body img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(204, 0, 0, 0.4);
         }
         
         .markdown-body strong {
@@ -686,11 +706,10 @@
         }
         
         /* ============================================================================
-           RIGHT SIDEBAR - ARCHIVE & RELATED DOCS
+           RIGHT SIDEBAR - REMOVED FOR BETTER CONTENT WIDTH
            ============================================================================ */
         .sidebar-right {
-            position: sticky;
-            top: 100px;
+            display: none;
         }
         
         .archive-card {
@@ -990,14 +1009,13 @@
         /* ============================================================================
            RESPONSIVE DESIGN
            ============================================================================ */
-        @media (max-width: 1200px) {
+        @media (max-width: 1100px) {
             .container {
                 grid-template-columns: 1fr;
                 padding: 30px 25px 60px;
             }
             
-            .sidebar-left,
-            .sidebar-right {
+            .sidebar-left {
                 display: none;
             }
             
@@ -1046,6 +1064,8 @@
             
             .markdown-body {
                 font-size: 1rem;
+                padding: 30px 20px;
+                line-height: 1.75;
             }
             
             .markdown-body h1 {
@@ -1054,10 +1074,37 @@
             
             .markdown-body h2 {
                 font-size: 1.6rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .markdown-body h2::before {
+                width: 50px;
+                height: 5px;
+                margin-bottom: 8px;
             }
             
             .markdown-body h3 {
                 font-size: 1.3rem;
+            }
+            
+            .markdown-body pre {
+                padding: 20px 15px;
+                font-size: 0.85rem;
+            }
+            
+            .markdown-body code {
+                font-size: 0.85em;
+                padding: 3px 8px;
+            }
+            
+            .markdown-body table {
+                font-size: 0.9rem;
+            }
+            
+            .markdown-body th,
+            .markdown-body td {
+                padding: 12px 15px;
             }
             
             .bottom-nav {
@@ -1280,12 +1327,24 @@
                 });
                 
                 // Render markdown with enhanced header and wrap content in .markdown-body
+                let renderedHTML = marked.parse(content);
+                
+                // Fix relative image paths (same as Arduino viewer fix)
+                const docBasePath = `/Documentation/${docPath.substring(0, docPath.lastIndexOf('/') + 1)}`;
+                renderedHTML = renderedHTML.replace(/(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi, (match, prefix, src, suffix) => {
+                    const resolvedPath = docBasePath + src;
+                    return prefix + resolvedPath + suffix;
+                });
+                
                 const html = renderDocumentHeader(frontmatterData, currentCategory) + 
                             '<div class="doc-content"><div class="markdown-body">' + 
-                            marked.parse(content) + 
+                            renderedHTML + 
                             '</div></div>';
                 
                 document.getElementById('markdown-content').innerHTML = html;
+                
+                // Fix {#custom-id} in headings and extract IDs
+                fixHeadingIDs();
                 
                 // Update navigation
                 updateNavigation();
@@ -1299,13 +1358,20 @@
                 // Update stats with enhanced data
                 updateStats(frontmatterData);
                 
-                // Highlight code blocks
-                document.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
+                // Highlight code blocks with lazy loading
+                requestIdleCallback(() => {
+                    document.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
                 });
                 
                 // Setup navigation
                 setupNavButtons();
+                
+                // Add lazy loading to images
+                document.querySelectorAll('.markdown-body img').forEach(img => {
+                    img.loading = 'lazy';
+                });
                 
                 // Smooth scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1470,15 +1536,52 @@
             document.getElementById('page-title').textContent = `${currentDoc.title} - A3KM Studio`;
         }
         
+        // Fix heading IDs - parse {#custom-id} syntax and remove from display
+        function fixHeadingIDs() {
+            const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6');
+            
+            headings.forEach((heading, index) => {
+                const originalText = heading.textContent;
+                
+                // Check for {#custom-id} pattern
+                const idMatch = originalText.match(/\s*\{#([a-zA-Z0-9_-]+)\}\s*$/);
+                
+                if (idMatch) {
+                    // Extract custom ID and clean text
+                    const customID = idMatch[1];
+                    const cleanText = originalText.replace(/\s*\{#[a-zA-Z0-9_-]+\}\s*$/, '').trim();
+                    
+                    // Set ID and update text
+                    heading.id = customID;
+                    heading.textContent = cleanText;
+                    
+                    // Restore icon for h2 if it was removed
+                    if (heading.tagName === 'H2') {
+                        const icon = document.createElement('span');
+                        icon.style.cssText = 'width: 6px; height: 28px; background: linear-gradient(135deg, var(--primary-red), var(--dark-red)); border-radius: 3px; margin-right: 12px;';
+                        heading.insertBefore(icon, heading.firstChild);
+                    }
+                } else if (!heading.id) {
+                    // Generate slug-based ID if no custom ID
+                    const slug = originalText.toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .trim();
+                    heading.id = slug || `heading-${index}`;
+                }
+            });
+        }
+        
         // Generate Table of Contents
         function generateTOC() {
             const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3');
             const tocList = document.getElementById('toc-list');
             tocList.innerHTML = '';
             
-            headings.forEach((heading, index) => {
-                const id = `heading-${index}`;
-                heading.id = id;
+            headings.forEach((heading) => {
+                // Use existing ID (from fixHeadingIDs)
+                const id = heading.id;
                 
                 const li = document.createElement('li');
                 li.className = 'toc-item';
@@ -1500,8 +1603,10 @@
                 tocList.appendChild(li);
             });
             
-            // Active TOC on scroll
-            window.addEventListener('scroll', updateActiveTOC);
+            // Active TOC on scroll with performance optimization
+            const debouncedUpdateTOC = debounce(updateActiveTOC, 100);
+            window.removeEventListener('scroll', updateActiveTOC); // Remove old listener if exists
+            window.addEventListener('scroll', debouncedUpdateTOC, { passive: true });
         }
         
         // Update active TOC link
@@ -1523,6 +1628,19 @@
                     link.classList.add('active');
                 }
             });
+        }
+        
+        // Debounce helper (defined early for use in generateTOC)
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
         
         // Render archive navigation
@@ -1654,6 +1772,13 @@
                     <p style="color: var(--accent-red);">${message}</p>
                 </div>
             `;
+        }
+        
+        // Polyfill for requestIdleCallback (older browsers)
+        if (!window.requestIdleCallback) {
+            window.requestIdleCallback = function(cb) {
+                return setTimeout(cb, 1);
+            };
         }
         
         // Initialize
