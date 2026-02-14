@@ -1849,34 +1849,34 @@
             <div class="reading-toolbar" id="readingToolbar">
                 <!-- Doc Tabs Group -->
                 <div class="toolbar-group doc-tabs-group">
-                    <button class="toolbar-btn doc-tab active" data-tab="readme">
+                    <button class="toolbar-btn doc-tab active" data-tab="readme" id="readmeTabBtn">
                         <i class="fas fa-file-alt"></i> <span>README</span>
                     </button>
-                    <button class="toolbar-btn doc-tab" data-tab="explanation">
+                    <button class="toolbar-btn doc-tab" data-tab="explanation" id="explanationTabBtn">
                         <i class="fas fa-graduation-cap"></i> <span>Explanation</span>
                     </button>
-                    <button class="toolbar-btn doc-tab" data-tab="code">
+                    <button class="toolbar-btn doc-tab" data-tab="code" id="codeTabBtn">
                         <i class="fas fa-code"></i> <span>Code</span>
                     </button>
-                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="explanation" title="Download Explanation PDF">
+                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="explanation" id="pdfExpBtn" title="Download Explanation PDF">
                         <i class="fas fa-file-pdf"></i> <span>PDF Exp</span>
                     </button>
-                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="readme" title="Download README PDF">
+                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="readme" id="pdfReadBtn" title="Download README PDF">
                         <i class="fas fa-file-pdf"></i> <span>PDF Read</span>
                     </button>
                 </div>
                 
                 <!-- Reading Mode Group -->
                 <div class="toolbar-group">
-                    <button class="toolbar-btn" id="defaultModeBtn" onclick="setDefaultMode()" title="Default Mode (D)">
+                    <button class="toolbar-btn" id="defaultModeBtn" title="Default Mode (D)">
                         <i class="fas fa-sun"></i>
                         <span>Default</span>
                     </button>
-                    <button class="toolbar-btn" id="nightModeBtn" onclick="toggleNightMode()" title="Night Mode (N)">
+                    <button class="toolbar-btn" id="nightModeBtn" title="Night Mode (N)">
                         <i class="fas fa-moon"></i>
                         <span>Night</span>
                     </button>
-                    <button class="toolbar-btn" id="sepiaModeBtn" onclick="toggleSepiaMode()" title="Sepia Mode (S)">
+                    <button class="toolbar-btn" id="sepiaModeBtn" title="Sepia Mode (S)">
                         <i class="fas fa-book-open"></i>
                         <span>Sepia</span>
                     </button>
@@ -1884,7 +1884,7 @@
 
                 <!-- Navigation Group -->
                 <div class="toolbar-group">
-                    <button class="toolbar-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+                    <button class="toolbar-btn" id="fullscreenBtn" title="Fullscreen (F)">
                         <i class="fas fa-expand"></i>
                         <span>Fullscreen</span>
                     </button>
@@ -3410,49 +3410,156 @@
             return html;
         }
 
+        // Helper function to switch tabs
+        function switchToTab(tabName) {
+            console.log(`🔄 Switching to ${tabName} tab`);
+            
+            // Update active tab button
+            document.querySelectorAll('.doc-tab[data-tab]').forEach(t => t.classList.remove('active'));
+            const targetBtn = document.querySelector(`.doc-tab[data-tab="${tabName}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+            
+            // Show content
+            document.querySelectorAll('.doc-content').forEach(c => c.classList.remove('active'));
+            const targetTab = document.getElementById(tabName + 'Tab');
+            if (targetTab) {
+                targetTab.classList.add('active');
+                
+                // Regenerate TOC after tab switch
+                setTimeout(() => {
+                    generateTOC();
+                    console.log('📋 TOC regenerated for', tabName, 'tab');
+                }, 100);
+                
+                // Update fullscreen button state
+                const fullscreenBtn = document.getElementById('fullscreenBtn');
+                if (fullscreenBtn) {
+                    if (tabName === 'code') {
+                        fullscreenBtn.disabled = true;
+                        fullscreenBtn.style.opacity = '0.5';
+                        fullscreenBtn.style.cursor = 'not-allowed';
+                        fullscreenBtn.title = 'Fullscreen only available for README & Explanation';
+                    } else {
+                        fullscreenBtn.disabled = false;
+                        fullscreenBtn.style.opacity = '1';
+                        fullscreenBtn.style.cursor = 'pointer';
+                        fullscreenBtn.title = 'Toggle Fullscreen (F)';
+                    }
+                }
+            }
+        }
+
         // Event Listeners
         function setupEventListeners() {
-            // Tab switching with TOC regeneration
-            document.querySelectorAll('.doc-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    
-                    // Skip if it's a PDF download button
-                    if (!tabName) return;
-                    
-                    // Update active tab
-                    document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    // Show content
-                    document.querySelectorAll('.doc-content').forEach(c => c.classList.remove('active'));
-                    const targetTab = document.getElementById(tabName + 'Tab');
-                    if (targetTab) {
-                        targetTab.classList.add('active');
-                        
-                        // Regenerate TOC after tab switch
-                        setTimeout(() => {
-                            generateTOC();
-                            console.log('📋 TOC regenerated for', tabName, 'tab');
-                        }, 100);
-                    }
+            console.log('🔧 Setting up event listeners...');
+            
+            // ===== TAB SWITCHING =====
+            // README Tab
+            const readmeTabBtn = document.getElementById('readmeTabBtn');
+            if (readmeTabBtn) {
+                readmeTabBtn.addEventListener('click', () => {
+                    console.log('📄 README tab clicked');
+                    switchToTab('readme');
                 });
-            });
+            }
+            
+            // Explanation Tab
+            const explanationTabBtn = document.getElementById('explanationTabBtn');
+            if (explanationTabBtn) {
+                explanationTabBtn.addEventListener('click', () => {
+                    console.log('📚 Explanation tab clicked');
+                    switchToTab('explanation');
+                });
+            }
+            
+            // Code Tab
+            const codeTabBtn = document.getElementById('codeTabBtn');
+            if (codeTabBtn) {
+                codeTabBtn.addEventListener('click', () => {
+                    console.log('💻 Code tab clicked');
+                    switchToTab('code');
+                });
+            }
+            
+            // ===== READING MODE BUTTONS =====
+            // Default Mode
+            const defaultModeBtn = document.getElementById('defaultModeBtn');
+            if (defaultModeBtn) {
+                defaultModeBtn.addEventListener('click', () => {
+                    console.log('☀️ Default mode clicked');
+                    setDefaultMode();
+                });
+            }
+            
+            // Night Mode
+            const nightModeBtn = document.getElementById('nightModeBtn');
+            if (nightModeBtn) {
+                nightModeBtn.addEventListener('click', () => {
+                    console.log('🌙 Night mode clicked');
+                    toggleNightMode();
+                });
+            }
+            
+            // Sepia Mode
+            const sepiaModeBtn = document.getElementById('sepiaModeBtn');
+            if (sepiaModeBtn) {
+                sepiaModeBtn.addEventListener('click', () => {
+                    console.log('📜 Sepia mode clicked');
+                    toggleSepiaMode();
+                });
+            }
+            
+            // ===== FULLSCREEN BUTTON =====
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    console.log('📺 Fullscreen clicked');
+                    toggleFullscreen();
+                });
+            }
+            
+            // ===== PDF DOWNLOAD BUTTONS =====
+            const pdfExpBtn = document.getElementById('pdfExpBtn');
+            if (pdfExpBtn) {
+                pdfExpBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log('📄 PDF Exp clicked');
+                    downloadExplanationPDF();
+                });
+            }
+            
+            const pdfReadBtn = document.getElementById('pdfReadBtn');
+            if (pdfReadBtn) {
+                pdfReadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log('📄 PDF Read clicked');
+                    downloadReadmePDF();
+                });
+            }
+            
+            console.log('✅ All event listeners attached');
+            
+            // ===== OTHER EVENT LISTENERS =====
             
             // Copy code
-            document.getElementById('copyCodeBtn').addEventListener('click', () => {
-                const code = document.getElementById('codeContent').textContent;
-                navigator.clipboard.writeText(code).then(() => {
-                    alert('Code copied to clipboard!');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            if (copyCodeBtn) {
+                copyCodeBtn.addEventListener('click', () => {
+                    const code = document.getElementById('codeContent').textContent;
+                    navigator.clipboard.writeText(code).then(() => {
+                        alert('Code copied to clipboard!');
+                    });
                 });
-            });
+            }
             
             // Download code
             const downloadCodeBtn = document.getElementById('downloadCodeBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             
-            [downloadCodeBtn, downloadBtn].forEach(btn => {
-                btn.addEventListener('click', () => {
+            if (downloadCodeBtn) {
+                downloadCodeBtn.addEventListener('click', () => {
                     const code = document.getElementById('codeContent').textContent;
                     const blob = new Blob([code], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
@@ -3462,7 +3569,20 @@
                     a.click();
                     URL.revokeObjectURL(url);
                 });
-            });
+            }
+            
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => {
+                    const code = document.getElementById('codeContent').textContent;
+                    const blob = new Blob([code], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = currentProject.codeFile;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            }
 
             // Download circuit diagram
             const downloadCircuitBtn = document.getElementById('downloadCircuitBtn');
@@ -3493,117 +3613,40 @@
                 });
             }
             
-            // PDF download buttons
-            document.querySelectorAll('.pdf-download-btn[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    
-                    const action = btn.dataset.action;
-                    
-                    if (action === 'explanation') {
-                        downloadExplanationPDF();
-                    } else if (action === 'readme') {
-                        downloadReadmePDF();
+            // Fullscreen change listener
+            document.addEventListener('fullscreenchange', () => {
+                const fullscreenBtn = document.getElementById('fullscreenBtn');
+                
+                if (!document.fullscreenElement) {
+                    // Exited fullscreen
+                    const icon = fullscreenBtn?.querySelector('i');
+                    const text = fullscreenBtn?.querySelector('span');
+                    if (icon) {
+                        icon.className = 'fas fa-expand';
                     }
-                });
+                    if (text) {
+                        text.textContent = 'Fullscreen';
+                    }
+                    if (fullscreenBtn) {
+                        fullscreenBtn.title = 'Toggle Fullscreen (F)';
+                    }
+                    console.log('📺 Fullscreen exited via ESC');
+                } else {
+                    // Entered fullscreen
+                    const icon = fullscreenBtn?.querySelector('i');
+                    const text = fullscreenBtn?.querySelector('span');
+                    if (icon) {
+                        icon.className = 'fas fa-compress';
+                    }
+                    if (text) {
+                        text.textContent = 'Exit';
+                    }
+                    if (fullscreenBtn) {
+                        fullscreenBtn.title = 'Exit Fullscreen (Esc)';
+                    }
+                    console.log('📺 Fullscreen entered');
+                }
             });
-
-            // Fullscreen toggle for README and Explanation tabs only
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            const docSection = document.getElementById('documentationSection');
-            
-            if (fullscreenBtn && docSection) {
-                fullscreenBtn.addEventListener('click', async () => {
-                    // Only allow fullscreen for README and Explanation tabs
-                    const activeTab = document.querySelector('.doc-tab.active');
-                    const activeTabName = activeTab?.dataset.tab;
-                    
-                    if (activeTabName !== 'readme' && activeTabName !== 'explanation') {
-                        alert('Fullscreen is only available for README and Explanation tabs');
-                        console.log('⚠️ Fullscreen not allowed for', activeTabName, 'tab');
-                        return;
-                    }
-                    
-                    try {
-                        // Request true fullscreen using Fullscreen API
-                        if (!document.fullscreenElement) {
-                            // Enter fullscreen
-                            await docSection.requestFullscreen();
-                            
-                            const icon = fullscreenBtn.querySelector('i');
-                            const text = fullscreenBtn.querySelector('span');
-                            icon.className = 'fas fa-compress';
-                            text.textContent = 'Exit Fullscreen';
-                            fullscreenBtn.title = 'Exit Fullscreen (Esc)';
-                            
-                            // Regenerate TOC for fullscreen mode
-                            setTimeout(() => {
-                                generateTOC();
-                                console.log('📋 TOC regenerated for fullscreen');
-                            }, 100);
-                            
-                            console.log('📺 True fullscreen activated');
-                        } else {
-                            // Exit fullscreen
-                            await document.exitFullscreen();
-                            
-                            const icon = fullscreenBtn.querySelector('i');
-                            const text = fullscreenBtn.querySelector('span');
-                            icon.className = 'fas fa-expand';
-                            text.textContent = 'Fullscreen';
-                            fullscreenBtn.title = 'Toggle Fullscreen';
-                            
-                            console.log('📺 Fullscreen exited');
-                        }
-                    } catch (error) {
-                        console.error('❌ Fullscreen request failed:', error);
-                        // Fallback to CSS fullscreen if API not supported
-                        docSection.classList.toggle('fullscreen-fallback');
-                    }
-                });
-                
-                // ESC key to exit fullscreen (browser handles this automatically)
-                document.addEventListener('fullscreenchange', () => {
-                    if (!document.fullscreenElement) {
-                        // User pressed ESC or fullscreen was exited
-                        const icon = fullscreenBtn.querySelector('i');
-                        const text = fullscreenBtn.querySelector('span');
-                        if (icon) {
-                            icon.className = 'fas fa-expand';
-                            text.textContent = 'Fullscreen';
-                            fullscreenBtn.title = 'Toggle Fullscreen';
-                        }
-                        console.log('📺 Fullscreen exited via ESC');
-                    }
-                });
-                
-                // Also check if fullscreen is possible when tab changes
-                document.querySelectorAll('.doc-tab').forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        const tabName = tab.dataset.tab;
-                        
-                        if (tabName === 'code') {
-                            // Disable fullscreen button for Code tab
-                            fullscreenBtn.disabled = true;
-                            fullscreenBtn.style.opacity = '0.5';
-                            fullscreenBtn.style.cursor = 'not-allowed';
-                            fullscreenBtn.title = 'Fullscreen only available for README & Explanation';
-                        } else if (tabName === 'readme' || tabName === 'explanation') {
-                            // Enable fullscreen button for README/Explanation
-                            fullscreenBtn.disabled = false;
-                            fullscreenBtn.style.opacity = '1';
-                            fullscreenBtn.style.cursor = 'pointer';
-                            fullscreenBtn.title = 'Toggle Fullscreen';
-                            
-                            // Exit fullscreen if currently in fullscreen and switching to code
-                        } else {
-                            fullscreenBtn.disabled = true;
-                            fullscreenBtn.style.opacity = '0.5';
-                            fullscreenBtn.style.cursor = 'not-allowed';
-                        }
-                    });
-                });
-            }
             
             // Keyboard Navigation
             document.addEventListener('keydown', (e) => {
@@ -3632,6 +3675,8 @@
                     }
                 }
             });
+            
+            console.log('✅ Event listeners setup complete');
         }
 
         // Initialize

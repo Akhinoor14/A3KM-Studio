@@ -212,11 +212,11 @@
         
         // Detect project type: check URL category OR project-specific properties
         const isMATLAB = urlCategory === 'matlab' || 
-                        currentProject.id?.startsWith('matlab-') || 
+                        (typeof currentProject.id === 'string' && currentProject.id.startsWith('matlab-')) || 
                         currentProject.toolboxes || 
                         currentProject.matlabVersion ||
                         (currentProject.files?.code && currentProject.files.code.endsWith('.m'));
-        const isArduino = urlCategory === 'arduino' || currentProject.id?.startsWith('arduino-');
+        const isArduino = urlCategory === 'arduino' || (typeof currentProject.id === 'string' && currentProject.id.startsWith('arduino-'));
         const isElectronics = urlCategory === 'electronics';
         
         const hasGLB = currentProject.glbFile && urlCategory === 'solidworks';
