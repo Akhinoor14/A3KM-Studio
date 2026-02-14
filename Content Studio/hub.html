@@ -167,7 +167,7 @@
         .hub-stats {
             display: flex;
             justify-content: center;
-            gap: 50px;
+            gap: 35px;
             flex-wrap: wrap;
             margin-top: 30px;
             position: relative;
@@ -178,13 +178,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            padding: 15px 25px;
+            gap: 8px;
+            padding: 18px 22px;
             background: rgba(20, 20, 20, 0.6);
             border: 1px solid var(--border-primary);
             border-radius: 12px;
             backdrop-filter: blur(10px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 120px;
         }
 
         .stat-item:hover {
@@ -194,19 +195,27 @@
             box-shadow: 0 10px 30px rgba(204, 0, 0, 0.2);
         }
 
+        .stat-item > i {
+            font-size: 1.8rem;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--primary-red);
             text-shadow: 0 0 20px rgba(204, 0, 0, 0.5);
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.2;
         }
 
         /* Content Grid - Engineering Architecture */
@@ -514,19 +523,24 @@
             }
 
             .hub-stats {
-                gap: 25px;
+                gap: 20px;
             }
 
             .stat-item {
-                padding: 12px 20px;
+                padding: 12px 18px;
+                min-width: 100px;
+            }
+
+            .stat-item > i {
+                font-size: 1.5rem;
             }
 
             .stat-number {
-                font-size: 1.6rem;
+                font-size: 1.5rem;
             }
 
             .stat-label {
-                font-size: 0.8rem;
+                font-size: 0.7rem;
             }
 
             .content-grid {
@@ -681,20 +695,29 @@
         <p>Explore our comprehensive collection of videos, books, posts, papers, and educational courses</p>
         <div class="hub-stats">
             <div class="stat-item">
+                <i class="fab fa-youtube" style="color: #FF0000;"></i>
                 <span class="stat-number" data-type="videos">0</span>
-                <span class="stat-label">Videos</span>
+                <span class="stat-label">Vlogs</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number" data-type="books-papers">0</span>
-                <span class="stat-label">Books & Papers</span>
+                <i class="fas fa-book" style="color: #00897B;"></i>
+                <span class="stat-number" data-type="books">0</span>
+                <span class="stat-label">Books & PDFs</span>
             </div>
             <div class="stat-item">
+                <i class="fas fa-pen-fancy" style="color: #8B0000;"></i>
                 <span class="stat-number" data-type="posts">0</span>
-                <span class="stat-label">Articles</span>
+                <span class="stat-label">Blog Posts</span>
             </div>
             <div class="stat-item">
+                <i class="fas fa-file-alt" style="color: #1565C0;"></i>
+                <span class="stat-number" data-type="papers">0</span>
+                <span class="stat-label">Research Papers</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-chalkboard-teacher" style="color: #FF6F00;"></i>
                 <span class="stat-number" data-type="courses">0</span>
-                <span class="stat-label">Courses</span>
+                <span class="stat-label">Educational Courses</span>
             </div>
         </div>
     </section>
@@ -798,12 +821,18 @@
                     fetch('./research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
                 ]);
                 
-                // Count videos from all groups
+                // Count videos from all categories
                 let videoCount = 0;
-                if (videosData.videoGroups && Array.isArray(videosData.videoGroups)) {
-                    videosData.videoGroups.forEach(group => {
-                        if (group.videos && Array.isArray(group.videos)) {
-                            videoCount += group.videos.length;
+                if (videosData.categories && typeof videosData.categories === 'object') {
+                    // Loop through each content type (video-blog, educational, etc.)
+                    Object.values(videosData.categories).forEach(contentType => {
+                        if (contentType && typeof contentType === 'object') {
+                            // Loop through each category within the content type
+                            Object.values(contentType).forEach(category => {
+                                if (category.videos && Array.isArray(category.videos)) {
+                                    videoCount += category.videos.length;
+                                }
+                            });
                         }
                     });
                 }
@@ -823,11 +852,14 @@
                         case 'videos': 
                             count = videoCount; 
                             break;
-                        case 'books-papers': 
-                            count = bookCount + paperCount; 
+                        case 'books': 
+                            count = bookCount; 
                             break;
                         case 'posts': 
                             count = postCount; 
+                            break;
+                        case 'papers': 
+                            count = paperCount; 
                             break;
                         case 'courses': 
                             count = courseCount; 

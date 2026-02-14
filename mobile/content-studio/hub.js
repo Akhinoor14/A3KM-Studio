@@ -34,26 +34,34 @@
     async function loadContentCounts() {
         try {
             // Load all JSON files in parallel
-            const [videosData, postsData, booksData, coursesData] = await Promise.all([
-                fetch('../../../Content Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
-                fetch('../../../Content Studio/written-posts/posts.json').then(r => r.json()).catch(() => ({posts: []})),
-                fetch('../../../Content Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
-                fetch('../../../Content Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []}))
+            const [videosData, contentData, booksData, coursesData, papersData] = await Promise.all([
+                fetch('../../Content Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
+                fetch('../../Content Code/content.json').then(r => r.json()).catch(() => ({'written-posts': []})),
+                fetch('../../Content Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
+                fetch('../../Content Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []})),
+                fetch('../../Content Studio/research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
             ]);
             
-            // Count videos from all groups
+            // Count videos from all categories
             let videoCount = 0;
-            if (videosData.videoGroups && Array.isArray(videosData.videoGroups)) {
-                videosData.videoGroups.forEach(group => {
-                    if (group.videos && Array.isArray(group.videos)) {
-                        videoCount += group.videos.length;
+            if (videosData.categories && typeof videosData.categories === 'object') {
+                // Loop through each content type (video-blog, educational, etc.)
+                Object.values(videosData.categories).forEach(contentType => {
+                    if (contentType && typeof contentType === 'object') {
+                        // Loop through each category within the content type
+                        Object.values(contentType).forEach(category => {
+                            if (category.videos && Array.isArray(category.videos)) {
+                                videoCount += category.videos.length;
+                            }
+                        });
                     }
                 });
             }
             
-            const postCount = (postsData.posts || []).length;
+            const postCount = (contentData['written-posts'] || []).length;
             const bookCount = (booksData.books || []).length;
             const courseCount = (coursesData.courses || []).length;
+            const paperCount = (papersData.papers || []).length;
             
             // Update stat numbers
             const statElements = document.querySelectorAll('.stat-number');
@@ -65,13 +73,14 @@
                     case 'videos': count = videoCount; break;
                     case 'posts': count = postCount; break;
                     case 'books': count = bookCount; break;
+                    case 'papers': count = paperCount; break;
                     case 'courses': count = courseCount; break;
                 }
                 
                 el.textContent = count;
             });
             
-            console.log('📊 Mobile Hub Counts:', { videos: videoCount, posts: postCount, books: bookCount, courses: courseCount });
+            console.log('📊 Mobile Hub Counts:', { videos: videoCount, posts: postCount, books: bookCount, papers: paperCount, courses: courseCount });
         } catch (error) {
             console.error('❌ Failed to load content counts:', error);
         }

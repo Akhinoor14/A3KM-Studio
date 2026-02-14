@@ -67,13 +67,13 @@
             const urlParams = new URLSearchParams(window.location.search);
             const category = urlParams.get('category');
             
-            let dataSource = '../../Projects%20Code/projects.json';
+            let dataSource = '../../Projects Code/projects.json';
             
             // Load from appropriate data source based on category
             if (category === 'arduino') {
-                dataSource = '../../Projects%20Code/Arduino/arduino-data.json';
+                dataSource = '../../Projects Code/Arduino/arduino-data.json';
             } else if (category === 'matlab') {
-                dataSource = '../../Projects%20Code/MATLAB/matlab-data.json';
+                dataSource = '../../Projects Code/MATLAB/matlab-data.json';
             }
             
             console.log(`🔍 Loading from: ${dataSource} (category: ${category})`);
@@ -236,7 +236,7 @@
         let imageUrls = [];
         if (isMATLAB && nestedImages) {
             // MATLAB: Build paths from files.images array
-            const basePath = `../../Projects%20Storage/MATLAB%20Projects/${currentProject.folder || currentProject.id}/`;
+            const basePath = `../../Projects Storage/MATLAB Projects/${currentProject.folder || currentProject.id}/`;
             imageUrls = currentProject.files.images.map(img => basePath + img);
         } else if (topLevelImages) {
             // Arduino/SolidWorks: Use direct URLs
@@ -504,7 +504,7 @@
                 <div style="background: rgba(0,151,157,0.1); border-radius: 12px; border: 2px solid rgba(0,151,157,0.3); overflow: hidden;">
                     ${isArduino && currentProject.files?.circuit && currentProject.folder ? `
                     <div style="width: 100%; height: 200px; background: #0a0a0a; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.circuit}" 
+                        <img src="../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.circuit}" 
                              alt="Circuit Diagram" 
                              style="width: 100%; height: 100%; object-fit: contain; opacity: 0.85;"
                              onerror="this.parentElement.innerHTML='<i class=\'fas fa-microchip\' style=\'font-size:48px;color:#00979d;opacity:0.3;\'></i>'">
@@ -841,7 +841,7 @@
             // For Arduino projects, construct full path from JSON data
             if (isArduino && !codePath && currentProject.files && currentProject.folder) {
                 const codeFile = currentProject.files.code || currentProject.codeFile;
-                codePath = `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${codeFile}`;
+                codePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${codeFile}`;
             }
             
             // For MATLAB projects, construct full path from JSON data
@@ -861,7 +861,7 @@
             
             // For Arduino projects, construct full path
             if (isArduino && !readmePath && currentProject.files && currentProject.folder) {
-                readmePath = `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.readme}`;
+                readmePath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.readme}`;
             }
             
             if (readmePath) {
@@ -874,7 +874,7 @@
             
             // For Arduino projects, construct full path
             if (isArduino && !explanationPath && currentProject.files && currentProject.folder) {
-                explanationPath = `../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.explanation}`;
+                explanationPath = `../../Projects Storage/Arduino UNO Projects with Tinkercad/${encodeURIComponent(currentProject.folder)}/${currentProject.files.explanation}`;
             }
             
             if (explanationPath) {

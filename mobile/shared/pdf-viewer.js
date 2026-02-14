@@ -471,7 +471,20 @@ function createViewerUI() {
  */
 async function loadPDF(url) {
     try {
-        const loadingTask = UniversalPDFViewer.pdfjsLib.getDocument(url);
+        console.log('🔄 Loading PDF from:', url);
+        
+        // Prevent browser from downloading - load as blob
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        console.log('✅ PDF fetched as blob, loading with PDF.js...');
+        
+        const loadingTask = UniversalPDFViewer.pdfjsLib.getDocument(blobUrl);
         UniversalPDFViewer.pdfDoc = await loadingTask.promise;
         UniversalPDFViewer.totalPages = UniversalPDFViewer.pdfDoc.numPages;
         
@@ -484,7 +497,7 @@ async function loadPDF(url) {
         
     } catch (error) {
         console.error('❌ Failed to load PDF:', error);
-        showPDFError('Failed to load PDF file. Please try again.');
+        showPDFError(`Failed to load PDF: ${error.message || 'Unknown error'}`);
     }
 }
 

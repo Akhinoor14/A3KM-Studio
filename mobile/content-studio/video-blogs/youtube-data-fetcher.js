@@ -11,10 +11,21 @@ class YouTubeDataFetcher {
         this.apiKey = typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.API_KEY : null;
         this.hasValidKey = this.apiKey && !this.apiKey.includes('XXXXXXX') && this.apiKey !== 'YOUR_YOUTUBE_API_KEY_HERE';
         
+        console.log('🔧 YouTube Data Fetcher initializing...');
+        console.log(`YOUTUBE_CONFIG exists: ${typeof YOUTUBE_CONFIG !== 'undefined'}`);
+        console.log(`API Key present: ${!!this.apiKey}`);
+        console.log(`API Key first 10 chars: ${this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'N/A'}`);
+        console.log(`Has valid key: ${this.hasValidKey}`);
+        
         if (this.hasValidKey) {
-            console.log('✅ YouTube Data Fetcher initialized with API key');
+            console.log('✅ YouTube Data Fetcher initialized with VALID API key');
         } else {
-            console.log('⚠️ YouTube Data Fetcher: Using fallback mode (no API key)');
+            console.warn('⚠️ YouTube Data Fetcher: Using fallback mode (NO VALID API KEY)');
+            if (!this.apiKey) {
+                console.error('❌ API key is missing!');
+            } else if (this.apiKey.includes('XXXXXXX')) {
+                console.error('❌ API key is placeholder (XXXXXXX)');
+            }
         }
     }
 
@@ -41,19 +52,28 @@ class YouTubeDataFetcher {
     // ==================== FETCH WITH YOUTUBE API ====================
 
     async fetchWithAPI(videoId) {
-        if (!this.hasValidKey) return null;
+        if (!this.hasValidKey) {
+            console.warn('❌ YouTube API: No valid API key');
+            return null;
+        }
 
         try {
             const url = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?id=${videoId}&part=${YOUTUBE_CONFIG.PARTS.join(',')}&key=${this.apiKey}`;
+            console.log(`🔄 Fetching YouTube data for video: ${videoId}`);
             
             const response = await fetch(url);
+            console.log(`📡 API Response status: ${response.status}`);
+            
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ API Error ${response.status}:`, errorText);
                 throw new Error(`API Error: ${response.status}`);
             }
 
             const data = await response.json();
             
             if (!data.items || data.items.length === 0) {
+                console.warn(`⚠️ No video data found for: ${videoId}`);
                 throw new Error('Video not found');
             }
 
@@ -62,7 +82,7 @@ class YouTubeDataFetcher {
             const statistics = item.statistics || {};
             const contentDetails = item.contentDetails || {};
 
-            return {
+            const videoData = {
                 id: videoId,
                 title: snippet.title || 'Unknown Title',
                 author: snippet.channelTitle || 'Unknown Channel',
@@ -84,6 +104,9 @@ class YouTubeDataFetcher {
                 type: this.detectVideoType(snippet.title),
                 fetchedAt: new Date().toISOString()
             };
+            
+            console.log(`✅ Fetched YouTube data: ${videoData.title} (${videoData.duration}, ${videoData.views} views)`);
+            return videoData;
         } catch (error) {
             console.error('YouTube API fetch failed:', error);
             return null;
@@ -207,14 +230,18 @@ class YouTubeDataFetcher {
     // ==================== ENHANCE EXISTING VIDEO DATA ====================
 
     async enhanceVideoData(video) {
-        if (!video || !video.videoId) return video;
+        if (!video || !video.videoId) {
+            console.warn('❌ Cannot enhance video: Missing video or videoId', video);
+            return video;
+        }
 
         try {
+            console.log(`🔄 Enhancing video: ${video.title} (${video.videoId})`);
             const fetchedData = await this.fetchVideoData(video.videoId);
             
             if (fetchedData) {
                 // Merge with existing data, preferring content.json data but adding API stats
-                return {
+                const enhanced = {
                     ...video,
                     duration: fetchedData.duration || video.duration || '0:00',
                     views: fetchedData.views || video.views || 0,
@@ -226,9 +253,13 @@ class YouTubeDataFetcher {
                     apiEnhanced: true,
                     lastFetched: fetchedData.fetchedAt
                 };
+                console.log(`✅ Enhanced: ${enhanced.title} - Views: ${enhanced.views}, Duration: ${enhanced.duration}`);
+                return enhanced;
+            } else {
+                console.warn(`⚠️ No API data received for: ${video.title}`);
             }
         } catch (error) {
-            console.error('Failed to enhance video:', error);
+            console.error(`❌ Failed to enhance video ${video.title}:`, error);
         }
 
         return video;
@@ -237,20 +268,34 @@ class YouTubeDataFetcher {
     // ==================== BATCH ENHANCE VIDEOS ====================
 
     async enhanceMultipleVideos(videos) {
-        if (!videos || videos.length === 0) return videos;
+        if (!videos || videos.length === 0) {
+            console.warn('⚠️ No videos to enhance');
+            return videos;
+        }
 
         console.log(`🔄 Enhancing ${videos.length} videos with YouTube data...`);
         
         const enhanced = [];
-        for (const video of videos) {
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (let i = 0; i < videos.length; i++) {
+            const video = videos[i];
+            console.log(`📹 Processing ${i + 1}/${videos.length}: ${video.title}`);
             const enhancedVideo = await this.enhanceVideoData(video);
             enhanced.push(enhancedVideo);
+            
+            if (enhancedVideo.apiEnhanced) {
+                successCount++;
+            } else {
+                failCount++;
+            }
             
             // Small delay to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        console.log(`✅ Enhanced ${enhanced.length} videos`);
+        console.log(`✅ Batch complete: ${successCount} enhanced, ${failCount} failed out of ${videos.length} videos`);
         return enhanced;
     }
 

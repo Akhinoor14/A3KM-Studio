@@ -1024,30 +1024,29 @@
                             </div>
 
                             <div class="form-group">
-                                <label><i class="fas fa-folder"></i> Category *</label>
-                                <select id="projectCategory" onchange="updateCategoryHelper()" required>
-                                    <option value="">Select category...</option>
-                                    <option value="parts">Parts</option>
-                                    <option value="assemblies">Assemblies</option>
-                                    <option value="drawings">Drawings</option>
-                                    <option value="mechanical">Mechanical Design</option>
-                                    <option value="industrial">Industrial Design</option>
-                                </select>
-                                <small id="categoryHelper" style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;"></small>
-                            </div>
+                    <label><i class="fas fa-folder"></i> Category (Difficulty Level) *</label>
+                    <select id="projectCategory" onchange="updateCategoryHelper()" required>
+                        <option value="">Select category...</option>
+                        <option value="basic-models">⭐ Basic Models - Beginner</option>
+                        <option value="intermediate-models">⭐⭐ Intermediate Models</option>
+                        <option value="professional-models">⭐⭐⭐ Professional Models</option>
+                        <option value="commercial-projects">💼 Commercial Projects</option>
+                    </select>
+                    <small id="categoryHelper" style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;">Choose skill level (Basic/Intermediate/Professional/Commercial)</small>
+                </div>
 
-                            <div class="form-group">
-                                <label><i class="fas fa-star"></i> Difficulty Level *</label>
-                                <select id="projectDifficulty" required>
-                                    <option value="">Select level...</option>
-                                    <option value="beginner">⭐ Beginner - Basic Models</option>
-                                    <option value="intermediate">⭐⭐ Intermediate - Complex Assemblies</option>
-                                    <option value="pro">⭐⭐⭐ Professional - Advanced Designs</option>
-                                    <option value="paid">💼 Commercial - Client Projects</option>
-                                </select>
-                                <small style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;">
-                                    Each level has independent numbering (Model 1, 2, 3...)
-                                </small>
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Type *</label>
+                    <select id="projectType" required>
+                        <option value="">Select type...</option>
+                        <option value="parts">Parts</option>
+                        <option value="assemblies">Assemblies</option>
+                        <option value="drawings">Drawings</option>
+                        <option value="mechanical">Mechanical Design</option>
+                        <option value="industrial">Industrial Design</option>
+                    </select>
+                    <small style="color: #ff4500; display: block; margin-top: 5px; font-style: italic;">
+                        Type classification: Parts, Assemblies, etc.
                             </div>
 
                             <div class="form-group full-width">
@@ -1300,6 +1299,13 @@
                         </div>
                         <select id="bulkCategory" style="padding: 8px 12px; border: 2px solid #ff4500; border-radius: 6px; background: white;">
                             <option value="">-- Move to Category --</option>
+                            <option value="basic-models">⭐ Basic Models</option>
+                            <option value="intermediate-models">⭐⭐ Intermediate Models</option>
+                            <option value="professional-models">⭐⭐⭐ Professional Models</option>
+                            <option value="commercial-projects">💼 Commercial Projects</option>
+                        </select>
+                        <select id="bulkType" style="padding: 8px 12px; border: 2px solid #ff4500; border-radius: 6px; background: white;">
+                            <option value="">-- Change Type --</option>
                             <option value="parts">Parts</option>
                             <option value="assemblies">Assemblies</option>
                             <option value="drawings">Drawings</option>
@@ -1307,7 +1313,7 @@
                             <option value="industrial">Industrial Design</option>
                         </select>
                         <button class="btn" style="background: rgba(255, 69, 0, 0.2); border-color: #ff4500; color: #ff4500;" onclick="bulkMoveCategory()">
-                            <i class="fas fa-folder-open"></i> Move
+                            <i class="fas fa-edit"></i> Update
                         </button>
                         <button class="btn-danger" style="padding: 8px 16px; border-radius: 6px;" onclick="bulkDelete()">
                             <i class="fas fa-trash"></i> Delete
@@ -1761,13 +1767,13 @@
             // Collect form data
             const title = sanitizeInput(document.getElementById('projectTitle').value.trim());
             const category = document.getElementById('projectCategory').value;
+            const type = document.getElementById('projectType').value;
             const description = sanitizeInput(document.getElementById('projectDescription').value.trim());
-            const difficulty = document.getElementById('projectDifficulty').value;
             const subtitle = sanitizeInput(document.getElementById('projectSubtitle').value.trim());
             
             // Validation
-            if (!title || !category || !description || !difficulty) {
-                alert('⚠️ Please fill in all required fields (Title, Category, Description, Difficulty)!');
+            if (!title || !category || !type || !description) {
+                alert('⚠️ Please fill in all required fields (Title, Category, Type, Description)!');
                 return;
             }
             
@@ -1794,21 +1800,21 @@
             const partsCountValue = document.getElementById('partsCount')?.value || null;
             const weightValue = document.getElementById('weight')?.value || null;
             
-            // Generate next ID (independent per difficulty level)
-            const projectsInLevel = projectsData.projects.filter(p => p.difficulty === difficulty);
+            // Generate next ID (independent per category level)
+            const projectsInLevel = projectsData.projects.filter(p => p.category === category);
             const nextId = projectsInLevel.length > 0 
                 ? Math.max(...projectsInLevel.map(p => p.id)) + 1 
                 : 1;
             
-            // Generate folder name with difficulty prefix (matching storage structure)
+            // Generate folder name with category prefix (matching storage structure)
             const folderNumber = String(nextId).padStart(2, '0');
             const folderMappings = {
-                'beginner': 'Basic (Practice) Models',
-                'intermediate': 'Intermediate (Practice) Models',
-                'pro': 'Pro (Practice) Models',
-                'paid': 'Paid (Selled) Models'
+                'basic-models': '01 Basic Part',
+                'intermediate-models': '02 Intermediate Part',
+                'professional-models': '03 Professional Part',
+                'commercial-projects': '04 Commercial Project'
             };
-            const folderPrefix = folderMappings[difficulty];
+            const folderPrefix = folderMappings[category];
             const folderName = `${folderPrefix}/Model ${folderNumber} ${title}`;
             
             // Collect uploaded files
@@ -1828,10 +1834,10 @@
                 id: nextId,
                 folder: folderName,
                 title: title,
-                subtitle: subtitle || `${projectsData.categories[category].name} Project`,
+                subtitle: subtitle || `${type} Project`,
                 description: description,
                 category: category,
-                difficulty: difficulty,
+                type: type,
                 features: features,
                 materials: materials,
                 partsCount: partsCountValue,
@@ -1858,19 +1864,20 @@
             updateJSONEditor();
             updateFolderStructure();
             
-            // Difficulty-specific instructions
-            const levelNames = {
-                'beginner': '⭐ Beginner',
-                'intermediate': '⭐⭐ Intermediate',
-                'pro': '⭐⭐⭐ Professional',
-                'paid': '💼 Commercial'
+            // Category-specific display names
+            const categoryNames = {
+                'basic-models': '⭐ Basic Models',
+                'intermediate-models': '⭐⭐ Intermediate Models',
+                'professional-models': '⭐⭐⭐ Professional Models',
+                'commercial-projects': '💼 Commercial Projects'
             };
             
-            const dataFiles = {
-                'beginner': 'solidworks-models-data.js',
-                'intermediate': 'solidworks-intermediate-data.js',
-                'pro': 'solidworks-pro-data.js',
-                'paid': 'solidworks-paid-data.js'
+            const typeNames = {
+                'parts': 'Parts',
+                'assemblies': 'Assemblies',
+                'drawings': 'Drawings',
+                'mechanical': 'Mechanical Design',
+                'industrial': 'Industrial Design'
             };
             
             const featuresList = features.length > 0 ? features.join(', ') : 'None specified';
@@ -1881,9 +1888,9 @@
             // Success message with clear instructions
             alert(
                 `✅ SolidWorks Project Created Successfully!\n\n` +
-                `🏆 Level: ${levelNames[difficulty]}\n` +
+                `🏆 Category: ${categoryNames[category]}\n` +
+                `🏷️ Type: ${typeNames[type]}\n` +
                 `📁 Folder: "${folderName}"\n` +
-                `📂 Category: ${projectsData.categories[category].name}\n` +
                 `🔢 ID: Model ${nextId}\n` +
                 `🛠️ Features: ${features.length}\n` +
                 `🎨 Materials: ${materials.length}` +
@@ -1895,11 +1902,9 @@
                 `1. Download JSON from JSON Editor tab\n` +
                 `2. Create folder in GitHub:\n` +
                 `   Projects Storage/Solidwork Projects/${folderName}/\n` +
-                `   (Example: Model 01 Gear Assembly/)\n` +
                 `3. Upload CAD files, images, and docs\n` +
-                `4. Update ${dataFiles[difficulty]} in:\n` +
-                `   Projects Code/solidworks/\n` +
-                `5. Your model will appear in ${levelNames[difficulty]} gallery!`
+                `4. Update solidworks-data.json in Projects Code/solidworks/\n` +
+                `5. Your model will appear in ${categoryNames[category]} gallery!`
             );
             
             // Reset form
@@ -1958,7 +1963,7 @@
             const category = document.getElementById('projectCategory').value;
             const subtitle = sanitizeInput(document.getElementById('projectSubtitle').value);
             const description = sanitizeInput(document.getElementById('projectDescription').value);
-            const difficulty = document.getElementById('projectDifficulty')?.value || 'Intermediate';
+            const type = document.getElementById('projectType')?.value || 'parts';
 
             // Get selected features
             const features = [];
@@ -1989,11 +1994,11 @@
             const newProject = {
                 id: nextId,
                 category: category,
+                type: type,
                 folder: folderName,
                 title: title,
                 subtitle: subtitle,
                 description: description,
-                difficulty: difficulty,
                 features: features,
                 materials: materials,
                 partsCount: partsCount,
@@ -2027,7 +2032,7 @@
             
             const detailsText = details.length > 0 ? '\n\n' + details.join('\n') : '';
             
-            alert(`✅ Project Created Successfully!\n\n📁 Folder: "${folderName}"\n🆔 ID: ${nextId}\n🎯 Difficulty: ${difficulty}${detailsText}\n\n📋 Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder in Projects Storage\n3. Upload CAD files and images\n4. Push changes to GitHub`);
+            alert(`✅ Project Created Successfully!\n\n📁 Folder: "${folderName}"\n🆔 ID: ${nextId}\n🎯 Category: ${category}\n🏷️ Type: ${type}${detailsText}\n\n📋 Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder in Projects Storage\n3. Upload CAD files and images\n4. Push changes to GitHub`);
 
             // Reset form
             this.reset();
@@ -2310,7 +2315,7 @@
             document.getElementById('editTitle').value = project.title;
             document.getElementById('editSubtitle').value = project.subtitle || '';
             document.getElementById('editCategory').value = project.category;
-            document.getElementById('editDifficulty').value = project.difficulty || 'Intermediate';
+            document.getElementById('editType').value = project.type || 'parts';
             document.getElementById('editDescription').value = project.description || '';
             document.getElementById('editPartsCount').value = project.partsCount || '';
             document.getElementById('editWeight').value = project.weight || '';
@@ -2496,7 +2501,7 @@
             project.title = newTitle;
             project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
             project.category = document.getElementById('editCategory').value;
-            project.difficulty = document.getElementById('editDifficulty').value;
+            project.type = document.getElementById('editType').value;
             project.description = sanitizeInput(document.getElementById('editDescription').value.trim());
             project.partsCount = document.getElementById('editPartsCount').value ? parseInt(document.getElementById('editPartsCount').value) : null;
             project.weight = document.getElementById('editWeight').value ? parseFloat(document.getElementById('editWeight').value) : null;
@@ -2911,27 +2916,28 @@ This part is designed for [specific application] in [industry/system].`
                     <div class="edit-form-group">
                         <label>
                             <i class="fas fa-folder"></i>
-                            Category *
+                            Category (Skill Level) *
                         </label>
                         <select id="editCategory" class="form-input" required>
                             <option value="">-- Select Category --</option>
-                            <option value="parts">🔩 Parts Design</option>
-                            <option value="assemblies">🏭️ Assemblies</option>
-                            <option value="mechanical">⚙️ Mechanical Systems</option>
-                            <option value="industrial">🏭 Industrial Design</option>
+                            <option value="basic-models">⭐ Basic Models</option>
+                            <option value="intermediate-models">⭐⭐ Intermediate Models</option>
+                            <option value="professional-models">⭐⭐⭐ Professional Models</option>
+                            <option value="commercial-projects">💼 Commercial Projects</option>
                         </select>
                     </div>
 
                     <div class="edit-form-group">
                         <label>
-                            <i class="fas fa-signal"></i>
-                            Difficulty Level
+                            <i class="fas fa-tag"></i>
+                            Type
                         </label>
-                        <select id="editDifficulty" class="form-input">
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Professional">Professional</option>
-                            <option value="Commercial">Commercial</option>
+                        <select id="editType" class="form-input">
+                            <option value="parts">🔩 Parts</option>
+                            <option value="assemblies">🏭 Assemblies</option>
+                            <option value="drawings">📐 Drawings</option>
+                            <option value="mechanical">⚙️ Mechanical Design</option>
+                            <option value="industrial">🏭 Industrial Design</option>
                         </select>
                     </div>
                 </div>

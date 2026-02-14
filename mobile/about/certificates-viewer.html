@@ -742,8 +742,6 @@ function renderCertificates(){
             `:''}            
             ${!isManual && !cert.filePath && !cert.image?`<div style="padding:10px;margin-top:12px;background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.2);border-radius:8px;text-align:center;"><i class="fas fa-lock" style="color:#CC0000;font-size:12px;margin-right:4px;"></i><span style="font-size:11px;color:rgba(180,180,180,0.8);">Certificate not available</span></div>`:''}        </div>
     `}).join('');
-    
-    addHapticFeedback();
 }
 
 function handleFilterChange(e){
@@ -755,16 +753,11 @@ function handleFilterChange(e){
     renderCertificates();
 }
 
-function addHapticFeedback(){
-    document.querySelectorAll('.cert-card,.view-btn').forEach(el=>{
-        el.addEventListener('touchstart',()=>{
-            if(navigator.vibrate)navigator.vibrate(10);
-        });
-    });
-}
-
 function viewCertificate(filePath){
-    if(!filePath)return;
+    if(!filePath){
+        console.error('❌ No file path provided');
+        return;
+    }
     
     console.log('📱 Opening certificate:', filePath);
     
@@ -781,20 +774,33 @@ function viewCertificate(filePath){
         console.log('📸 Opening image certificate:', fileName);
         openImageViewer(filePath, fileName);
     } else if (pdfExtensions.includes(fileExt)) {
-        // Open PDF in PDF viewer
-        console.log('📄 Opening PDF certificate:', fileName);
-        openMobilePDFViewer({
-            filePath: filePath,
-            fileType: fileExt,
-            title: '📄 Certificate Viewer',
-            downloadName: fileName,
-            showDownload: true,
-            allowZoom: true
-        });
+        // Open PDF in custom PDF viewer - NEVER let browser download
+        console.log('📄 Opening PDF certificate in custom viewer:', fileName);
+        
+        // Make sure PDF viewer is loaded
+        if (typeof openMobilePDFViewer !== 'function') {
+            console.error('❌ PDF viewer not loaded!');
+            alert('PDF viewer is loading. Please try again in a moment.');
+            return;
+        }
+        
+        try {
+            openMobilePDFViewer({
+                filePath: filePath,
+                fileType: fileExt,
+                title: '📄 ' + fileName,
+                downloadName: fileName,
+                showDownload: true,
+                allowZoom: true
+            });
+        } catch (error) {
+            console.error('❌ Error opening PDF viewer:', error);
+            alert('Failed to open PDF viewer. Error: ' + error.message);
+        }
     } else {
-        // Unsupported file type - try to open in new tab
-        console.log('⚠️ Unsupported file type, opening in new tab');
-        window.open(filePath, '_blank');
+        // Unsupported file type
+        console.warn('⚠️ Unsupported file type:', fileExt);
+        alert('Unsupported file type: ' + fileExt);
     }
 }
 

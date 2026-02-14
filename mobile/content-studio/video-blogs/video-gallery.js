@@ -73,15 +73,30 @@
             console.log(`📂 Categories: ${categories.join(', ')}`);
             
             // Enhance videos with YouTube data in background
+            console.log('🔍 Checking for YouTube API fetcher...');
+            console.log(`window.youtubeFetcher exists: ${!!window.youtubeFetcher}`);
+            console.log(`allVideos.length: ${allVideos.length}`);
+            
             if (window.youtubeFetcher && allVideos.length > 0) {
-                console.log('🔄 Fetching YouTube data for videos...');
+                console.log('✅ Starting YouTube data enhancement...');
+                console.log(`First video to enhance: ${allVideos[0].title} (ID: ${allVideos[0].videoId})`);
+                
                 window.youtubeFetcher.enhanceMultipleVideos(allVideos).then(enhanced => {
+                    console.log('✅ Enhancement complete, updating video list...');
                     allVideos = enhanced;
-                    console.log('✅ Videos enhanced with YouTube data');
+                    console.log(`Sample enhanced video: ${enhanced[0].title} - Views: ${enhanced[0].views}, Duration: ${enhanced[0].duration}`);
                     renderVideos(); // Re-render with enhanced data
                 }).catch(err => {
-                    console.warn('⚠️ Failed to enhance videos:', err);
+                    console.error('❌ Enhancement failed:', err);
+                    console.error('Error stack:', err.stack);
                 });
+            } else {
+                if (!window.youtubeFetcher) {
+                    console.error('❌ window.youtubeFetcher is not available!');
+                }
+                if (allVideos.length === 0) {
+                    console.warn('⚠️ No videos loaded to enhance');
+                }
             }
             
             hideLoadingState();

@@ -1,6 +1,6 @@
 // ============================================================================
-// POST LISTING - Written Posts Section (Mobile)
-// Displays blog posts and articles from content.json
+// POST LISTING - Blog Posts Section (Mobile)
+// Displays blog posts and articles from Content Code/content.json
 // Fetches data from central content.json
 // ============================================================================
 
@@ -34,14 +34,14 @@
             // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
             await syncFromGitHubCloud();
             
-            // STEP 2: Load posts from GitHub posts.json (Professional Manager)
-            const response = await fetch('../../../Content Studio/written-posts/posts.json');
+            // STEP 2: Load posts from central content.json
+            const response = await fetch('../../../Content Code/content.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            allPosts = data.posts || [];
+            allPosts = data['written-posts'] || [];
             
             // STEP 3: Load posts from localStorage (Quick Post Creator!)
             const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
@@ -233,15 +233,14 @@
         const filtered = filterPosts();
         
         if (filtered.length === 0) {
-            postsGrid.innerHTML = '';
-            if (emptyState) {
-                emptyState.style.display = 'block';
-            }
+            postsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-file-alt" style="font-size: 64px; color: rgba(139, 0, 0, 0.4); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 10px;">No posts available yet</h3>
+                    <p style="color: var(--text-dim); font-size: 0.9rem;">Check back soon for new articles</p>
+                </div>
+            `;
             return;
-        }
-
-        if (emptyState) {
-            emptyState.style.display = 'none';
         }
 
         postsGrid.innerHTML = filtered.map(post => `
