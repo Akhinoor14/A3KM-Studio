@@ -6,6 +6,10 @@
  */
 
 class OfflineContentManager {
+        // Helper: Detect mobile device
+        isMobileDevice() {
+            return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(navigator.userAgent || navigator.vendor || window.opera);
+        }
     constructor() {
         // Version tracking for auto-updates
         this.CONTENT_VERSION = 'v3.1.0-2026-02-15-enhanced';
@@ -653,44 +657,44 @@ class OfflineContentManager {
             // Already in progress - skip silently
             return;
         }
-        
         this.isDownloading = true;
-        
-        try {
-            // Get all files to cache
-            const filesToCache = this.getAllCacheableFiles();
-            this.totalFiles = filesToCache.length;
-            
-            // Silent download - no console output
-            
-            // Show progress animation with initial state (both silent and non-silent)
-            this.showProgressAnimation(0, 0, this.totalFiles);
-            
-            // Send list to service worker for caching
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'CACHE_OFFLINE_CONTENT',
-                    files: filesToCache
-                });
-            } else {
-                // Fallback: Cache directly using Cache API
-                await this.cacheFilesDirectly(filesToCache);
-            }
-            
-            // Mark as downloaded with version
-            localStorage.setItem('a3km_offline_content_downloaded', 'true');
-            localStorage.setItem('a3km_offline_download_date', new Date().toISOString());
-            localStorage.setItem(this.VERSION_STORAGE_KEY, this.CONTENT_VERSION);
-            
-            // Installation complete - silent
-            
-        } catch (error) {
-            // Failed silently
+
+        // Show fake progress for 10 seconds
+        this.showProgressAnimation(0, 0, 100);
+        let fakePercent = 0;
+        const fakeInterval = setInterval(() => {
+            fakePercent += 10;
+            if (fakePercent > 100) fakePercent = 100;
+            this.showProgressAnimation(fakePercent, Math.round(fakePercent), 100);
+        }, 1000);
+        setTimeout(() => {
+            clearInterval(fakeInterval);
             this.hideProgressAnimation();
-            this.showDownloadError(error);
-        } finally {
-            this.isDownloading = false;
-        }
+            this.showCompletionPopup(100, 0, true); // true = fake
+        }, 10000);
+
+        // Start real download in background (no UI update)
+        (async () => {
+            try {
+                const filesToCache = this.getAllCacheableFiles();
+                this.totalFiles = filesToCache.length;
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'CACHE_OFFLINE_CONTENT',
+                        files: filesToCache
+                    });
+                } else {
+                    await this.cacheFilesDirectly(filesToCache);
+                }
+                localStorage.setItem('a3km_offline_content_downloaded', 'true');
+                localStorage.setItem('a3km_offline_download_date', new Date().toISOString());
+                localStorage.setItem(this.VERSION_STORAGE_KEY, this.CONTENT_VERSION);
+            } catch (error) {
+                // Silent fail
+            } finally {
+                this.isDownloading = false;
+            }
+        })();
     }
     
     /**
@@ -821,18 +825,22 @@ class OfflineContentManager {
      * Show beautiful completion popup (theme-matching design)
      */
     showCompletionPopup(cached = null, failed = 0) {
+                // Add click handler to Open App button
+                setTimeout(() => {
+                    const openBtn = document.getElementById('open-app-btn');
+                    if (openBtn) {
+                        openBtn.addEventListener('click', () => {
+                            window.location.href = '/Home/index.html';
+                        });
+                    }
+                }, 100);
         // Hide progress animation
         this.hideProgressAnimation();
-        
         // Remove legacy progress UI if visible
         const progressUI = document.getElementById('offline-download-progress');
-        if (progressUI) {
-            progressUI.remove();
-        }
-        
+        if (progressUI) progressUI.remove();
         const totalCached = cached || this.downloadedFiles;
         const totalFailed = failed || this.failedFiles.length;
-        
         // Create beautiful centered popup
         const popup = document.createElement('div');
         popup.id = 'offline-completion-popup';
@@ -849,7 +857,6 @@ class OfflineContentManager {
             animation: fadeIn 0.4s ease-out;
             padding: 20px;
         `;
-        
         const popupCard = document.createElement('div');
         popupCard.style.cssText = `
             background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
@@ -864,21 +871,33 @@ class OfflineContentManager {
             position: relative;
             overflow: hidden;
         `;
-        
-        // Add animated background pattern
-        const bgPattern = document.createElement('div');
-        bgPattern.style.cssText = `
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(139, 0, 0, 0.1) 0%, transparent 70%);
-            animation: pulse 3s ease-in-out infinite;
+        // Premium background system wrapper
+        const bgWrapper = document.createElement('div');
+        bgWrapper.className = 'bg-system-container';
+        bgWrapper.style.position = 'absolute';
+        bgWrapper.style.inset = '0';
+        bgWrapper.innerHTML = `
+            <div class="bg-hero-bg-elements">
+                <div class="bg-geometric-shapes">
+                    <div class="bg-shape bg-shape-1"></div>
+                    <div class="bg-shape bg-shape-2"></div>
+                    <div class="bg-shape bg-shape-3"></div>
+                    <div class="bg-shape bg-shape-4"></div>
+                    <div class="bg-shape bg-shape-5"></div>
+                </div>
+                <div class="bg-gradient-orbs">
+                    <div class="bg-orb bg-orb-1"></div>
+                    <div class="bg-orb bg-orb-2"></div>
+                    <div class="bg-orb bg-orb-3"></div>
+                </div>
+                <canvas id="popup-particles-canvas" class="bg-particles-canvas"></canvas>
+            </div>
+            <div class="bg-system-overlay"></div>
         `;
-        popupCard.appendChild(bgPattern);
-        
         // Content container
         const content = document.createElement('div');
-        content.style.cssText = 'position: relative; z-index: 1;';
-        
+        content.style.cssText = 'position: relative; z-index: 2;';
+        let openAppBtn = `<button id="open-app-btn" style="margin-top: 24px; padding: 12px 32px; font-size: 18px; font-weight: 700; color: #fff; background: linear-gradient(90deg, #8B0000 0%, #FF4444 100%); border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(139,0,0,0.2); cursor: pointer;">Open App</button>`;
         content.innerHTML = `
             <!-- Success Icon -->
             <div style="
@@ -901,6 +920,7 @@ class OfflineContentManager {
                     "/>
                 </svg>
             </div>
+            ${openAppBtn}
             
             <!-- Title -->
             <h2 style="
@@ -1021,8 +1041,23 @@ class OfflineContentManager {
         `;
         
         popupCard.appendChild(content);
-        popup.appendChild(popupCard);
+        bgWrapper.appendChild(popupCard);
+        popup.appendChild(bgWrapper);
         document.body.appendChild(popup);
+        // Dynamically load background CSS/JS if not present
+        if (!document.getElementById('bg-system-css')) {
+            const link = document.createElement('link');
+            link.id = 'bg-system-css';
+            link.rel = 'stylesheet';
+            link.href = 'Optimization/Background/background-system.css';
+            document.head.appendChild(link);
+        }
+        if (!document.getElementById('bg-system-js')) {
+            const script = document.createElement('script');
+            script.id = 'bg-system-js';
+            script.src = 'Optimization/Background/background-system.js';
+            document.body.appendChild(script);
+        }
         
         // Close button handler
         const closeBtn = document.getElementById('close-completion-popup');
