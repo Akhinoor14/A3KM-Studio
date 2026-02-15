@@ -559,9 +559,11 @@ class OfflineContentManager {
                             <div id="progress-bar-fill" style="background: linear-gradient(90deg, #8B0000 0%, #FF4444 100%); height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 12px; box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);"></div>
                         </div>
                         
+
                         <!-- Progress Stats -->
-                        <div style="display: flex; justify-content: center; align-items: center;">
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
                             <span id="progress-percent" style="font-size: 18px; font-weight: 600; color: #8B0000;">0%</span>
+                            <span style="font-size: 15px; color: rgba(255,255,255,0.7); font-weight: 500;">Installing...</span>
                             <span id="progress-files" style="display: none; font-size: 14px; color: rgba(255, 255, 255, 0.5);">0 / ${total} files</span>
                         </div>
                         
@@ -744,8 +746,7 @@ class OfflineContentManager {
             // Update progress
             this.updateProgress(this.downloadedFiles, this.totalFiles);
             
-            // Small delay to prevent overwhelming the browser
-            await new Promise(resolve => setTimeout(resolve, 10));
+            // Removed delay for faster download
         }
     }
     
