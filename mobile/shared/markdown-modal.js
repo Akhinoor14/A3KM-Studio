@@ -94,14 +94,16 @@ function createMarkdownModal(config) {
     const contentContainer = document.createElement('div');
     contentContainer.id = 'md-modal-content';
     contentContainer.style.cssText = `
-        max-height: 250px;
+        flex: 1;
+        min-height: 0;
+        height: 100%;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         padding: 24px 16px;
         font-size: ${MarkdownModal.fontSize}px;
         transition: font-size 0.2s ease;
-        flex: 1;
+        box-sizing: border-box;
     `;
 
     // Loading state
