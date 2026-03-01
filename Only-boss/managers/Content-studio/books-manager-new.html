@@ -634,8 +634,8 @@
   </div>
 
   <script src="svg-generator.js"></script>
-  <script src="../../shared/unified-token-manager.js"></script>
-  <script src="../../shared/central-api-gateway.js"></script>
+  <script src="../shared/unified-token-manager.js"></script>
+  <script src="../shared/central-api-gateway.js"></script>
   <script src="github-content-uploader.js"></script>
   <script src="content-manager.js"></script>
   <script src="thumbnail-handler.js"></script>
@@ -707,13 +707,19 @@
 
     // Load categories with proper grouping
     async function loadCategories() {
+      console.log('📂 loadCategories() started');
+      
       try {
+        console.log('📡 Fetching categories from GitHub...');
         let data = await contentManager.loadContent(CONTENT_TYPE);
+        console.log('📦 Received data:', data);
         
         // Use fallback if no categories from GitHub
-        if (!data.categoryGroups || data.categoryGroups.length === 0) {
-          console.warn('⚠️ Using fallback categories - GitHub file not found');
+        if (!data || !data.categoryGroups || data.categoryGroups.length === 0) {
+          console.warn('⚠️ Using fallback categories - GitHub file missing/empty');
           data = DEFAULT_CATEGORIES;
+        } else {
+          console.log(`✅ Loaded ${data.categoryGroups.length} category groups from GitHub`);
         }
         
         // Custom dropdown elements
@@ -723,14 +729,28 @@
         const categorySearch = document.getElementById('categorySearch');
         const categoryCount = document.getElementById('categoryCount');
         
+        // Verify elements exist
+        if (!categoryInput || !categoryDisplay || !categoryDropdown) {
+          console.error('❌ Category elements not found in DOM:', {
+            categoryInput: !!categoryInput,
+            categoryDisplay: !!categoryDisplay,
+            categoryDropdown: !!categoryDropdown
+          });
+          return;
+        }
+        
+        console.log('✅ All category DOM elements found');
+        
         const allCategories = [];
         let totalCategories = 0;
         
         // Build dropdown options
         const renderDropdown = (filterTerm = '') => {
+          console.log('🎨 renderDropdown() called with filter:', filterTerm || 'none');
           categoryDropdown.innerHTML = '';
           
           if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
+            console.log(`📋 Processing ${data.categoryGroups.length} category groups`);
             const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
             let matchCount = 0;
             
@@ -768,7 +788,12 @@
               noMatch.style.cssText = 'padding: 20px; text-align: center; color: #f44336; font-size: 13px;';
               noMatch.textContent = '❌ No categories found';
               categoryDropdown.appendChild(noMatch);
+              console.log('⚠️ No categories matched filter:', filterTerm);
+            } else {
+              console.log(`✅ Rendered ${matchCount} categories in dropdown`);
             }
+          } else {
+            console.error('❌ data.categoryGroups is missing or not an array');
           }
         };
         
@@ -795,12 +820,13 @@
         
         // Initial render
         renderDropdown();
-        console.log(`✅ Loaded ${totalCategories} categories from ${data.categoryGroups?.length || 0} groups`);
+        console.log(`✅ Rendered dropdown with ${totalCategories} categories from ${data.categoryGroups?.length || 0} groups`);
         
         // Category search/filter
         if (categorySearch) {
           categorySearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value;
+            console.log('🔍 Search term:', searchTerm || '(empty)');
             renderDropdown(searchTerm);
             categoryDropdown.style.display = 'block';
             
@@ -820,8 +846,10 @@
         // Toggle dropdown on display click
         if (categoryDisplay) {
           categoryDisplay.onclick = () => {
+            console.log('🖱️ Category display clicked');
             const isOpen = categoryDropdown.style.display === 'block';
             categoryDropdown.style.display = isOpen ? 'none' : 'block';
+            console.log('👁️ Dropdown visibility:', isOpen ? 'hidden' : 'visible');
             categorySearch.focus();
           };
         }
@@ -842,9 +870,20 @@
           inputElement: !!categoryInput
         });
         
+        console.log('✨ loadCategories() completed successfully');
+        
       } catch (error) {
-        console.error('Failed to load categories:', error);
-        document.getElementById('categoryDropdown').innerHTML = '<div style="padding: 10px; color: #f44336;">❌ Failed to load categories</div>';
+        console.error('❌ Failed to load categories:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        const dropdownElement = document.getElementById('categoryDropdown');
+        if (dropdownElement) {
+          dropdownElement.innerHTML = '<div style="padding: 20px 10px; color: #f44336; text-align: center; font-size: 13px;">❌ Failed to load categories<br><small style="color: #666;">' + error.message + '</small></div>';
+        }
       }
     }
 
@@ -1704,9 +1743,26 @@
       alert('❌ Error: ' + message);
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadCategories();
-      loadDashboard();
+    window.addEventListener('DOMContentLoaded', async () => {
+      console.log('🚀 Books Manager initializing...');
+      
+      try {
+        console.log('📂 Loading categories...');
+        await loadCategories();
+        console.log('✅ Categories loaded successfully');
+      } catch (error) {
+        console.error('❌ Failed to load categories:', error);
+      }
+      
+      try {
+        console.log('📊 Loading dashboard...');
+        await loadDashboard();
+        console.log('✅ Dashboard loaded successfully');
+      } catch (error) {
+        console.error('❌ Failed to load dashboard:', error);
+      }
+      
+      console.log('🎉 Books Manager initialized');
     });
   </script>
   <script src="content-hub-sync.js"></script>
