@@ -23,7 +23,7 @@
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Noto Sans Bengali', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
+    body { font-family: 'Noto Sans Bengali', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; background-image: linear-gradient(rgba(139, 69, 19, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 69, 19, 0.05) 1px, transparent 1px); background-size: 100px 100px; min-height: 100vh; }
     .container { display: flex; min-height: 100vh; background: white; }
     .sidebar { width: 280px; background: linear-gradient(180deg, #2c1810 0%, #3d2415 100%); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 4px solid #8B4513; }
     .sidebar-header { background: linear-gradient(135deg, #8B4513, #A0522D); padding: 30px 20px; color: white; }
@@ -46,7 +46,7 @@
     .tab-content.active { display: block; }
     .form-group { margin-bottom: 20px; }
     label { display: block; margin-bottom: 8px; color: #1a1a1a; font-weight: 600; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; color: #1a1a1a; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: 'Noto Sans Bengali', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', Tahoma, sans-serif; color: #1a1a1a; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #8B4513; }
     textarea { resize: vertical; min-height: 100px; }
     .btn-primary { padding: 15px 30px; background: linear-gradient(135deg, #8B4513, #A0522D); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
@@ -538,10 +538,33 @@
       updateSelectedCount();
     }
 
+    // Default categories fallback (used when GitHub file doesn't exist yet)
+    const DEFAULT_CATEGORIES = {
+      categoryGroups: [
+        { name: "Literature & Language", icon: "📚", order: 1, categories: ["Children's Literature", "Classic Literature", "Comics & Graphic Novels", "Contemporary Fiction", "Creative Writing", "Drama & Plays", "Fiction - Novels", "Language Learning & Linguistics", "Literary Criticism", "Mystery & Thriller", "Poetry & Verse", "Romance Literature", "Science Fiction & Fantasy", "Short Stories", "World Literature"] },
+        { name: "Arts & Culture", icon: "🎨", order: 2, categories: ["Architecture & Interior Design", "Art History", "Calligraphy & Typography", "Crafts & Handmade", "Cultural Studies", "Dance & Choreography", "Digital Art & Animation", "Fashion & Beauty", "Fashion & Design", "Film & Cinema Studies", "Graphic Design", "Museum & Heritage Studies", "Music Theory & Composition", "Photography & Videography", "Sculpture & 3D Art", "Theater & Performance Arts", "Visual Arts & Painting"] },
+        { name: "Social Sciences & Humanities", icon: "🌍", order: 3, categories: ["Anthropology", "Archaeology", "Communication & Soft Skills", "Development Studies", "Economics & Finance", "Education & Pedagogy", "Gender Studies", "Geography & Earth Sciences", "History & Archaeology", "Human Rights & Social Justice", "International Relations", "Journalism & Reporting", "Law & Legal Studies", "Library & Information Science", "Media & Communication Studies", "Philosophy & Ethics", "Political Science & Governance", "Psychology & Mental Health", "Public Policy & Administration", "Public Speaking & Rhetoric", "Religious Studies & Theology", "Social Justice", "Sociology & Anthropology", "Urban Planning"] },
+        { name: "Natural & Physical Sciences", icon: "🔬", order: 4, categories: ["Astronomy & Space Science", "Biochemistry", "Biology & Life Sciences", "Botany & Plant Sciences", "Chemistry & Biochemistry", "Environmental Science & Ecology", "Genetics & Molecular Biology", "Geology & Mineralogy", "Marine Biology & Oceanography", "Mathematics & Statistics", "Meteorology & Climate Science", "Microbiology & Virology", "Neuroscience & Brain Studies", "Physics & Astronomy", "Quantum Physics", "Space Science & Astrophysics", "Zoology & Animal Behavior"] },
+        { name: "Medicine & Health", icon: "⚕️", order: 5, categories: ["Alternative Medicine & Ayurveda", "Anatomy & Physiology", "Dentistry & Oral Health", "Geriatrics & Elderly Care", "Health & Fitness", "Medical Research & Diagnostics", "Medicine & Healthcare", "Mental Health & Counseling", "Nursing & Patient Care", "Nutrition & Dietetics", "Parenting & Child Development", "Pediatrics & Child Health", "Pharmacy & Pharmacology", "Physiotherapy & Rehabilitation", "Public Health & Epidemiology", "Sports Medicine & Fitness", "Surgery & Medical Procedures", "Yoga & Meditation"] },
+        { name: "Business & Management", icon: "💼", order: 6, categories: ["Banking & Insurance", "Business Administration", "Business Strategy & Planning", "Career & Professional Growth", "Corporate Governance", "Digital Marketing", "E-commerce & Online Business", "Entrepreneurship & Startups", "Finance & Accounting", "Human Resource Management", "Investment & Stock Market", "Leadership & Management", "Marketing & Advertising", "Productivity & Time Management", "Project Management", "Real Estate & Property", "Retail & Trade", "Sales & Customer Relations", "Supply Chain & Logistics"] },
+        { name: "Agriculture & Environment", icon: "🌾", order: 7, categories: ["Agriculture & Farming", "Animal Husbandry & Livestock", "Fisheries & Aquaculture", "Forestry & Wildlife", "Horticulture & Gardening", "Organic Farming", "Pest Management", "Soil Science", "Sustainable Agriculture"] },
+        { name: "Engineering & Technology", icon: "⚙️", order: 8, categories: ["3D Modeling & CAD", "Aerospace Engineering", "Android Development", "API Development", "Arduino & Microcontrollers", "Artificial Intelligence", "Augmented Reality", "Automotive Engineering", "Biotechnology & Bioengineering", "Blockchain & Cryptocurrency", "Chemical Engineering", "Circuit Design", "Civil Engineering", "Cloud Computing", "Communication Systems", "Computer Science & Programming", "Computer Vision", "Cybersecurity & Networking", "Data Science & Analytics", "Database Design", "DevOps & CI/CD", "Digital Electronics", "Drones & UAV", "Electrical Engineering", "Embedded Systems", "Game Development", "Hardware Design", "Home Automation", "Industrial Engineering", "Industry 4.0", "Internet of Things (IoT)", "Linux & System Administration", "Machine Learning & Deep Learning", "Mechanical Engineering", "Mobile App Development", "Operating Systems", "PCB Design & Fabrication", "Power Electronics", "Power Systems", "Programming Languages", "Python Programming", "Quantum Computing", "Renewable Energy", "Robotics & Automation", "Signal Processing", "Simulation & Modeling", "Smart Cities", "Software Architecture", "Software Engineering", "SQL & NoSQL", "System Design", "Systems Engineering", "Technical Writing", "Testing & QA", "Troubleshooting & Debugging", "UI/UX Design", "Virtual Reality", "Wearable Tech", "Web Development & Design", "Wireless Communication"] },
+        { name: "Lifestyle & Personal Development", icon: "✨", order: 9, categories: ["Cooking & Culinary Arts", "Hobbies & Recreation", "Home & Garden", "Personal Development & Self-Help", "Relationships & Family", "Sports & Athletics", "Travel & Tourism", "Work-Life Balance"] }
+      ],
+      books: []
+    };
+
     // Load categories with proper grouping
     async function loadCategories() {
       try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
+        let data = await contentManager.loadContent(CONTENT_TYPE);
+        
+        // Use fallback if no categories from GitHub
+        if (!data.categoryGroups || data.categoryGroups.length === 0) {
+          console.warn('Using fallback categories - GitHub file not found');
+          data = DEFAULT_CATEGORIES;
+        }
+        
         const categorySelect = document.getElementById('category');
         const editCategorySelect = document.getElementById('editCategory');
         
@@ -1416,7 +1439,7 @@
     });
   </script>
   <script src="content-hub-sync.js"></script>
-  <script src="../../Optimization/navbar-autohide.js"></script>
+  <script src="../../../Optimization/navbar-autohide.js"></script>
 
 <!-- Mobile CSS Priority Enforcer -->
 <script>

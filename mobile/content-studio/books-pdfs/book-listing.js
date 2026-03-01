@@ -114,9 +114,9 @@
                         <span><i class="fas fa-database"></i> ${book.size}</span>
                         <span><i class="fas fa-file"></i> ${book.format}</span>
                     </div>
-                    <p class="content-item-desc">${truncateText(book.description, 120)}</p>
+                    <p class="content-item-desc">${truncateText(book.summary || book.description || '', 120)}</p>
                     <div class="content-tags">
-                        ${book.tags.slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
+                        ${(book.tags || []).slice(0, 4).map(tag => `<span class="content-tag">${tag}</span>`).join('')}
                     </div>
                     ${book.author ? `<div style="margin-top: 8px; font-size: 11px; color: var(--text-dim);"><i class="fas fa-user"></i> ${book.author}</div>` : ''}
                     <div class="book-actions">
@@ -166,14 +166,14 @@
 
         const filtered = allBooks.filter(book => {
             return book.title.toLowerCase().includes(query) ||
-                   book.description.toLowerCase().includes(query) ||
+                   (book.summary || book.description || '').toLowerCase().includes(query) ||
                    book.category.toLowerCase().includes(query) ||
-                   book.tags.some(tag => tag.toLowerCase().includes(query));
+                   (book.tags || []).some(tag => tag.toLowerCase().includes(query));
         });
 
         // Sort by date (newest first)
         filtered.sort((a, b) => {
-            return new Date(b.publishDate) - new Date(a.publishDate);
+            return new Date(b.date || b.publishDate) - new Date(a.date || a.publishDate);
         });
 
         renderBooks(filtered);

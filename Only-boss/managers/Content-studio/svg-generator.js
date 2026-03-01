@@ -6,15 +6,15 @@
 class SVGCoverGenerator {
   constructor() {
     this.templates = {
-      'literature-language': '../../Content Storage/svg-templates/literature-language.svg',
-      'arts-culture': '../../Content Storage/svg-templates/arts-culture.svg',
-      'social-humanities': '../../Content Storage/svg-templates/social-humanities.svg',
-      'natural-sciences': '../../Content Storage/svg-templates/natural-sciences.svg',
-      'medicine-health': '../../Content Storage/svg-templates/medicine-health.svg',
-      'business-management': '../../Content Storage/svg-templates/business-management.svg',
-      'agriculture-environment': '../../Content Storage/svg-templates/agriculture-environment.svg',
-      'engineering-technology': '../../Content Storage/svg-templates/engineering-technology.svg',
-      'lifestyle-personal': '../../Content Storage/svg-templates/lifestyle-personal.svg'
+      'literature-language': '../../../Content Storage/svg-templates/literature-language.svg',
+      'arts-culture': '../../../Content Storage/svg-templates/arts-culture.svg',
+      'social-humanities': '../../../Content Storage/svg-templates/social-humanities.svg',
+      'natural-sciences': '../../../Content Storage/svg-templates/natural-sciences.svg',
+      'medicine-health': '../../../Content Storage/svg-templates/medicine-health.svg',
+      'business-management': '../../../Content Storage/svg-templates/business-management.svg',
+      'agriculture-environment': '../../../Content Storage/svg-templates/agriculture-environment.svg',
+      'engineering-technology': '../../../Content Storage/svg-templates/engineering-technology.svg',
+      'lifestyle-personal': '../../../Content Storage/svg-templates/lifestyle-personal.svg'
     };
 
     this.groupMapping = this.initializeGroupMapping();

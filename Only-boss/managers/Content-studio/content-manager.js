@@ -33,7 +33,16 @@ class ContentManager {
             const jsonPath = `Content Studio/${contentType}/${jsonFileName}`;
             
             const fileData = await this.githubUploader.getFile(jsonPath);
-            const jsonContent = JSON.parse(atob(fileData.content));
+            
+            // If file doesn't exist, return empty structure
+            if (!fileData) {
+                console.warn(`No ${jsonFileName} found on GitHub - returning empty structure`);
+                return { categoryGroups: [], items: [] };
+            }
+            
+            const cleanBase64 = fileData.content.replace(/\s/g, '');
+            const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+            const jsonContent = JSON.parse(new TextDecoder('utf-8').decode(bytes));
             
             // Cache it
             this.cache[contentType] = {
@@ -759,7 +768,9 @@ class ContentManager {
             
             try {
                 const fileData = await this.githubUploader.getFile(contentJsonPath);
-                contentData = JSON.parse(atob(fileData.content));
+                const cleanBase64 = fileData.content.replace(/\s/g, '');
+                const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+                contentData = JSON.parse(new TextDecoder('utf-8').decode(bytes));
             } catch (error) {
                 console.warn('content.json not found, creating new...');
                 contentData = {
@@ -824,7 +835,9 @@ class ContentManager {
     async loadMarkdownFile(filePath) {
         try {
             const fileData = await this.githubUploader.getFile(filePath);
-            const content = atob(fileData.content);
+            const cleanBase64 = fileData.content.replace(/\s/g, '');
+            const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+            const content = new TextDecoder('utf-8').decode(bytes);
             return content;
         } catch (error) {
             console.error('Error loading markdown file:', error);

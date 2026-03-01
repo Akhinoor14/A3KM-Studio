@@ -28,12 +28,12 @@
     // ========== LOAD BOOKS FROM JSON ==========
     async function loadBooksFromJSON() {
         try {
-            const response = await fetch('../../../Content Code/content.json');
+            const response = await fetch('../../../Content Studio/books-pdfs/books.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
-            allBooks = data['books-pdfs'] || [];
-            console.log(`📚 Loaded ${allBooks.length} books from content.json`);
+            allBooks = data.books || [];
+            console.log(`📚 Loaded ${allBooks.length} books from books.json`);
             
             // Load the current book
             loadBook();
@@ -155,9 +155,9 @@
             
             <div class="book-description">
                 <h4>About This Book</h4>
-                <p>${currentBook.description}</p>
+                <p>${currentBook.summary || currentBook.description || ''}</p>
                 <div class="book-tags">
-                    ${currentBook.tags.map(tag => `<span class="book-tag">${tag}</span>`).join('')}
+                    ${(currentBook.tags || []).map(tag => `<span class="book-tag">${tag}</span>`).join('')}
                 </div>
             </div>
             
@@ -230,19 +230,19 @@
     }
 
     function handleDownload() {
-        // In production, trigger actual download
-        showToast('Download started...');
-        
-        // Simulate download
-        setTimeout(() => {
-            showToast('Book downloaded successfully!');
-        }, 2000);
-        
-        // Actual implementation:
-        // const link = document.createElement('a');
-        // link.href = currentBook.pdfUrl;
-        // link.download = `${currentBook.title}.pdf`;
-        // link.click();
+        const url = currentBook.downloadUrl || currentBook.pdfUrl;
+        if (!url) {
+            showToast('⚠️ Download link not available');
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('📥 Download started...');
     }
 
     // ========== HELPER FUNCTIONS ==========

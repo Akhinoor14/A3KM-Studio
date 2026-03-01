@@ -194,7 +194,8 @@ class GitHubContentUploader {
             // Get file SHA first
             const file = await this.getFile(path);
             if (!file) {
-                throw new Error('File not found');
+                console.warn(`File ${path} does not exist, skipping delete`);
+                return null;
             }
             
             const response = await this.makeRequest(
@@ -274,13 +275,24 @@ class GitHubContentUploader {
             
             // Get existing JSON
             const existingFile = await this.getFile(jsonPath);
-            if (!existingFile) {
-                throw new Error(`JSON file not found: ${jsonPath}`);
-            }
             
-            // Decode base64 content
-            const decodedContent = atob(existingFile.content);
-            const jsonData = JSON.parse(decodedContent);
+            let jsonData;
+            if (!existingFile) {
+                // File doesn't exist yet - create initial structure
+                console.warn(`JSON file not found, creating new: ${jsonPath}`);
+                jsonData = {};
+                if (arrayKey) {
+                    jsonData[arrayKey] = [];
+                }
+            } else {
+                // Decode base64 content
+                // GitHub base64 has \n line breaks — strip whitespace before decoding
+                const cleanBase64 = existingFile.content.replace(/\s/g, '');
+                // Use TextDecoder to properly handle UTF-8 (Bengali, Arabic, etc.)
+                const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+                const decodedContent = new TextDecoder('utf-8').decode(bytes);
+                jsonData = JSON.parse(decodedContent);
+            }
             
             // Special handling for video-content (vlogs) nested structure
             if (jsonPath.includes('video-content/videos.json')) {
@@ -482,11 +494,12 @@ class GitHubContentUploader {
             const correctJsonPath = pathConfig.jsonPath;
             const arrayKey = pathConfig.arrayKey;
             
-            // Convert absolute GitHub paths to relative paths for JSON (../../Content Storage/...)
+            // Convert paths to absolute raw GitHub URLs so they work from any page depth
             const convertToRelativePath = (absolutePath) => {
                 if (!absolutePath || absolutePath.startsWith('http')) return absolutePath;
-                // From "Content Studio/{type}/" to "Content Storage/..."
-                return `../../${absolutePath}`;
+                // Encode each path segment to handle folder names with spaces (e.g. "Content Storage")
+                const encodedPath = absolutePath.split('/').map(seg => encodeURIComponent(seg)).join('/');
+                return `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.branch}/${encodedPath}`;
             };
             
             // Build JSON entry matching existing ecosystem structure
@@ -616,7 +629,9 @@ class GitHubContentUploader {
             // Add delay to respect rate limits
             await this.delay(this.requestDelay);
 
-            const response = await fetch(url, options);
+            // Encode spaces in URL so GitHub API handles paths with spaces correctly
+            const safeUrl = url.replace(/ /g, '%20');
+            const response = await fetch(safeUrl, options);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -782,105 +797,6 @@ class GitHubContentUploader {
         };
     }
 
-    // ==================== DELETE & EDIT METHODS ====================
-
-    /**
-     * Get file from GitHub
-     */
-    async getFile(path) {
-        try {
-            const response = await fetch(
-                `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}`,
-                {
-                    headers: {
-                        'Authorization': `token ${this.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Failed to get file: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error getting file:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Delete file from GitHub
-     */
-    async deleteFile(path, message = 'Delete file') {
-        try {
-            // Get file SHA first
-            const fileData = await this.getFile(path);
-            
-            const response = await fetch(
-                `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `token ${this.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify({
-                        message,
-                        sha: fileData.sha,
-                        branch: this.branch
-                    })
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Failed to delete: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error deleting file:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Replace entire JSON file content
-     */
-    async replaceJSON(path, newData, message = 'Update content') {
-        try {
-            const fileData = await this.getFile(path);
-            
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2))));
-            
-            const response = await fetch(
-                `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${this.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify({
-                        message,
-                        content,
-                        sha: fileData.sha,
-                        branch: this.branch
-                    })
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Failed to replace JSON: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error replacing JSON:', error);
-            throw error;
-        }
-    }
 }
 
 // Export for use
