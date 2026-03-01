@@ -257,7 +257,24 @@
 
           <div class="form-group">
             <label>📝 Summary/Description</label>
-            <textarea id="summary" placeholder="Book summary and description..." required></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 300px; gap: 15px; align-items: start;">
+              <div>
+                <textarea id="summary" placeholder="Write a detailed description about the book..." required style="min-height: 150px; font-size: 14px; line-height: 1.6;"></textarea>
+                <small style="color: #666; display: block; margin-top: 8px;">
+                  💡 <strong>Hint:</strong> Include what the book is about, who should read it, and why it's useful
+                </small>
+              </div>
+              <div style="background: rgba(139, 69, 19, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid #8B4513; font-size: 12px; color: #555; line-height: 1.6;">
+                <strong style="color: #8B4513;">✍️ Writing Tips:</strong>
+                <ul style="margin: 8px 0 0 18px; padding: 0;">
+                  <li>Start with main topic</li>
+                  <li>Explain key concepts</li>
+                  <li>Mention target readers</li>
+                  <li>Add practical value</li>
+                  <li>Keep 100-300 words</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -280,6 +297,47 @@
           </div>
 
           <button type="submit" class="btn-primary">📤 Upload Book</button>
+
+          <!-- LIVE PREVIEW -->
+          <div style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 12px; border: 2px dashed #8B4513;">
+            <h3 style="color: #8B4513; margin-bottom: 15px;">👁️ Preview আপনার বই কেমন দেখাবে:</h3>
+            <div id="liveBookPreview" style="display: grid; grid-template-columns: 220px 1fr; gap: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <!-- Thumbnail -->
+              <div>
+                <img id="livePreviewImg" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22280%22%3E%3Crect fill=%22%238B4513%22 width=%22200%22 height=%22280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📚%3C/text%3E%3C/svg%3E" alt="Book Cover" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+              </div>
+              
+              <!-- Info -->
+              <div>
+                <h4 id="liveTitle" style="color: #1a1a1a; margin: 0 0 10px 0; font-size: 18px;">
+                  📕 Book Title...
+                </h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div style="font-size: 12px; color: #666;">
+                    👤 <strong id="liveAuthor">Author...</strong>
+                  </div>
+                  <div style="font-size: 12px; color: #666;">
+                    📁 <strong id="liveCategory">Select Category</strong>
+                  </div>
+                </div>
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;" id="liveBadges">
+                  <span style="font-size: 10px; padding: 4px 8px; background: rgba(139, 69, 19, 0.1); color: #8B4513; border-radius: 4px;">📄 Pages</span>
+                  <span style="font-size: 10px; padding: 4px 8px; background: rgba(139, 69, 19, 0.1); color: #8B4513; border-radius: 4px;">📦 Format</span>
+                  <span style="font-size: 10px; padding: 4px 8px; background: rgba(139, 69, 19, 0.1); color: #8B4513; border-radius: 4px;">🌐 Language</span>
+                </div>
+                
+                <p id="liveDescription" style="font-size: 13px; color: #555; line-height: 1.6; margin: 0;">
+                  Description will appear here...
+                </p>
+                
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                  <span id="liveWordCount" style="font-size: 11px; color: #8B4513; font-weight: 600;">0 words</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="progress" id="progress">
             <div class="progress-bar">
@@ -433,7 +491,22 @@
 
         <div class="form-group">
           <label>Summary</label>
-          <textarea id="editSummary" required></textarea>
+          <div style="display: grid; grid-template-columns: 1fr 300px; gap: 15px; align-items: start;">
+            <div>
+              <textarea id="editSummary" required style="min-height: 120px;"></textarea>
+              <small style="color: #666; display: block; margin-top: 8px;">
+                💡 Write a detailed description about what's in this book
+              </small>
+            </div>
+            <div style="background: rgba(139, 69, 19, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid #8B4513; font-size: 11px; color: #555;">
+              <strong style="color: #8B4513;">📝 Tips:</strong>
+              <ul style="margin: 5px 0 0 15px; padding: 0; font-size: 10px;">
+                <li>Book overview</li>
+                <li>Key topics</li>
+                <li>Who should read</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -714,10 +787,67 @@
         reader.onload = function(e) {
           document.getElementById('coverPreviewImg').src = e.target.result;
           document.getElementById('coverPreview').classList.add('active');
+          // Update live preview image
+          document.getElementById('livePreviewImg').src = e.target.result;
         };
         reader.readAsDataURL(file);
       }
     });
+
+    // Live Preview Updates
+    const updateLivePreview = () => {
+      // Title
+      const title = document.getElementById('title').value || 'Book Title...';
+      document.getElementById('liveTitle').textContent = '📕 ' + title;
+      
+      // Author
+      const author = document.getElementById('author').value || 'Author...';
+      document.getElementById('liveAuthor').textContent = author;
+      
+      // Category
+      const category = document.getElementById('category').value || 'Select Category';
+      document.getElementById('liveCategory').textContent = category;
+      
+      // Description & word count
+      const description = document.getElementById('summary').value || 'Description will appear here...';
+      document.getElementById('liveDescription').textContent = description;
+      const wordCount = description.trim().split(/\s+/).filter(w => w.length > 0).length;
+      const wordStatus = wordCount > 300 ? '⚠️' : wordCount > 100 ? '✅' : '📝';
+      document.getElementById('liveWordCount').textContent = `${wordStatus} ${wordCount} words (ideal: 100-300)`;
+      
+      // Badges
+      const pages = document.getElementById('pages').value;
+      const format = document.getElementById('format').value;
+      const language = document.getElementById('language').value;
+      
+      const languageNames = {
+        'en': '🇬🇧 English',
+        'bn': '🇧🇩 Bengali',
+        'bn-en': '🇧🇩🇬🇧 Mixed',
+        'hi': '🇮🇳 Hindi',
+        'ar': '🇸🇦 Arabic',
+        'ur': '🇵🇰 Urdu'
+      };
+      
+      let badgesHtml = '';
+      if (pages) badgesHtml += `<span style="font-size: 10px; padding: 4px 8px; background: #2196f3; color: white; border-radius: 4px;">📄 ${pages} pages</span>`;
+      if (format) badgesHtml += `<span style="font-size: 10px; padding: 4px 8px; background: #ff9800; color: white; border-radius: 4px;">📦 ${format}</span>`;
+      if (language) badgesHtml += `<span style="font-size: 10px; padding: 4px 8px; background: #4caf50; color: white; border-radius: 4px;">${languageNames[language]}</span>`;
+      
+      document.getElementById('liveBadges').innerHTML = badgesHtml || '<span style="font-size: 10px; color: #999;">⚠️ Add details above</span>';
+    };
+    
+    // Attach listeners to all form fields
+    ['title', 'author', 'summary', 'pages', 'format', 'language', 'category'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', updateLivePreview);
+        el.addEventListener('change', updateLivePreview);
+      }
+    });
+    
+    // Initial preview
+    updateLivePreview();
 
     // Form submission
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
@@ -947,12 +1077,21 @@
         }
         const fallbackCover = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22280%22%3E%3Crect fill=%22%238B4513%22 width=%22200%22 height=%22280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📚%3C/text%3E%3C/svg%3E';
         
+        // Truncate description for preview
+        const descriptionPreview = (item.summary || 'No description provided')
+          .substring(0, 120)
+          .trim() + (item.summary && item.summary.length > 120 ? '...' : '');
+        
         card.innerHTML = `
           <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
           <img src="${coverUrl || fallbackCover}" class="card-thumbnail" onerror="this.src='${fallbackCover}'">
           <div class="card-body">
             <div style="margin-bottom: 8px;">${badges.join(' ')}</div>
             <div class="card-title">${item.title}</div>
+            <div style="font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 8px; padding: 8px; background: rgba(139, 69, 19, 0.05); border-radius: 6px;">
+              <strong>📖 Overview:</strong><br>
+              ${descriptionPreview}
+            </div>
             <div class="card-meta">
               📁 ${item.category}<br>
               👤 ${item.author || 'Unknown Author'}<br>
