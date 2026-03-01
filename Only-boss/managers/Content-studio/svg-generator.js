@@ -239,10 +239,19 @@ class SVGCoverGenerator {
    * @returns {Promise<string>} - Generated SVG content
    */
   async generateCover(categoryName, contentCount = 0) {
+    // Validate category
+    if (!categoryName || categoryName.trim() === '') {
+      console.error('❌ SVG Generator: Empty category provided', { categoryName });
+      throw new Error('Category is required to generate cover');
+    }
+    
     const groupId = this.groupMapping[categoryName];
     
     if (!groupId) {
-      console.warn(`No template mapping found for category: ${categoryName}`);
+      console.warn(`⚠️ No template mapping found for category: "${categoryName}"`);
+      console.log('📚 Available categories:', Object.keys(this.groupMapping).slice(0, 5), '... and more');
+      
+      // Return null silently - cover generation is optional
       return null;
     }
 
@@ -257,7 +266,7 @@ class SVGCoverGenerator {
 
       return svgContent;
     } catch (error) {
-      console.error(`Error generating cover for ${categoryName}:`, error);
+      console.error(`❌ Error generating cover for ${categoryName}:`, error);
       return null;
     }
   }

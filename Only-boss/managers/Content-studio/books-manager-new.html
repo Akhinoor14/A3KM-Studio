@@ -561,7 +561,7 @@
         
         // Use fallback if no categories from GitHub
         if (!data.categoryGroups || data.categoryGroups.length === 0) {
-          console.warn('Using fallback categories - GitHub file not found');
+          console.warn('⚠️ Using fallback categories - GitHub file not found');
           data = DEFAULT_CATEGORIES;
         }
         
@@ -614,6 +614,13 @@
           
           console.log(`✅ Loaded ${totalCategories} categories from ${sortedGroups.length} groups`);
         }
+        
+        // Log category loading for debugging
+        console.log('📚 Category dropdown loaded:', {
+          totalOptions: categorySelect.options.length,
+          totalCategories: totalCategories,
+          firstCategory: allCategories.length > 0 ? allCategories[0].name : 'none'
+        });
         
         // Add category search/filter functionality
         const categorySearch = document.getElementById('categorySearch');
@@ -754,6 +761,26 @@
         const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
         const bookFile = document.getElementById('bookFile').files[0];
         const coverFile = document.getElementById('coverImage').files[0];
+        
+        // Debug logging
+        console.log('📤 Upload form submitted:', {
+          category: category,
+          categoryTrimmed: category?.trim(),
+          categoryEmpty: !category || category.trim() === '',
+          title: title,
+          author: author,
+          bookFile: bookFile?.name,
+          format: format,
+          language: language
+        });
+        
+        // Validate category selection
+        if (!category || category.trim() === '') {
+          console.warn('❌ Category validation failed - empty category');
+          alert('⚠️ Please select a category! Categories must be selected from the dropdown.');
+          progress.classList.remove('active');
+          return;
+        }
         
         if (!bookFile) {
           alert('⚠️ Please select a book file!');
