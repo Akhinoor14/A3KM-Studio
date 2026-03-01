@@ -199,9 +199,18 @@
                    placeholder="🔍 Search by keyword (e.g. Arduino, Programming, Literature)..." 
                    autocomplete="off"
                    style="margin-bottom: 8px; border: 2px solid #8B4513; background: rgba(139, 69, 19, 0.05); padding: 12px; border-radius: 10px; font-size: 14px;">
-            <select id="category" required size="12" style="height: 250px; font-size: 13px; line-height: 1.6;">
-              <option value="">Loading categories...</option>
-            </select>
+            
+            <!-- Custom Dropdown (searchable/scrollable) -->
+            <div style="position: relative; margin-bottom: 10px;">
+              <input type="hidden" id="category" required style="display:none;">
+              <div id="categoryDisplay" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px; background: white; cursor: pointer; font-size: 14px; color: #8B4513; font-weight: 600; min-height: 20px; user-select: none; transition: all 0.3s;">
+                📌 Select a Category...
+              </div>
+              <div id="categoryDropdown" style="position: absolute; top: 100%; left: 0; right: 0; max-height: 350px; overflow-y: auto; border: 2px solid #8B4513; border-top: none; border-radius: 0 0 10px 10px; background: white; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div style="padding: 10px; text-align: center; color: #999;">Loading categories...</div>
+              </div>
+            </div>
+            
             <small style="color: #444; display: block; margin-top: 5px;">
               💡 Categories are organized by sector (Literature, Science, Engineering, etc.)
               <span id="categoryCount" style="font-weight: 600; color: #8B4513; margin-left: 8px;"></span>
@@ -565,160 +574,135 @@
           data = DEFAULT_CATEGORIES;
         }
         
-        const categorySelect = document.getElementById('category');
-        const editCategorySelect = document.getElementById('editCategory');
-        
-        categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #8B4513;">━━━ SELECT CATEGORY ━━━</option>';
-        editCategorySelect.innerHTML = '<option value="">Select category...</option>';
+        // Custom dropdown elements
+        const categoryInput = document.getElementById('category');
+        const categoryDisplay = document.getElementById('categoryDisplay');
+        const categoryDropdown = document.getElementById('categoryDropdown');
+        const categorySearch = document.getElementById('categorySearch');
+        const categoryCount = document.getElementById('categoryCount');
         
         const allCategories = [];
         let totalCategories = 0;
         
-        if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
-          // Sort groups by order
-          const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+        // Build dropdown options
+        const renderDropdown = (filterTerm = '') => {
+          categoryDropdown.innerHTML = '';
           
-          sortedGroups.forEach(group => {
-            if (group.categories && group.categories.length > 0) {
-              // Add group header as disabled option
-              const groupHeader = document.createElement('option');
-              groupHeader.disabled = true;
-              groupHeader.style.cssText = 'font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.1); padding: 8px 5px; font-size: 13px; margin-top: 5px;';
-              groupHeader.textContent = `${group.icon || '📁'} ${group.name} (${group.categories.length})`;
-              categorySelect.appendChild(groupHeader);
-              
-              // Add all categories in this group
-              group.categories.forEach(cat => {
-                allCategories.push({
-                  name: cat,
-                  group: group.name,
-                  icon: group.icon || '📁'
-                });
-                totalCategories++;
-                
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = `  ${cat}`;
-                option.style.cssText = 'padding-left: 15px;';
-                option.dataset.group = group.name;
-                categorySelect.appendChild(option);
-                
-                // For edit modal (simple list without grouping)
-                const editOption = document.createElement('option');
-                editOption.value = cat;
-                editOption.textContent = cat;
-                editCategorySelect.appendChild(editOption);
-              });
-            }
-          });
-          
-          console.log(`✅ Loaded ${totalCategories} categories from ${sortedGroups.length} groups`);
-        }
-        
-        // Log category loading for debugging
-        console.log('📚 Category dropdown loaded:', {
-          totalOptions: categorySelect.options.length,
-          totalCategories: totalCategories,
-          firstCategory: allCategories.length > 0 ? allCategories[0].name : 'none'
-        });
-        
-        // Add category search/filter functionality
-        const categorySearch = document.getElementById('categorySearch');
-        const categoryCount = document.getElementById('categoryCount');
-        
-        if (categorySearch) {
-          categorySearch.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
+          if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
+            const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
+            let matchCount = 0;
             
-            // Clear and rebuild select options
-            categorySelect.innerHTML = '<option value="" style="font-weight: 600; color: #8B4513;">━━━ SELECT CATEGORY ━━━</option>';
-            
-            if (!searchTerm) {
-              // Restore full grouped view
-              const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
-              sortedGroups.forEach(group => {
-                if (group.categories && group.categories.length > 0) {
-                  const groupHeader = document.createElement('option');
-                  groupHeader.disabled = true;
-                  groupHeader.style.cssText = 'font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.1); padding: 8px 5px; font-size: 13px; margin-top: 5px;';
-                  groupHeader.textContent = `${group.icon || '📁'} ${group.name} (${group.categories.length})`;
-                  categorySelect.appendChild(groupHeader);
+            sortedGroups.forEach(group => {
+              if (group.categories && group.categories.length > 0) {
+                // Filter categories if search term provided
+                const filteredCats = filterTerm ? 
+                  group.categories.filter(cat => cat.toLowerCase().includes(filterTerm.toLowerCase())) : 
+                  group.categories;
+                
+                if (filteredCats.length > 0) {
+                  // Group header
+                  const groupDiv = document.createElement('div');
+                  groupDiv.style.cssText = 'padding: 8px 12px; font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.05); font-size: 12px; cursor: default; user-select: none;';
+                  groupDiv.textContent = `${group.icon || '📁'} ${group.name} (${filteredCats.length})`;
+                  categoryDropdown.appendChild(groupDiv);
                   
-                  group.categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = `  ${cat}`;
-                    option.style.cssText = 'padding-left: 15px;';
-                    categorySelect.appendChild(option);
+                  // Category options
+                  filteredCats.forEach(cat => {
+                    const optDiv = document.createElement('div');
+                    optDiv.style.cssText = 'padding: 10px 20px; cursor: pointer; color: #1a1a1a; font-size: 13px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s; user-select: none;';
+                    optDiv.textContent = '  ' + cat;
+                    optDiv.onmouseover = () => optDiv.style.background = 'rgba(139, 69, 19, 0.1)';
+                    optDiv.onmouseout = () => optDiv.style.background = 'white';
+                    optDiv.onclick = () => selectCategory(cat);
+                    categoryDropdown.appendChild(optDiv);
+                    matchCount++;
                   });
                 }
-              });
-              
-              if (categoryCount) {
-                categoryCount.textContent = `All ${totalCategories} categories`;
-                categoryCount.style.color = '#8B4513';
-              }
-              return;
-            }
-            
-            // Filter categories
-            let matchCount = 0;
-            const matchedGroups = new Map();
-            
-            allCategories.forEach(cat => {
-              if (cat.name.toLowerCase().includes(searchTerm)) {
-                if (!matchedGroups.has(cat.group)) {
-                  matchedGroups.set(cat.group, []);
-                }
-                matchedGroups.get(cat.group).push(cat.name);
-                matchCount++;
               }
             });
             
             if (matchCount === 0) {
-              const noResult = document.createElement('option');
-              noResult.disabled = true;
-              noResult.style.color = '#f44336';
-              noResult.textContent = '❌ No categories found. Try different keywords.';
-              categorySelect.appendChild(noResult);
-              
-              if (categoryCount) {
-                categoryCount.textContent = 'No matches';
-                categoryCount.style.color = '#f44336';
-              }
-            } else {
-              // Show filtered results with group headers
-              matchedGroups.forEach((categories, groupName) => {
-                const groupHeader = document.createElement('option');
-                groupHeader.disabled = true;
-                groupHeader.style.cssText = 'font-weight: 700; color: #4caf50; background: rgba(76, 175, 80, 0.1); padding: 5px;';
-                groupHeader.textContent = `✓ ${groupName} (${categories.length})`;
-                categorySelect.appendChild(groupHeader);
-                
-                categories.forEach(catName => {
-                  const option = document.createElement('option');
-                  option.value = catName;
-                  option.textContent = `  ${catName}`;
-                  option.style.cssText = 'padding-left: 15px;';
-                  categorySelect.appendChild(option);
-                });
+              const noMatch = document.createElement('div');
+              noMatch.style.cssText = 'padding: 20px; text-align: center; color: #f44336; font-size: 13px;';
+              noMatch.textContent = '❌ No categories found';
+              categoryDropdown.appendChild(noMatch);
+            }
+          }
+        };
+        
+        // Select category function
+        const selectCategory = (catName) => {
+          categoryInput.value = catName;
+          categoryDisplay.textContent = '✅ ' + catName;
+          categoryDisplay.style.color = '#4CAF50';
+          categoryDropdown.style.display = 'none';
+          console.log('✅ Category selected:', catName);
+        };
+        
+        // Load all categories for search
+        if (data.categoryGroups && Array.isArray(data.categoryGroups)) {
+          data.categoryGroups.forEach(group => {
+            if (group.categories) {
+              group.categories.forEach(cat => {
+                allCategories.push({ name: cat, group: group.name });
+                totalCategories++;
               });
-              
-              if (categoryCount) {
-                categoryCount.textContent = `${matchCount} match${matchCount !== 1 ? 'es' : ''} in ${matchedGroups.size} sector${matchedGroups.size !== 1 ? 's' : ''}`;
-                categoryCount.style.color = '#4caf50';
-              }
             }
           });
-          
-          // Initial count
-          if (categoryCount) {
-            categoryCount.textContent = `All ${totalCategories} categories loaded`;
-            categoryCount.style.color = '#4caf50';
-          }
         }
+        
+        // Initial render
+        renderDropdown();
+        console.log(`✅ Loaded ${totalCategories} categories from ${data.categoryGroups?.length || 0} groups`);
+        
+        // Category search/filter
+        if (categorySearch) {
+          categorySearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value;
+            renderDropdown(searchTerm);
+            categoryDropdown.style.display = 'block';
+            
+            const matches = searchTerm ? 
+              allCategories.filter(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase())).length : 
+              totalCategories;
+            
+            if (categoryCount) {
+              categoryCount.textContent = searchTerm ? 
+                `${matches} match${matches !== 1 ? 'es' : ''}` : 
+                `All ${totalCategories} categories`;
+              categoryCount.style.color = searchTerm && matches === 0 ? '#f44336' : '#8B4513';
+            }
+          });
+        }
+        
+        // Toggle dropdown on display click
+        if (categoryDisplay) {
+          categoryDisplay.onclick = () => {
+            const isOpen = categoryDropdown.style.display === 'block';
+            categoryDropdown.style.display = isOpen ? 'none' : 'block';
+            categorySearch.focus();
+          };
+        }
+        
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+          if (!categoryDisplay?.contains(e.target) && !categoryDropdown?.contains(e.target) && !categorySearch?.contains(e.target)) {
+            categoryDropdown.style.display = 'none';
+          }
+        });
+        
+        // Log for debugging
+        console.log('📚 Custom dropdown created:', {
+          totalCategories: totalCategories,
+          groups: data.categoryGroups?.length || 0,
+          dropdownElement: !!categoryDropdown,
+          displayElement: !!categoryDisplay,
+          inputElement: !!categoryInput
+        });
+        
       } catch (error) {
         console.error('Failed to load categories:', error);
+        document.getElementById('categoryDropdown').innerHTML = '<div style="padding: 10px; color: #f44336;">❌ Failed to load categories</div>';
       }
     }
 
