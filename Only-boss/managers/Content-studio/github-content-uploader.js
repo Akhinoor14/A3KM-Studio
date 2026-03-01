@@ -193,7 +193,8 @@ class GitHubContentUploader {
             };
             
         } catch (error) {
-            if (error.message.includes('404')) {
+            // Handle 404 errors - file doesn't exist
+            if (error.message.includes('404') || error.message.includes('Not Found')) {
                 return null; // File doesn't exist
             }
             throw error;
@@ -477,35 +478,50 @@ class GitHubContentUploader {
             // 3. Upload category cover (if provided and doesn't exist)
             // For flat structures, covers go in a single covers/ folder
             if (coverSVG) {
-                const coversPath = usesFlatStructure 
-                    ? `${basePath}/covers`  // All in one covers/ folder
-                    : `${basePath}/covers`;  // Category-specific covers/ subfolder
+                try {
+                    const coversPath = usesFlatStructure 
+                        ? `${basePath}/covers`  // All in one covers/ folder
+                        : `${basePath}/covers`;  // Category-specific covers/ subfolder
+                        
+                    const coverPath = `${coversPath}/${categorySlug}-cover.svg`;
                     
-                const coverPath = `${coversPath}/${categorySlug}-cover.svg`;
-                const coverExists = await this.getFile(coverPath);
-                
-                if (!coverExists) {
-                    // Ensure covers folder exists (GitHub creates on file upload, but be explicit)
+                    // Try to get cover, but don't fail if it doesn't exist
+                    let coverExists = null;
                     try {
-                        if (!await this.folderExists(coversPath)) {
-                            await this.createFolder(coversPath);
-                        }
-                    } catch (e) {
-                        console.log(`📂 Covers folder will be created on file upload: ${coversPath}`);
+                        coverExists = await this.getFile(coverPath);
+                    } catch (checkError) {
+                        // File doesn't exist or error checking - will upload fresh
+                        console.log(`📂 Cover will be uploaded fresh: ${coverPath}`);
+                        coverExists = null;
                     }
                     
-                    const coverResult = await this.uploadFile(
-                        coverPath,
-                        coverSVG,
-                        `Add cover for ${category}`,
-                        false
-                    );
-                    results.uploads.push(coverResult);
-                    results.paths.cover = coverPath;
-                    console.log(`✅ Cover uploaded: ${coverPath}`);
-                } else {
-                    results.paths.cover = coverPath;
-                    console.log(`ℹ️ Cover already exists: ${coverPath}`);
+                    if (!coverExists) {
+                        // Ensure covers folder exists (GitHub creates on file upload, but be explicit)
+                        try {
+                            if (!await this.folderExists(coversPath)) {
+                                await this.createFolder(coversPath);
+                            }
+                        } catch (e) {
+                            console.log(`📂 Covers folder will be created on file upload: ${coversPath}`);
+                        }
+                        
+                        const coverResult = await this.uploadFile(
+                            coverPath,
+                            coverSVG,
+                            `Add cover for ${category}`,
+                            false
+                        );
+                        results.uploads.push(coverResult);
+                        results.paths.cover = coverPath;
+                        console.log(`✅ Cover uploaded: ${coverPath}`);
+                    } else {
+                        results.paths.cover = coverPath;
+                        console.log(`ℹ️ Cover already exists: ${coverPath}`);
+                    }
+                } catch (coverUploadError) {
+                    // Cover upload failed, but don't stop the entire upload
+                    console.warn(`⚠️ Cover upload failed (non-critical): ${coverUploadError.message}`);
+                    console.log(`ℹ️ Continuing upload without cover...`);
                 }
             }
 
