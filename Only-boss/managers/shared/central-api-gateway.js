@@ -299,7 +299,8 @@ class CentralAPIGateway {
             return {
                 token: 'missing',
                 uploader: 'not_initialized',
-                rateLimit: null
+                rateLimit: null,
+                user: null
             };
         }
         
@@ -313,7 +314,10 @@ class CentralAPIGateway {
             token: validation.valid ? 'valid' : 'invalid',
             uploader: this.uploader ? 'ready' : 'not_initialized',
             rateLimit: rateLimit,
-            validation: validation
+            validation: validation,
+            user: validation.user || null,  // Expose user at top level for easier access
+            remaining: rateLimit?.remaining || 0,
+            limit: rateLimit?.limit || 5000
         };
     }
     

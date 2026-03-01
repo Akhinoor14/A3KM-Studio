@@ -101,15 +101,35 @@ class UnifiedTokenManager {
         }
 
         try {
-            const response = await fetch(`${this.GITHUB_API}/user`, {
+            const apiUrl = `${this.GITHUB_API}/user`;
+            const requestTime = new Date().toISOString();
+            
+            console.log('🌐 [REAL API CALL] Fetching from:', apiUrl);
+            console.log('⏰ Request timestamp:', requestTime);
+            console.log('🔑 Using token:', token.substring(0, 10) + '...');
+            
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
             });
+            
+            console.log('📡 HTTP Response status:', response.status, response.statusText);
+            console.log('🕹️ Response headers:', {
+                'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining'),
+                'x-ratelimit-limit': response.headers.get('x-ratelimit-limit')
+            });
 
             if (response.ok) {
                 const userData = await response.json();
+                console.log('👤 [REAL DATA] GitHub user data received:', {
+                    login: userData.login,
+                    name: userData.name,
+                    id: userData.id,
+                    type: userData.type,
+                    created_at: userData.created_at
+                });
                 
                 // Get rate limit info
                 const rateLimitInfo = await this.checkRateLimit(token);
@@ -120,7 +140,8 @@ class UnifiedTokenManager {
                     user: userData.login,
                     name: userData.name,
                     rateLimit: rateLimitInfo,
-                    message: `✅ Token valid for ${userData.login}`
+                    message: `✅ Token valid for ${userData.login}`,
+                    fetchedAt: new Date().toISOString()
                 };
             } else if (response.status === 401) {
                 return {
@@ -154,16 +175,32 @@ class UnifiedTokenManager {
         if (!token) return null;
 
         try {
-            const response = await fetch(`${this.GITHUB_API}/rate_limit`, {
+            const apiUrl = `${this.GITHUB_API}/rate_limit`;
+            const requestTime = new Date().toISOString();
+            
+            console.log('🌐 [REAL API CALL] Fetching rate limit from:', apiUrl);
+            console.log('⏰ Request timestamp:', requestTime);
+            
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
             });
+            
+            console.log('📡 HTTP Response status:', response.status, response.statusText);
 
             if (response.ok) {
                 const data = await response.json();
                 const core = data.resources.core;
+                
+                console.log('📊 [REAL DATA] Rate limit data received:', {
+                    limit: core.limit,
+                    remaining: core.remaining,
+                    used: core.limit - core.remaining,
+                    reset: new Date(core.reset * 1000).toLocaleString(),
+                    fetchedAt: new Date().toLocaleString()
+                });
                 
                 // Save to localStorage
                 localStorage.setItem(this.RATE_LIMIT_KEY, JSON.stringify({
@@ -177,7 +214,8 @@ class UnifiedTokenManager {
                     limit: core.limit,
                     remaining: core.remaining,
                     reset: new Date(core.reset * 1000),
-                    percentage: (core.remaining / core.limit * 100).toFixed(1)
+                    percentage: (core.remaining / core.limit * 100).toFixed(1),
+                    fetchedAt: new Date().toISOString()
                 };
             }
         } catch (error) {
