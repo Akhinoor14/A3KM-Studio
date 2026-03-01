@@ -661,7 +661,9 @@ class GitHubContentUploader {
             } else if (contentType === 'books-pdfs') {
                 // Books specific fields
                 jsonEntry.downloadUrl = convertToRelativePath(results.paths.content);
-                jsonEntry.cover = convertToRelativePath(results.paths.cover);
+                // Set cover from either SVG cover or manual thumbnail upload
+                jsonEntry.cover = convertToRelativePath(results.paths.cover || results.paths.thumbnail);
+                jsonEntry.thumbnail = convertToRelativePath(results.paths.thumbnail || results.paths.cover);
                 if (metadata.pages) jsonEntry.pages = metadata.pages;
                 if (metadata.size) jsonEntry.size = metadata.size;
                 if (metadata.format) jsonEntry.format = metadata.format;
