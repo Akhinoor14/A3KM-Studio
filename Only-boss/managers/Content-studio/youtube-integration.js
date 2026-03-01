@@ -7,11 +7,36 @@
 
 class YouTubeIntegration {
     constructor() {
-        this.API_KEY = 'AIzaSyCBMJNDxIvJ5YfYMNupIL8t2l0JC315c2A';
+        // Read API key from localStorage (set by Command Center) or use default
+        this.API_KEY = localStorage.getItem('youtube_api_key') || 'AIzaSyCBMJNDxIvJ5YfYMNupIL8t2l0JC315c2A';
         this.VIDEOS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos';
         this.OEMBED_ENDPOINT = 'https://www.youtube.com/oembed';
         this.cache = new Map();
         this.CACHE_DURATION = 3600000; // 1 hour
+        
+        // Listen for API key updates from Command Center
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'youtube_api_key' && e.newValue) {
+                this.API_KEY = e.newValue;
+                console.log('✅ YouTube API key updated from Command Center');
+            }
+        });
+    }
+    
+    // Update API key programmatically
+    updateAPIKey(newKey) {
+        this.API_KEY = newKey;
+        localStorage.setItem('youtube_api_key', newKey);
+        console.log('✅ YouTube API key updated');
+    }
+    
+    // Get current API key status
+    getAPIKeyStatus() {
+        return {
+            hasKey: !!this.API_KEY,
+            isDefault: this.API_KEY === 'AIzaSyCBMJNDxIvJ5YfYMNupIL8t2l0JC315c2A',
+            key: this.API_KEY ? this.API_KEY.substring(0, 10) + '...' : 'Not set'
+        };
     }
 
     // ==================== EXTRACT VIDEO ID ====================

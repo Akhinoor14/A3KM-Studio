@@ -1,8 +1,9 @@
 /**
  * GitHub API Integration Handler
  * Handles direct push to GitHub repository
- * Version: 1.0.0
- * Last Updated: January 22, 2026
+ * Version: 1.1.0
+ * Last Updated: March 1, 2026
+ * Now integrates with CentralAPIGateway for unified token & activity tracking
  */
 
 class GitHubAPIHandler {
@@ -12,6 +13,11 @@ class GitHubAPIHandler {
         this.repo = 'A3KM-Studio';
         this.branch = 'main';
         this.apiBase = 'https://api.github.com';
+        
+        // Try to get gateway instance if available
+        this.gateway = typeof CentralAPIGateway !== 'undefined' 
+            ? CentralAPIGateway.getInstance() 
+            : null;
     }
 
     /**
@@ -259,7 +265,22 @@ class GitHubAPIHandler {
      */
     async updateJSONFile(path, data, message = 'Update project data') {
         const content = JSON.stringify(data, null, 2);
-        return await this.uploadTextFile(path, content, message);
+        const result = await this.uploadTextFile(path, content, message);
+        
+        // Log to gateway if available
+        if (this.gateway) {
+            try {
+                this.gateway.logUpload({
+                    contentType: 'projects',
+                    title: path.split('/').pop().replace('.json', ''),
+                    category: path.includes('Arduino') ? 'arduino' : path.includes('MATLAB') ? 'matlab' : path.includes('Solidworks') ? 'solidworks' : 'projects'
+                });
+            } catch (e) {
+                console.warn('Gateway activity log failed:', e);
+            }
+        }
+        
+        return result;
     }
 
     /**

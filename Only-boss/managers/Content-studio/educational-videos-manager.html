@@ -220,6 +220,8 @@
       color: var(--text-secondary);
       font-weight: 600;
     }
+
+    .header h1 {
       color: var(--primary-color);
       font-size: 1.3rem;
       margin-bottom: 20px;
@@ -1510,6 +1512,8 @@
     </div>
   </div>
 
+  <script src="../../shared/unified-token-manager.js"></script>
+  <script src="../../shared/central-api-gateway.js"></script>
   <script src="github-content-uploader.js"></script>
   <script src="content-manager.js"></script>
   <script src="youtube-integration.js"></script>
@@ -1592,32 +1596,27 @@
       'Education & Learning': ['Study Tips', 'Online Courses', 'Research Methods', 'Academic Writing', 'Teaching', 'Language Learning']
     };
 
-    // GitHub token must be set via API Config Manager - no default token for security
-    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    // Initialize Central API Gateway
+    const gateway = CentralAPIGateway.getInstance();
     
     // Token validation on page load
-    if (!GITHUB_TOKEN) {
-      const userChoice = confirm(
-        '⚠️ GitHub Token Not Found!\n\n' +
-        'This manager requires a GitHub token to function.\n\n' +
-        'Click OK to go to API Config Manager and set your token.\n' +
-        'Click Cancel to continue anyway (features will not work).'
-      );
-      if (userChoice) {
-        window.location.href = '../../shared/api-config-manager.html';
-      } else {
-        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+    gateway.getStatus().then(status => {
+      if (status.token === 'missing') {
+        const userChoice = confirm(
+          '⚠️ GitHub Token Not Found!\n\n' +
+          'This manager requires a GitHub token to function.\n\n' +
+          'Click OK to go to Command Center and set your token.\n' +
+          'Click Cancel to continue anyway (features will not work).'
+        );
+        if (userChoice) {
+          window.location.href = '../../shared/command-center.html?tab=api';
+        }
       }
-    }
+    });
+    
     const CONTENT_TYPE = 'educational-videos';
     
-    const githubUploader = new GitHubContentUploader({
-      token: GITHUB_TOKEN,
-      owner: 'Akhinoor14',
-      repo: 'A3KM-Studio',
-      onProgress: (data) => { document.getElementById('progressFill').style.width = '60%'; },
-      onError: (error) => alert('Error: ' + error.error)
-    });
+    const githubUploader = gateway.getUploader();
     
     const contentManager = new ContentManager(githubUploader);
     let currentContent = [];

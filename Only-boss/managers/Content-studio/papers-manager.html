@@ -1609,6 +1609,8 @@
   </div>
 
   <!-- Scripts -->
+  <script src="../../shared/unified-token-manager.js"></script>
+  <script src="../../shared/central-api-gateway.js"></script>
   <script src="content-manager.js"></script>
   <script src="github-content-uploader.js"></script>
   <script>
@@ -1622,29 +1624,25 @@
       'Social Sciences': ['Psychology', 'Sociology', 'Education', 'Political Science', 'Anthropology']
     };
 
-    // GitHub Token and Setup
-    // GitHub token must be set via API Config Manager - no default token for security
-    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    // Initialize Central API Gateway
+    const gateway = CentralAPIGateway.getInstance();
     
     // Token validation on page load
-    if (!GITHUB_TOKEN) {
-      const userChoice = confirm(
-        '⚠️ GitHub Token Not Found!\n\n' +
-        'This manager requires a GitHub token to function.\n\n' +
-        'Click OK to go to API Config Manager and set your token.\n' +
-        'Click Cancel to continue anyway (features will not work).'
-      );
-      if (userChoice) {
-        window.location.href = '../../shared/api-config-manager.html';
-      } else {
-        console.warn('⚠️ Manager running without GitHub token - upload features disabled');
+    gateway.getStatus().then(status => {
+      if (status.token === 'missing') {
+        const userChoice = confirm(
+          '⚠️ GitHub Token Not Found!\n\n' +
+          'This manager requires a GitHub token to function.\n\n' +
+          'Click OK to go to Command Center and set your token.\n' +
+          'Click Cancel to continue anyway (features will not work).'
+        );
+        if (userChoice) {
+          window.location.href = '../../shared/command-center.html?tab=api';
+        }
       }
-    }
-    const githubUploader = new GitHubContentUploader({
-      token: GITHUB_TOKEN,
-      owner: 'Akhinoor14',
-      repo: 'A3KM-Studio'
     });
+    
+    const githubUploader = gateway.getUploader();
 
     // Global variables
     let papersData = { categoryGroups: [], papers: [] };
