@@ -568,49 +568,6 @@
             </div>
         </div>
 
-        <!-- Content Managers (Always Visible) -->
-        <div style="margin: 30px 0;">
-            <h2 style="color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-folder-tree"></i> Content Managers
-            </h2>
-            <div class="cards-grid">
-                <div class="action-card" onclick="window.location.href='../Content-studio/books-manager-new.html'">
-                    <i class="fas fa-book card-icon blue"></i>
-                    <h3>Books & PDFs</h3>
-                    <p>Upload and manage book collection with rich metadata</p>
-                    <span class="card-badge" id="booksCount">0</span>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../Content-studio/educational-videos-manager.html'">
-                    <i class="fas fa-graduation-cap card-icon green"></i>
-                    <h3>Educational Videos</h3>
-                    <p>Manage course playlists and tutorial series</p>
-                    <span class="card-badge" id="videosCount">0</span>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../Content-studio/papers-manager.html'">
-                    <i class="fas fa-file-alt card-icon orange"></i>
-                    <h3>Research Papers</h3>
-                    <p>Academic papers with citations and DOI tracking</p>
-                    <span class="card-badge" id="papersCount">0</span>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../Content-studio/vlogs-manager.html'">
-                    <i class="fas fa-video card-icon purple"></i>
-                    <h3>Video Blogs</h3>
-                    <p>YouTube vlogs organized by series and episodes</p>
-                    <span class="card-badge" id="vlogsCount">0</span>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../Content-studio/posts-manager.html'">
-                    <i class="fas fa-pen-nib card-icon red"></i>
-                    <h3>Written Posts</h3>
-                    <p>Blog articles and markdown-based content</p>
-                    <span class="card-badge" id="postsCount">0</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Tab Navigation -->
         <div class="tab-nav">
             <button class="tab-btn active" onclick="switchTab('api')">
@@ -907,26 +864,32 @@
             gateway.on('content:uploaded', () => {
                 loadContentCounts();
                 loadActivityLog();
-                showSuccess('✅ Content uploaded successfully!');\n            });
+                showSuccess('✅ Content uploaded successfully!');
+            });
             
             gateway.on('content:deleted', () => {
                 loadContentCounts();
                 loadActivityLog();
-                showSuccess('✅ Content deleted successfully!');\n            });
+                showSuccess('✅ Content deleted successfully!');
+            });
             
             gateway.on('content:updated', () => {
                 loadActivityLog();
-                showSuccess('✅ Content updated successfully!');\n            });
+                showSuccess('✅ Content updated successfully!');
+            });
             
             gateway.on('api:error', (data) => {
                 loadActivityLog();
-                showError(`❌ API Error: ${data.error || 'Unknown error'}`);\n            });
+                showError(`❌ API Error: ${data.error || 'Unknown error'}`);
+            });
             
             gateway.on('ratelimit:warning', (data) => {
                 loadStatus(); // Refresh rate limit display
-                showError(`⚠️ Rate limit low: ${data.remaining} requests remaining`);\n            });
+                showError(`⚠️ Rate limit low: ${data.remaining} requests remaining`);
+            });
             
-            console.log('Command Center initialized successfully');\n        });
+            console.log('Command Center initialized successfully');
+        });
 
         // Tab switching
         function switchTab(tab) {
@@ -1008,11 +971,11 @@
         async function loadContentCounts() {
             try {
                 const contentTypes = [
-                    { id: 'books', type: 'books-pdfs', file: 'books.json', key: 'books' },
-                    { id: 'videos', type: 'educational-videos', file: 'courses.json', key: 'courses' },
-                    { id: 'papers', type: 'research-papers', file: 'papers.json', key: 'papers' },
-                    { id: 'vlogs', type: 'video-content', file: 'videos.json', key: 'videos' },
-                    { id: 'posts', type: 'written-posts', file: 'posts.json', key: 'posts' }
+                    { type: 'books-pdfs', file: 'books.json', key: 'books' },
+                    { type: 'educational-videos', file: 'courses.json', key: 'courses' },
+                    { type: 'research-papers', file: 'papers.json', key: 'papers' },
+                    { type: 'video-content', file: 'videos.json', key: 'videos' },
+                    { type: 'written-posts', file: 'posts.json', key: 'posts' }
                 ];
                 
                 let totalCount = 0;
@@ -1039,26 +1002,13 @@
                             }
                         }
                         
-                        if (data) {
-                            const count = data[content.key] ? (Array.isArray(data[content.key]) ? data[content.key].length : 0) : 0;
-                            const countElement = document.getElementById(content.id + 'Count');
-                            if (countElement) {
-                                countElement.textContent = count;
-                                totalCount += count;
-                                successCount++;
-                            }
-                        } else {
-                            const countElement = document.getElementById(content.id + 'Count');
-                            if (countElement) {
-                                countElement.textContent = '~';
-                            }
+                        if (data && data[content.key]) {
+                            const count = Array.isArray(data[content.key]) ? data[content.key].length : 0;
+                            totalCount += count;
+                            successCount++;
                         }
                     } catch (err) {
                         console.warn('Failed to load ' + content.type + ':', err);
-                        const countElement = document.getElementById(content.id + 'Count');
-                        if (countElement) {
-                            countElement.textContent = '~';
-                        }
                     }
                 }
                 
