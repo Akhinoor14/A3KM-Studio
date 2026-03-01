@@ -436,46 +436,62 @@ class GitHubContentUploader {
             const pathConfig = this.getContentPaths(contentType);
             const categorySlug = this.slugify(category);
             
-            // Special path handling for written-posts (nested CategoryGroup/Category)
+            // Storage path strategy:
+            // Books & Papers: FLAT structure (all in one folder) - simple, fast, GitHub-friendly
+            // Posts: Nested by CategoryGroup/Category - maintains organizational structure
+            // Videos: Metadata-based in videos.json with categories
+            
             let basePath;
+            let usesFlatStructure = false;  // For books & papers
+            
             if (contentType === 'written-posts') {
                 // Posts use: written-posts/{CategoryGroup}/{Category}/
-                // We need to determine CategoryGroup from category name
                 const categoryGroup = this.getCategoryGroup(category, contentType);
                 basePath = `${pathConfig.storagePath}/${categoryGroup}/${categorySlug}`;
+            } else if (contentType === 'books-pdfs' || contentType === 'research-papers') {
+                // ✅ FLAT STRUCTURE: All books/papers in one folder
+                // Organization happens in books.json metadata, not filesystem
+                basePath = pathConfig.storagePath;  // e.g., "Content Storage/books-pdfs"
+                usesFlatStructure = true;
+                console.log(`📁 Using flat structure for ${contentType}: ${basePath}`);
             } else {
-                // Others use: {storage}/{category}/
-                basePath = `${pathConfig.storagePath}/${categorySlug}`;
+                // Educational videos, vlogs, etc.
+                basePath = pathConfig.storagePath;
             }
-            
-            // Files go directly in category folder (matching ecosystem)
-            // No contentId subfolder needed
             
             this.onProgress({ stage: 'starting', total: 4 });
 
-            // 2. Create folder structure (attempt, but don't fail if it doesn't exist)
-            // The GitHub API creates parent directories automatically when uploading files
-            try {
-                if (!await this.folderExists(basePath)) {
-                    await this.createFolder(basePath);
-                    results.uploads.push('folder structure configured');
+            // 2. DON'T create per-category folders for default flat structures
+            // GitHub API handles parent directories automatically on file upload
+            if (!usesFlatStructure) {
+                try {
+                    if (!await this.folderExists(basePath)) {
+                        await this.createFolder(basePath);
+                        results.uploads.push('folder structure configured');
+                    }
+                } catch (folderError) {
+                    console.warn(`⚠️ Folder creation warning: ${folderError.message}`);
                 }
-            } catch (folderError) {
-                // Folder creation failed but we can continue - files will create structure
-                console.warn(`⚠️ Folder creation warning: ${folderError.message}`);
             }
 
             // 3. Upload category cover (if provided and doesn't exist)
+            // For flat structures, covers go in a single covers/ folder
             if (coverSVG) {
-                // Covers go in covers/ subfolder to match ecosystem
-                const coversPath = `${basePath}/covers`;
+                const coversPath = usesFlatStructure 
+                    ? `${basePath}/covers`  // All in one covers/ folder
+                    : `${basePath}/covers`;  // Category-specific covers/ subfolder
+                    
                 const coverPath = `${coversPath}/${categorySlug}-cover.svg`;
                 const coverExists = await this.getFile(coverPath);
                 
                 if (!coverExists) {
-                    // Ensure covers folder exists
-                    if (!await this.folderExists(coversPath)) {
-                        await this.createFolder(coversPath);
+                    // Ensure covers folder exists (GitHub creates on file upload, but be explicit)
+                    try {
+                        if (!await this.folderExists(coversPath)) {
+                            await this.createFolder(coversPath);
+                        }
+                    } catch (e) {
+                        console.log(`📂 Covers folder will be created on file upload: ${coversPath}`);
                     }
                     
                     const coverResult = await this.uploadFile(
@@ -486,46 +502,70 @@ class GitHubContentUploader {
                     );
                     results.uploads.push(coverResult);
                     results.paths.cover = coverPath;
+                    console.log(`✅ Cover uploaded: ${coverPath}`);
                 } else {
                     results.paths.cover = coverPath;
+                    console.log(`ℹ️ Cover already exists: ${coverPath}`);
                 }
             }
 
-            // 4. Upload content file (directly in category folder)
+            // 4. Upload content file
+            // For flat structures, generate unique filename to avoid collisions
             if (contentFile) {
                 const extension = this.getFileExtension(contentFile.name);
-                // Generate clean filename from title
+                // Generate unique filename using title + timestamp to avoid overwrites
                 const fileSlug = this.slugify(title);
-                const contentFilePath = `${basePath}/${fileSlug}.${extension}`;
+                const timestamp = Date.now();
+                const filename = usesFlatStructure 
+                    ? `${fileSlug}-${timestamp}.${extension}`  // Unique filename in flat structure
+                    : `${fileSlug}.${extension}`;  // Regular filename in nested structure
+                    
+                const contentFilePath = `${basePath}/${filename}`;
                 
-                const contentResult = await this.uploadBinaryFile(
-                    contentFilePath,
-                    contentFile,
-                    `Add ${title}`
-                );
-                results.uploads.push(contentResult);
-                results.paths.content = contentFilePath;
+                try {
+                    const contentResult = await this.uploadBinaryFile(
+                        contentFilePath,
+                        contentFile,
+                        `Add ${title}`
+                    );
+                    results.uploads.push(contentResult);
+                    results.paths.content = contentFilePath;
+                    console.log(`✅ Content uploaded: ${contentFilePath}`);
+                } catch (uploadError) {
+                    const msg = `Failed to upload content file: ${uploadError.message}`;
+                    console.error(msg);
+                    results.errors.push(msg);
+                    throw uploadError;  // Critical - can't continue without content
+                }
             }
 
-            // 5. Upload thumbnail (in covers/ subfolder with content)
+            // 5. Upload thumbnail
             if (thumbnailFile) {
                 const coversPath = `${basePath}/covers`;
-                const thumbnailPath = `${coversPath}/${this.slugify(title)}-thumbnail.jpg`;
+                const fileSlug = this.slugify(title);
+                const timestamp = Date.now();
+                const thumbnailPath = usesFlatStructure
+                    ? `${coversPath}/${fileSlug}-${timestamp}-thumbnail.jpg`  // Unique in flat
+                    : `${coversPath}/${fileSlug}-thumbnail.jpg`;
                 
-                // Ensure covers folder exists
-                if (!await this.folderExists(coversPath)) {
-                    await this.createFolder(coversPath);
+                try {
+                    if (!await this.folderExists(coversPath)) {
+                        await this.createFolder(coversPath);
+                    }
+                    
+                    const thumbnailResult = await this.uploadBinaryFile(
+                        thumbnailPath,
+                        thumbnailFile,
+                        `Add thumbnail for ${title}`
+                    );
+                    results.uploads.push(thumbnailResult);
+                    results.paths.thumbnail = thumbnailPath;
+                    console.log(`✅ Thumbnail uploaded: ${thumbnailPath}`);
+                } catch (thumbError) {
+                    console.warn(`⚠️ Thumbnail upload failed: ${thumbError.message}`);
+                    // Continue - thumbnail is optional
                 }
-                
-                const thumbnailResult = await this.uploadBinaryFile(
-                    thumbnailPath,
-                    thumbnailFile,
-                    `Add thumbnail for ${title}`
-                );
-                results.uploads.push(thumbnailResult);
-                results.paths.thumbnail = thumbnailPath;
             } else if (youtubeId) {
-                // Use YouTube thumbnail URL
                 results.paths.thumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
             }
 
