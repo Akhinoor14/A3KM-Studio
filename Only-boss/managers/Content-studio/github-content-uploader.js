@@ -438,23 +438,27 @@ class GitHubContentUploader {
             const categorySlug = this.slugify(category);
             
             // Storage path strategy:
-            // Books & Papers: FLAT structure (all in one folder) - simple, fast, GitHub-friendly
+            // Books: FOLDER-BASED structure (each book in its own folder) - organized, scalable, best practice
+            // Papers: FOLDER-BASED structure (each paper in its own folder)
             // Posts: Nested by CategoryGroup/Category - maintains organizational structure
             // Videos: Metadata-based in videos.json with categories
             
             let basePath;
-            let usesFlatStructure = false;  // For books & papers
+            let bookFolderName = null;  // For books & papers folder-based structure
             
             if (contentType === 'written-posts') {
                 // Posts use: written-posts/{CategoryGroup}/{Category}/
                 const categoryGroup = this.getCategoryGroup(category, contentType);
                 basePath = `${pathConfig.storagePath}/${categoryGroup}/${categorySlug}`;
             } else if (contentType === 'books-pdfs' || contentType === 'research-papers') {
-                // ✅ FLAT STRUCTURE: All books/papers in one folder
-                // Organization happens in books.json metadata, not filesystem
-                basePath = pathConfig.storagePath;  // e.g., "Content Storage/books-pdfs"
-                usesFlatStructure = true;
-                console.log(`📁 Using flat structure for ${contentType}: ${basePath}`);
+                // ✅ FOLDER-BASED STRUCTURE: Each book/paper gets its own folder
+                // Format: books-pdfs/{book-title-id}/
+                // Benefits: organized, easy to delete, scalable, all files in one place
+                const fileSlug = this.slugify(title);
+                const timestamp = Date.now();
+                bookFolderName = `${fileSlug}-${contentId || timestamp}`;
+                basePath = `${pathConfig.storagePath}/${bookFolderName}`;
+                console.log(`📁 Using folder-based structure for ${contentType}: ${basePath}`);
             } else {
                 // Educational videos, vlogs, etc.
                 basePath = pathConfig.storagePath;
@@ -462,9 +466,20 @@ class GitHubContentUploader {
             
             this.onProgress({ stage: 'starting', total: 4 });
 
-            // 2. DON'T create per-category folders for default flat structures
+            // 2. Create book/paper folder if using folder-based structure
             // GitHub API handles parent directories automatically on file upload
-            if (!usesFlatStructure) {
+            if (bookFolderName) {
+                try {
+                    if (!await this.folderExists(basePath)) {
+                        await this.createFolder(basePath);
+                        results.uploads.push(`Created folder: ${bookFolderName}`);
+                        console.log(`✅ Created book folder: ${basePath}`);
+                    }
+                } catch (folderError) {
+                    console.warn(`⚠️ Folder creation warning: ${folderError.message}`);
+                    // Continue anyway - GitHub creates folders on file upload
+                }
+            } else {
                 try {
                     if (!await this.folderExists(basePath)) {
                         await this.createFolder(basePath);
@@ -475,28 +490,24 @@ class GitHubContentUploader {
                 }
             }
 
-            // 3. Upload category cover (if provided and doesn't exist)
-            // For flat structures, covers go in a single covers/ folder
-            if (coverSVG) {
+            // 3. Upload cover image (uploaded by user, not auto-generated SVG)
+            // For books/papers with folder structure: goes directly in book folder as cover.jpg/cover.svg
+            // For other content: category cover logic (backwards compatible)
+            if (coverSVG && !bookFolderName) {
+                // Legacy category cover upload (for posts, etc.)
                 try {
-                    const coversPath = usesFlatStructure 
-                        ? `${basePath}/covers`  // All in one covers/ folder
-                        : `${basePath}/covers`;  // Category-specific covers/ subfolder
-                        
+                    const coversPath = `${basePath}/covers`;
                     const coverPath = `${coversPath}/${categorySlug}-cover.svg`;
                     
-                    // Try to get cover, but don't fail if it doesn't exist
                     let coverExists = null;
                     try {
                         coverExists = await this.getFile(coverPath);
                     } catch (checkError) {
-                        // File doesn't exist or error checking - will upload fresh
                         console.log(`📂 Cover will be uploaded fresh: ${coverPath}`);
                         coverExists = null;
                     }
                     
                     if (!coverExists) {
-                        // Ensure covers folder exists (GitHub creates on file upload, but be explicit)
                         try {
                             if (!await this.folderExists(coversPath)) {
                                 await this.createFolder(coversPath);
@@ -519,22 +530,27 @@ class GitHubContentUploader {
                         console.log(`ℹ️ Cover already exists: ${coverPath}`);
                     }
                 } catch (coverUploadError) {
-                    // Cover upload failed, but don't stop the entire upload
                     console.warn(`⚠️ Cover upload failed (non-critical): ${coverUploadError.message}`);
                     console.log(`ℹ️ Continuing upload without cover...`);
                 }
             }
+            // Note: Book/paper covers uploaded separately in step 5 (user-provided cover file)
 
             // 4. Upload content file
-            // For flat structures, generate unique filename to avoid collisions
+            // For books/papers: standardized filename "book.pdf" or "paper.pdf" in book folder
+            // For others: slug-based filename
             if (contentFile) {
                 const extension = this.getFileExtension(contentFile.name);
-                // Generate unique filename using title + timestamp to avoid overwrites
-                const fileSlug = this.slugify(title);
-                const timestamp = Date.now();
-                const filename = usesFlatStructure 
-                    ? `${fileSlug}-${timestamp}.${extension}`  // Unique filename in flat structure
-                    : `${fileSlug}.${extension}`;  // Regular filename in nested structure
+                let filename;
+                
+                if (bookFolderName) {
+                    // ✅ STANDARDIZED: book.pdf, paper.pdf (easy to reference, clean structure)
+                    filename = contentType === 'books-pdfs' ? `book.${extension}` : `paper.${extension}`;
+                } else {
+                    // Regular filename for other content types
+                    const fileSlug = this.slugify(title);
+                    filename = `${fileSlug}.${extension}`;
+                }
                     
                 const contentFilePath = `${basePath}/${filename}`;
                 
@@ -555,20 +571,36 @@ class GitHubContentUploader {
                 }
             }
 
-            // 5. Upload thumbnail
+            // 5. Upload cover and thumbnail (for books/papers: in book folder; for others: in covers subfolder)
+            // Books get: cover.jpg and thumbnail.jpg in their folder
             if (thumbnailFile) {
-                const coversPath = `${basePath}/covers`;
-                const fileSlug = this.slugify(title);
-                const timestamp = Date.now();
-                const thumbnailPath = usesFlatStructure
-                    ? `${coversPath}/${fileSlug}-${timestamp}-thumbnail.jpg`  // Unique in flat
-                    : `${coversPath}/${fileSlug}-thumbnail.jpg`;
+                let thumbnailPath;
+                let coverPath;
+                
+                if (bookFolderName) {
+                    // ✅ BOOKS/PAPERS: cover.jpg and thumbnail.jpg in book folder
+                    const extension = this.getFileExtension(thumbnailFile.name);
+                    thumbnailPath = `${basePath}/thumbnail.${extension}`;
+                    // If user uploaded cover separately, use it; otherwise thumbnail = cover
+                    coverPath = `${basePath}/cover.${extension}`;
+                } else {
+                    // Other content: covers subfolder with unique names
+                    const coversPath = `${basePath}/covers`;
+                    const fileSlug = this.slugify(title);
+                    const timestamp = Date.now();
+                    thumbnailPath = `${coversPath}/${fileSlug}-${timestamp}-thumbnail.jpg`;
+                    
+                    try {
+                        if (!await this.folderExists(coversPath)) {
+                            await this.createFolder(coversPath);
+                        }
+                    } catch (e) {
+                        console.log(`📂 Covers folder will be created on file upload`);
+                    }
+                }
                 
                 try {
-                    if (!await this.folderExists(coversPath)) {
-                        await this.createFolder(coversPath);
-                    }
-                    
+                    // Upload thumbnail
                     const thumbnailResult = await this.uploadBinaryFile(
                         thumbnailPath,
                         thumbnailFile,
@@ -577,6 +609,18 @@ class GitHubContentUploader {
                     results.uploads.push(thumbnailResult);
                     results.paths.thumbnail = thumbnailPath;
                     console.log(`✅ Thumbnail uploaded: ${thumbnailPath}`);
+                    
+                    // For books: also use thumbnail as cover if no separate cover uploaded
+                    if (bookFolderName && !results.paths.cover) {
+                        const coverResult = await this.uploadBinaryFile(
+                            coverPath,
+                            thumbnailFile,
+                            `Add cover for ${title}`
+                        );
+                        results.uploads.push(coverResult);
+                        results.paths.cover = coverPath;
+                        console.log(`✅ Cover uploaded (from thumbnail): ${coverPath}`);
+                    }
                 } catch (thumbError) {
                     console.warn(`⚠️ Thumbnail upload failed: ${thumbError.message}`);
                     // Continue - thumbnail is optional
@@ -625,6 +669,10 @@ class GitHubContentUploader {
                 // Papers specific fields
                 jsonEntry.pdfUrl = convertToRelativePath(results.paths.content);
                 jsonEntry.thumbnail = convertToRelativePath(results.paths.thumbnail);
+                // Store folder path for easy management (delete/update entire paper folder)
+                if (bookFolderName) {
+                    jsonEntry.folderPath = `${pathConfig.storagePath}/${bookFolderName}`;
+                }
                 jsonEntry.authors = metadata.authors || [author || 'Md Akhinoor Islam'];
                 if (metadata.abstract) jsonEntry.abstract = metadata.abstract;
                 if (metadata.keywords) jsonEntry.keywords = metadata.keywords;
@@ -664,6 +712,10 @@ class GitHubContentUploader {
                 // Set cover from either SVG cover or manual thumbnail upload
                 jsonEntry.cover = convertToRelativePath(results.paths.cover || results.paths.thumbnail);
                 jsonEntry.thumbnail = convertToRelativePath(results.paths.thumbnail || results.paths.cover);
+                // Store folder path for easy management (delete/update entire book folder)
+                if (bookFolderName) {
+                    jsonEntry.folderPath = `${pathConfig.storagePath}/${bookFolderName}`;
+                }
                 if (metadata.pages) jsonEntry.pages = metadata.pages;
                 if (metadata.size) jsonEntry.size = metadata.size;
                 if (metadata.format) jsonEntry.format = metadata.format;
