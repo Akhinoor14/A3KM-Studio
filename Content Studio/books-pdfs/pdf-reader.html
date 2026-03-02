@@ -470,6 +470,79 @@
     }
     .key-hint.show { opacity: 1; }
     .key-hint span { color: rgba(255,150,150,0.8); font-weight: 700; }
+
+    /* ─────────────────────────────────────────────────
+       RESPONSIVE OPTIMIZATION
+    ──────────────────────────────────────────────── */
+    
+    /* Tablet optimization */
+    @media (max-width: 1024px) {
+      .reader-area {
+        padding-top: 54px;
+      }
+      #pdfViewport {
+        padding: 20px 15px;
+      }
+    }
+    
+    /* Mobile optimization */
+    @media (max-width: 768px) {
+      .top-bar {
+        height: 52px;
+        padding: 0 10px;
+        gap: 6px;
+      }
+      .reader-area {
+        padding-top: 52px;
+      }
+      .bar-btn {
+        height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+      .bar-btn i {
+        font-size: 12px;
+      }
+      #pdfViewport {
+        padding: 15px 10px;
+      }
+      .nav-controls {
+        gap: 6px;
+      }
+      #pageInput {
+        width: 45px;
+        font-size: 12px;
+      }
+    }
+    
+    /* Small mobile optimization */
+    @media (max-width: 480px) {
+      .top-bar {
+        height: 48px;
+        padding: 0 8px;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .reader-area {
+        padding-top: 48px;
+      }
+      .bar-btn {
+        height: 32px;
+        min-width: 32px;
+        padding: 0 8px;
+        font-size: 11px;
+      }
+      .bar-btn span {
+        display: none; /* Hide text labels on very small screens */
+      }
+      #pdfViewport {
+        padding: 10px 5px;
+      }
+      .page-indicator {
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -780,11 +853,26 @@
 
       try {
         const page = await pdfDoc.getPage(n);
-        const areaW = document.getElementById('readerArea').clientWidth - 48;
-        const baseScale = Math.min(areaW, 1100) / page.getViewport({scale:1}).width;
+        const readerArea = document.getElementById('readerArea');
+        const areaW = readerArea.clientWidth - 48;
+        const areaH = readerArea.clientHeight - 100;
+        
+        // ADAPTIVE SCALING: Width-priority for better readability
+        // Works perfectly for both A4 (1:1.41) and custom ratios (2:3)
+        const vp = page.getViewport({scale:1});
+        const pageRatio = vp.height / vp.width;
+        
+        // Use full available width (no arbitrary 1100px limit)
+        const widthScale = areaW / vp.width;
+        const heightScale = areaH / vp.height;
+        
+        // Prioritize width, but limit if page is extremely tall
+        const baseScale = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
         const scale = baseScale * curZoom;
         const scaledVP = page.getViewport({scale});
-        const dpr = window.devicePixelRatio || 1;
+        
+        // MAXIMUM QUALITY: 4x DPI for ultra-sharp text rendering (same as 3D viewer)
+        const dpr = 4.0;
 
         // Build canvas-wrap
         const wrap = document.createElement('div');
@@ -799,7 +887,10 @@
         canvas.height = Math.floor(scaledVP.height * dpr);
         canvas.style.width  = scaledVP.width  + 'px';
         canvas.style.height = scaledVP.height + 'px';
+        // Maximum sharpness for text
         ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.textRendering = 'optimizeLegibility';
 
         wrap.appendChild(canvas);
 
