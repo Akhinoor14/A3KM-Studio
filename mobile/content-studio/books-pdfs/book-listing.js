@@ -105,6 +105,9 @@
                     }
                     <i class="fas fa-book" ${book.cover ? 'style="display:none;"' : ''}></i>
                     <span class="book-badge">${languageDisplay}</span>
+                    <div class="book-mode-icon" data-book-id="${book.id}" data-action="book-mode" title="Open in Book Mode">
+                        <i class="fas fa-book-open"></i>
+                    </div>
                 </div>
                 <div class="content-info-wrap">
                     <span class="book-category">${book.category}</span>
@@ -183,7 +186,23 @@
     function addHapticFeedback() {
         const readBtns = document.querySelectorAll('.read-btn');
         const downloadBtns = document.querySelectorAll('.download-btn');
+        const bookModeIcons = document.querySelectorAll('.book-mode-icon');
         const bookItems = document.querySelectorAll('.book-item');
+        
+        // Book Mode icon handlers
+        bookModeIcons.forEach(icon => {
+            icon.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                if (navigator.vibrate) navigator.vibrate(15);
+            });
+
+            icon.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const bookId = icon.getAttribute('data-book-id');
+                handleReadAsBook(bookId);
+            });
+        });
         
         // Read button handlers
         readBtns.forEach(btn => {
@@ -218,20 +237,35 @@
         // Make card clickable to open reader
         bookItems.forEach(item => {
             item.addEventListener('touchstart', (e) => {
-                // Only trigger if not clicking on buttons
-                if (!e.target.closest('.read-btn') && !e.target.closest('.download-btn')) {
+                // Only trigger if not clicking on buttons or book mode icon
+                if (!e.target.closest('.read-btn') && !e.target.closest('.download-btn') && !e.target.closest('.book-mode-icon')) {
                     if (navigator.vibrate) navigator.vibrate(10);
                 }
             });
             
             item.addEventListener('click', (e) => {
-                // Only trigger if not clicking on buttons
-                if (!e.target.closest('.read-btn') && !e.target.closest('.download-btn')) {
+                // Only trigger if not clicking on buttons or book mode icon
+                if (!e.target.closest('.read-btn') && !e.target.closest('.download-btn') && !e.target.closest('.book-mode-icon')) {
                     const bookId = item.getAttribute('data-book-id');
                     handleRead(bookId);
                 }
             });
         });
+    }
+
+    function handleReadAsBook(bookId) {
+        const book = allBooks.find(b => b.id === bookId);
+        if (book) {
+            // Vibration feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([30, 50, 30]);
+            }
+
+            console.log(`📖 Opening book in Book Mode: ${book.title}`);
+            
+            // Open in book reader with bookmode parameter
+            window.location.href = `book-reader.html?id=${bookId}&bookmode=true`;
+        }
     }
 
     function handleRead(bookId) {

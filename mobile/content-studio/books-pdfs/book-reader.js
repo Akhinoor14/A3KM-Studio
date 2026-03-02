@@ -90,6 +90,59 @@
         updatePageInfo();
     }
 
+    // ========== OPEN BOOK IN VIEWER ==========
+    function openBookInViewer(bookMode = false) {
+        // Use downloadUrl from content.json
+        let pdfPath = currentBook.downloadUrl || currentBook.pdfUrl || '#';
+        
+        // Add CORS proxy for GitHub-hosted PDFs
+        if (pdfPath.includes('github.com') || pdfPath.includes('githubusercontent.com')) {
+            pdfPath = `https://corsproxy.io/?${encodeURIComponent(pdfPath)}`;
+        }
+        
+        if (window.openUniversalPDFViewer) {
+            openUniversalPDFViewer({
+                filePath: pdfPath,
+                fileType: 'pdf',
+                title: currentBook.title,
+                downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+                showDownload: true,
+                allowZoom: true
+            });
+            
+            // Activate Book Mode if requested
+            if (bookMode) {
+                setTimeout(() => {
+                    activateBookModeInViewer();
+                }, 800);
+            }
+        } else {
+            // Fallback: Open PDF in new tab
+            window.open(pdfPath, '_blank');
+        }
+    }
+
+    // ========== ACTIVATE BOOK MODE IN VIEWER ==========
+    function activateBookModeInViewer() {
+        // Add Book Mode class to body for styling
+        document.body.classList.add('book-mode');
+        
+        // Apply Book Mode styling to viewer overlay
+        const viewerOverlay = document.getElementById('universalPDFViewerOverlay');
+        if (viewerOverlay) {
+            viewerOverlay.style.background = 'linear-gradient(135deg, #1a0a00 0%, #0a0505 50%, #1a0a00 100%)';
+        }
+        
+        // Apply styling to PDF canvas
+        const pdfCanvas = document.getElementById('universalPDFCanvas');
+        if (pdfCanvas) {
+            pdfCanvas.style.boxShadow = '0 0 60px rgba(0,0,0,0.9), inset 2px 0 20px rgba(139,0,0,0.3)';
+            pdfCanvas.style.border = '1px solid rgba(139,0,0,0.2)';
+        }
+        
+        console.log('📖 Book Mode ACTIVATED in viewer');
+    }
+
     // ========== LOAD PDF VIEWER ==========
     function loadPDFViewer() {
         // Display book preview with Read button
@@ -111,22 +164,7 @@
         const openPDFBtn = document.getElementById('openPDFBtn');
         if (openPDFBtn) {
             openPDFBtn.addEventListener('click', () => {
-                // Use downloadUrl from content.json
-                const pdfPath = currentBook.downloadUrl || currentBook.pdfUrl || '#';
-                
-                if (window.openMobilePDFViewer) {
-                    openMobilePDFViewer({
-                        filePath: pdfPath,
-                        fileType: 'pdf',
-                        title: currentBook.title,
-                        downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-                        showDownload: false, // Don't prompt for download when reading
-                        allowZoom: true
-                    });
-                } else {
-                    // Fallback: Open PDF in new tab for inline viewing
-                    window.open(pdfPath, '_blank');
-                }
+                openBookInViewer(false);
             });
         }
     }
@@ -319,6 +357,9 @@
 
         // Swipe gestures for page navigation
         addSwipeGestures();
+
+        // Check for Book Mode parameter
+        checkBookMode();
     }
 
     // ========== SWIPE GESTURES ==========
@@ -350,6 +391,93 @@
             }
         }
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════ */
+    /* 📖 MOBILE BOOK MODE - Immersive Reading                                 */
+    /* ═══════════════════════════════════════════════════════════════════════ */
+    
+    let isBookMode = false;
+    let controlsVisible = true;
+
+    // Check URL parameter for book mode
+    function checkBookMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookModeParam = urlParams.get('bookmode');
+        const savedBookMode = localStorage.getItem('preferBookMode');
+        
+        if (bookModeParam === 'true' || savedBookMode === 'true') {
+            // Open in viewer with Book Mode activated
+            setTimeout(() => {
+                openBookInViewer(true);
+            }, 500);
+        }
+    }
+
+    // Toggle Book Mode
+    function toggleBookMode() {
+        isBookMode = !isBookMode;
+        document.body.classList.toggle('book-mode');
+        
+        // Save preference
+        localStorage.setItem('preferBookMode', isBookMode.toString());
+        
+        if (isBookMode) {
+            console.log('📖 Book Mode ACTIVATED');
+            showSwipeHint();
+            
+            // Add tap to toggle controls
+            document.addEventListener('click', toggleControlsOnTap);
+        } else {
+            console.log('📖 Book Mode DEACTIVATED');
+            document.removeEventListener('click', toggleControlsOnTap);
+        }
+    }
+
+    // Show swipe hint for first-time users
+    function showSwipeHint() {
+        const swipeHint = document.getElementById('swipeHint');
+        if (!swipeHint) return;
+        
+        const hasSeenHint = localStorage.getItem('bookModeSwipeHintSeenMobile');
+        
+        if (!hasSeenHint) {
+            setTimeout(() => {
+                swipeHint.classList.add('show');
+                
+                setTimeout(() => {
+                    swipeHint.classList.remove('show');
+                    localStorage.setItem('bookModeSwipeHintSeenMobile', 'true');
+                }, 3000);
+            }, 500);
+        }
+    }
+
+    // Toggle controls visibility on tap
+    function toggleControlsOnTap(e) {
+        if (!isBookMode) return;
+        
+        // Don't toggle if clicking on controls themselves
+        if (e.target.closest('.book-mode-controls')) return;
+        
+        const controls = document.getElementById('bookModeControls');
+        if (!controls) return;
+        
+        controlsVisible = !controlsVisible;
+        
+        if (controlsVisible) {
+            controls.style.opacity = '1';
+            controls.style.pointerEvents = 'all';
+        } else {
+            controls.style.opacity = '0';
+            controls.style.pointerEvents = 'none';
+        }
+        
+        // Haptic feedback
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // Make toggleBookMode globally accessible
+    window.toggleBookMode = toggleBookMode;
 
     // Wait for DOM
     if (document.readyState === 'loading') {

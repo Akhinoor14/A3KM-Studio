@@ -529,6 +529,12 @@ async function renderPage(pageNum) {
         UniversalPDFViewer.canvas.style.width = Math.floor(viewport.width) + 'px';
         UniversalPDFViewer.canvas.style.height = Math.floor(viewport.height) + 'px';
         
+        // Disable image smoothing for sharp text rendering
+        UniversalPDFViewer.ctx.imageSmoothingEnabled = false;
+        UniversalPDFViewer.ctx.webkitImageSmoothingEnabled = false;
+        UniversalPDFViewer.ctx.mozImageSmoothingEnabled = false;
+        UniversalPDFViewer.ctx.msImageSmoothingEnabled = false;
+        
         // Scale context for high-DPI
         const transform = outputScale !== 1
             ? [outputScale, 0, 0, outputScale, 0, 0]
