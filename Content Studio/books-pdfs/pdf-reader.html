@@ -471,6 +471,147 @@
     .key-hint.show { opacity: 1; }
     .key-hint span { color: rgba(255,150,150,0.8); font-weight: 700; }
 
+
+    /* ─────────────────────────────────────────────────
+       ANNOTATION SYSTEM
+    ──────────────────────────────────────────────── */
+    :root {
+      --hl-yellow: rgba(255,229,80,0.6);
+      --hl-green:  rgba(110,210,90,0.6);
+      --hl-blue:   rgba(90,170,245,0.6);
+      --hl-pink:   rgba(245,140,190,0.6);
+      --hl-orange: rgba(255,170,60,0.6);
+    }
+
+    /* Highlight toolbar */
+    .hl-toolbar {
+      position: fixed;
+      background: rgba(10,2,2,0.97);
+      border: 1px solid rgba(204,0,0,0.4);
+      border-radius: 14px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.85);
+      z-index: 2500;
+      opacity: 0;
+      transform: translateY(8px) scale(0.9);
+      transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      backdrop-filter: blur(16px);
+      user-select: none;
+    }
+    .hl-toolbar.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+    .hl-toolbar-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 2px; }
+    .hl-color { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), border-color 0.15s; flex-shrink: 0; }
+    .hl-color:hover { transform: scale(1.3); border-color: rgba(255,255,255,0.5); }
+    .hl-color[data-c="yellow"] { background: #FFE550; }
+    .hl-color[data-c="green"]  { background: #6ED25A; }
+    .hl-color[data-c="blue"]   { background: #5AAAF5; }
+    .hl-color[data-c="pink"]   { background: #F58CBE; }
+    .hl-color[data-c="orange"] { background: #FFAA3C; }
+    .hl-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); margin: 0 3px; flex-shrink: 0; }
+    .hl-action { width: 28px; height: 28px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all 0.15s; flex-shrink: 0; }
+    .hl-action:hover { background: rgba(204,0,0,0.3); border-color: rgba(204,0,0,0.5); color: #fff; }
+
+    /* Highlight colors on PDF text layer */
+    .textLayer .hl-yellow { background: rgba(255,229,80,0.55)  !important; border-bottom: 2px solid rgba(220,190,0,0.6)  !important; border-radius: 2px; cursor: pointer; }
+    .textLayer .hl-green  { background: rgba(110,210,90,0.55)  !important; border-bottom: 2px solid rgba(60,180,40,0.6)   !important; border-radius: 2px; cursor: pointer; }
+    .textLayer .hl-blue   { background: rgba(90,170,245,0.55)  !important; border-bottom: 2px solid rgba(40,130,220,0.6)  !important; border-radius: 2px; cursor: pointer; }
+    .textLayer .hl-pink   { background: rgba(245,140,190,0.55) !important; border-bottom: 2px solid rgba(210,80,150,0.6)  !important; border-radius: 2px; cursor: pointer; }
+    .textLayer .hl-orange { background: rgba(255,170,60,0.55)  !important; border-bottom: 2px solid rgba(220,130,0,0.6)   !important; border-radius: 2px; cursor: pointer; }
+    .textLayer [class*="hl-"]:hover { filter: brightness(1.15); }
+
+    /* Highlight delete tooltip */
+    .hl-del-tip { position: fixed; background: rgba(10,2,2,0.97); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; padding: 5px 10px; z-index: 2600; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+    .hl-del-tip.visible { opacity: 1; pointer-events: all; }
+    .hl-del-tip button { background: none; border: none; color: rgba(255,120,100,0.9); font-size: 12px; font-family: 'Inter',sans-serif; cursor: pointer; padding: 2px 4px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .hl-del-tip button:hover { color: #fff; }
+
+    /* Bookmark ribbon */
+    .bm-ribbon-wrap { position: absolute; top: 0; right: 14px; width: 22px; height: 40px; cursor: pointer; z-index: 60; transition: filter 0.2s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .bm-ribbon-wrap:hover { transform: translateY(-3px) scale(1.05); filter: drop-shadow(0 5px 10px rgba(204,0,0,0.5)); }
+
+    /* Note pin */
+    .note-pin { position: absolute; width: 26px; height: 26px; background: #FFE550; border: 2px solid rgba(180,150,0,0.7); border-radius: 50% 50% 50% 0; transform: rotate(-45deg) translate(-50%,-50%); transform-origin: bottom left; cursor: pointer; z-index: 60; box-shadow: 0 3px 10px rgba(0,0,0,0.4); transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .note-pin:hover { transform: rotate(-45deg) translate(-50%,-50%) scale(1.2); }
+    .note-pin.blue  { background: #5AAAF5; border-color: rgba(30,110,220,0.7); }
+    .note-pin.green { background: #6ED25A; border-color: rgba(30,160,30,0.7); }
+    .note-pin.red   { background: #F06050; border-color: rgba(190,40,20,0.7); }
+
+    /* Note tooltip */
+    .note-tooltip { position: fixed; background: rgba(10,2,2,0.97); border: 1px solid rgba(255,220,60,0.3); border-radius: 12px; padding: 12px 14px; max-width: 270px; min-width: 180px; z-index: 3000; opacity: 0; transform: translateY(6px) scale(0.93); transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; box-shadow: 0 12px 40px rgba(0,0,0,0.8); backdrop-filter: blur(16px); }
+    .note-tooltip.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+    .note-tooltip-hd { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,220,60,0.7); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .note-tooltip-body { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; max-height: 120px; overflow-y: auto; word-break: break-word; }
+    .note-tooltip-body::-webkit-scrollbar { width: 4px; }
+    .note-tooltip-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+    .note-tooltip-acts { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .note-tt-btn { flex: 1; padding: 5px 8px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-size: 11px; font-family: 'Inter',sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.15s; }
+    .note-tt-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .note-tt-btn.del:hover { background: rgba(200,30,30,0.35); border-color: rgba(200,30,30,0.5); }
+
+    /* Modal overlay */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 3998; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+    .modal-overlay.visible { opacity: 1; pointer-events: all; }
+
+    /* Note modal */
+    .note-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9); background: rgba(10,2,2,0.99); border: 1px solid rgba(204,0,0,0.45); border-radius: 18px; padding: 22px; width: 340px; z-index: 3999; opacity: 0; transition: opacity 0.25s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; box-shadow: 0 24px 80px rgba(0,0,0,0.95); backdrop-filter: blur(20px); }
+    .note-modal.visible { opacity: 1; transform: translate(-50%,-50%) scale(1); pointer-events: all; }
+    .note-modal h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .note-modal h4 i { color: var(--primary-red); }
+    .note-modal textarea { width: 100%; height: 110px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: rgba(255,255,255,0.9); font-family: 'Inter',sans-serif; font-size: 13px; padding: 10px 12px; resize: none; outline: none; transition: border-color 0.2s; }
+    .note-modal textarea:focus { border-color: rgba(204,0,0,0.5); }
+    .note-modal-colors { display: flex; gap: 9px; margin: 12px 0 6px; align-items: center; }
+    .note-modal-colors span { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .note-c-opt { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+    .note-c-opt:hover { transform: scale(1.2); }
+    .note-c-opt.sel { border-color: rgba(255,255,255,0.8); transform: scale(1.1); }
+    .note-c-opt[data-c="yellow"] { background: #FFE550; }
+    .note-c-opt[data-c="blue"]   { background: #5AAAF5; }
+    .note-c-opt[data-c="green"]  { background: #6ED25A; }
+    .note-c-opt[data-c="red"]    { background: #F06050; }
+    .note-modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+    .nm-btn { flex: 1; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter',sans-serif; transition: all 0.2s; }
+    .nm-btn:hover { background: rgba(255,255,255,0.1); }
+    .nm-btn.primary { background: rgba(204,0,0,0.4); border-color: rgba(204,0,0,0.6); color: #fff; }
+    .nm-btn.primary:hover { background: rgba(204,0,0,0.65); }
+
+    /* Annotation panel */
+    .annot-panel { position: fixed; top: 0; right: 0; width: 290px; height: 100vh; background: rgba(8,2,2,0.98); border-left: 1px solid rgba(204,0,0,0.2); z-index: 1400; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); display: flex; flex-direction: column; box-shadow: -12px 0 50px rgba(0,0,0,0.7); backdrop-filter: blur(20px); }
+    .annot-panel.open { transform: translateX(0); }
+    .annot-panel-hd { padding: 60px 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .annot-panel-title { font-size: 13px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .annot-panel-title i { color: var(--primary-red); }
+    .annot-close { position: absolute; top: 16px; right: 14px; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; }
+    .annot-close:hover { background: rgba(204,0,0,0.25); color: #fff; border-color: rgba(204,0,0,0.4); }
+    .annot-tabs { display: flex; margin: 0 -16px; }
+    .annot-tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.35); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; user-select: none; }
+    .annot-tab:hover { color: rgba(255,255,255,0.65); }
+    .annot-tab.active { color: #fff; border-bottom-color: var(--primary-red); }
+    .annot-body { flex: 1; overflow-y: auto; padding: 12px; }
+    .annot-body::-webkit-scrollbar { width: 4px; }
+    .annot-body::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.3); border-radius: 2px; }
+    .annot-empty { text-align: center; color: rgba(255,255,255,0.28); font-size: 12px; padding: 36px 12px; line-height: 1.7; }
+    .annot-empty i { display: block; font-size: 26px; margin-bottom: 10px; opacity: 0.4; }
+    .annot-item { padding: 9px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; margin-bottom: 7px; cursor: pointer; transition: background 0.18s, border-color 0.18s; position: relative; }
+    .annot-item:hover { background: rgba(204,0,0,0.1); border-color: rgba(204,0,0,0.22); }
+    .annot-item-pg { font-size: 10px; font-weight: 800; color: rgba(204,0,0,0.75); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+    .annot-item-pg i { font-size: 10px; }
+    .annot-item-txt { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .annot-item-del { position: absolute; top: 7px; right: 7px; width: 20px; height: 20px; border-radius: 50%; background: rgba(200,30,30,0.12); border: 1px solid rgba(200,30,30,0.2); color: rgba(255,100,100,0.5); font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: all 0.15s; }
+    .annot-item:hover .annot-item-del { opacity: 1; }
+    .annot-item-del:hover { background: rgba(200,30,30,0.5); color: #fff; opacity: 1 !important; }
+    .hl-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Active tool button */
+    .bar-btn.tool-active { background: rgba(204,0,0,0.25); border-color: rgba(204,0,0,0.6); color: #fff; }
+
+    /* Note mode cursor */
+    body.note-mode .canvas-wrap { cursor: crosshair !important; }
+    body.note-mode .textLayer   { pointer-events: none !important; }
+
     /* ─────────────────────────────────────────────────
        RESPONSIVE OPTIMIZATION
     ──────────────────────────────────────────────── */
@@ -580,8 +721,9 @@
     <div class="bar-sep"></div>
 
     <!-- Tools -->
-    <button class="bar-btn" onclick="addBookmark()" title="Add bookmark"><i class="fas fa-bookmark"></i></button>
-    <button class="bar-btn" id="bmPanelBtn" onclick="toggleBmPanel()" title="Bookmarks"><i class="fas fa-list-ul"></i></button>
+    <button class="bar-btn" onclick="toggleBookmarkCurrent()" title="Bookmark this page (B)"><i class="fas fa-bookmark"></i></button>
+    <button class="bar-btn" id="noteModeBtn" onclick="toggleNoteMode()" title="Add note (N)"><i class="fas fa-sticky-note"></i></button>
+    <button class="bar-btn" id="annotPanelBtn" onclick="toggleAnnotPanel()" title="Annotations (A)"><i class="fas fa-layer-group"></i></button>
     <button class="bar-btn" onclick="cycleTheme()" title="Reading theme" id="themeBtn"><i class="fas fa-adjust"></i></button>
     <button class="bar-btn" onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
 
@@ -632,13 +774,57 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   <div class="page-label" id="pageLabel">Page 1</div>
 
-  <!-- BOOKMARKS PANEL -->
-  <div class="bm-panel" id="bmPanel">
-    <div class="bm-head">
-      <h3><i class="fas fa-bookmark" style="color:var(--primary-red);margin-right:8px;"></i>Bookmarks</h3>
-      <div class="bm-close" onclick="toggleBmPanel()"><i class="fas fa-times"></i></div>
+  <!-- HIGHLIGHT TOOLBAR -->
+  <div class="hl-toolbar" id="hlToolbar">
+    <span class="hl-toolbar-label">Highlight</span>
+    <button class="hl-color" data-c="yellow" title="Yellow" onclick="applyHighlight('yellow')"></button>
+    <button class="hl-color" data-c="green"  title="Green"  onclick="applyHighlight('green')"></button>
+    <button class="hl-color" data-c="blue"   title="Blue"   onclick="applyHighlight('blue')"></button>
+    <button class="hl-color" data-c="pink"   title="Pink"   onclick="applyHighlight('pink')"></button>
+    <button class="hl-color" data-c="orange" title="Orange" onclick="applyHighlight('orange')"></button>
+    <div class="hl-sep"></div>
+    <button class="hl-action" title="Copy" onclick="copySelectedText()"><i class="fas fa-copy"></i></button>
+    <button class="hl-action" title="Close" onclick="hideHlToolbar()"><i class="fas fa-times"></i></button>
+  </div>
+
+  <!-- HIGHLIGHT DELETE TOOLTIP -->
+  <div class="hl-del-tip" id="hlDeleteTooltip"></div>
+
+  <!-- NOTE TOOLTIP -->
+  <div class="note-tooltip" id="noteTooltip"></div>
+
+  <!-- MODAL OVERLAY -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeNoteModal()"></div>
+
+  <!-- NOTE MODAL -->
+  <div class="note-modal" id="noteModal">
+    <h4><i class="fas fa-sticky-note"></i> Add Note</h4>
+    <textarea id="noteTextarea" placeholder="Write your note here&#8230;" onkeydown="if(event.key==='Enter'&&event.ctrlKey)saveNote()"></textarea>
+    <div class="note-modal-colors">
+      <span>Color:</span>
+      <button class="note-c-opt sel" data-c="yellow" title="Yellow" onclick="setNoteColor('yellow')"></button>
+      <button class="note-c-opt"     data-c="blue"   title="Blue"   onclick="setNoteColor('blue')"></button>
+      <button class="note-c-opt"     data-c="green"  title="Green"  onclick="setNoteColor('green')"></button>
+      <button class="note-c-opt"     data-c="red"    title="Red"    onclick="setNoteColor('red')"></button>
     </div>
-    <div class="bm-list" id="bmList"></div>
+    <div class="note-modal-btns">
+      <button class="nm-btn" onclick="closeNoteModal()">Cancel</button>
+      <button class="nm-btn primary" onclick="saveNote()"><i class="fas fa-check"></i> Save Note</button>
+    </div>
+  </div>
+
+  <!-- ANNOTATION PANEL -->
+  <div class="annot-panel" id="annotPanel">
+    <div class="annot-close" onclick="toggleAnnotPanel()"><i class="fas fa-times"></i></div>
+    <div class="annot-panel-hd">
+      <div class="annot-panel-title"><i class="fas fa-layer-group"></i> Annotations</div>
+      <div class="annot-tabs">
+        <div class="annot-tab active" data-tab="bookmarks" onclick="setAnnotTab('bookmarks')">&#128204; Bookmarks</div>
+        <div class="annot-tab"        data-tab="highlights" onclick="setAnnotTab('highlights')">&#9998; Highlights</div>
+        <div class="annot-tab"        data-tab="notes"      onclick="setAnnotTab('notes')">&#128221; Notes</div>
+      </div>
+    </div>
+    <div class="annot-body" id="annotBody"></div>
   </div>
 
   <!-- Keyboard hint -->
@@ -681,7 +867,10 @@
         document.title = bookData.title + ' – A3KM Studio';
 
         loadBookmarks();
+        loadHighlights();
+        loadNotes();
         await loadPDF(bookData.downloadUrl);
+        loadLastPage();
         showKeyHint();
       } catch (e) {
         showErr('Failed to load: ' + e.message);
@@ -838,6 +1027,7 @@
     async function renderPage(n, skipTransition) {
       if (!pdfDoc) return;
       curPage = n;
+      saveLastPage(n);
       document.getElementById('pageInput').value = n;
       updateProgress();
       showPageLabel(n);
@@ -922,6 +1112,18 @@
 
         wrap.classList.add('fade-in');
         updateNav();
+
+        // Attach note-click handler and text-selection handler
+        wrap.addEventListener('click', handleCanvasClick);
+        textDiv.addEventListener('mouseup', () => setTimeout(onTextSelectionEnd, 30));
+
+        // Re-apply saved annotations after textLayer finishes rendering
+        const _pageNum = n;
+        setTimeout(() => {
+          applyHighlightsToPage(_pageNum);
+          renderNotesOnPage(_pageNum);
+          updateBookmarkRibbon();
+        }, 220);
       } catch (err) {
         showErr('Render error: ' + err.message);
       }
@@ -1003,47 +1205,398 @@
     });
     resetBarTimer();
 
+    // ═══════════════════════════════════════════════════
+    //  ANNOTATION SYSTEM – Bookmarks, Highlights, Notes
+    // ═══════════════════════════════════════════════════
+    let highlights = {};
+    let notes      = {};
+    let noteModeActive = false;
+    let annotTab   = 'bookmarks';
+    let hlSelection = null;
+    let hlHideTimer = null;
+    let pendingNote = null;
+    let noteColor   = 'yellow';
+    let noteTooltipTimer = null;
+
+    const SK = {
+      lastPage:   () => `rdr_last_${bookId}`,
+      highlights: () => `rdr_hl_${bookId}`,
+      notes:      () => `rdr_notes_${bookId}`,
+    };
+
+    // ── Last page resume ──────────────────────────────────
+    function saveLastPage(n) {
+      try { localStorage.setItem(SK.lastPage(), String(n)); } catch(e) {}
+    }
+    function loadLastPage() {
+      try {
+        const n = parseInt(localStorage.getItem(SK.lastPage()));
+        if (n >= 2 && n <= totalPg) { renderPage(n); showPageLabel('Resumed from page ' + n); }
+      } catch(e) {}
+    }
+
     // ── Bookmarks ─────────────────────────────────────────
     function loadBookmarks() {
-      const s = localStorage.getItem('bm-' + bookId);
-      bookmarks = s ? JSON.parse(s) : [];
-      renderBmList();
+      try { bookmarks = JSON.parse(localStorage.getItem('bm-' + bookId) || '[]'); } catch(e) { bookmarks = []; }
     }
     function saveBookmarks() {
-      localStorage.setItem('bm-' + bookId, JSON.stringify(bookmarks));
+      try { localStorage.setItem('bm-' + bookId, JSON.stringify(bookmarks)); } catch(e) {}
     }
-    function addBookmark() {
-      if (bookmarks.find(b => b.p === curPage)) {
-        showPageLabel('Already bookmarked'); return;
+    function addBookmark() { toggleBookmarkCurrent(); }
+    function toggleBookmarkCurrent() {
+      const idx = bookmarks.findIndex(b => b.p === curPage);
+      if (idx >= 0) {
+        bookmarks.splice(idx, 1);
+        showPageLabel('Bookmark removed');
+      } else {
+        if (bookmarks.length >= 50) { showPageLabel('Max 50 bookmarks reached'); return; }
+        bookmarks.push({ p: curPage, d: new Date().toLocaleDateString() });
+        showPageLabel('Page ' + curPage + ' bookmarked');
       }
-      bookmarks.push({ p: curPage, d: new Date().toLocaleDateString() });
       saveBookmarks();
-      renderBmList();
-      showPageLabel(`Bookmarked page ${curPage}`);
+      updateBookmarkRibbon();
+      refreshAnnotPanel();
     }
     function removeBookmark(p) {
       bookmarks = bookmarks.filter(b => b.p !== p);
       saveBookmarks();
-      renderBmList();
+      updateBookmarkRibbon();
+      refreshAnnotPanel();
     }
-    function renderBmList() {
-      const el = document.getElementById('bmList');
-      if (!bookmarks.length) { el.innerHTML = '<div class="bm-empty">No bookmarks yet.<br>Press the 🔖 button to add one.</div>'; return; }
-      el.innerHTML = bookmarks.sort((a,b)=>a.p-b.p).map(b => `
-        <div class="bm-item">
-          <div onclick="jumpTo(${b.p})">
-            <div class="bm-item-page">Page ${b.p}</div>
-            <div class="bm-item-date">${b.d}</div>
-          </div>
-          <span class="bm-del" onclick="removeBookmark(${b.p})"><i class="fas fa-times"></i></span>
-        </div>`).join('');
-    }
+    function renderBmList() { refreshAnnotPanel(); }
     function jumpTo(p) {
       renderPage(p);
-      toggleBmPanel();
+      document.getElementById('annotPanel').classList.remove('open');
     }
-    function toggleBmPanel() {
-      document.getElementById('bmPanel').classList.toggle('open');
+    function toggleBmPanel() { toggleAnnotPanel(); }
+
+    // ── Bookmark ribbon on page corner ────────────────────
+    function updateBookmarkRibbon() {
+      const old = document.getElementById('pageRibbon');
+      if (old) old.remove();
+      const wrap = document.querySelector('.canvas-wrap');
+      if (!wrap) return;
+      const marked = bookmarks.some(b => b.p === curPage);
+      const ribbon = document.createElement('div');
+      ribbon.id = 'pageRibbon';
+      ribbon.className = 'bm-ribbon-wrap';
+      ribbon.title = marked ? 'Remove bookmark (B)' : 'Bookmark this page (B)';
+      ribbon.onclick = () => toggleBookmarkCurrent();
+      ribbon.innerHTML = `<svg viewBox="0 0 22 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2h18v34l-9-7-9 7V2z"
+          fill="${marked ? 'rgba(204,0,0,0.87)' : 'rgba(255,255,255,0.07)'}"
+          stroke="${marked ? 'rgba(220,20,20,0.9)' : 'rgba(255,255,255,0.18)'}"
+          stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>`;
+      ribbon.style.opacity = '0';
+      ribbon.style.transition = 'opacity 0.3s ease';
+      wrap.appendChild(ribbon);
+      requestAnimationFrame(() => { ribbon.style.opacity = '1'; });
+    }
+
+    // ── Highlight storage ─────────────────────────────────
+    function loadHighlights() {
+      try { highlights = JSON.parse(localStorage.getItem(SK.highlights()) || '{}'); } catch(e) { highlights = {}; }
+    }
+    function saveHighlights() {
+      try { localStorage.setItem(SK.highlights(), JSON.stringify(highlights)); }
+      catch(e) { showPageLabel('Storage full – clear some highlights'); }
+    }
+
+    // ── Highlight toolbar (appears on text selection) ─────
+    function onTextSelectionEnd() {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.toString().trim().length < 2) {
+        setTimeout(hideHlToolbar, 300); return;
+      }
+      const text = sel.toString().trim();
+      const range = sel.getRangeAt(0);
+      const rect  = range.getBoundingClientRect();
+      hlSelection = { text };
+      const tb = document.getElementById('hlToolbar');
+      const tbW = 236;
+      let x = rect.left + rect.width / 2 - tbW / 2;
+      let y = rect.top - 50;
+      x = Math.max(8, Math.min(x, window.innerWidth - tbW - 8));
+      y = Math.max(64, y);
+      tb.style.left = x + 'px';
+      tb.style.top  = y + 'px';
+      tb.classList.add('visible');
+      clearTimeout(hlHideTimer);
+      hlHideTimer = setTimeout(hideHlToolbar, 10000);
+    }
+    function hideHlToolbar() {
+      document.getElementById('hlToolbar').classList.remove('visible');
+      hlSelection = null;
+    }
+    function copySelectedText() {
+      const text = window.getSelection()?.toString();
+      if (text) navigator.clipboard.writeText(text).then(() => showPageLabel('Copied!'));
+      hideHlToolbar();
+    }
+    function applyHighlight(color) {
+      if (!hlSelection) return;
+      const { text } = hlSelection;
+      const pg = String(curPage);
+      if (!highlights[pg]) highlights[pg] = [];
+      const dupe = highlights[pg].findIndex(h => h.text.trim() === text.trim());
+      if (dupe >= 0) highlights[pg][dupe].color = color;
+      else highlights[pg].push({ id: Date.now(), text, color });
+      saveHighlights();
+      window.getSelection().removeAllRanges();
+      hideHlToolbar();
+      applyHighlightsToPage(curPage);
+      refreshAnnotPanel();
+    }
+    function applyHighlightsToPage(pageNum) {
+      const pageHls = highlights[String(pageNum)];
+      if (!pageHls || !pageHls.length) return;
+      const textLayer = document.querySelector('.textLayer');
+      if (!textLayer) return;
+      const spans = Array.from(textLayer.querySelectorAll('span'));
+      pageHls.forEach(hl => {
+        const target = hl.text.trim();
+        if (!target) return;
+        for (let i = 0; i < spans.length; i++) {
+          // Single span contains the target text
+          if (spans[i].textContent.includes(target)) {
+            spans[i].classList.add('hl-' + hl.color);
+            spans[i].dataset.hlId = String(hl.id);
+            spans[i].addEventListener('click', (e) => {
+              if (noteModeActive) return;
+              e.stopPropagation();
+              showHlDeleteTip(hl.id, e);
+            }, { once: true });
+            return;
+          }
+          // Multi-span: combine up to 5 adjacent spans
+          let combo = '';
+          for (let j = i; j < Math.min(i + 5, spans.length); j++) {
+            combo += spans[j].textContent;
+            if (combo.includes(target)) {
+              for (let k = i; k <= j; k++) {
+                spans[k].classList.add('hl-' + hl.color);
+                spans[k].dataset.hlId = String(hl.id);
+              }
+              spans[i].addEventListener('click', (e) => {
+                if (noteModeActive) return;
+                e.stopPropagation();
+                showHlDeleteTip(hl.id, e);
+              }, { once: true });
+              return;
+            }
+          }
+        }
+      });
+    }
+    function showHlDeleteTip(hlId, e) {
+      const tt = document.getElementById('hlDeleteTooltip');
+      tt.innerHTML = `<button onclick="removeHighlightById(${hlId})"><i class="fas fa-eraser"></i> Remove highlight</button>`;
+      tt.style.left = Math.min(e.clientX, window.innerWidth - 175) + 'px';
+      tt.style.top  = (e.clientY - 40) + 'px';
+      tt.classList.add('visible');
+      clearTimeout(tt._t);
+      tt._t = setTimeout(() => tt.classList.remove('visible'), 4000);
+    }
+    function removeHighlightById(id) {
+      Object.keys(highlights).forEach(pg => {
+        highlights[pg] = highlights[pg].filter(h => h.id !== id);
+        if (!highlights[pg].length) delete highlights[pg];
+      });
+      saveHighlights();
+      document.getElementById('hlDeleteTooltip').classList.remove('visible');
+      renderPage(curPage, true);
+      refreshAnnotPanel();
+    }
+
+    // ── Notes storage ─────────────────────────────────────
+    function loadNotes() {
+      try { notes = JSON.parse(localStorage.getItem(SK.notes()) || '{}'); } catch(e) { notes = {}; }
+    }
+    function saveNotes() {
+      try { localStorage.setItem(SK.notes(), JSON.stringify(notes)); }
+      catch(e) { showPageLabel('Storage full – clear some notes'); }
+    }
+
+    // ── Note mode ─────────────────────────────────────────
+    function toggleNoteMode() {
+      noteModeActive = !noteModeActive;
+      document.body.classList.toggle('note-mode', noteModeActive);
+      document.getElementById('noteModeBtn').classList.toggle('tool-active', noteModeActive);
+      showPageLabel(noteModeActive ? 'Click on the page to drop a note' : 'Note mode off');
+    }
+    function setNoteColor(c) {
+      noteColor = c;
+      document.querySelectorAll('.note-c-opt').forEach(el => el.classList.toggle('sel', el.dataset.c === c));
+    }
+    function handleCanvasClick(e) {
+      if (!noteModeActive) return;
+      const wrap = e.currentTarget;
+      const rect = wrap.getBoundingClientRect();
+      pendingNote = {
+        xPct: (e.clientX - rect.left) / wrap.offsetWidth,
+        yPct: (e.clientY - rect.top)  / wrap.offsetHeight,
+      };
+      document.getElementById('noteTextarea').value = '';
+      setNoteColor(noteColor);
+      document.getElementById('noteModal').classList.add('visible');
+      document.getElementById('modalOverlay').classList.add('visible');
+      setTimeout(() => document.getElementById('noteTextarea').focus(), 120);
+    }
+    function saveNote() {
+      const content = document.getElementById('noteTextarea').value.trim();
+      if (!content || !pendingNote) { closeNoteModal(); return; }
+      const pg = String(curPage);
+      if (!notes[pg]) notes[pg] = [];
+      if (notes[pg].length >= 20) { showPageLabel('Max 20 notes per page'); closeNoteModal(); return; }
+      notes[pg].push({ id: Date.now(), xPct: pendingNote.xPct, yPct: pendingNote.yPct, content, color: noteColor });
+      saveNotes();
+      closeNoteModal();
+      renderNotesOnPage(curPage);
+      refreshAnnotPanel();
+    }
+    function closeNoteModal() {
+      document.getElementById('noteModal').classList.remove('visible');
+      document.getElementById('modalOverlay').classList.remove('visible');
+      pendingNote = null;
+    }
+    function renderNotesOnPage(pageNum) {
+      document.querySelectorAll('.note-pin').forEach(p => p.remove());
+      const wrap = document.querySelector('.canvas-wrap');
+      if (!wrap) return;
+      const pgNotes = notes[String(pageNum)];
+      if (!pgNotes || !pgNotes.length) return;
+      pgNotes.forEach(note => {
+        const pin = document.createElement('div');
+        pin.className = 'note-pin' + (note.color !== 'yellow' ? ' ' + note.color : '');
+        pin.dataset.noteId = String(note.id);
+        pin.style.left = (note.xPct * 100) + '%';
+        pin.style.top  = (note.yPct * 100) + '%';
+        pin.addEventListener('mouseenter', (e) => showNoteTooltip(note, e.currentTarget));
+        pin.addEventListener('mouseleave', () => {
+          noteTooltipTimer = setTimeout(hideNoteTooltip, 250);
+        });
+        wrap.appendChild(pin);
+      });
+    }
+    function showNoteTooltip(note, pinEl) {
+      clearTimeout(noteTooltipTimer);
+      const colorMap = { yellow:'#FFE550', blue:'#5AAAF5', green:'#6ED25A', red:'#F06050' };
+      const tt = document.getElementById('noteTooltip');
+      tt.innerHTML = `
+        <div class="note-tooltip-hd">
+          <span style="color:${colorMap[note.color]||'#FFE550'}">&#128204; Note</span>
+          <span style="color:rgba(255,255,255,0.3);font-size:10px">Page ${curPage}</span>
+        </div>
+        <div class="note-tooltip-body">${note.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+        <div class="note-tooltip-acts">
+          <button class="note-tt-btn del" onclick="deleteNoteById(${note.id},${curPage})"><i class="fas fa-trash-alt"></i> Delete</button>
+          <button class="note-tt-btn"     onclick="editNote(${note.id},${curPage})"><i class="fas fa-edit"></i> Edit</button>
+        </div>`;
+      const pinRect = pinEl.getBoundingClientRect();
+      let x = pinRect.right + 12;
+      let y = pinRect.top - 12;
+      if (x + 280 > window.innerWidth) x = pinRect.left - 282;
+      y = Math.max(64, Math.min(y, window.innerHeight - 210));
+      tt.style.left = x + 'px';
+      tt.style.top  = y + 'px';
+      tt.classList.add('visible');
+      tt.onmouseenter = () => clearTimeout(noteTooltipTimer);
+      tt.onmouseleave = () => { noteTooltipTimer = setTimeout(hideNoteTooltip, 250); };
+    }
+    function hideNoteTooltip() {
+      document.getElementById('noteTooltip').classList.remove('visible');
+    }
+    function deleteNoteById(id, pg) {
+      const k = String(pg);
+      notes[k] = (notes[k] || []).filter(n => n.id !== id);
+      if (!notes[k].length) delete notes[k];
+      saveNotes();
+      if (pg === curPage) renderNotesOnPage(curPage);
+      hideNoteTooltip();
+      refreshAnnotPanel();
+    }
+    function editNote(id, pg) {
+      const k = String(pg);
+      const note = (notes[k] || []).find(n => n.id === id);
+      if (!note) return;
+      notes[k] = notes[k].filter(n => n.id !== id);
+      saveNotes();
+      pendingNote = { xPct: note.xPct, yPct: note.yPct };
+      noteColor = note.color;
+      document.getElementById('noteTextarea').value = note.content;
+      setNoteColor(note.color);
+      document.getElementById('noteModal').classList.add('visible');
+      document.getElementById('modalOverlay').classList.add('visible');
+      setTimeout(() => document.getElementById('noteTextarea').focus(), 120);
+      hideNoteTooltip();
+      if (pg === curPage) renderNotesOnPage(curPage);
+    }
+
+    // ── Annotation panel ──────────────────────────────────
+    function toggleAnnotPanel() {
+      const panel = document.getElementById('annotPanel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) renderAnnotPanel();
+    }
+    function setAnnotTab(tab) {
+      annotTab = tab;
+      document.querySelectorAll('.annot-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      renderAnnotBody();
+    }
+    function renderAnnotPanel() {
+      document.querySelectorAll('.annot-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === annotTab));
+      renderAnnotBody();
+    }
+    function refreshAnnotPanel() {
+      if (document.getElementById('annotPanel').classList.contains('open')) renderAnnotBody();
+    }
+    function renderAnnotBody() {
+      const body = document.getElementById('annotBody');
+      if (annotTab === 'bookmarks') {
+        if (!bookmarks.length) {
+          body.innerHTML = '<div class="annot-empty"><i class="fas fa-bookmark"></i>No bookmarks yet.<br>Click the ribbon on a page or press B.</div>';
+          return;
+        }
+        body.innerHTML = bookmarks.sort((a,b) => a.p - b.p).map(b => `
+          <div class="annot-item" onclick="jumpTo(${b.p})">
+            <div class="annot-item-del" onclick="event.stopPropagation();removeBookmark(${b.p})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><i class="fas fa-bookmark"></i> Page ${b.p}</div>
+            <div class="annot-item-txt">${b.d}</div>
+          </div>`).join('');
+        return;
+      }
+      if (annotTab === 'highlights') {
+        const all = Object.entries(highlights)
+          .flatMap(([pg, hls]) => hls.map(h => ({...h, pg: parseInt(pg)})))
+          .sort((a,b) => a.pg - b.pg);
+        if (!all.length) {
+          body.innerHTML = '<div class="annot-empty"><i class="fas fa-highlighter"></i>No highlights yet.<br>Select text on the page and pick a color.</div>';
+          return;
+        }
+        body.innerHTML = all.map(h => `
+          <div class="annot-item" onclick="renderPage(${h.pg})">
+            <div class="annot-item-del" onclick="event.stopPropagation();removeHighlightById(${h.id})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><span class="hl-dot" style="background:var(--hl-${h.color})"></span> Page ${h.pg}</div>
+            <div class="annot-item-txt">&ldquo;${h.text.substring(0,80)}${h.text.length>80?'&hellip;':''}&rdquo;</div>
+          </div>`).join('');
+        return;
+      }
+      if (annotTab === 'notes') {
+        const all = Object.entries(notes)
+          .flatMap(([pg, ns]) => ns.map(n => ({...n, pg: parseInt(pg)})))
+          .sort((a,b) => a.pg - b.pg);
+        if (!all.length) {
+          body.innerHTML = '<div class="annot-empty"><i class="fas fa-sticky-note"></i>No notes yet.<br>Enable note mode and click on the page.</div>';
+          return;
+        }
+        body.innerHTML = all.map(n => `
+          <div class="annot-item" onclick="renderPage(${n.pg})">
+            <div class="annot-item-del" onclick="event.stopPropagation();deleteNoteById(${n.id},${n.pg})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><i class="fas fa-sticky-note"></i> Page ${n.pg}</div>
+            <div class="annot-item-txt">${n.content.substring(0,80)}${n.content.length>80?'&hellip;':''}</div>
+          </div>`).join('');
+      }
     }
 
     // ── Keyboard hints ────────────────────────────────────
@@ -1063,8 +1616,16 @@
         case '-':           zoom(-0.2); break;
         case '0':           resetZoom(); break;
         case 'f': case 'F': toggleFullscreen(); break;
-        case 'b': case 'B': addBookmark(); break;
-        case 'Escape':      document.getElementById('bmPanel').classList.remove('open'); break;
+        case 'b': case 'B': toggleBookmarkCurrent(); break;
+        case 'n': case 'N': toggleNoteMode(); break;
+        case 'a': case 'A': toggleAnnotPanel(); break;
+        case 'Escape':
+          document.getElementById('annotPanel').classList.remove('open');
+          closeNoteModal();
+          hideHlToolbar();
+          hideNoteTooltip();
+          if (noteModeActive) toggleNoteMode();
+          break;
       }
     });
 
