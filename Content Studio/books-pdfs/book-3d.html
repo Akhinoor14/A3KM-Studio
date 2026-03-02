@@ -52,24 +52,11 @@
       position: relative;
     }
 
-    /* Subtle radial desk-light glow */
+    /* Clean solid background - no distractions */
     body::before {
       content: '';
       position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 70% 50% at 50% 40%, rgba(40,10,10,0.85) 0%, rgba(5,2,2,0.97) 100%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Faint grid */
-    body::after {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
-        linear-gradient(0deg,   rgba(255,255,255,0.018) 1px, transparent 1px);
-      background-size: 50px 50px;
+      background: linear-gradient(180deg, #0a0000 0%, #030000 100%);
       pointer-events: none;
       z-index: 0;
     }
@@ -148,29 +135,46 @@
       perspective: 2400px;
     }
 
-    /* Open book container */
+    /* Open book container - maximized for full screen reading */
     .open-book {
       position: relative;
       display: flex;
       align-items: stretch;
-      height: 82vh;
-      max-height: 860px;
+      height: 95vh;
       transform-style: preserve-3d;
       /* Subtle tilt for realism */
-      transform: perspective(2400px) rotateX(3deg);
+      transform: perspective(2400px) rotateX(2deg);
       filter: drop-shadow(0 40px 80px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(204,0,0,0.12));
-      transition: transform 0.4s ease;
+      transition: all 0.4s ease;
     }
     .open-book:hover {
-      transform: perspective(2400px) rotateX(1.5deg) translateY(-6px);
+      transform: perspective(2400px) rotateX(1deg) translateY(-6px);
+    }
+    
+    /* Single-page mode */
+    body.single-page-mode .open-book {
+      justify-content: center;
+    }
+    body.single-page-mode .book-p.left-p {
+      display: none;
+    }
+    body.single-page-mode .book-p.right-p {
+      border-radius: 6px;
+      box-shadow: 
+        inset 0 0 50px rgba(0,0,0,0.08),
+        0 20px 60px rgba(0,0,0,0.6);
+      width: 48vw;
+      max-width: 700px;
+    }
+    body.single-page-mode .book-spine {
+      display: none;
     }
 
-    /* Single page */
+    /* Single page - maximized dimensions */
     .book-p {
       position: relative;
-      width: 42vw;
-      max-width: 560px;
-      min-width: 260px;
+      width: 46vw;
+      min-width: 300px;
       height: 100%;
       background: #fefefe;
       overflow: hidden;
@@ -398,6 +402,100 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ─────────────────────────────────────────────────
+       ADBLOCKER NOTIFICATION POPUP
+    ───────────────────────────────────────────────── */
+    .adblocker-notification {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 10000; animation: fadeIn 0.3s ease;
+    }
+    .adblocker-notification.active { display: flex; }
+    
+    .notif-content {
+      background: linear-gradient(145deg, rgba(20,2,2,0.98), rgba(8,0,0,0.98));
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(204,0,0,0.15);
+      text-align: center;
+      position: relative;
+      animation: slideUp 0.4s ease;
+    }
+    
+    .notif-icon {
+      width: 80px; height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(204,0,0,0.4);
+    }
+    .notif-icon i { font-size: 36px; color: #fff; }
+    
+    .notif-title {
+      font-size: 24px; font-weight: 800; color: var(--text-primary);
+      margin-bottom: 12px; letter-spacing: -0.3px;
+    }
+    
+    .notif-msg {
+      font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.65);
+      margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto;
+    }
+    
+    .notif-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    
+    .notif-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .notif-btn i { font-size: 13px; }
+    
+    .notif-btn-primary {
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      color: #fff; box-shadow: 0 4px 12px rgba(204,0,0,0.3);
+    }
+    .notif-btn-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.5);
+    }
+    
+    .notif-btn-secondary {
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .notif-btn-secondary:hover {
+      background: rgba(255,255,255,0.1); color: var(--text-primary);
+      border-color: rgba(255,255,255,0.25);
+    }
+    
+    .notif-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.05); border: none;
+      color: rgba(255,255,255,0.4); cursor: pointer;
+      transition: all 0.2s; font-size: 14px;
+    }
+    .notif-close:hover {
+      background: rgba(255,255,255,0.1); color: var(--text-primary);
+      transform: rotate(90deg);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* ──────────────────────────────────────────────────
        NIGHT MODE OVERLAY
     ────────────────────────────────────────────────── */
@@ -447,6 +545,28 @@
     <small>Rendering pages for the best reading experience</small>
   </div>
 
+  <!-- ADBLOCKER WARNING NOTIFICATION -->
+  <div class="adblocker-notification" id="adblockNotification">
+    <div class="notif-content">
+      <div class="notif-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h3 class="notif-title">AdBlocker Detected</h3>
+      <p class="notif-msg">It looks like your browser extension is blocking the PDF. Please disable your AdBlocker for this site to view the book in 3D mode.</p>
+      <div class="notif-actions">
+        <button class="notif-btn notif-btn-primary" onclick="retryPDFLoad()">
+          <i class="fas fa-redo"></i> Try Again
+        </button>
+        <button class="notif-btn notif-btn-secondary" onclick="continueWithFallback()">
+          <i class="fas fa-forward"></i> Continue Anyway
+        </button>
+      </div>
+      <button class="notif-close" onclick="closeAdblockNotif()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- TOP STRIP -->
   <div class="top-strip" id="topStrip">
     <a class="ts-btn" id="backToDetail" href="#" style="flex-shrink:0">
@@ -458,6 +578,9 @@
     </a>
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
+    </button>
+    <button class="ts-btn" onclick="toggleReadingMode()" id="readingModeBtn" title="Toggle single/dual page">
+      <i class="fas fa-book-open"></i> Dual Page
     </button>
     <button class="ts-btn red" onclick="toggleFullscreen()">
       <i class="fas fa-expand"></i>
@@ -586,28 +709,75 @@
       }).promise;
     }
 
-    async function loadPDF(url) {
+    let loadAttempts = [];
+    let currentPdfUrl = '';
+    let skipAdblockWarning = false;
+
+    async function loadPDF(url, startFromIndex = 0) {
       const rawUrl = normalizeGithubUrl(url);
+      currentPdfUrl = rawUrl;
       const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
 
-      const attempts = isGithub ? [
-        rawUrl,
-        'https://corsproxy.io/?' + encodeURIComponent(rawUrl),
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
-      ] : [rawUrl];
+      // Multiple fallback strategies: direct → CDN → CORS proxies
+      loadAttempts = isGithub ? [
+        { url: rawUrl, label: 'Direct GitHub' },
+        { url: `https://cdn.jsdelivr.net/gh/${extractGithubPath(rawUrl)}`, label: 'jsDelivr CDN' },
+        { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl), label: 'AllOrigins Proxy' },
+        { url: 'https://corsproxy.io/?' + encodeURIComponent(rawUrl), label: 'CORS Proxy' },
+      ] : [{ url: rawUrl, label: 'Direct' }];
 
       let lastErr;
-      for (const pdfUrl of attempts) {
+      for (let i = startFromIndex; i < loadAttempts.length; i++) {
+        const attempt = loadAttempts[i];
         try {
-          pdfDoc = await tryLoadDoc(pdfUrl);
+          console.log(`[3D PDF Loader] Attempt ${i + 1}/${loadAttempts.length}: ${attempt.label}`);
+          updateLoadingMsg(`Loading Book (${attempt.label})...`);
+          
+          pdfDoc = await tryLoadDoc(attempt.url);
           totalPg = pdfDoc.numPages;
           currentL = 1;
           await spread(currentL, false);
           document.getElementById('loadingCover').classList.add('done');
+          console.log(`[3D PDF Loader] ✓ Success via ${attempt.label}`);
           return;
-        } catch(e) { lastErr = e; }
+        } catch(e) { 
+          console.warn(`[3D PDF Loader] ✗ Failed ${attempt.label}:`, e.message);
+          lastErr = e;
+          
+          // Show AdBlocker warning on first attempt failure (Direct GitHub blocked)
+          // Check for common AdBlocker/network error patterns
+          const errStr = e.message || e.toString();
+          const isBlocked = errStr.includes('ERR_BLOCKED_BY_CLIENT') || 
+                           errStr.includes('net::ERR') || 
+                           errStr.includes('Failed to fetch') ||
+                           errStr.includes('NetworkError');
+          
+          if (i === 0 && !skipAdblockWarning && isGithub && isBlocked) {
+            showAdblockNotification();
+            throw new Error('AdBlocker_Detected'); // Stop here and wait for user action
+          }
+        }
       }
+      
+      // All attempts failed
+      showErrWithDownload(rawUrl);
       throw lastErr;
+    }
+
+    // Extract GitHub path for jsDelivr CDN: user/repo@branch/path
+    function extractGithubPath(url) {
+      const match = url.match(/githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)/);
+      if (match) return `${match[1]}/${match[2]}@${match[3]}/${match[4]}`;
+      return url;
+    }
+
+    // Update loading message
+    function updateLoadingMsg(msg) {
+      const loadEl = document.getElementById('loadingCover');
+      if (loadEl && !loadEl.classList.contains('done')) {
+        const pTag = loadEl.querySelector('p');
+        if (pTag) pTag.textContent = msg;
+      }
     }
 
     // ── Render two-page spread ────────────────────────────
@@ -662,9 +832,10 @@
         const cW = container.offsetWidth  || 480;
         const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
-        const sc  = Math.min((cW * 0.94) / vp.width, (cH * 0.94) / vp.height);
+        const sc  = Math.min((cW * 0.98) / vp.width, (cH * 0.98) / vp.height);
         const scaled = page.getViewport({scale: sc});
-        const dpr    = window.devicePixelRatio || 1;
+        // High-quality rendering: 2.5x DPI for crisp text
+        const dpr    = 2.5;
 
         const canvas = document.createElement('canvas');
         const ctx    = canvas.getContext('2d', {alpha:false});
@@ -672,7 +843,9 @@
         canvas.height = Math.floor(scaled.height * dpr);
         canvas.style.width  = Math.floor(scaled.width)  + 'px';
         canvas.style.height = Math.floor(scaled.height) + 'px';
-        ctx.imageSmoothingEnabled = false;
+        // Enable smoothing for better text anti-aliasing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         await page.render({
           canvasContext: ctx,
@@ -692,17 +865,27 @@
 
     // ── Navigation ────────────────────────────────────────
     function nextPages() {
-      if (flipping || currentL + 2 > totalPg) return;
+      const increment = isSinglePageMode ? 1 : 2;
+      if (flipping || currentL + increment > totalPg) return;
       flipping = true;
-      currentL += 2;
-      spread(currentL, true).finally(() => { flipping = false; showCtrl(); });
+      currentL += increment;
+      if (isSinglePageMode) {
+        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; showCtrl(); });
+      } else {
+        spread(currentL, true).finally(() => { flipping = false; showCtrl(); });
+      }
     }
 
     function prevPages() {
+      const decrement = isSinglePageMode ? 1 : 2;
       if (flipping || currentL <= 1) return;
       flipping = true;
-      currentL = Math.max(1, currentL - 2);
-      spreadBack(currentL).finally(() => { flipping = false; showCtrl(); });
+      currentL = Math.max(1, currentL - decrement);
+      if (isSinglePageMode) {
+        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; showCtrl(); });
+      } else {
+        spreadBack(currentL).finally(() => { flipping = false; showCtrl(); });
+      }
     }
 
     function goToFirstPage() {
@@ -753,6 +936,25 @@
       isNight = !isNight;
       document.body.classList.toggle('night', isNight);
     }
+    
+    // Reading mode toggle: single-page vs dual-page
+    let isSinglePageMode = false;
+    function toggleReadingMode() {
+      isSinglePageMode = !isSinglePageMode;
+      document.body.classList.toggle('single-page-mode', isSinglePageMode);
+      
+      const btn = document.getElementById('readingModeBtn');
+      if (isSinglePageMode) {
+        btn.innerHTML = '<i class="fas fa-book"></i> Single Page';
+        // Re-render only right page (current page)
+        renderPageTo(currentL, 'rightPage', 'rightRibbon');
+      } else {
+        btn.innerHTML = '<i class="fas fa-book-open"></i> Dual Page';
+        // Re-render both pages
+        spread(currentL, false);
+      }
+    }
+    
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -795,6 +997,63 @@
            style="padding:11px 22px;background:var(--primary-red);color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:13px;">
           ← Go Back
         </a>`;
+    }
+
+    function showErrWithDownload(pdfUrl) {
+      document.getElementById('loadingCover').innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="animation:none;color:var(--primary-red)"></i>
+        <p style="font-size:15px;font-weight:600;margin-bottom:8px;">Unable to load PDF in 3D viewer</p>
+        <small style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;display:block;">Your browser or extensions may be blocking the PDF. Try disabling ad blockers.</small>
+        <a href="${pdfUrl}" download style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--primary-red);color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:13px;margin:8px;">
+          <i class="fas fa-download"></i> Download PDF Instead
+        </a>
+        <a href="book-detail.html?id=${bookId || ''}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);text-decoration:none;border-radius:10px;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,0.1);margin:8px;">
+          <i class="fas fa-arrow-left"></i> Back to Book Details
+        </a>
+      `;
+    }
+
+    // AdBlocker notification functions
+    function showAdblockNotification() {
+      document.getElementById('adblockNotification').classList.add('active');
+    }
+
+    function closeAdblockNotif() {
+      document.getElementById('adblockNotification').classList.remove('active');
+    }
+
+    function retryPDFLoad() {
+      closeAdblockNotif();
+      skipAdblockWarning = false;
+      // Reset loading cover
+      document.getElementById('loadingCover').classList.remove('done');
+      document.getElementById('loadingCover').innerHTML = `
+        <i class="fas fa-spinner"></i>
+        <p>Retrying...</p>
+        <small>Attempting to load PDF again</small>
+      `;
+      // Retry from beginning
+      loadPDF(currentPdfUrl, 0).catch(e => {
+        if (e.message !== 'AdBlocker_Detected') {
+          console.error('Retry failed:', e);
+        }
+      });
+    }
+
+    function continueWithFallback() {
+      closeAdblockNotif();
+      skipAdblockWarning = true;
+      // Reset loading cover
+      document.getElementById('loadingCover').classList.remove('done');
+      document.getElementById('loadingCover').innerHTML = `
+        <i class="fas fa-spinner"></i>
+        <p>Loading with backup method...</p>
+        <small>Using alternative servers</small>
+      `;
+      // Continue from CDN fallback (skip Direct GitHub)
+      loadPDF(currentPdfUrl, 1).catch(e => {
+        console.error('Fallback failed:', e);
+      });
     }
 
     // ── Swipe support ─────────────────────────────────────

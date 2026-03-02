@@ -229,6 +229,120 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .center-state p { font-size: 15px; font-weight: 600; }
     .center-state small { font-size: 13px; color: rgba(255,255,255,0.3); max-width: 500px; line-height: 1.6; }
+    .dl-fallback-btn, .back-btn {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+      padding: 12px 24px; border-radius: 10px; text-decoration: none;
+      font-weight: 700; font-size: 13px; transition: all 0.2s;
+    }
+    .dl-fallback-btn {
+      background: var(--primary-red); color: #fff;
+    }
+    .dl-fallback-btn:hover {
+      background: var(--accent-red); transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(204,0,0,0.4);
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.05); color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.08); color: var(--text-primary);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    /* ─────────────────────────────────────────────────
+       ADBLOCKER NOTIFICATION POPUP
+    ───────────────────────────────────────────────── */
+    .adblocker-notification {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 10000; animation: fadeIn 0.3s ease;
+    }
+    .adblocker-notification.active { display: flex; }
+    
+    .notif-content {
+      background: linear-gradient(145deg, rgba(20,2,2,0.98), rgba(8,0,0,0.98));
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(204,0,0,0.15);
+      text-align: center;
+      position: relative;
+      animation: slideUp 0.4s ease;
+    }
+    
+    .notif-icon {
+      width: 80px; height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(204,0,0,0.4);
+    }
+    .notif-icon i { font-size: 36px; color: #fff; }
+    
+    .notif-title {
+      font-size: 24px; font-weight: 800; color: var(--text-primary);
+      margin-bottom: 12px; letter-spacing: -0.3px;
+    }
+    
+    .notif-msg {
+      font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.65);
+      margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto;
+    }
+    
+    .notif-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    
+    .notif-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .notif-btn i { font-size: 13px; }
+    
+    .notif-btn-primary {
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      color: #fff; box-shadow: 0 4px 12px rgba(204,0,0,0.3);
+    }
+    .notif-btn-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.5);
+    }
+    
+    .notif-btn-secondary {
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .notif-btn-secondary:hover {
+      background: rgba(255,255,255,0.1); color: var(--text-primary);
+      border-color: rgba(255,255,255,0.25);
+    }
+    
+    .notif-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.05); border: none;
+      color: rgba(255,255,255,0.4); cursor: pointer;
+      transition: all 0.2s; font-size: 14px;
+    }
+    .notif-close:hover {
+      background: rgba(255,255,255,0.1); color: var(--text-primary);
+      transform: rotate(90deg);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* ─────────────────────────────────────────────────
        BOTTOM PROGRESS BAR
@@ -419,6 +533,28 @@
     </div>
   </div>
 
+  <!-- ADBLOCKER WARNING NOTIFICATION -->
+  <div class="adblocker-notification" id="adblockNotification">
+    <div class="notif-content">
+      <div class="notif-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h3 class="notif-title">AdBlocker Detected</h3>
+      <p class="notif-msg">It looks like your browser extension is blocking the PDF. Please disable your AdBlocker for this site to view the book directly.</p>
+      <div class="notif-actions">
+        <button class="notif-btn notif-btn-primary" onclick="retryPDFLoad()">
+          <i class="fas fa-redo"></i> Try Again
+        </button>
+        <button class="notif-btn notif-btn-secondary" onclick="continueWithFallback()">
+          <i class="fas fa-forward"></i> Continue Anyway
+        </button>
+      </div>
+      <button class="notif-close" onclick="closeAdblockNotif()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- BOTTOM PROGRESS -->
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   <div class="page-label" id="pageLabel">Page 1</div>
@@ -505,29 +641,124 @@
       }).promise;
     }
 
-    async function loadPDF(url) {
+    let loadAttempts = [];
+    let currentPdfUrl = '';
+    let skipAdblockWarning = false;
+
+    async function loadPDF(url, startFromIndex = 0) {
       const rawUrl = normalizeGithubUrl(url);
+      currentPdfUrl = rawUrl;
       const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
 
-      // raw.githubusercontent.com supports CORS natively — try direct first, then fallback proxies
-      const attempts = isGithub ? [
-        rawUrl,
-        'https://corsproxy.io/?' + encodeURIComponent(rawUrl),
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
-      ] : [rawUrl];
+      // Multiple fallback strategies: direct → CDN → CORS proxies
+      loadAttempts = isGithub ? [
+        { url: rawUrl, label: 'Direct GitHub' },
+        { url: `https://cdn.jsdelivr.net/gh/${extractGithubPath(rawUrl)}`, label: 'jsDelivr CDN' },
+        { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl), label: 'AllOrigins Proxy' },
+        { url: 'https://corsproxy.io/?' + encodeURIComponent(rawUrl), label: 'CORS Proxy' },
+      ] : [{ url: rawUrl, label: 'Direct' }];
 
       let lastErr;
-      for (const pdfUrl of attempts) {
+      for (let i = startFromIndex; i < loadAttempts.length; i++) {
+        const attempt = loadAttempts[i];
         try {
-          pdfDoc = await tryLoadPDF(pdfUrl);
+          console.log(`[PDF Loader] Attempt ${i + 1}/${loadAttempts.length}: ${attempt.label}`);
+          updateLoadingState(`Loading PDF (${attempt.label})...`);
+          
+          pdfDoc = await tryLoadPDF(attempt.url);
           totalPg = pdfDoc.numPages;
           document.getElementById('totalPages').textContent = totalPg;
           document.getElementById('pageInput').max = totalPg;
           await renderPage(1);
+          console.log(`[PDF Loader] ✓ Success via ${attempt.label}`);
           return;
-        } catch(e) { lastErr = e; }
+        } catch(e) { 
+          console.warn(`[PDF Loader] ✗ Failed ${attempt.label}:`, e.message);
+          lastErr = e;
+          
+          // Show AdBlocker warning on first attempt failure (Direct GitHub blocked)
+          // Check for common AdBlocker/network error patterns
+          const errStr = e.message || e.toString();
+          const isBlocked = errStr.includes('ERR_BLOCKED_BY_CLIENT') || 
+                           errStr.includes('net::ERR') || 
+                           errStr.includes('Failed to fetch') ||
+                           errStr.includes('NetworkError');
+          
+          if (i === 0 && !skipAdblockWarning && isGithub && isBlocked) {
+            showAdblockNotification();
+            throw new Error('AdBlocker_Detected'); // Stop here and wait for user action
+          }
+        }
       }
+      
+      // All attempts failed - show download option
+      showErrWithDownload(rawUrl);
       throw lastErr;
+    }
+
+    // Extract GitHub path for jsDelivr CDN: user/repo@branch/path
+    function extractGithubPath(url) {
+      // https://raw.githubusercontent.com/user/repo/branch/path → user/repo@branch/path
+      const match = url.match(/githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)/);
+      if (match) return `${match[1]}/${match[2]}@${match[3]}/${match[4]}`;
+      return url;
+    }
+
+    // Update loading state message
+    function updateLoadingState(msg) {
+      const loadEl = document.getElementById('loadingState');
+      if (loadEl) {
+        loadEl.innerHTML = `
+          <i class="fas fa-spinner spin"></i>
+          <p>${msg}</p>
+        `;
+      }
+    }
+
+    // Show error with download fallback
+    function showErrWithDownload(pdfUrl) {
+      document.getElementById('pdfViewport').innerHTML = `
+        <div class="center-state">
+          <i class="fas fa-exclamation-triangle" style="animation:none;"></i>
+          <p>Unable to load PDF in viewer</p>
+          <small style="margin-bottom:16px;">Your browser or extensions may be blocking the PDF. Try disabling ad blockers.</small>
+          <a href="${pdfUrl}" download class="dl-fallback-btn">
+            <i class="fas fa-download"></i> Download PDF Instead
+          </a>
+          <a href="book-detail.html?id=${bookId}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Book Details
+          </a>
+        </div>
+      `;
+    }
+
+    // AdBlocker notification functions
+    function showAdblockNotification() {
+      document.getElementById('adblockNotification').classList.add('active');
+    }
+
+    function closeAdblockNotif() {
+      document.getElementById('adblockNotification').classList.remove('active');
+    }
+
+    function retryPDFLoad() {
+      closeAdblockNotif();
+      skipAdblockWarning = false;
+      // Retry from beginning
+      loadPDF(currentPdfUrl, 0).catch(e => {
+        if (e.message !== 'AdBlocker_Detected') {
+          console.error('Retry failed:', e);
+        }
+      });
+    }
+
+    function continueWithFallback() {
+      closeAdblockNotif();
+      skipAdblockWarning = true;
+      // Continue from CDN fallback (skip Direct GitHub)
+      loadPDF(currentPdfUrl, 1).catch(e => {
+        console.error('Fallback failed:', e);
+      });
     }
 
     // ── Render ───────────────────────────────────────────
@@ -722,19 +953,6 @@
     }
     function toggleBmPanel() {
       document.getElementById('bmPanel').classList.toggle('open');
-    }
-
-    // ── Error ─────────────────────────────────────────────
-    function showErr(msg) {
-      document.getElementById('pdfViewport').innerHTML = `
-        <div class="center-state">
-          <i class="fas fa-exclamation-triangle" style="animation:none;"></i>
-          <p>${msg}</p>
-          <small>Some PDFs hosted on GitHub may require a moment. Try refreshing.</small>
-          <a href="book-detail.html?id=${bookId}" style="margin-top:12px;padding:10px 20px;background:var(--primary-red);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;">
-            ← Back to Book Details
-          </a>
-        </div>`;
     }
 
     // ── Keyboard hints ────────────────────────────────────
