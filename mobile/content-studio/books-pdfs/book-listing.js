@@ -271,43 +271,16 @@
     function handleRead(bookId) {
         const book = allBooks.find(b => b.id === bookId);
         if (book) {
-            // Vibration feedback
-            if (navigator.vibrate) {
-                navigator.vibrate([30, 50, 30]);
-            }
-
-            console.log(`Opening book for reading: ${book.title}`);
-            
-            // Open in book reader
-            window.location.href = `book-reader.html?id=${bookId}`;
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            console.log(`Opening book detail: ${book.title}`);
+            window.location.href = `book-detail.html?id=${bookId}`;
         }
     }
 
     function handleDownload(bookId) {
-        const book = allBooks.find(b => b.id === bookId);
-        if (book) {
-            // Vibration feedback
-            if (navigator.vibrate) {
-                navigator.vibrate([10, 20, 10, 20, 10]);
-            }
-
-            console.log(`Downloading book: ${book.title}`);
-            
-            // Trigger download
-            if (book.downloadUrl) {
-                const link = document.createElement('a');
-                link.href = book.downloadUrl;
-                link.download = `${book.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showToast('📥 Downloading ' + book.title);
-            } else {
-                showToast('⚠️ Download link not available');
-            }
-        }
+        if (navigator.vibrate) navigator.vibrate([10, 20, 10, 20, 10]);
+        // Download requires contact — redirect to detail page which shows the CTA
+        window.location.href = `book-detail.html?id=${bookId}`;
     }
     
     function showToast(message) {

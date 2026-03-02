@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Mobile redirect -->
+  <script>
+    (function() {
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(navigator.userAgent) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        const id = new URLSearchParams(window.location.search).get('id');
+        window.location.replace('../../mobile/content-studio/books-pdfs/book-reader.html' + (id ? '?id='+id : ''));
+      }
+    })();
+  </script>
+
+  <title>PDF Reader – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --accent-red: #FF2020;
+      --border-red: rgba(139,0,0,0.45);
+      --bar-bg: rgba(8,2,2,0.97);
+      --card-bg: rgba(14,4,4,0.96);
+      --text-primary: #FFFFFF;
+      --text-dim: rgba(255,255,255,0.55);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─────────────────────────────────────────────────
+       TOP BAR (auto-hide)
+    ──────────────────────────────────────────────── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      background: var(--bar-bg);
+      border-bottom: 1px solid var(--border-red);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      z-index: 1000;
+      transition: transform 0.35s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    .top-bar.hidden { transform: translateY(-100%); }
+
+    .bar-btn {
+      height: 36px;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.75);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      font-family: 'Inter',sans-serif;
+    }
+    .bar-btn:hover {
+      background: rgba(204,0,0,0.15);
+      border-color: var(--border-red);
+      color: #fff;
+    }
+    .bar-btn.active {
+      background: rgba(204,0,0,0.2);
+      border-color: rgba(204,0,0,0.6);
+      color: #fff;
+    }
+    .bar-btn:disabled { opacity: 0.35; cursor: default; }
+    .bar-btn i { font-size: 13px; }
+
+    .bar-red {
+      background: var(--primary-red) !important;
+      border-color: var(--primary-red) !important;
+      color: #fff !important;
+    }
+    .bar-red:hover {
+      background: var(--dark-red) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(204,0,0,0.4);
+    }
+
+    .bar-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .bar-sep {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .page-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .page-num-input {
+      width: 52px;
+      height: 32px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 7px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      font-family: 'Inter',sans-serif;
+      transition: border-color 0.2s;
+    }
+    .page-num-input:focus { outline:none; border-color:var(--border-red); }
+
+    .zoom-display {
+      min-width: 52px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ─────────────────────────────────────────────────
+       READING AREA
+    ──────────────────────────────────────────────── */
+    .reader-area {
+      flex: 1;
+      padding-top: 54px;
+      overflow-y: auto;
+      overflow-x: auto;
+      background: #111;
+      scroll-behavior: smooth;
+      position: relative;
+    }
+
+    /* Custom scrollbar */
+    .reader-area::-webkit-scrollbar { width: 8px; height: 8px; }
+    .reader-area::-webkit-scrollbar-track { background: #0a0a0a; }
+    .reader-area::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.4); border-radius: 4px; }
+    .reader-area::-webkit-scrollbar-thumb:hover { background: rgba(204,0,0,0.65); }
+
+    #pdfViewport {
+      min-height: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 80px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      display: inline-block;
+      box-shadow: 0 12px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(139,0,0,0.3);
+      border-radius: 2px;
+      background: #fff;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .canvas-wrap:hover {
+      box-shadow: 0 18px 60px rgba(0,0,0,0.9), 0 0 30px rgba(204,0,0,0.15), 0 0 0 1px rgba(204,0,0,0.5);
+    }
+
+    #pdfCanvas { display: block; image-rendering: -webkit-optimize-contrast; }
+
+    /* Text layer (selectable text) */
+    .textLayer {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: all;
+      overflow: hidden;
+    }
+    .textLayer span { color: transparent; cursor: text; position: absolute; white-space: pre; transform-origin: 0 0; }
+    .textLayer ::selection { background: rgba(204,0,0,0.25); }
+
+    /* Page transition animation */
+    .canvas-wrap.fade-out { opacity: 0; transform: scale(0.985); }
+    .canvas-wrap.fade-in  { opacity: 1; transform: scale(1); transition: opacity 0.2s ease, transform 0.2s ease; }
+
+    /* Loading / Error states */
+    .center-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      gap: 16px;
+    }
+    .center-state i { font-size: 52px; color: var(--primary-red); }
+    .spin { animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .center-state p { font-size: 15px; font-weight: 600; }
+    .center-state small { font-size: 13px; color: rgba(255,255,255,0.3); max-width: 500px; line-height: 1.6; }
+
+    /* ─────────────────────────────────────────────────
+       BOTTOM PROGRESS BAR
+    ──────────────────────────────────────────────── */
+    .progress-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(204,0,0,0.15);
+      z-index: 1000;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), #FF4444);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(204,0,0,0.6);
+    }
+
+    /* Page label floating */
+    .page-label {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 16px;
+      background: rgba(8,2,2,0.92);
+      border: 1px solid var(--border-red);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      pointer-events: none;
+      z-index: 999;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .page-label.show { opacity: 1; }
+
+    /* ─────────────────────────────────────────────────
+       BOOKMARKS PANEL
+    ──────────────────────────────────────────────── */
+    .bm-panel {
+      position: fixed;
+      top: 0; right: -320px;
+      width: 300px;
+      height: 100vh;
+      background: rgba(10,2,2,0.98);
+      border-left: 1px solid var(--border-red);
+      z-index: 1100;
+      transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(20px);
+      box-shadow: -12px 0 40px rgba(0,0,0,0.7);
+    }
+    .bm-panel.open { right: 0; }
+
+    .bm-head {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--border-red);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bm-head h3 { font-size: 15px; font-weight: 800; color: #fff; }
+    .bm-close {
+      width: 32px; height: 32px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(204,0,0,0.15);
+      border: 1px solid var(--border-red);
+      border-radius: 50%;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+    .bm-close:hover { background: var(--primary-red); color: #fff; }
+
+    .bm-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .bm-item {
+      padding: 12px;
+      background: rgba(204,0,0,0.08);
+      border: 1px solid var(--border-red);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bm-item:hover { background: rgba(204,0,0,0.18); border-color: rgba(204,0,0,0.7); }
+    .bm-item-page { font-size: 14px; font-weight: 800; color: var(--primary-red); }
+    .bm-item-date { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .bm-del { color: var(--text-dim); font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 4px; transition:all 0.2s; }
+    .bm-del:hover { color: #fff; background: rgba(204,0,0,0.3); }
+    .bm-empty { text-align:center; padding:40px 16px; color:var(--text-dim); font-size:13px; }
+
+    /* ─────────────────────────────────────────────────
+       NIGHT MODE / SEPIA
+    ──────────────────────────────────────────────── */
+    body.night-mode .reader-area { background: #050505; }
+    body.night-mode .canvas-wrap { filter: invert(0.9) hue-rotate(180deg); }
+    body.sepia-mode .reader-area { background: #1a1208; }
+    body.sepia-mode .canvas-wrap { filter: sepia(0.6) brightness(0.95); }
+
+    /* ─────────────────────────────────────────────────
+       KEYBOARD HINT (briefly shown)
+    ──────────────────────────────────────────────── */
+    .key-hint {
+      position: fixed;
+      bottom: 26px;
+      right: 20px;
+      padding: 8px 14px;
+      background: rgba(8,2,2,0.9);
+      border: 1px solid rgba(204,0,0,0.25);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 1200;
+    }
+    .key-hint.show { opacity: 1; }
+    .key-hint span { color: rgba(255,150,150,0.8); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar" id="topBar">
+    <!-- Back -->
+    <a class="bar-btn" id="backBtn" href="book-listing-new.html" style="text-decoration:none;">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <div class="bar-sep"></div>
+
+    <!-- Prev / Page input / Next -->
+    <button class="bar-btn" id="prevBtn" onclick="changePage(-1)" disabled><i class="fas fa-chevron-left"></i></button>
+    <div class="page-input-wrap">
+      <input type="number" class="page-num-input" id="pageInput" min="1" value="1" onchange="goToPage()">
+      <span>/ <span id="totalPages">0</span></span>
+    </div>
+    <button class="bar-btn" id="nextBtn" onclick="changePage(1)" disabled><i class="fas fa-chevron-right"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- Zoom -->
+    <button class="bar-btn" onclick="zoom(-0.2)" title="Zoom out"><i class="fas fa-search-minus"></i></button>
+    <span class="zoom-display" id="zoomDisplay">100%</span>
+    <button class="bar-btn" onclick="zoom(+0.2)" title="Zoom in"><i class="fas fa-search-plus"></i></button>
+    <button class="bar-btn" onclick="resetZoom()" title="Fit page"><i class="fas fa-compress-arrows-alt"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- Title -->
+    <span class="bar-title" id="barTitle">Loading…</span>
+
+    <div class="bar-sep"></div>
+
+    <!-- Tools -->
+    <button class="bar-btn" onclick="addBookmark()" title="Add bookmark"><i class="fas fa-bookmark"></i></button>
+    <button class="bar-btn" id="bmPanelBtn" onclick="toggleBmPanel()" title="Bookmarks"><i class="fas fa-list-ul"></i></button>
+    <button class="bar-btn" onclick="cycleTheme()" title="Reading theme" id="themeBtn"><i class="fas fa-adjust"></i></button>
+    <button class="bar-btn" onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- 3D / Back to detail -->
+    <a class="bar-btn" id="detailBackBtn" href="#" style="text-decoration:none;" title="Book info">
+      <i class="fas fa-info-circle"></i>
+    </a>
+    <a class="bar-btn bar-red" id="openBookModeBtn" href="#" style="text-decoration:none;">
+      <i class="fas fa-book-open"></i> 3D Mode
+    </a>
+  </div>
+
+  <!-- READING AREA -->
+  <div class="reader-area" id="readerArea">
+    <div id="pdfViewport">
+      <div class="center-state" id="loadingState">
+        <i class="fas fa-spinner spin"></i>
+        <p>Loading PDF…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM PROGRESS -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="page-label" id="pageLabel">Page 1</div>
+
+  <!-- BOOKMARKS PANEL -->
+  <div class="bm-panel" id="bmPanel">
+    <div class="bm-head">
+      <h3><i class="fas fa-bookmark" style="color:var(--primary-red);margin-right:8px;"></i>Bookmarks</h3>
+      <div class="bm-close" onclick="toggleBmPanel()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="bm-list" id="bmList"></div>
+  </div>
+
+  <!-- Keyboard hint -->
+  <div class="key-hint" id="keyHint">
+    <span>←→</span> Page &nbsp; <span>+/-</span> Zoom &nbsp; <span>F</span> Fullscreen
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const params   = new URLSearchParams(window.location.search);
+    const bookId   = params.get('id');
+    let pdfDoc     = null;
+    let curPage    = 1;
+    let totalPg    = 0;
+    let curZoom    = 1.0;
+    let bookData   = null;
+    let bookmarks  = [];
+    let barHideTimer;
+    let themes = ['default','night','sepia'];
+    let themeIdx = 0;
+    let pageLabelTimer;
+    let barVisible = true;
+
+    // ── Bootstrap ───────────────────────────────────────
+    async function init() {
+      if (!bookId) { showErr('No book ID in URL.'); return; }
+
+      try {
+        const res  = await fetch('books.json');
+        const data = await res.json();
+        bookData   = data.books.find(b => b.id === bookId);
+        if (!bookData) { showErr('Book not found.'); return; }
+
+        document.getElementById('barTitle').textContent      = bookData.title;
+        document.getElementById('detailBackBtn').href        = `book-detail.html?id=${bookId}`;
+        document.getElementById('openBookModeBtn').href      = `book-3d.html?id=${bookId}`;
+        document.getElementById('backBtn').href              = `book-detail.html?id=${bookId}`;
+        document.title = bookData.title + ' – A3KM Studio';
+
+        loadBookmarks();
+        await loadPDF(bookData.downloadUrl);
+        showKeyHint();
+      } catch (e) {
+        showErr('Failed to load: ' + e.message);
+      }
+    }
+
+    // ── PDF Loading ──────────────────────────────────────
+    async function loadPDF(url) {
+      let pdfUrl = url;
+      if (pdfUrl.includes('github.com') && !pdfUrl.includes('/raw/')) {
+        pdfUrl = pdfUrl.replace('/blob/','/raw/');
+      }
+      if (pdfUrl.includes('github.com') || pdfUrl.includes('githubusercontent.com')) {
+        pdfUrl = 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl);
+      }
+
+      const task = pdfjsLib.getDocument({
+        url: pdfUrl,
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+        enableXfa: true,
+        disableFontFace: false,
+        useSystemFonts: false,
+      });
+
+      pdfDoc = await task.promise;
+      totalPg = pdfDoc.numPages;
+      document.getElementById('totalPages').textContent = totalPg;
+      document.getElementById('pageInput').max = totalPg;
+      await renderPage(1);
+    }
+
+    // ── Render ───────────────────────────────────────────
+    async function renderPage(n, skipTransition) {
+      if (!pdfDoc) return;
+      curPage = n;
+      document.getElementById('pageInput').value = n;
+      updateProgress();
+      showPageLabel(n);
+
+      const viewport_wrap = document.getElementById('pdfViewport');
+
+      // Fade out existing
+      const oldWrap = viewport_wrap.querySelector('.canvas-wrap');
+      if (oldWrap && !skipTransition) {
+        oldWrap.classList.add('fade-out');
+        await delay(180);
+      }
+
+      try {
+        const page = await pdfDoc.getPage(n);
+        const areaW = document.getElementById('readerArea').clientWidth - 48;
+        const baseScale = Math.min(areaW, 1100) / page.getViewport({scale:1}).width;
+        const scale = baseScale * curZoom;
+        const scaledVP = page.getViewport({scale});
+        const dpr = window.devicePixelRatio || 1;
+
+        // Build canvas-wrap
+        const wrap = document.createElement('div');
+        wrap.className = 'canvas-wrap';
+        wrap.style.width  = scaledVP.width + 'px';
+        wrap.style.height = scaledVP.height + 'px';
+
+        const canvas  = document.createElement('canvas');
+        canvas.id = 'pdfCanvas';
+        const ctx = canvas.getContext('2d', {alpha:false, willReadFrequently:false});
+        canvas.width  = Math.floor(scaledVP.width  * dpr);
+        canvas.height = Math.floor(scaledVP.height * dpr);
+        canvas.style.width  = scaledVP.width  + 'px';
+        canvas.style.height = scaledVP.height + 'px';
+        ctx.imageSmoothingEnabled = false;
+
+        wrap.appendChild(canvas);
+
+        // Text layer
+        const textDiv = document.createElement('div');
+        textDiv.className = 'textLayer';
+        textDiv.style.width  = scaledVP.width  + 'px';
+        textDiv.style.height = scaledVP.height + 'px';
+        wrap.appendChild(textDiv);
+
+        viewport_wrap.innerHTML = '';
+        viewport_wrap.appendChild(wrap);
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: scaledVP,
+          transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null,
+          intent: 'display'
+        }).promise;
+
+        const tc = await page.getTextContent();
+        pdfjsLib.renderTextLayer({
+          textContentSource: tc,
+          container: textDiv,
+          viewport: scaledVP,
+          textDivs: [],
+          enhanceTextSelection: true,
+        });
+
+        wrap.classList.add('fade-in');
+        updateNav();
+      } catch (err) {
+        showErr('Render error: ' + err.message);
+      }
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ── Navigation ───────────────────────────────────────
+    function changePage(d) {
+      const np = curPage + d;
+      if (np >= 1 && np <= totalPg) renderPage(np);
+    }
+    function goToPage() {
+      const v = parseInt(document.getElementById('pageInput').value);
+      if (v >= 1 && v <= totalPg) renderPage(v);
+    }
+    function updateNav() {
+      document.getElementById('prevBtn').disabled = curPage <= 1;
+      document.getElementById('nextBtn').disabled = curPage >= totalPg;
+    }
+    function updateProgress() {
+      document.getElementById('progressFill').style.width = (curPage/totalPg*100) + '%';
+    }
+    function showPageLabel(n) {
+      const el = document.getElementById('pageLabel');
+      el.textContent = `Page ${n} of ${totalPg}`;
+      el.classList.add('show');
+      clearTimeout(pageLabelTimer);
+      pageLabelTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+
+    // ── Zoom ─────────────────────────────────────────────
+    function zoom(delta) {
+      curZoom = Math.max(0.4, Math.min(4.0, curZoom + delta));
+      document.getElementById('zoomDisplay').textContent = Math.round(curZoom*100) + '%';
+      renderPage(curPage, true);
+    }
+    function resetZoom() {
+      curZoom = 1.0;
+      document.getElementById('zoomDisplay').textContent = '100%';
+      renderPage(curPage, true);
+    }
+
+    // ── Theme cycling ─────────────────────────────────────
+    function cycleTheme() {
+      document.body.classList.remove('night-mode','sepia-mode');
+      themeIdx = (themeIdx+1) % 3;
+      if (themeIdx === 1) { document.body.classList.add('night-mode'); showPageLabel('Night mode'); }
+      if (themeIdx === 2) { document.body.classList.add('sepia-mode'); showPageLabel('Sepia mode'); }
+      if (themeIdx === 0) showPageLabel('Default mode');
+    }
+
+    // ── Fullscreen ────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen && document.exitFullscreen();
+      }
+    }
+
+    // ── Top bar auto-hide ─────────────────────────────────
+    function showBar() {
+      document.getElementById('topBar').classList.remove('hidden');
+      barVisible = true;
+      resetBarTimer();
+    }
+    function hideBar() {
+      document.getElementById('topBar').classList.add('hidden');
+      barVisible = false;
+    }
+    function resetBarTimer() {
+      clearTimeout(barHideTimer);
+      barHideTimer = setTimeout(hideBar, 3500);
+    }
+    document.getElementById('readerArea').addEventListener('mousemove', showBar);
+    document.getElementById('readerArea').addEventListener('click', () => {
+      barVisible ? resetBarTimer() : showBar();
+    });
+    resetBarTimer();
+
+    // ── Bookmarks ─────────────────────────────────────────
+    function loadBookmarks() {
+      const s = localStorage.getItem('bm-' + bookId);
+      bookmarks = s ? JSON.parse(s) : [];
+      renderBmList();
+    }
+    function saveBookmarks() {
+      localStorage.setItem('bm-' + bookId, JSON.stringify(bookmarks));
+    }
+    function addBookmark() {
+      if (bookmarks.find(b => b.p === curPage)) {
+        showPageLabel('Already bookmarked'); return;
+      }
+      bookmarks.push({ p: curPage, d: new Date().toLocaleDateString() });
+      saveBookmarks();
+      renderBmList();
+      showPageLabel(`Bookmarked page ${curPage}`);
+    }
+    function removeBookmark(p) {
+      bookmarks = bookmarks.filter(b => b.p !== p);
+      saveBookmarks();
+      renderBmList();
+    }
+    function renderBmList() {
+      const el = document.getElementById('bmList');
+      if (!bookmarks.length) { el.innerHTML = '<div class="bm-empty">No bookmarks yet.<br>Press the 🔖 button to add one.</div>'; return; }
+      el.innerHTML = bookmarks.sort((a,b)=>a.p-b.p).map(b => `
+        <div class="bm-item">
+          <div onclick="jumpTo(${b.p})">
+            <div class="bm-item-page">Page ${b.p}</div>
+            <div class="bm-item-date">${b.d}</div>
+          </div>
+          <span class="bm-del" onclick="removeBookmark(${b.p})"><i class="fas fa-times"></i></span>
+        </div>`).join('');
+    }
+    function jumpTo(p) {
+      renderPage(p);
+      toggleBmPanel();
+    }
+    function toggleBmPanel() {
+      document.getElementById('bmPanel').classList.toggle('open');
+    }
+
+    // ── Error ─────────────────────────────────────────────
+    function showErr(msg) {
+      document.getElementById('pdfViewport').innerHTML = `
+        <div class="center-state">
+          <i class="fas fa-exclamation-triangle" style="animation:none;"></i>
+          <p>${msg}</p>
+          <small>Some PDFs hosted on GitHub may require a moment. Try refreshing.</small>
+          <a href="book-detail.html?id=${bookId}" style="margin-top:12px;padding:10px 20px;background:var(--primary-red);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;">
+            ← Back to Book Details
+          </a>
+        </div>`;
+    }
+
+    // ── Keyboard hints ────────────────────────────────────
+    function showKeyHint() {
+      const el = document.getElementById('keyHint');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+    // ── Keyboard shortcuts ────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      switch(e.key) {
+        case 'ArrowLeft':  case 'ArrowUp':    changePage(-1); break;
+        case 'ArrowRight': case 'ArrowDown': case ' ': e.preventDefault(); changePage(1); break;
+        case '+': case '=': zoom(+0.2); break;
+        case '-':           zoom(-0.2); break;
+        case '0':           resetZoom(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'b': case 'B': addBookmark(); break;
+        case 'Escape':      document.getElementById('bmPanel').classList.remove('open'); break;
+      }
+    });
+
+    // ── Scroll: auto-hide bar ─────────────────────────────
+    let lastScroll = 0;
+    document.getElementById('readerArea').addEventListener('scroll', (e) => {
+      const now = e.target.scrollTop;
+      if (now > lastScroll + 40) { hideBar(); }
+      else if (now < lastScroll - 10) { showBar(); }
+      lastScroll = now;
+    });
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

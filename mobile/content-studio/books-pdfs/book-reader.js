@@ -75,6 +75,8 @@
 
         // Update header
         bookTitleHeader.textContent = currentBook.title;
+        const backBtn = document.getElementById('backBtn');
+        if (backBtn) backBtn.href = `book-detail.html?id=${currentBook.id}`;
 
         // Load PDF viewer
         loadPDFViewer();

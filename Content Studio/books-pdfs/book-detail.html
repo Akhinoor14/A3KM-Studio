@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Mobile redirect -->
+  <script>
+    (function() {
+      function isMobile() {
+        return /android|iphone|ipad|ipod|iemobile|mobile/i.test(navigator.userAgent) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile);
+      }
+      if (isMobile()) {
+        const id = new URLSearchParams(window.location.search).get('id');
+        window.location.replace('../../mobile/content-studio/books-pdfs/book-reader.html' + (id ? '?id=' + id : ''));
+      }
+    })();
+  </script>
+
+  <title>Book Details – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../Optimization/styles.css" />
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
+  <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --accent-red: #FF2020;
+      --border-red: rgba(139,0,0,0.4);
+      --border-strong: rgba(204,0,0,0.7);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.85);
+      --text-dim: rgba(255,255,255,0.5);
+      --text-muted: rgba(255,255,255,0.35);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter','Noto Sans Bengali','Segoe UI',sans-serif;
+      color: var(--text-primary);
+      background: #000;
+      min-height: 100vh;
+      padding-top: 85px;
+      overflow-x: hidden;
+    }
+
+    /* Grid bg */
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background-image:
+        linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px),
+        linear-gradient(0deg,rgba(255,255,255,0.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(139,0,0,0.08) 1px,transparent 1px),
+        linear-gradient(0deg,rgba(139,0,0,0.08) 1px,transparent 1px);
+      background-size:100px 100px,100px 100px,20px 20px,20px 20px;
+    }
+
+    /* ── Back Button ─────────────────────────────────── */
+    .back-btn {
+      position: fixed;
+      top: 96px;
+      left: 22px;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: rgba(12,0,0,0.92);
+      border: 1px solid var(--border-red);
+      border-radius: 10px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      backdrop-filter: blur(16px);
+      transition: all 0.3s;
+    }
+    .back-btn:hover {
+      background: var(--primary-red);
+      border-color: var(--accent-red);
+      color: #fff;
+      transform: translateX(-3px);
+      box-shadow: 0 6px 20px rgba(204,0,0,0.45);
+    }
+
+    /* ── Main Layout ─────────────────────────────────── */
+    .detail-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Loading / Error */
+    .state-msg {
+      text-align: center;
+      padding: 100px 20px;
+      color: var(--text-dim);
+    }
+    .state-msg i { font-size: 52px; color: var(--primary-red); margin-bottom: 20px; display:block; animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Detail Grid ─────────────────────────────────── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* ── Cover Column ───────────────────────────────── */
+    .cover-wrap {
+      position: sticky;
+      top: 110px;
+    }
+
+    .book-cover-3d {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2/3;
+      border-radius: 4px 12px 12px 4px;
+      overflow: hidden;
+      /* 3D book shadow / spine illusion */
+      box-shadow:
+        -8px 0   0 rgba(0,0,0,0.6),
+        -14px 0  12px rgba(0,0,0,0.6),
+        0 20px 50px rgba(0,0,0,0.8),
+        0 0 60px rgba(204,0,0,0.15);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s;
+    }
+
+    .book-cover-3d:hover {
+      transform: perspective(900px) rotateY(-5deg) scale(1.02);
+      box-shadow:
+        -18px 0  0 rgba(0,0,0,0.65),
+        -26px 0  18px rgba(0,0,0,0.65),
+        0 30px 70px rgba(0,0,0,0.9),
+        0 0 80px rgba(204,0,0,0.22);
+    }
+
+    /* Spine strip */
+    .book-cover-3d::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 16px;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,0.7) 0%,
+        rgba(0,0,0,0.45) 40%,
+        rgba(255,255,255,0.06) 60%,
+        rgba(0,0,0,0.35) 100%);
+      z-index: 10;
+    }
+
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Cover format badge */
+    .cover-format {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      padding: 5px 12px;
+      background: var(--primary-red);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #fff;
+      z-index: 12;
+      box-shadow: 0 4px 14px rgba(204,0,0,0.5);
+    }
+
+    /* Stat strip under cover */
+    .cover-stats {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .cstat {
+      padding: 10px;
+      background: rgba(14,4,4,0.85);
+      border: 1px solid rgba(139,0,0,0.3);
+      border-radius: 10px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .cstat i { color: var(--primary-red); font-size: 15px; margin-bottom: 4px; display:block; }
+    .cstat .cstat-val { font-size: 14px; font-weight: 800; color: #fff; }
+    .cstat .cstat-lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* ── Info Column ────────────────────────────────── */
+    .info-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Badges row */
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-cat {
+      background: rgba(204,0,0,0.15);
+      border: 1px solid rgba(204,0,0,0.45);
+      color: rgba(255,100,100,0.95);
+    }
+    .badge-lang {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.75);
+    }
+    .badge-date {
+      background: transparent;
+      border: 1px solid rgba(139,0,0,0.3);
+      color: var(--text-muted);
+    }
+
+    /* Title */
+    .book-title {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 900;
+      line-height: 1.25;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8), 0 0 30px rgba(204,0,0,0.2);
+      letter-spacing: -0.3px;
+    }
+
+    /* Author */
+    .author-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .author-line i { color: var(--primary-red); font-size: 13px; }
+
+    /* Meta chips */
+    .meta-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(14,4,4,0.85);
+      border: 1px solid rgba(139,0,0,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      backdrop-filter: blur(8px);
+    }
+    .chip i { color: var(--primary-red); font-size: 11px; }
+
+    /* ── ACTION BUTTONS ─────────────────────────────── */
+    .action-strip {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-read, .btn-3d {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-read {
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(204,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-read::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .btn-read:hover::before { transform: translateX(100%); }
+    .btn-read:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(204,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .btn-3d {
+      background: rgba(14,4,4,0.95);
+      color: rgba(255,255,255,0.85);
+      border: 2px solid rgba(139,0,0,0.45) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .btn-3d:hover {
+      background: rgba(204,0,0,0.12);
+      border-color: rgba(204,0,0,0.7) !important;
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(204,0,0,0.3);
+    }
+
+    /* ── DIVIDER ──────────────────────────────────────── */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(139,0,0,0.4), transparent);
+    }
+
+    /* ── SUMMARY ─────────────────────────────────────── */
+    .summary-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary-red);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(139,0,0,0.3);
+    }
+
+    .summary-text {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      font-weight: 400;
+      max-height: 200px;
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.5s ease;
+    }
+    .summary-text.expanded { max-height: 9999px; }
+    .summary-text:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.95));
+      pointer-events: none;
+    }
+    /* strip HTML tags visual style */
+    .summary-text h2, .summary-text h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255,150,150,0.9);
+      margin: 14px 0 6px;
+    }
+    .summary-text p, .summary-text div { margin-bottom: 6px; }
+    .summary-text strong { color: #fff; font-weight: 700; }
+
+    .summary-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid rgba(139,0,0,0.35);
+      border-radius: 6px;
+      color: var(--primary-red);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .summary-toggle:hover {
+      background: rgba(204,0,0,0.1);
+      border-color: rgba(204,0,0,0.6);
+    }
+
+    /* ── DOWNLOAD SECTION ──────────────────────────── */
+    .download-box {
+      background: rgba(10,2,2,0.88);
+      border: 1px solid rgba(139,0,0,0.3);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .download-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .download-header:hover { background: rgba(204,0,0,0.06); }
+
+    .download-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+    }
+    .download-header-left i { color: var(--primary-red); font-size: 16px; }
+
+    .dl-arrow {
+      color: var(--primary-red);
+      font-size: 13px;
+      transition: transform 0.3s;
+    }
+    .download-box.open .dl-arrow { transform: rotate(180deg); }
+
+    .download-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .download-box.open .download-body { max-height: 200px; }
+
+    .download-body-inner {
+      padding: 0 20px 20px;
+      border-top: 1px solid rgba(139,0,0,0.2);
+    }
+
+    .download-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 0 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .download-note i { color: var(--primary-red); font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+
+    .contact-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 22px;
+      background: linear-gradient(135deg,rgba(204,0,0,0.2),rgba(139,0,0,0.15));
+      border: 1px solid rgba(204,0,0,0.45);
+      border-radius: 10px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+    .contact-cta:hover {
+      background: var(--primary-red);
+      border-color: var(--accent-red);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(204,0,0,0.4);
+    }
+
+    /* ── RELATED BOOKS ──────────────────────────────── */
+    .related-section { margin-top: 64px; }
+
+    .section-heading {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: 0.2px;
+    }
+    .section-heading i { color: var(--primary-red); }
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg,rgba(139,0,0,0.5),transparent);
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(140px,12vw,185px), 1fr));
+      gap: 16px;
+    }
+
+    /* Related card */
+    .rel-card {
+      background: rgba(16,3,3,0.95);
+      border: 1px solid rgba(139,0,0,0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: block;
+    }
+    .rel-card:hover {
+      border-color: rgba(204,0,0,0.65);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(139,0,0,0.35);
+    }
+    .rel-cover {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      display: block;
+    }
+    .rel-info {
+      padding: 9px 10px 10px;
+    }
+    .rel-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+    .rel-author {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Loading spinner for related */
+    .related-empty {
+      color: var(--text-dim);
+      font-size: 14px;
+      padding: 20px 0;
+    }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (max-width: 860px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .cover-wrap {
+        position: static;
+        max-width: 240px;
+        margin: 0 auto;
+      }
+      .back-btn { top: 90px; }
+      .detail-page { padding-top: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+      <a href="../../Home/index.html" class="desktop-nav-logo">
+        <img src="../../images/logo.svg" alt="A3KM Studio" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+        <div class="desktop-nav-brand">
+          <span class="desktop-nav-brand-name">A3KM Studio</span>
+          <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+        </div>
+      </a>
+      <ul class="desktop-nav-menu">
+        <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a></li>
+        <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a></li>
+        <li class="desktop-nav-item"><a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a></li>
+        <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="background-system"></div>
+
+  <a href="book-listing-new.html" class="back-btn">
+    <i class="fas fa-arrow-left"></i> Library
+  </a>
+
+  <div class="detail-page" id="detailPage">
+    <div class="state-msg" id="loadingMsg">
+      <i class="fas fa-spinner"></i>
+      <p>Loading book details…</p>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookId = urlParams.get('id');
+
+    async function loadDetail() {
+      if (!bookId) { showError('No book ID provided.'); return; }
+      try {
+        const res = await fetch('books.json');
+        const data = await res.json();
+        const book = data.books.find(b => b.id === bookId);
+        if (!book) { showError('Book not found.'); return; }
+
+        // Related (same category, max 8, exclude self)
+        const related = data.books.filter(b => b.id !== bookId && b.category === book.category).slice(0, 8);
+
+        renderDetail(book, related);
+      } catch (e) {
+        showError('Failed to load book data.');
+      }
+    }
+
+    function renderDetail(book, related) {
+      const langLabel = book.language === 'bn' ? 'বাংলা' : 'English';
+      const langCode  = book.language === 'bn' ? 'BN' : 'EN';
+      const dateStr   = book.date ? new Date(book.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+      const pages     = book.pages ? `${book.pages} pages` : '—';
+      const catSlug   = book.category.toLowerCase().replace(/[^\w\s-]/g,'').replace(/\s+/g,'-');
+
+      // Sanitize summary HTML (keep formatting, strip scripts)
+      const summaryHTML = book.summary
+        ? book.summary.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/on\w+="[^"]*"/g,'')
+        : '<p>No summary available.</p>';
+
+      const relatedHTML = related.length
+        ? related.map(r => `
+            <a class="rel-card" href="book-detail.html?id=${r.id}">
+              <img class="rel-cover" src="${r.cover}" alt="${r.title}" loading="lazy"
+                   onerror="this.src='../../Content Storage/books-pdfs/${catSlug}/covers/category-default.svg'">
+              <div class="rel-info">
+                <div class="rel-title">${r.title}</div>
+                <div class="rel-author">${r.author || ''}</div>
+              </div>
+            </a>`).join('')
+        : '<p class="related-empty">No related books found in this category yet.</p>';
+
+      document.getElementById('detailPage').innerHTML = `
+        <div class="detail-grid">
+
+          <!-- LEFT: Cover -->
+          <div class="cover-wrap">
+            <div class="book-cover-3d">
+              <img class="cover-img" src="${book.cover}" alt="${book.title}"
+                   onerror="this.src='../../Content Storage/books-pdfs/${catSlug}/covers/category-default.svg'">
+              <span class="cover-format">${book.format || 'PDF'}</span>
+            </div>
+            <div class="cover-stats">
+              <div class="cstat">
+                <i class="fas fa-file-alt"></i>
+                <div class="cstat-val">${book.pages || '—'}</div>
+                <div class="cstat-lbl">Pages</div>
+              </div>
+              <div class="cstat">
+                <i class="fas fa-weight"></i>
+                <div class="cstat-val">${book.size || '—'}</div>
+                <div class="cstat-lbl">Size</div>
+              </div>
+              <div class="cstat">
+                <i class="fas fa-globe"></i>
+                <div class="cstat-val">${langCode}</div>
+                <div class="cstat-lbl">Language</div>
+              </div>
+              <div class="cstat">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="cstat-val">${dateStr || '—'}</div>
+                <div class="cstat-lbl">Added</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Info -->
+          <div class="info-col">
+
+            <!-- Badges -->
+            <div class="badge-row">
+              <span class="badge badge-cat"><i class="fas fa-tag" style="margin-right:5px;font-size:9px;"></i>${book.category}</span>
+              <span class="badge badge-lang">${langLabel}</span>
+              ${dateStr ? `<span class="badge badge-date"><i class="fas fa-calendar" style="margin-right:5px;font-size:9px;"></i>${dateStr}</span>` : ''}
+            </div>
+
+            <!-- Title -->
+            <h1 class="book-title">${book.title}</h1>
+
+            <!-- Author -->
+            <div class="author-line">
+              <i class="fas fa-user-edit"></i>
+              <span>${book.author || 'Unknown Author'}</span>
+            </div>
+
+            <!-- Meta chips -->
+            <div class="meta-chips">
+              <span class="chip"><i class="fas fa-file-pdf"></i>${pages}</span>
+              <span class="chip"><i class="fas fa-hdd"></i>${book.size || '—'}</span>
+              <span class="chip"><i class="fas fa-file-code"></i>${book.format || 'PDF'}</span>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-strip">
+              <a class="btn-read" href="pdf-reader.html?id=${book.id}" id="readPdfBtn">
+                <i class="fas fa-book-reader"></i>
+                Read as PDF
+              </a>
+              <a class="btn-3d" href="book-3d.html?id=${book.id}" id="read3dBtn">
+                <i class="fas fa-book-open"></i>
+                3D Book Mode
+              </a>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- SUMMARY -->
+            <div class="summary-wrap">
+              <div class="summary-label"><i class="fas fa-align-left" style="color:var(--primary-red);margin-right:6px;font-size:11px;"></i>About this Book</div>
+              <div class="summary-text" id="summaryText">${summaryHTML}</div>
+              <button class="summary-toggle" onclick="toggleSummary()" id="summaryToggleBtn">
+                <i class="fas fa-chevron-down" id="summaryIcon"></i>
+                <span id="summaryToggleLabel">Show more</span>
+              </button>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- DOWNLOAD BOX -->
+            <div class="download-box" id="downloadBox">
+              <div class="download-header" onclick="toggleDownload()">
+                <div class="download-header-left">
+                  <i class="fas fa-download"></i>
+                  Download this Book
+                </div>
+                <i class="fas fa-chevron-down dl-arrow"></i>
+              </div>
+              <div class="download-body">
+                <div class="download-body-inner">
+                  <div class="download-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>বইটি ডাউনলোড করতে লেখকের সাথে সরাসরি যোগাযোগ করুন। ডাউনলোড সম্পূর্ণ বিনামূল্যে পাওয়া যাবে।</span>
+                  </div>
+                  <a class="contact-cta" href="../../Contact/contact.html">
+                    <i class="fas fa-envelope"></i>
+                    Contact Us →
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RELATED BOOKS -->
+        <div class="related-section">
+          <h2 class="section-heading">
+            <i class="fas fa-books"></i>
+            More in "${book.category}"
+          </h2>
+          <div class="related-grid">${relatedHTML}</div>
+        </div>
+      `;
+
+      // Auto-check if summary needs toggle
+      requestAnimationFrame(() => {
+        const el = document.getElementById('summaryText');
+        if (el && el.scrollHeight <= 210) {
+          document.getElementById('summaryToggleBtn').style.display = 'none';
+        }
+      });
+
+      document.title = `${book.title} – A3KM Studio`;
+    }
+
+    function toggleSummary() {
+      const el = document.getElementById('summaryText');
+      const icon = document.getElementById('summaryIcon');
+      const lbl  = document.getElementById('summaryToggleLabel');
+      el.classList.toggle('expanded');
+      const exp = el.classList.contains('expanded');
+      icon.style.transform = exp ? 'rotate(180deg)' : '';
+      lbl.textContent = exp ? 'Show less' : 'Show more';
+    }
+
+    function toggleDownload() {
+      document.getElementById('downloadBox').classList.toggle('open');
+    }
+
+    function showError(msg) {
+      document.getElementById('detailPage').innerHTML = `
+        <div class="state-msg" style="padding:100px 20px">
+          <i class="fas fa-exclamation-triangle" style="animation:none;color:var(--primary-red);"></i>
+          <p style="margin-top:16px;font-size:16px;color:rgba(255,255,255,0.6)">${msg}</p>
+          <a href="book-listing-new.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:12px 22px;background:var(--primary-red);color:#fff;text-decoration:none;border-radius:10px;font-weight:700">
+            <i class="fas fa-arrow-left"></i> Back to Library
+          </a>
+        </div>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDetail);
+  </script>
+
+  <script src="../../Optimization/Background/background-system.js"></script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+  <script>
+    (function() {
+      window.addEventListener('scroll', function() {
+        const navbar = document.getElementById('desktopNavbar');
+        if (navbar) { navbar.classList[window.scrollY > 50 ? 'add' : 'remove']('scrolled'); }
+      });
+    })();
+  </script>
+</body>
+</html>

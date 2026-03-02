@@ -280,7 +280,9 @@ class OfflineContentManager {
             // Content Studio - Books & PDFs
             books: [
                 '/Content Studio/books-pdfs/book-listing-new.html',
-                '/Content Studio/books-pdfs/book-reader-new.html',
+                '/Content Studio/books-pdfs/book-detail.html',
+                '/Content Studio/books-pdfs/pdf-reader.html',
+                '/Content Studio/books-pdfs/book-3d.html',
                 '/Content Studio/books-pdfs/books.json',
                 '/Content Studio/books-pdfs/print-export.js'
             ],

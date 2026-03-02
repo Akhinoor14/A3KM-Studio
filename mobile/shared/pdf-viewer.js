@@ -18,10 +18,11 @@ const UniversalPDFViewer = {
     pageNumPending: null,
     
     // Zoom & pan
-    scale: 1.4,
-    minScale: 0.5,
+    scale: 1.0,
+    minScale: 0.3,
     maxScale: 4.0,
-    defaultScale: 1.4,
+    defaultScale: 1.0,
+    scaleFitted: false,   // true after auto fit-to-width is calculated
     isFullscreen: false,
     
     // Touch gestures
@@ -187,15 +188,11 @@ function createViewerUI() {
                 flex: 1;
                 overflow: auto;
                 -webkit-overflow-scrolling: touch;
-                background: linear-gradient(135deg, 
-                    rgba(10, 0, 0, 0.95), 
-                    rgba(0, 0, 0, 0.98),
-                    rgba(20, 0, 0, 0.90)
-                );
+                background: #111;
                 display: flex;
                 justify-content: center;
                 align-items: flex-start;
-                padding: 20px;
+                padding: 0;
                 position: relative;
             }
             
@@ -378,24 +375,123 @@ function createViewerUI() {
             
             /* Mobile optimizations */
             @media (max-width: 768px) {
-                .pdf-header {
-                    padding: 10px 12px;
-                }
-                .pdf-title {
-                    font-size: 14px;
-                }
-                .pdf-canvas-wrapper {
-                    padding: 10px;
-                }
+                .pdf-header { padding: 10px 12px; }
+                .pdf-title  { font-size: 14px; }
+                .pdf-canvas-wrapper { padding: 0; }
                 .pdf-controls {
                     padding: 12px;
                     flex-wrap: nowrap;
                     overflow-x: auto;
                 }
-                .pdf-zoom-group {
-                    order: -1;
-                }
+                .pdf-zoom-group { order: -1; }
             }
+            
+            /* Canvas fills full width by default */
+            #pdf-canvas {
+                display: block;
+                max-width: 100%;
+            }
+
+            /* ── PAGE FLIP ANIMATION ────────────────────── */
+            .pdf-page-inner {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                width: 100%;
+                will-change: transform, opacity;
+            }
+            @keyframes pfiExitLeft {
+                from { transform: translateX(0)   rotateY(0deg)  ; opacity: 1; }
+                to   { transform: translateX(-55%) rotateY(30deg) ; opacity: 0; }
+            }
+            @keyframes pfiEnterRight {
+                from { transform: translateX(60%)  rotateY(-25deg); opacity: 0; }
+                to   { transform: translateX(0)    rotateY(0deg)  ; opacity: 1; }
+            }
+            @keyframes pfiExitRight {
+                from { transform: translateX(0)   rotateY(0deg)   ; opacity: 1; }
+                to   { transform: translateX(55%) rotateY(-30deg) ; opacity: 0; }
+            }
+            @keyframes pfiEnterLeft {
+                from { transform: translateX(-60%) rotateY(25deg); opacity: 0; }
+                to   { transform: translateX(0)    rotateY(0deg) ; opacity: 1; }
+            }
+            .pdf-page-inner.exit-left  { animation: pfiExitLeft  0.22s ease-in  forwards; pointer-events:none; }
+            .pdf-page-inner.exit-right { animation: pfiExitRight 0.22s ease-in  forwards; pointer-events:none; }
+            .pdf-page-inner.enter-right{ animation: pfiEnterRight 0.28s ease-out forwards; }
+            .pdf-page-inner.enter-left { animation: pfiEnterLeft  0.28s ease-out forwards; }
+
+            /* ── SWIPE HINT ─────────────────────────────── */
+            .pdf-swipe-hint {
+                position: absolute;
+                inset: 0;
+                z-index: 50;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+                background: rgba(0,0,0,0.45);
+                backdrop-filter: blur(2px);
+                transition: opacity 0.5s ease;
+            }
+            .pdf-swipe-hint.hidden { opacity: 0; pointer-events: none; }
+            /* left edge arrow */
+            .pdf-swipe-hint::before,
+            .pdf-swipe-hint::after {
+                content: '';
+                position: absolute;
+                top: 50%; transform: translateY(-50%);
+                width: 38px; height: 80px;
+                border-radius: 4px;
+                background: rgba(204,0,0,0.18);
+                border: 1px solid rgba(204,0,0,0.35);
+            }
+            .pdf-swipe-hint::before { left: 0; border-radius: 0 8px 8px 0; }
+            .pdf-swipe-hint::after  { right:0; border-radius: 8px 0 0 8px; }
+            /* chevrons inside edges */
+            .swipe-hint-left-arrow,
+            .swipe-hint-right-arrow {
+                position: absolute;
+                top: 50%; transform: translateY(-50%);
+                font-size: 18px;
+                color: rgba(204,0,0,0.75);
+                animation: pulseArrow 1.2s ease-in-out infinite;
+            }
+            .swipe-hint-left-arrow  { left: 8px; animation-direction: normal; }
+            .swipe-hint-right-arrow { right:8px; animation-direction: reverse; }
+            @keyframes pulseArrow {
+                0%,100% { opacity: 0.3; transform: translateY(-50%) translateX(0); }
+                50%      { opacity: 1;   transform: translateY(-50%) translateX(4px); }
+            }
+            /* center hand icon */
+            .swipe-hint-hand {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 14px;
+            }
+            .swipe-hint-hand i {
+                font-size: 42px;
+                color: rgba(255,255,255,0.9);
+                filter: drop-shadow(0 0 12px rgba(204,0,0,0.7));
+                animation: swipeGesture 1.8s cubic-bezier(0.4,0,0.2,1) infinite;
+            }
+            @keyframes swipeGesture {
+                0%   { transform: translateX(28px)  ; opacity: 0;   }
+                15%  { transform: translateX(28px)  ; opacity: 1;   }
+                50%  { transform: translateX(-28px) ; opacity: 1;   }
+                85%  { transform: translateX(-28px) ; opacity: 0.8; }
+                100% { transform: translateX(28px)  ; opacity: 0;   }
+            }
+            .swipe-hint-dots {
+                display: flex; gap: 6px;
+            }
+            .swipe-hint-dots span {
+                width: 6px; height: 6px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.3);
+            }
+            .swipe-hint-dots span:nth-child(2) { background: rgba(204,0,0,0.8); transform: scale(1.4); }
         </style>
         
         <!-- Header -->
@@ -415,11 +511,24 @@ function createViewerUI() {
         </div>
         
         <!-- Canvas Container -->
-        <div class="pdf-canvas-wrapper" id="pdf-canvas-wrapper">
-            <canvas id="pdf-canvas"></canvas>
+        <div class="pdf-canvas-wrapper" id="pdf-canvas-wrapper" style="overflow:hidden; perspective:900px;">
+            <div class="pdf-page-inner" id="pdf-page-inner">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
             <div class="pdf-loading" id="pdf-loading">
                 <div class="pdf-spinner"></div>
                 <div class="pdf-loading-text">Loading PDF...</div>
+            </div>
+            <!-- Swipe gesture guide: shows once after load, hides on first touch -->
+            <div class="pdf-swipe-hint hidden" id="pdf-swipe-hint">
+                <i class="swipe-hint-left-arrow fas fa-chevron-right"></i>
+                <div class="swipe-hint-hand">
+                    <i class="fas fa-hand-pointer"></i>
+                    <div class="swipe-hint-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <i class="swipe-hint-right-arrow fas fa-chevron-left"></i>
             </div>
         </div>
         
@@ -495,6 +604,15 @@ async function loadPDF(url) {
         await renderPage(1);
         updatePageInfo();
         
+        // Show swipe hint briefly after first load
+        setTimeout(() => {
+            const hint = document.getElementById('pdf-swipe-hint');
+            if (hint) {
+                hint.classList.remove('hidden');
+                setTimeout(() => hint.classList.add('hidden'), 2600);
+            }
+        }, 400);
+        
     } catch (error) {
         console.error('❌ Failed to load PDF:', error);
         showPDFError(`Failed to load PDF: ${error.message || 'Unknown error'}`);
@@ -516,11 +634,22 @@ async function renderPage(pageNum) {
     try {
         const page = await UniversalPDFViewer.pdfDoc.getPage(pageNum);
         
+        // Auto fit-to-width on very first render
+        if (!UniversalPDFViewer.scaleFitted) {
+            const wrapper = document.getElementById('pdf-canvas-wrapper');
+            const availableWidth = (wrapper ? wrapper.clientWidth : window.innerWidth) || window.innerWidth;
+            const naturalViewport = page.getViewport({ scale: 1.0 });
+            const fitScale = availableWidth / naturalViewport.width;
+            UniversalPDFViewer.scale = Math.min(fitScale, 2.5); // cap at 2.5× for clarity
+            UniversalPDFViewer.defaultScale = UniversalPDFViewer.scale;
+            UniversalPDFViewer.scaleFitted = true;
+        }
+        
         // High-DPI rendering for sharp quality
         const pixelRatio = window.devicePixelRatio || 2;
         const outputScale = pixelRatio;
         
-        // Calculate viewport with higher quality
+        // Calculate viewport with current scale
         const viewport = page.getViewport({ scale: UniversalPDFViewer.scale });
         
         // Set canvas dimensions with pixel ratio for crisp rendering
@@ -603,7 +732,7 @@ function updateNavigationButtons() {
  */
 function goToPrevPage() {
     if (UniversalPDFViewer.currentPage > 1) {
-        renderPage(UniversalPDFViewer.currentPage - 1);
+        flipPage('right');
         if (navigator.vibrate) navigator.vibrate(10);
     }
 }
@@ -613,10 +742,48 @@ function goToPrevPage() {
  */
 function goToNextPage() {
     if (UniversalPDFViewer.currentPage < UniversalPDFViewer.totalPages) {
-        renderPage(UniversalPDFViewer.currentPage + 1);
+        flipPage('left');
         if (navigator.vibrate) navigator.vibrate(10);
     }
 }
+
+/**
+ * Animated page flip: direction 'left'=next page, 'right'=prev page
+ */
+async function flipPage(direction) {
+    // Hide swipe hint on first use
+    const hint = document.getElementById('pdf-swipe-hint');
+    if (hint) hint.classList.add('hidden');
+
+    const inner = document.getElementById('pdf-page-inner');
+    if (!inner) {
+        // fallback
+        direction === 'left' ? renderPage(UniversalPDFViewer.currentPage + 1)
+                             : renderPage(UniversalPDFViewer.currentPage - 1);
+        return;
+    }
+
+    const exitClass  = direction === 'left' ? 'exit-left'   : 'exit-right';
+    const enterClass = direction === 'left' ? 'enter-right'  : 'enter-left';
+    const nextPage   = direction === 'left'
+        ? UniversalPDFViewer.currentPage + 1
+        : UniversalPDFViewer.currentPage - 1;
+
+    // Exit animation
+    inner.classList.add(exitClass);
+    await delay(200);
+    inner.classList.remove(exitClass);
+
+    // Render new page (silent, no anim yet)
+    await renderPage(nextPage);
+
+    // Enter animation
+    inner.classList.add(enterClass);
+    await delay(280);
+    inner.classList.remove(enterClass);
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 /**
  * Zoom In
@@ -643,18 +810,18 @@ function zoomOut() {
 /**
  * Fit to Screen
  */
-function fitToScreen() {
+async function fitToScreen() {
     const wrapper = UniversalPDFViewer.canvasWrapper;
-    const wrapperWidth = wrapper.clientWidth - 40; // padding
-    const wrapperHeight = wrapper.clientHeight - 40;
-    
-    // Get page dimensions at scale 1
-    UniversalPDFViewer.scale = 1.0;
-    const canvas = UniversalPDFViewer.canvas;
-    const scaleX = wrapperWidth / canvas.width;
-    const scaleY = wrapperHeight / canvas.height;
-    
-    UniversalPDFViewer.scale = Math.min(scaleX, scaleY, 2.0);
+    const wrapperWidth  = wrapper.clientWidth;
+    const wrapperHeight = wrapper.clientHeight;
+
+    // Re-measure against natural page size at scale 1
+    const page = await UniversalPDFViewer.pdfDoc.getPage(UniversalPDFViewer.currentPage);
+    const naturalVP = page.getViewport({ scale: 1.0 });
+    const scaleX = wrapperWidth  / naturalVP.width;
+    const scaleY = wrapperHeight / naturalVP.height;
+
+    UniversalPDFViewer.scale = Math.min(scaleX, scaleY, 2.5);
     renderPage(UniversalPDFViewer.currentPage);
     if (navigator.vibrate) navigator.vibrate(10);
 }
@@ -926,8 +1093,11 @@ function closeUniversalPDFViewer() {
         
         // Cleanup
         document.removeEventListener('keydown', handleKeyPress);
-        UniversalPDFViewer.pdfDoc = null;
-        UniversalPDFViewer.isOpen = false;
+        UniversalPDFViewer.pdfDoc        = null;
+        UniversalPDFViewer.isOpen        = false;
+        UniversalPDFViewer.scaleFitted   = false;
+        UniversalPDFViewer.scale         = 1.0;
+        UniversalPDFViewer.defaultScale  = 1.0;
         
         console.log('📱 PDF Viewer closed');
     }
