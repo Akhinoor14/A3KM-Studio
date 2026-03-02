@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0a0000">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
   <!-- Mobile redirect -->
@@ -563,28 +564,50 @@
     }
 
     // ── PDF load ─────────────────────────────────────────
-    async function loadPDF(url) {
-      let pdfUrl = url;
-      if (pdfUrl.includes('github.com') && !pdfUrl.includes('/raw/')) {
-        pdfUrl = pdfUrl.replace('/blob/','/raw/');
+    function normalizeGithubUrl(url) {
+      let u = url;
+      try { u = decodeURIComponent(u); } catch(e) {}
+      if (u.includes('github.com') && u.includes('/blob/')) {
+        u = u.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      } else if (u.includes('github.com') && !u.includes('/raw/')) {
+        u = u.replace('/blob/', '/raw/');
       }
-      if (pdfUrl.includes('github.com') || pdfUrl.includes('githubusercontent.com')) {
-        pdfUrl = 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl);
-      }
+      return u;
+    }
 
-      pdfDoc = await pdfjsLib.getDocument({
+    async function tryLoadDoc(pdfUrl) {
+      return pdfjsLib.getDocument({
         url: pdfUrl,
-        cMapUrl:         'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
-        cMapPacked:      true,
+        cMapUrl:             'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+        cMapPacked:          true,
         standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
-        enableXfa:       true,
-        disableFontFace: false,
+        enableXfa:           true,
+        disableFontFace:     false,
       }).promise;
+    }
 
-      totalPg = pdfDoc.numPages;
-      currentL = 1;
-      await spread(currentL, false);
-      document.getElementById('loadingCover').classList.add('done');
+    async function loadPDF(url) {
+      const rawUrl = normalizeGithubUrl(url);
+      const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
+
+      const attempts = isGithub ? [
+        rawUrl,
+        'https://corsproxy.io/?' + encodeURIComponent(rawUrl),
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
+      ] : [rawUrl];
+
+      let lastErr;
+      for (const pdfUrl of attempts) {
+        try {
+          pdfDoc = await tryLoadDoc(pdfUrl);
+          totalPg = pdfDoc.numPages;
+          currentL = 1;
+          await spread(currentL, false);
+          document.getElementById('loadingCover').classList.add('done');
+          return;
+        } catch(e) { lastErr = e; }
+      }
+      throw lastErr;
     }
 
     // ── Render two-page spread ────────────────────────────
@@ -784,5 +807,6 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

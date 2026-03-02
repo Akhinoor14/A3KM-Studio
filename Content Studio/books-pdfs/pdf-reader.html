@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0a0000">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <!-- Mobile redirect -->
@@ -479,16 +480,21 @@
     }
 
     // ── PDF Loading ──────────────────────────────────────
-    async function loadPDF(url) {
-      let pdfUrl = url;
-      if (pdfUrl.includes('github.com') && !pdfUrl.includes('/raw/')) {
-        pdfUrl = pdfUrl.replace('/blob/','/raw/');
+    function normalizeGithubUrl(url) {
+      // Decode first to prevent double-encoding (%20 becomes %2520 otherwise)
+      let u = url;
+      try { u = decodeURIComponent(u); } catch(e) {}
+      // Convert github.com blob URL → raw.githubusercontent.com
+      if (u.includes('github.com') && u.includes('/blob/')) {
+        u = u.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      } else if (u.includes('github.com') && !u.includes('/raw/')) {
+        u = u.replace('/blob/', '/raw/');
       }
-      if (pdfUrl.includes('github.com') || pdfUrl.includes('githubusercontent.com')) {
-        pdfUrl = 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl);
-      }
+      return u;
+    }
 
-      const task = pdfjsLib.getDocument({
+    async function tryLoadPDF(pdfUrl) {
+      return pdfjsLib.getDocument({
         url: pdfUrl,
         cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
         cMapPacked: true,
@@ -496,13 +502,32 @@
         enableXfa: true,
         disableFontFace: false,
         useSystemFonts: false,
-      });
+      }).promise;
+    }
 
-      pdfDoc = await task.promise;
-      totalPg = pdfDoc.numPages;
-      document.getElementById('totalPages').textContent = totalPg;
-      document.getElementById('pageInput').max = totalPg;
-      await renderPage(1);
+    async function loadPDF(url) {
+      const rawUrl = normalizeGithubUrl(url);
+      const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
+
+      // raw.githubusercontent.com supports CORS natively — try direct first, then fallback proxies
+      const attempts = isGithub ? [
+        rawUrl,
+        'https://corsproxy.io/?' + encodeURIComponent(rawUrl),
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
+      ] : [rawUrl];
+
+      let lastErr;
+      for (const pdfUrl of attempts) {
+        try {
+          pdfDoc = await tryLoadPDF(pdfUrl);
+          totalPg = pdfDoc.numPages;
+          document.getElementById('totalPages').textContent = totalPg;
+          document.getElementById('pageInput').max = totalPg;
+          await renderPage(1);
+          return;
+        } catch(e) { lastErr = e; }
+      }
+      throw lastErr;
     }
 
     // ── Render ───────────────────────────────────────────
@@ -745,5 +770,6 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

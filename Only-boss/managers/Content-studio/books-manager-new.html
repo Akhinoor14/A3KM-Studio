@@ -1761,7 +1761,7 @@
                   // Group header
                   const groupDiv = document.createElement('div');
                   groupDiv.style.cssText = 'padding: 8px 12px; font-weight: 700; color: #8B4513; background: rgba(139, 69, 19, 0.05); font-size: 12px; cursor: default; user-select: none;';
-                  groupDiv.textContent = `${group.icon || '📁'} ${group.name} (${filteredCats.length})`;
+                  groupDiv.textContent = `${getGroupIcon(group)} ${group.name} (${filteredCats.length})`;
                   categoryDropdown.appendChild(groupDiv);
                   
                   // Category options
@@ -2237,6 +2237,33 @@
       return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
     }
 
+    // Name → emoji map so icons don't depend on (often mis-encoded) group.icon from JSON
+    const GROUP_ICON_MAP = {
+      'Literature & Language': '📚',
+      'Arts & Culture': '🎨',
+      'Social Sciences & Humanities': '🌍',
+      'Natural & Physical Sciences': '🔬',
+      'Medicine & Health': '⚕️',
+      'Business & Management': '💼',
+      'Law & Governance': '⚖️',
+      'Engineering & Technology': '🔧',
+      'Computer Science & IT': '💻',
+      'Agriculture & Environment': '🌾',
+      'Education & Learning': '🎓',
+      'Religion & Spirituality': '🕌',
+      'Sports & Recreation': '⚽',
+      'Travel & Geography': '✈️',
+      'Biographies & Memoirs': '👤',
+      'Self-Help & Personal Development': '🌱',
+      'Children & Young Adult': '👶',
+      'Comics & Graphic Novels': '💬',
+      'Cooking & Food': '🍳',
+      'History & Heritage': '🏛️'
+    };
+    function getGroupIcon(group) {
+      return GROUP_ICON_MAP[group.name] || group.icon || '📁';
+    }
+
     // Populate the edit modal's <select id="editCategory"> with categories from GitHub
     async function populateEditCategory(selectedValue) {
       let data;
@@ -2255,7 +2282,7 @@
         sortedGroups.forEach(group => {
           if (group.categories && group.categories.length > 0) {
             const optGroup = document.createElement('optgroup');
-            optGroup.label = `${group.icon || '📁'} ${group.name}`;
+            optGroup.label = `${getGroupIcon(group)} ${group.name}`;
             group.categories.forEach(cat => {
               const opt = document.createElement('option');
               opt.value = cat;
