@@ -532,9 +532,12 @@
                     <small>Required for content uploads and management</small>
                 </div>
                 <div class="form-group">
-                    <label>YouTube API Key</label>
-                    <input type="password" id="youtubeApiKey" placeholder="AIzaSyXXXXXXXXXXXXXXX">
-                    <small>For fetching video durations and details</small>
+                    <label><i class="fab fa-youtube" style="color:#FF0000;"></i> YouTube Data API v3 Key <span class="setting-badge required">Required</span></label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="password" id="youtubeApiKey" placeholder="AIzaSyXXXXXXXXXXXXXXX" style="flex:1;">
+                        <button type="button" onclick="(function(){var i=document.getElementById('youtubeApiKey');i.type=i.type==='password'?'text':'password';})()" style="padding:8px 12px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <small>Used by: Educational Course Viewer, Video Gallery — fetches real-time durations via YouTube Data API v3. Get from: <a href="https://console.cloud.google.com/" target="_blank" style="color:#4fc3f7;">console.cloud.google.com</a> → APIs &amp; Services → YouTube Data API v3</small>
                 </div>
                 <div class="form-group">
                     <label>SMTP Email Host (for contact forms)</label>
@@ -876,6 +879,16 @@
 
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
             
+            // Expose API keys as standalone keys for other pages
+            if (settings.api.youtubeApiKey) {
+                localStorage.setItem('youtube_api_key', settings.api.youtubeApiKey);
+            } else {
+                localStorage.removeItem('youtube_api_key');
+            }
+            if (settings.api.githubToken) {
+                localStorage.setItem('github_token', settings.api.githubToken);
+            }
+            
             // Update last saved info
             updateLastSavedInfo();
             
@@ -955,6 +968,13 @@
                     const el = document.getElementById(key);
                     if (el) el.value = settings.api[key] || '';
                 });
+                // Also propagate as standalone keys for other pages
+                if (settings.api.youtubeApiKey) {
+                    localStorage.setItem('youtube_api_key', settings.api.youtubeApiKey);
+                }
+                if (settings.api.githubToken) {
+                    localStorage.setItem('github_token', settings.api.githubToken);
+                }
             }
 
             // Load advanced

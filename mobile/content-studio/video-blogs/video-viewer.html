@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#CC0000">
+    <meta name="theme-color" content="#000000">
     <meta name="description" content="Watch technical video tutorials by Md Akhinoor Islam">
     <title>Video Player - A3KM Studio</title>
     
@@ -13,6 +13,8 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <!-- YouTube API Configuration -->
     <script src="youtube-api-config.js"></script>
     <script src="youtube-data-fetcher.js"></script>
@@ -21,6 +23,9 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="../../shared/mobile-common.css">
     <link rel="stylesheet" href="../../shared/mobile-navbar.css">
+    
+    <!-- Page Loading Indicator -->
+    <script src="../../shared/page-loading.js"></script>
     
     <style>
         /* Video Viewer Styles */
@@ -78,42 +83,296 @@
             transform: translateX(-3px);
         }
         
-        /* Video Player Container */
-        .video-player-container {
+        /* ── Video Player Wrapper ── */
+        .vp-wrapper {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 aspect ratio */
+            background: #000;
+            touch-action: none; /* We handle all gestures manually */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Normal mode: 16:9 aspect */
+        .vp-inner {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
             background: #000;
             overflow: hidden;
         }
-        
-        .video-player-container iframe {
+
+        .vp-inner iframe,
+        .vp-inner > div {
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             border: none;
         }
-        
-        .video-placeholder {
+
+        /* Placeholder until IFrame API is ready */
+        .vp-placeholder {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 0, 0.85));
+            background: linear-gradient(135deg, #0a0000, #1a0000);
+            z-index: 2;
+            transition: opacity 0.4s ease;
         }
-        
-        .video-placeholder i {
-            font-size: 64px;
-            color: #CC0000;
-            opacity: 0.5;
-            filter: drop-shadow(0 4px 8px rgba(204, 0, 0, 0.3));
+        .vp-placeholder.hidden { opacity: 0; pointer-events: none; }
+        .vp-placeholder i {
+            font-size: 64px; color: #CC0000; opacity: 0.5;
+            filter: drop-shadow(0 4px 8px rgba(204,0,0,0.3));
         }
+
+        /* Brightness overlay */
+        .vp-brightness {
+            position: absolute; inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+            transition: opacity 0.1s;
+        }
+
+        /* Gesture overlay (sits above iframe, intercepts all touch) */
+        .vp-gesture {
+            position: absolute; inset: 0;
+            z-index: 10;
+        }
+
+        /* Custom controls bar at bottom of player */
+        .vp-controls {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+            z-index: 11;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .vp-wrapper.controls-visible .vp-controls {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .vp-fs-btn {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Volume / Brightness HUD */
+        .vp-hud {
+            position: absolute;
+            top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column;
+            align-items: center; gap: 8px;
+            background: rgba(0,0,0,0.65);
+            border-radius: 12px;
+            padding: 12px 10px;
+            min-width: 44px;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .vp-hud.visible { opacity: 1; }
+        .vp-hud i { font-size: 18px; color: #fff; }
+        .vp-hud-track {
+            width: 6px; height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        .vp-hud-fill {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: #CC0000;
+            border-radius: 3px;
+            transition: height 0.08s linear;
+        }
+        #volHud  { right: 16px; }   /* volume → right side */
+        #briHud  { left:  16px; }   /* brightness → left side */
+
+        /* Tap-to-play overlay feedback */
+        .vp-tap-ring {
+            position: absolute;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.4);
+            transform: translate(-50%,-50%) scale(0);
+            pointer-events: none;
+            z-index: 12;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .vp-tap-ring.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+        .vp-tap-ring.hide { transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+
+        /* PORTRAIT FULLSCREEN STATE */
+        .vp-wrapper.portrait-fs {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 9000;
+            background: #000;
+            display: flex;
+            align-items: center;
+        }
+        .vp-wrapper.portrait-fs .vp-inner {
+            padding-top: 0;
+            height: 100dvh;
+        }
+        .vp-wrapper.portrait-fs ~ * { display: none !important; }
+        .vp-wrapper.portrait-fs .vp-controls { opacity: 1; pointer-events: auto; }
+
+        /* Swipe-to-enter drag preview */
+        .vp-wrapper.dragging-enter .vp-inner {
+            transform-origin: top center;
+            transition: transform 0.05s;
+        }
+
+        /* LANDSCAPE FULLSCREEN — whole wrapper goes fullscreen */
+        :fullscreen .vp-wrapper,
+        :-webkit-full-screen .vp-wrapper {
+            position: fixed; inset: 0;
+            width: 100vw; height: 100vh;
+        }
+        :fullscreen .vp-inner,
+        :-webkit-full-screen .vp-inner {
+            padding-top: 0;
+            height: 100vh;
+        }
+        :fullscreen .vp-controls,
+        :-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
+
+        /* Hide bottom navbar during fullscreen */
+
+        /* ── Media Controls: Prev / Play-Pause / Next ── */
+        .vp-media-controls {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex; align-items: center; gap: 20px;
+            z-index: 14;
+            opacity: 0; transition: opacity 0.28s ease;
+            pointer-events: none;
+        }
+        .vp-wrapper.controls-visible .vp-media-controls {
+            opacity: 1; pointer-events: auto;
+        }
+        .vp-mc-btn {
+            width: 46px; height: 46px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.62);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 50%; color: #fff; font-size: 17px;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.14s cubic-bezier(0.4,0,0.2,1), background 0.14s;
+            backdrop-filter: blur(6px);
+        }
+        .vp-mc-btn.center {
+            width: 56px; height: 56px; font-size: 21px;
+            background: rgba(204,0,0,0.62);
+            border-color: rgba(255,255,255,0.3);
+        }
+        .vp-mc-btn:active:not(.disabled) {
+            transform: scale(0.86);
+            background: rgba(204,0,0,0.88);
+        }
+        .vp-mc-btn.disabled { opacity: 0.28; pointer-events: none; }
+
+        /* ── PiP Button ── */
+        .vp-pip-btn {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px; color: rgba(255,255,255,0.85);
+            font-size: 14px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .vp-pip-btn.active { color: #ff4444; border-color: rgba(204,0,0,0.5); }
+        .vp-controls { gap: 8px; }
+        /* ── PiP Tab-Hidden Toast ── */
+        .vp-pip-toast {
+            position: absolute; bottom: 52px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.88); color: #fff;
+            font-size: 12px; font-weight: 700;
+            padding: 7px 16px; border-radius: 20px;
+            white-space: nowrap; z-index: 20;
+            opacity: 0; transition: opacity 0.3s ease;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; gap: 7px;
+        }
+        .vp-pip-toast.show { opacity: 1; pointer-events: auto; cursor: pointer; }
+        .vp-pip-toast i { color: #ff4444; }
+        /* ── PiP Fallback Mini Remote (iOS / Firefox) ── */
+        .vp-pip-fallback {
+            position: fixed; bottom: 86px; right: 12px; width: 240px;
+            background: linear-gradient(135deg,rgba(10,0,0,0.97),rgba(4,0,0,0.99));
+            border-radius: 14px; overflow: hidden; z-index: 99998;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(204,0,0,0.22);
+            display: none; flex-direction: column;
+            touch-action: none; user-select: none;
+        }
+        .vp-pip-fallback.active { display: flex; }
+        .vp-pip-fb-header {
+            height: 30px; background: rgba(204,0,0,0.82);
+            display: flex; align-items: center; gap: 7px;
+            padding: 0 10px; cursor: grab; flex-shrink: 0;
+        }
+        .vp-pip-fb-header:active { cursor: grabbing; }
+        .vp-pip-fb-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .vp-pip-fb-title {
+            flex: 1; font-size: 10.5px; font-weight: 800;
+            color: rgba(255,255,255,0.9);
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .vp-pip-fb-close {
+            background: none; border: none; color: rgba(255,255,255,0.75);
+            font-size: 13px; cursor: pointer; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .vp-pip-fb-body {
+            display: flex; align-items: center; justify-content: center;
+            padding: 12px 8px; gap: 8px;
+        }
+        .vp-pip-fb-btn {
+            width: 40px; height: 40px; border: none;
+            background: rgba(255,255,255,0.08); color: #fff; font-size: 16px;
+            cursor: pointer; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.14s, transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .vp-pip-fb-btn:active { transform: scale(0.87); background: rgba(204,0,0,0.5); }
+        .vp-pip-fb-btn.play { background: rgba(204,0,0,0.72); font-size: 19px; width: 48px; height: 48px; }
+        .vp-pip-fb-btn.disabled { opacity: 0.28; pointer-events: none; }
+        :fullscreen ~ .mobile-bottom-nav,
+        :-webkit-full-screen ~ .mobile-bottom-nav { display: none !important; }
+        .portrait-fs ~ .mobile-bottom-nav { display: none !important; }
         
         /* Video Info Section */
         .video-info {
@@ -448,9 +707,69 @@
     </header>
 
     <!-- Video Player -->
-    <div class="video-player-container" id="videoPlayerContainer">
-        <div class="video-placeholder">
-            <i class="fab fa-youtube"></i>
+    <div class="vp-wrapper" id="vpWrapper">
+        <div class="vp-inner" id="videoPlayerContainer">
+            <!-- YouTube IFrame API target -->
+            <div id="ytPlayer"></div>
+            <!-- Placeholder until ready -->
+            <div class="vp-placeholder" id="vpPlaceholder">
+                <i class="fab fa-youtube"></i>
+            </div>
+            <!-- Brightness overlay -->
+            <div class="vp-brightness" id="vpBrightness"></div>
+        </div>
+        <!-- Gesture capture layer -->
+        <div class="vp-gesture" id="vpGesture"></div>
+        <!-- Custom controls -->
+        <div class="vp-controls" id="vpControls">
+            <button class="vp-pip-btn" id="vpPipBtn" title="Picture in Picture">
+                <i class="fas fa-external-link-square-alt"></i>
+            </button>
+            <button class="vp-fs-btn" id="vpFsBtn" title="Fullscreen">
+                <i class="fas fa-expand" id="vpFsIcon"></i>
+            </button>
+        </div>
+        <!-- Brightness HUD (left side — left-swipe gesture) -->
+        <div class="vp-hud" id="briHud" style="left:16px">
+            <i class="fas fa-sun"></i>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:50%"></div></div>
+        </div>
+        <!-- Volume HUD (right side — right-swipe gesture) -->
+        <div class="vp-hud" id="volHud" style="right:16px">
+            <i class="fas fa-volume-up" id="volIcon"></i>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="volFill" style="height:80%"></div></div>
+        </div>
+        <!-- Media Controls: Prev / Play-Pause / Next -->
+        <div class="vp-media-controls" id="vpMediaControls">
+            <button class="vp-mc-btn disabled" id="vpPrevBtn" title="Previous video">
+                <i class="fas fa-step-backward"></i>
+            </button>
+            <button class="vp-mc-btn center" id="vpPlayPauseBtn" title="Play / Pause">
+                <i class="fas fa-pause" id="vpPlayPauseIcon"></i>
+            </button>
+            <button class="vp-mc-btn disabled" id="vpNextBtn" title="Next video">
+                <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+        <!-- Tap ring feedback -->
+        <div class="vp-tap-ring" id="vpTapRing"></div>
+        <!-- PiP tab-hidden toast -->
+        <div class="vp-pip-toast" id="vpPipToast">
+            <i class="fas fa-external-link-square-alt"></i> Tap for Picture-in-Picture
+        </div>
+    </div>
+
+    <!-- PiP Fallback Mini Remote (iOS / Firefox) -->
+    <div class="vp-pip-fallback" id="vpPipFallback">
+        <div class="vp-pip-fb-header" id="vpPipFbHeader">
+            <div class="vp-pip-fb-dot"></div>
+            <span class="vp-pip-fb-title" id="vpPipFbTitle">Now Playing</span>
+            <button class="vp-pip-fb-close" id="vpPipFbClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="vp-pip-fb-body">
+            <button class="vp-pip-fb-btn disabled" id="vpPipFbPrev"><i class="fas fa-step-backward"></i></button>
+            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-pause" id="vpPipFbPlayIcon"></i></button>
+            <button class="vp-pip-fb-btn disabled" id="vpPipFbNext"><i class="fas fa-step-forward"></i></button>
         </div>
     </div>
 
@@ -530,5 +849,634 @@
     <script src="../../shared/mobile-navbar.js"></script>
     <script src="video-viewer.js"></script>
     <script src="../../pwa-init.js"></script>
+
+    <!-- ══════════════════════════════════════════════════
+         GESTURE ENGINE + PLAYER CONTROLLER
+         ══════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        /* ─────────────────────────────────────────────────────────
+           STATE — single source of truth
+           'normal' | 'portraitFS' | 'landscapeFS'
+        ───────────────────────────────────────────────────────── */
+        let state        = 'normal';
+        let ytPlayer     = null;
+        let playerReady  = false;
+        let isPlaying    = false;
+        let currentVol   = 80;      // 0‑100
+        let brightness   = 0;       // 0‑0.70 (overlay opacity)
+        let controlsTimer = null;
+
+        /* DOM refs */
+        const wrapper    = document.getElementById('vpWrapper');
+        const inner      = document.getElementById('videoPlayerContainer');
+        const gesture    = document.getElementById('vpGesture');
+        const placeholder= document.getElementById('vpPlaceholder');
+        const briOverlay = document.getElementById('vpBrightness');
+        const volFill    = document.getElementById('volFill');
+        const briFill    = document.getElementById('briFill');
+        const volIcon    = document.getElementById('volIcon');
+        const volHud     = document.getElementById('volHud');
+        const briHud     = document.getElementById('briHud');
+        const mcPrev     = document.getElementById('vpPrevBtn');
+        const mcPlay     = document.getElementById('vpPlayPauseBtn');
+        const mcNext     = document.getElementById('vpNextBtn');
+        const mcPlayIcon = document.getElementById('vpPlayPauseIcon');
+        const tapRing    = document.getElementById('vpTapRing');
+        const fsBtn      = document.getElementById('vpFsBtn');
+        const fsIcon     = document.getElementById('vpFsIcon');
+
+        /* ─────────────────────────────────────────────────────────
+           YOUTUBE IFRAME API
+        ───────────────────────────────────────────────────────── */
+        window._initYTPlayer = function(videoId) {
+            if (ytPlayer) {
+                ytPlayer.loadVideoById(videoId);
+                return;
+            }
+            ytPlayer = new YT.Player('ytPlayer', {
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1, rel: 0, modestbranding: 1,
+                    playsinline: 1, controls: 1, fs: 0,
+                    iv_load_policy: 3, enablejsapi: 1
+                },
+                events: {
+                    onReady: function(e) {
+                        playerReady = true;
+                        placeholder.classList.add('hidden');
+                        e.target.setVolume(currentVol);
+                        syncVolHud();
+                        /* Restore FS state after same-category prev/next navigation */
+                        const rs = sessionStorage.getItem('vpRestoreState');
+                        if (rs) {
+                            sessionStorage.removeItem('vpRestoreState');
+                            setTimeout(() => {
+                                if (rs === 'portraitFS')  enterPortraitFS();
+                                else if (rs === 'landscapeFS') enterLandscapeFS();
+                            }, 700);
+                        }
+                    },
+                    onStateChange: function(e) {
+                        isPlaying = (e.data === YT.PlayerState.PLAYING);
+                        if (mcPlayIcon) {
+                            mcPlayIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+                        }
+                        if (typeof window._onPipStateChange === 'function') window._onPipStateChange();
+                    }
+                }
+            });
+        };
+
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('✅ YT IFrame API ready');
+        };
+
+        /* ─────────────────────────────────────────────────────────
+           HELPERS
+        ───────────────────────────────────────────────────────── */
+        function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+
+        function syncVolHud() {
+            volFill.style.height = currentVol + '%';
+            volIcon.className    = currentVol === 0 ? 'fas fa-volume-mute'
+                                 : currentVol < 50  ? 'fas fa-volume-down'
+                                 : 'fas fa-volume-up';
+        }
+
+        function showHud(el, ms) {
+            el.classList.add('visible');
+            clearTimeout(el._hideT);
+            el._hideT = setTimeout(() => el.classList.remove('visible'), ms || 1400);
+        }
+
+        function showControls() {
+            wrapper.classList.add('controls-visible');
+            clearTimeout(controlsTimer);
+            controlsTimer = setTimeout(() => wrapper.classList.remove('controls-visible'), 2800);
+        }
+
+        function playPause() {
+            if (!playerReady || !ytPlayer) return;
+            if (isPlaying) ytPlayer.pauseVideo();
+            else           ytPlayer.playVideo();
+        }
+
+        function showTapRing(x, y) {
+            tapRing.style.left = x + 'px';
+            tapRing.style.top  = y + 'px';
+            tapRing.className  = 'vp-tap-ring show';
+            setTimeout(() => { tapRing.className = 'vp-tap-ring hide'; }, 200);
+            setTimeout(() => { tapRing.className = 'vp-tap-ring'; },      460);
+        }
+
+        /* ─────────────────────────────────────────────────────────
+           FS ICON — single function keeping icon in sync with state
+        ───────────────────────────────────────────────────────── */
+        function updateFsIcon() {
+            fsIcon.className = (state !== 'normal') ? 'fas fa-compress' : 'fas fa-expand';
+        }
+
+        /* ─────────────────────────────────────────────────────────
+           MEDIA CONTROLS — expose API + wire buttons
+        ───────────────────────────────────────────────────────── */
+        /* Called by video-viewer.js after video list is resolved */
+        window._updateNavBtns = function(prevDisabled, nextDisabled) {
+            if (mcPrev) mcPrev.classList.toggle('disabled', !!prevDisabled);
+            if (mcNext) mcNext.classList.toggle('disabled', !!nextDisabled);
+        };
+        /* Called by video-viewer.js before page navigation to persist FS state */
+        window._getPlayerState = function() { return state; };
+
+        if (mcPlay) mcPlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            playPause();
+            showControls();
+        });
+        if (mcPrev) mcPrev.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof window._prevVideo === 'function') window._prevVideo();
+        });
+        if (mcNext) mcNext.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof window._nextVideo === 'function') window._nextVideo();
+        });
+
+        /* ─────────────────────────────────────────────────────────
+           PiP ENGINE — Document PiP + iOS / Firefox fallback mini-remote
+        ───────────────────────────────────────────────────────── */
+        (function initPiP() {
+            const SUPPORTS_DOC_PIP = ('documentPictureInPicture' in window);
+            const pipBtn      = document.getElementById('vpPipBtn');
+            const pipToast    = document.getElementById('vpPipToast');
+            const pipFb       = document.getElementById('vpPipFallback');
+            const pipFbHead   = document.getElementById('vpPipFbHeader');
+            const pipFbTitle  = document.getElementById('vpPipFbTitle');
+            const pipFbClose  = document.getElementById('vpPipFbClose');
+            const pipFbPrev   = document.getElementById('vpPipFbPrev');
+            const pipFbPlay   = document.getElementById('vpPipFbPlay');
+            const pipFbNext   = document.getElementById('vpPipFbNext');
+            const pipFbPlayIc = document.getElementById('vpPipFbPlayIcon');
+            let pipWin = null, pipPlayer = null, fbOpen = false, toastTimer = null;
+            let pipCurrentVideoId = null; // track which video is loaded in PiP player
+
+            /* ── MediaSession: called from video-viewer.js after meta loads ── */
+            window._setPipMeta = function(title, thumbUrl) {
+                if (!('mediaSession' in navigator)) return;
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title:   title || document.title,
+                    artist:  'A3KM Studio — Md Akhinoor Islam',
+                    artwork: thumbUrl ? [{ src: thumbUrl, sizes: '512x512', type: 'image/jpeg' }] : []
+                });
+                navigator.mediaSession.setActionHandler('play',          () => { if (ytPlayer && playerReady) ytPlayer.playVideo(); });
+                navigator.mediaSession.setActionHandler('pause',         () => { if (ytPlayer && playerReady) ytPlayer.pauseVideo(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { if (typeof window._prevVideo === 'function') window._prevVideo(); });
+                navigator.mediaSession.setActionHandler('nexttrack',     () => { if (typeof window._nextVideo === 'function') window._nextVideo(); });
+                if (pipFbTitle) pipFbTitle.textContent = title || 'Now Playing';
+            };
+
+            /* ── Sync fallback icon when isPlaying changes (called from onStateChange) ── */
+            window._onPipStateChange = function() {
+                if (pipFbPlayIc) pipFbPlayIc.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+            };
+
+            /* ── Build Document PiP window content ── */
+            function buildPipContent(pw, videoId, startTime) {
+                const d = pw.document;
+                const st = d.createElement('style');
+                st.textContent =
+                    '*{margin:0;padding:0;box-sizing:border-box}' +
+                    'body{background:#000;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,sans-serif}' +
+                    '#pip-wrap{flex:1;position:relative;min-height:0}' +
+                    '#pip-wrap iframe,#pip-wrap>div{width:100%!important;height:100%!important;border:0;position:absolute;inset:0}' +
+                    '#pip-ctrl{background:linear-gradient(135deg,rgba(10,0,0,.97),rgba(4,0,0,.99));border-top:1px solid rgba(204,0,0,.22);' +
+                    'display:flex;align-items:center;gap:2px;padding:0 6px;flex-shrink:0;height:42px}' +
+                    '.pb{width:34px;height:34px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;' +
+                    'border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .14s;-webkit-tap-highlight-color:transparent}' +
+                    '.pb:active{background:rgba(204,0,0,.5)}' +
+                    '.pb.pl{font-size:19px;color:#ff4444;width:40px;height:40px}' +
+                    '.pb.cl{color:#ff6666;margin-left:auto}' +
+                    '.pb.off{opacity:.25;pointer-events:none}' +
+                    '.pt{flex:1;font-size:10px;color:rgba(255,255,255,.5);font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 4px;min-width:0}' +
+                    '.px{}' +
+                    '@media(max-width:199px){.px{display:none!important}}' +
+                    '@media(max-width:149px){.pt{display:none}#pip-ctrl{justify-content:center}}';
+                d.head.appendChild(st);
+                const fa = d.createElement('link');
+                fa.rel = 'stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                d.head.appendChild(fa);
+                const wrap = d.createElement('div'); wrap.id = 'pip-wrap';
+                const ytDiv = d.createElement('div'); ytDiv.id = 'ytPipPlayer';
+                wrap.appendChild(ytDiv); d.body.appendChild(wrap);
+                const ctrl = d.createElement('div'); ctrl.id = 'pip-ctrl';
+                ctrl.innerHTML =
+                    '<button class="pb px" id="pp-pv"><i class="fas fa-step-backward"></i></button>' +
+                    '<button class="pb pl" id="pp-pp"><i class="fas fa-pause" id="pp-ic"></i></button>' +
+                    '<button class="pb px" id="pp-nx"><i class="fas fa-step-forward"></i></button>' +
+                    '<span class="pt px" id="pp-tt"></span>' +
+                    '<button class="pb cl" id="pp-cl"><i class="fas fa-times"></i></button>';
+                d.body.appendChild(ctrl);
+                function adaptH() { ctrl.style.height = pw.innerWidth < 180 ? '34px' : '42px'; }
+                pw.addEventListener('resize', adaptH);
+                const ttlEl = d.getElementById('pp-tt');
+                if (ttlEl && pipFbTitle) ttlEl.textContent = pipFbTitle.textContent;
+                const ppPv = d.getElementById('pp-pv'), ppNx = d.getElementById('pp-nx');
+                const ppPp = d.getElementById('pp-pp'), ppIc = d.getElementById('pp-ic');
+                if (mcPrev && mcPrev.classList.contains('disabled')) ppPv.classList.add('off');
+                if (mcNext && mcNext.classList.contains('disabled')) ppNx.classList.add('off');
+                pw._syncPipNav = function(po, no) {
+                    ppPv.classList.toggle('off', !!po);
+                    ppNx.classList.toggle('off', !!no);
+                };
+                d.getElementById('pp-cl').addEventListener('click', () => pw.close());
+                ppPv.addEventListener('click', () => { if (typeof window._prevVideo === 'function') window._prevVideo(); });
+                ppNx.addEventListener('click', () => { if (typeof window._nextVideo === 'function') window._nextVideo(); });
+                ppPp.addEventListener('click', () => {
+                    if (!pipPlayer) return;
+                    const s = pipPlayer.getPlayerState ? pipPlayer.getPlayerState() : -1;
+                    if (s === 1) pipPlayer.pauseVideo(); else pipPlayer.playVideo();
+                });
+                const ys = d.createElement('script');
+                ys.src = 'https://www.youtube.com/iframe_api';
+                d.body.appendChild(ys);
+                pw.onYouTubeIframeAPIReady = function() {
+                    pipPlayer = new pw.YT.Player('ytPipPlayer', {
+                        videoId: videoId,
+                        playerVars: { autoplay:1, rel:0, modestbranding:1, playsinline:1, controls:0, fs:0, iv_load_policy:3, enablejsapi:1, start: Math.max(0, Math.floor(startTime) - 1) },
+                        events: {
+                            onStateChange: function(ev) {
+                                const pl = (ev.data === pw.YT.PlayerState.PLAYING);
+                                if (ppIc) ppIc.className = pl ? 'fas fa-pause' : 'fas fa-play';
+                            }
+                        }
+                    });
+                };
+            }
+
+            /* ── Open Document PiP ── */
+            async function openDocPiP() {
+                if (!playerReady || !ytPlayer) return;
+                const vd = ytPlayer.getVideoData ? ytPlayer.getVideoData() : {};
+                const vidId = vd.video_id || '';
+                const stT   = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+                if (!vidId) { openFbOverlay(); return; }
+                try {
+                    pipWin = await window.documentPictureInPicture.requestWindow({ width: 300, height: 220, disallowReturnToOpener: false });
+                } catch (err) {
+                    console.warn('[PiP] requestWindow failed:', err.message);
+                    openFbOverlay();
+                    return;
+                }
+                ytPlayer.pauseVideo();
+                pipCurrentVideoId = vidId;
+                buildPipContent(pipWin, vidId, stT);
+                setPipActive(true);
+                pipWin.addEventListener('pagehide', () => {
+                    // Only restore timestamp if PiP is still on the same video
+                    const t2 = (pipPlayer && pipPlayer.getCurrentTime && pipCurrentVideoId === vidId)
+                        ? pipPlayer.getCurrentTime() : null;
+                    if (pipPlayer && pipPlayer.destroy) pipPlayer.destroy();
+                    pipPlayer = null; pipWin = null; pipCurrentVideoId = null;
+                    setPipActive(false);
+                    if (ytPlayer && playerReady) {
+                        if (t2 !== null) ytPlayer.seekTo(t2, true);
+                        ytPlayer.playVideo();
+                    }
+                });
+            }
+
+            /* ── Fallback overlay (iOS / Firefox) ── */
+            function openFbOverlay() {
+                if (fbOpen || !pipFb) return;
+                fbOpen = true;
+                pipFb.classList.add('active');
+                setPipActive(true);
+                syncFbIcon();
+                syncFbNav();
+                if (!pipFb._drag) { makeDraggable(); pipFb._drag = true; }
+            }
+            function closeFbOverlay() {
+                if (!fbOpen || !pipFb) return;
+                fbOpen = false;
+                pipFb.classList.remove('active');
+                setPipActive(false);
+            }
+            function syncFbIcon() {
+                if (pipFbPlayIc) pipFbPlayIc.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            }
+            function syncFbNav() {
+                if (pipFbPrev) pipFbPrev.classList.toggle('disabled', typeof window._prevVideo !== 'function');
+                if (pipFbNext) pipFbNext.classList.toggle('disabled', typeof window._nextVideo !== 'function');
+            }
+
+            /* ── Unified entry point ── */
+            window._openPiP = function() {
+                if (SUPPORTS_DOC_PIP) {
+                    pipWin ? pipWin.close() : openDocPiP();
+                } else {
+                    fbOpen ? closeFbOverlay() : openFbOverlay();
+                }
+            };
+            function setPipActive(on) { if (pipBtn) pipBtn.classList.toggle('active', !!on); }
+
+            /* ── Patch _updateNavBtns to also sync PiP ── */
+            const _origNav = window._updateNavBtns;
+            window._updateNavBtns = function(po, no) {
+                if (_origNav) _origNav(po, no);
+                if (pipFbPrev) pipFbPrev.classList.toggle('disabled', !!po);
+                if (pipFbNext) pipFbNext.classList.toggle('disabled', !!no);
+                if (pipWin && pipWin._syncPipNav) pipWin._syncPipNav(po, no);
+            };
+
+            /* ── Button wiring ── */
+            if (pipBtn) pipBtn.addEventListener('click', function(e) { e.stopPropagation(); window._openPiP(); });
+            if (pipFbClose) pipFbClose.addEventListener('click', closeFbOverlay);
+            if (pipFbPrev) pipFbPrev.addEventListener('click', function(e) { e.stopPropagation(); if (typeof window._prevVideo === 'function') window._prevVideo(); });
+            if (pipFbNext) pipFbNext.addEventListener('click', function(e) { e.stopPropagation(); if (typeof window._nextVideo === 'function') window._nextVideo(); });
+            if (pipFbPlay) pipFbPlay.addEventListener('click', function(e) { e.stopPropagation(); playPause(); syncFbIcon(); });
+
+            /* ── visibilitychange → toast hint ── */
+            document.addEventListener('visibilitychange', function() {
+                if (!pipToast) return;
+                if (document.hidden && isPlaying && !pipWin && !fbOpen) {
+                    pipToast.classList.add('show');
+                    clearTimeout(toastTimer);
+                    toastTimer = setTimeout(() => pipToast.classList.remove('show'), 5000);
+                } else if (!document.hidden) {
+                    clearTimeout(toastTimer);
+                    pipToast.classList.remove('show');
+                }
+            });
+            if (pipToast) pipToast.addEventListener('click', function() { pipToast.classList.remove('show'); window._openPiP(); });
+
+            /* ── Draggable fallback ── */
+            function makeDraggable() {
+                let ox=0, oy=0, sx=0, sy=0, drag=false;
+                function onStart(e) {
+                    const t = e.touches ? e.touches[0] : e;
+                    const r = pipFb.getBoundingClientRect();
+                    ox=r.left; oy=r.top; sx=t.clientX; sy=t.clientY; drag=true;
+                    pipFb.style.transition = 'none';
+                    pipFb.style.bottom = 'auto'; pipFb.style.right = 'auto';
+                    pipFb.style.left = ox+'px'; pipFb.style.top = oy+'px';
+                }
+                function onMove(e) {
+                    if (!drag) return;
+                    const t = e.touches ? e.touches[0] : e;
+                    const nx = ox + (t.clientX - sx);
+                    const ny = oy + (t.clientY - sy);
+                    pipFb.style.left = clamp(nx, 0, window.innerWidth  - pipFb.offsetWidth)  + 'px';
+                    pipFb.style.top  = clamp(ny, 0, window.innerHeight - pipFb.offsetHeight) + 'px';
+                }
+                function onEnd() { drag = false; }
+                pipFbHead.addEventListener('touchstart', onStart, {passive:true});
+                document.addEventListener('touchmove',  onMove,  {passive:true});
+                document.addEventListener('touchend',   onEnd);
+                pipFbHead.addEventListener('mousedown', onStart);
+                document.addEventListener('mousemove',  onMove);
+                document.addEventListener('mouseup',    onEnd);
+            }
+            console.log('[PiP] engine ready. DocPiP supported:', SUPPORTS_DOC_PIP);
+        })();
+
+        /* ─────────────────────────────────────────────────────────
+           PORTRAIT FULLSCREEN
+           Triggered only by swipe-down gesture (not button/double-tap).
+        ───────────────────────────────────────────────────────── */
+        function enterPortraitFS() {
+            if (state !== 'normal') return;
+            state = 'portraitFS';
+            wrapper.classList.add('portrait-fs');
+            document.body.style.overflow = 'hidden';
+            updateFsIcon();
+            showControls();
+        }
+
+        function exitPortraitFS() {
+            if (state !== 'portraitFS') return;
+            state = 'normal';
+            wrapper.classList.remove('portrait-fs');
+            document.body.style.overflow = '';
+            inner.style.transform = '';   // clear any drag preview
+            updateFsIcon();
+        }
+
+        /* ─────────────────────────────────────────────────────────
+           LANDSCAPE FULLSCREEN
+           Button click / double-tap → always goes directly here.
+        ───────────────────────────────────────────────────────── */
+        function enterLandscapeFS() {
+            /* If currently in portrait FS, clean that up first (no flicker) */
+            if (state === 'portraitFS') {
+                wrapper.classList.remove('portrait-fs');
+                document.body.style.overflow = '';
+                inner.style.transform = '';
+            }
+            state = 'landscapeFS';
+
+            /* Request browser fullscreen on the whole document */
+            const el  = document.documentElement;
+            const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+            if (req) {
+                Promise.resolve(req.call(el)).catch(() => {});
+            }
+            /* Lock orientation to landscape */
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+
+            updateFsIcon();
+            showControls();
+        }
+
+        function exitLandscapeFS() {
+            if (state !== 'landscapeFS') return;
+            state = 'normal';
+
+            /* Only call exitFullscreen when the browser is actually in fullscreen */
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+                if (exit) Promise.resolve(exit.call(document)).catch(() => {});
+            }
+            try { screen.orientation.unlock(); } catch(e) {}
+
+            updateFsIcon();
+        }
+
+        /* ─────────────────────────────────────────────────────────
+           FULLSCREEN BUTTON
+           normal      → landscape FS   (direct, no portrait step)
+           portraitFS  → landscape FS   (direct, replaces portrait)
+           landscapeFS → normal         (exit)
+        ───────────────────────────────────────────────────────── */
+        fsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (state === 'landscapeFS') {
+                exitLandscapeFS();
+            } else {
+                enterLandscapeFS();   // works from 'normal' and 'portraitFS'
+            }
+        });
+
+        /* ─────────────────────────────────────────────────────────
+           SYSTEM FULLSCREEN CHANGE
+           Handles Android back button / swipe-up home exiting FS.
+        ───────────────────────────────────────────────────────── */
+        function onSystemFSChange() {
+            const inFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (!inFS && state === 'landscapeFS') {
+                /* Browser exited fullscreen externally — sync our state */
+                state = 'normal';
+                try { screen.orientation.unlock(); } catch(e) {}
+                updateFsIcon();
+            }
+        }
+        document.addEventListener('fullscreenchange',       onSystemFSChange);
+        document.addEventListener('webkitfullscreenchange', onSystemFSChange);
+
+        /* ─────────────────────────────────────────────────────────
+           GESTURE ENGINE
+        ───────────────────────────────────────────────────────── */
+        const LOCK_THRESH = 12;   // px moved before gesture mode locks
+
+        let touchStartX, touchStartY, touchStartTime;
+        let gMode            = null;   // 'vol' | 'bri' | 'swipe-enter' | 'swipe-exit'
+        let gLocked          = false;
+        let tapOK            = true;
+        let lastTapTs        = 0;
+        let pendingSingleTap = null;
+
+        gesture.addEventListener('touchstart', function(e) {
+            const t   = e.touches[0];
+            touchStartX    = t.clientX;
+            touchStartY    = t.clientY;
+            touchStartTime = Date.now();
+            gMode          = null;
+            gLocked        = false;
+            tapOK          = true;
+            /* Reset drag preview */
+            inner.style.transition = '';
+            inner.style.transform  = '';
+            showControls();
+        }, { passive: true });
+
+        gesture.addEventListener('touchmove', function(e) {
+            const t   = e.touches[0];
+            const dx  = t.clientX - touchStartX;
+            const dy  = t.clientY - touchStartY;
+            const adx = Math.abs(dx);
+            const ady = Math.abs(dy);
+
+            if (adx > 8 || ady > 8) tapOK = false;
+
+            /* Lock gesture mode once threshold crossed */
+            if (!gLocked && (adx > LOCK_THRESH || ady > LOCK_THRESH)) {
+                gLocked = true;
+                if (ady > adx) {
+                    /* Vertical swipe */
+                    if (state === 'normal' && dy > 0) {
+                        gMode = 'swipe-enter';     // swipe down → portrait FS
+                    } else if (state === 'portraitFS' && dy < 0) {
+                        gMode = 'swipe-exit';      // swipe up → exit portrait FS
+                    } else {
+                        /* Volume (right half) or Brightness (left half) */
+                        const mid = wrapper.getBoundingClientRect().left + wrapper.getBoundingClientRect().width / 2;
+                        gMode = t.clientX >= mid ? 'vol' : 'bri';
+                    }
+                }
+                /* Horizontal swipe — ignore (reserved for future use) */
+            }
+
+            if (!gMode) return;
+
+            if (gMode === 'swipe-enter') {
+                /* Visual drag-down preview (translate inner element) */
+                const prog = clamp(dy / 130, 0, 1);
+                inner.style.transition = 'none';
+                inner.style.transform  = `translateY(${prog * 18}px) scale(${1 - prog * 0.03})`;
+                if (prog >= 1) {
+                    inner.style.transform = '';
+                    enterPortraitFS();
+                    gMode = null;
+                }
+
+            } else if (gMode === 'swipe-exit') {
+                /* Visual drag-up preview */
+                const prog = clamp((-dy) / 130, 0, 1);
+                inner.style.transition = 'none';
+                inner.style.transform  = `translateY(${-prog * 18}px) scale(${1 - prog * 0.03})`;
+                if (prog >= 1) {
+                    inner.style.transform = '';
+                    exitPortraitFS();
+                    gMode = null;
+                }
+
+            } else if (gMode === 'vol') {
+                const h      = wrapper.getBoundingClientRect().height || 200;
+                const delta  = (touchStartY - t.clientY) / (h * 0.75) * 100;
+                currentVol   = clamp(currentVol + delta, 0, 100);
+                touchStartY  = t.clientY;
+                if (ytPlayer && playerReady) ytPlayer.setVolume(Math.round(currentVol));
+                syncVolHud();
+                showHud(volHud, 1500);
+
+            } else if (gMode === 'bri') {
+                const h      = wrapper.getBoundingClientRect().height || 200;
+                const delta  = (touchStartY - t.clientY) / (h * 0.75) * 0.70;
+                brightness   = clamp(brightness + delta, 0, 0.70);
+                touchStartY  = t.clientY;
+                briOverlay.style.opacity = brightness;
+                briFill.style.height     = ((1 - brightness / 0.70) * 100) + '%';
+                showHud(briHud, 1500);
+            }
+        }, { passive: true });
+
+        gesture.addEventListener('touchend', function(e) {
+            /* Snap back drag preview if gesture didn't commit */
+            if (gMode === 'swipe-enter' || gMode === 'swipe-exit') {
+                inner.style.transition = 'transform 0.22s cubic-bezier(0.4,0,0.2,1)';
+                inner.style.transform  = '';
+                setTimeout(() => { inner.style.transition = ''; }, 230);
+            }
+            gMode = null;
+
+            if (!tapOK || (Date.now() - touchStartTime) > 360) return;
+
+            /* Tap detected — single or double? */
+            const now      = Date.now();
+            const sinceLast= now - lastTapTs;
+            const t        = e.changedTouches[0];
+            const rx       = t.clientX - wrapper.getBoundingClientRect().left;
+            const ry       = t.clientY - wrapper.getBoundingClientRect().top;
+
+            if (sinceLast < 300) {
+                /* ── Double tap ── toggle landscape FS */
+                lastTapTs = 0;
+                clearTimeout(pendingSingleTap);
+                pendingSingleTap = null;
+                if (state === 'landscapeFS') {
+                    exitLandscapeFS();
+                } else {
+                    enterLandscapeFS();
+                }
+                showTapRing(rx, ry);
+            } else {
+                /* ── Single tap (wait to rule out double tap) ── */
+                lastTapTs = now;
+                pendingSingleTap = setTimeout(() => {
+                    pendingSingleTap = null;
+                    playPause();
+                    showTapRing(rx, ry);
+                }, 240);
+            }
+        }, { passive: true });
+
+        console.log('✅ Gesture engine ready — state machine v2');
+    })();
+    </script>
 </body>
 </html>

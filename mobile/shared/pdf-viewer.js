@@ -680,8 +680,8 @@ async function renderPage(pageNum) {
             UniversalPDFViewer.scaleFitted = true;
         }
         
-        // High-DPI rendering for sharp quality
-        const pixelRatio = window.devicePixelRatio || 2;
+        // MAXIMUM QUALITY: Higher DPR for ultra-sharp text rendering
+        const pixelRatio = Math.min(window.devicePixelRatio || 2, 4);
         const outputScale = pixelRatio;
         
         // Calculate viewport with current scale
@@ -693,11 +693,16 @@ async function renderPage(pageNum) {
         UniversalPDFViewer.canvas.style.width = Math.floor(viewport.width) + 'px';
         UniversalPDFViewer.canvas.style.height = Math.floor(viewport.height) + 'px';
         
-        // Disable image smoothing for sharp text rendering
-        UniversalPDFViewer.ctx.imageSmoothingEnabled = false;
-        UniversalPDFViewer.ctx.webkitImageSmoothingEnabled = false;
-        UniversalPDFViewer.ctx.mozImageSmoothingEnabled = false;
-        UniversalPDFViewer.ctx.msImageSmoothingEnabled = false;
+        // CSS optimizations for sharp rendering
+        UniversalPDFViewer.canvas.style.imageRendering = 'auto';
+        UniversalPDFViewer.canvas.style.webkitFontSmoothing = 'antialiased';
+        
+        // CRITICAL: Enable smoothing for sharp high-DPI text rendering
+        UniversalPDFViewer.ctx.imageSmoothingEnabled = true;
+        UniversalPDFViewer.ctx.imageSmoothingQuality = 'high';
+        UniversalPDFViewer.ctx.webkitImageSmoothingEnabled = true;
+        UniversalPDFViewer.ctx.mozImageSmoothingEnabled = true;
+        UniversalPDFViewer.ctx.msImageSmoothingEnabled = true;
         
         // Scale context for high-DPI
         const transform = outputScale !== 1
@@ -708,7 +713,10 @@ async function renderPage(pageNum) {
         const renderContext = {
             canvasContext: UniversalPDFViewer.ctx,
             viewport: viewport,
-            transform: transform
+            transform: transform,
+            intent: 'display',
+            renderInteractiveForms: false,
+            enableWebGL: false,
         };
         
         await page.render(renderContext).promise;

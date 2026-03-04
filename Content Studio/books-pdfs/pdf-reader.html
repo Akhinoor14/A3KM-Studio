@@ -1085,8 +1085,8 @@
         const scale = baseScale * curZoom;
         const scaledVP = page.getViewport({scale});
         
-        // MAXIMUM QUALITY: Use device pixel ratio (capped at 3 for performance)
-        const dpr = Math.min(window.devicePixelRatio || 2, 3);
+        // MAXIMUM QUALITY: Higher DPR for ultra-sharp text on all devices
+        const dpr = Math.min(window.devicePixelRatio || 2, 4);
 
         // Build canvas-wrap
         const wrap = document.createElement('div');
@@ -1126,7 +1126,9 @@
           canvasContext: ctx,
           viewport: scaledVP,
           transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null,
-          intent: 'display'
+          intent: 'display',
+          renderInteractiveForms: false,
+          enableWebGL: false,
         }).promise;
 
         const tc = await page.getTextContent();

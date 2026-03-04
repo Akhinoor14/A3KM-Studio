@@ -8,24 +8,42 @@
 class YouTubeDataFetcher {
     constructor() {
         this.cache = new Map();
-        this.apiKey = typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.API_KEY : null;
-        this.hasValidKey = this.apiKey && !this.apiKey.includes('XXXXXXX') && this.apiKey !== 'YOUR_YOUTUBE_API_KEY_HERE';
+        // Priority: localStorage (set by Only-boss) > YOUTUBE_CONFIG (hardcoded)
+        this.apiKey = localStorage.getItem('youtube_api_key') ||
+                      (typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.API_KEY : null);
+        this.hasValidKey = !!this.apiKey && !this.apiKey.includes('XXXXXXX') && this.apiKey !== 'YOUR_YOUTUBE_API_KEY_HERE';
         
         console.log('🔧 YouTube Data Fetcher initializing...');
-        console.log(`YOUTUBE_CONFIG exists: ${typeof YOUTUBE_CONFIG !== 'undefined'}`);
-        console.log(`API Key present: ${!!this.apiKey}`);
-        console.log(`API Key first 10 chars: ${this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'N/A'}`);
+        console.log(`API Key source: ${localStorage.getItem('youtube_api_key') ? 'localStorage (Only-boss)' : 'YOUTUBE_CONFIG'}`);
         console.log(`Has valid key: ${this.hasValidKey}`);
-        
+
         if (this.hasValidKey) {
             console.log('✅ YouTube Data Fetcher initialized with VALID API key');
         } else {
-            console.warn('⚠️ YouTube Data Fetcher: Using fallback mode (NO VALID API KEY)');
-            if (!this.apiKey) {
-                console.error('❌ API key is missing!');
-            } else if (this.apiKey.includes('XXXXXXX')) {
-                console.error('❌ API key is placeholder (XXXXXXX)');
+            console.warn('⚠️ YouTube Data Fetcher: No valid API key — set one in Only-boss Command Center');
+        }
+
+        // Listen for key updates from Only-boss (cross-tab / same-tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'youtube_api_key' && e.newValue) {
+                this.apiKey = e.newValue;
+                this.hasValidKey = true;
+                this.cache.clear(); // Invalidate cache so fresh data is fetched
+                console.log('✅ YouTube Data Fetcher: API key updated from Only-boss, cache cleared');
             }
+        });
+    }
+
+    /**
+     * Refresh API key from localStorage (call after Only-boss saves on same tab)
+     */
+    refreshKey() {
+        const newKey = localStorage.getItem('youtube_api_key');
+        if (newKey && newKey !== this.apiKey) {
+            this.apiKey = newKey;
+            this.hasValidKey = true;
+            this.cache.clear();
+            console.log('✅ YouTube Data Fetcher: API key refreshed');
         }
     }
 
@@ -58,7 +76,13 @@ class YouTubeDataFetcher {
         }
 
         try {
-            const url = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?id=${videoId}&part=${YOUTUBE_CONFIG.PARTS.join(',')}&key=${this.apiKey}`;
+            const endpoint = (typeof YOUTUBE_CONFIG !== 'undefined' && YOUTUBE_CONFIG.VIDEOS_ENDPOINT)
+                              ? YOUTUBE_CONFIG.VIDEOS_ENDPOINT
+                              : 'https://www.googleapis.com/youtube/v3/videos';
+            const parts = (typeof YOUTUBE_CONFIG !== 'undefined' && YOUTUBE_CONFIG.PARTS)
+                           ? YOUTUBE_CONFIG.PARTS.join(',')
+                           : 'snippet,contentDetails,statistics';
+            const url = `${endpoint}?id=${videoId}&part=${parts}&key=${this.apiKey}`;
             console.log(`🔄 Fetching YouTube data for video: ${videoId}`);
             
             const response = await fetch(url);

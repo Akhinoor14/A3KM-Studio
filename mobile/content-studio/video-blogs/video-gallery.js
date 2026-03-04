@@ -32,6 +32,30 @@
         setupEventListeners();
     });
 
+    // Listen for API key update from Only-boss → re-fetch with new key
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'youtube_api_key' && e.newValue && allVideos.length > 0) {
+            if (window.youtubeFetcher) window.youtubeFetcher.refreshKey();
+            window.youtubeFetcher?.enhanceMultipleVideos(allVideos).then(enhanced => {
+                allVideos = enhanced;
+                renderVideos();
+                console.log('✅ Video Gallery (mobile): re-fetched with updated API key');
+            }).catch(() => {});
+        }
+    });
+
+    // Auto-refresh YouTube stats every 30 minutes
+    setInterval(() => {
+        if (allVideos.length > 0 && window.youtubeFetcher?.hasValidKey) {
+            window.youtubeFetcher.cache.clear();
+            window.youtubeFetcher.enhanceMultipleVideos(allVideos).then(enhanced => {
+                allVideos = enhanced;
+                renderVideos();
+                console.log('🔄 Video Gallery (mobile): auto-refreshed YouTube stats');
+            }).catch(() => {});
+        }
+    }, 1800000); // 30 minutes
+
     /**
      * Load videos directly from videos.json (just like desktop!)
      * This ensures mobile automatically shows new videos without manual sync

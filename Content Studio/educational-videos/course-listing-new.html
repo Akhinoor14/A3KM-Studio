@@ -1,838 +1,505 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0a0000">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <!-- Immediate Mobile Detection -->
   <script>
-      (function() {
-          function isMobile() {
-              const ua = navigator.userAgent || '';
-              return /android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) || 
-                     (navigator.userAgentData && navigator.userAgentData.mobile);
-          }
-          if (isMobile()) {
-              window.location.replace('../../mobile/content-studio/educational-courses/course-listing.html');
-          }
-      })();
+    (function() {
+      const ua = navigator.userAgent || '';
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        window.location.replace('../../mobile/content-studio/educational-courses/course-listing.html');
+      }
+    })();
   </script>
 
-    <title>Educational Courses - A3KM Studio</title>
+  <title>Educational Courses – A3KM Studio</title>
   <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="../../Optimization/styles.css" />
-  <link rel="stylesheet" href="../../Optimization/Background/background-system.css" />
   <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
   <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
-  <meta name="description" content="Browse engineering video courses, tutorials, and educational content - Arduino guides, circuit design, CAD tutorials, programming courses" />
-  <meta name="keywords" content="engineering courses, Arduino videos, SolidWorks tutorials, circuit design course, programming videos" />
+
+  <meta name="description" content="Browse engineering video courses, tutorials and educational content – A3KM Studio" />
   <meta name="author" content="Md Akhinoor Islam" />
-  <meta name="theme-color" content="#0a0000" />
-  
+
   <style>
     :root {
       --primary-red: #CC0000;
       --dark-red: #8B0000;
       --light-red: #FF1744;
-      --bg-dark: #000000;
-      --bg-card: rgba(15, 15, 15, 0.95);
-      --border-primary: rgba(204, 0, 0, 0.3);
-      --border-red: rgba(204, 0, 0, 0.3);
-      --border-red-hover: rgba(255, 23, 68, 0.6);
-      --text-white: #FFFFFF;
-      --text-secondary: rgba(255, 255, 255, 0.85);
-      --text-dim: rgba(255, 255, 255, 0.65);
-      --accent-white: rgba(255, 255, 255, 0.95);
-      --grid-color: rgba(255, 255, 255, 0.08);
-      --highlight-white: rgba(255, 255, 255, 0.15);
+      --accent-red: #FF0000;
       --beginner: #4CAF50;
       --intermediate: #FF9800;
       --advanced: #F44336;
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.85);
+      --text-dim: rgba(255,255,255,0.55);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
     body {
-      font-family: 'Inter', sans-serif;
-      color: var(--text-white);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: var(--text-primary);
       overflow-x: hidden;
-      background: #000000;
-      position: relative;
+      background: linear-gradient(180deg, #0a0000 0%, #030000 100%);
       padding-top: 85px;
+      min-height: 100vh;
     }
 
-    /* Premium Engineering Grid Background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 40px),
-        repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 40px),
-        repeating-linear-gradient(45deg, transparent 0 20px, rgba(204, 0, 0, 0.02) 20px 40px);
-      pointer-events: none;
-      z-index: 0;
-      animation: gridPulse 8s ease-in-out infinite;
-    }
-
-    @keyframes gridPulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 0.8; }
-    }
-
-    /* White Accent Splash */
-    body::after {
-      content: '';
-      position: fixed;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-      animation: splash 12s ease-in-out infinite;
-    }
-
-    @keyframes splash {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-100px, 50px) scale(1.2); }
-    }
-
-    /* Ensure content is above background */
-    body > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .back-to-hub {
-      position: fixed;
-      top: 100px;
-      left: 20px;
-      z-index: 1000;
-      display: none; /* Hidden - desktop navbar replaces this */
-      /*display: flex;*/
+    /* ── COMPACT HEADER STRIP ──────────────────────── */
+    .lib-header {
+      display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-      border: 2px solid var(--border-primary);
-      border-radius: 12px;
-      color: var(--light-red);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 700;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(20px);
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 22px 30px;
+      background: linear-gradient(160deg,
+        rgba(80,0,0,0.35) 0%,
+        rgba(40,0,0,0.25) 50%,
+        rgba(15,2,2,0.85) 100%);
+      border-top: 1px solid rgba(204,0,0,0.2);
+      border-bottom: 2px solid rgba(204,0,0,0.45);
       position: relative;
       overflow: hidden;
-      box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    /* Sliding highlight effect */
-    .back-to-hub::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, var(--highlight-white), transparent);
-      transition: left 0.5s ease;
-    }
-
-    .back-to-hub:hover::before {
-      left: 100%;
-    }
-
-    .back-to-hub:hover {
-      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-      border-color: var(--light-red);
-      transform: translateX(-4px);
-      color: var(--accent-white);
-      box-shadow: 
-        0 8px 24px rgba(204, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 0 40px rgba(204, 0, 0, 0.3);
-    }
-
-    .back-to-hub i {
-      font-size: 16px;
-      position: relative;
       z-index: 1;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     }
 
-    .page-header {
-      text-align: center;
-      padding: 120px 40px 80px;
-      background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-      border: 2px solid var(--border-primary);
-      border-radius: 20px;
-      position: relative;
-      margin: 20px auto 30px;
-      max-width: 1400px;
-      backdrop-filter: blur(30px);
-      box-shadow: 
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 var(--highlight-white),
-        0 0 80px rgba(204, 0, 0, 0.15);
-      overflow: visible;
-    }
-
-    /* Animated Corner Brackets */
-    .page-header::before,
-    .page-header::after {
+    .lib-header::before {
       content: '';
       position: absolute;
-      width: 80px;
-      height: 80px;
-      border-color: var(--light-red);
-      z-index: 10;
-      animation: bracketGlow 3s ease-in-out infinite;
+      top:0; left:-50%; width:200%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(204,0,0,0.07), transparent);
+      pointer-events: none;
     }
 
-    .page-header::before {
-      top: -2px;
-      left: -2px;
-      border-top: 4px solid;
-      border-left: 4px solid;
+    .lib-header-left {
+      display: flex; align-items: center; gap: 12px; z-index: 2;
     }
 
-    .page-header::after {
-      bottom: -2px;
-      right: -2px;
-      border-bottom: 4px solid;
-      border-right: 4px solid;
-    }
-
-    @keyframes bracketGlow {
-      0%, 100% { 
-        opacity: 0.6;
-        border-color: var(--light-red);
-        filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.3));
-      }
-      50% { 
-        opacity: 1;
-        border-color: var(--accent-white);
-        filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.6));
-      }
-    }
-
-    .page-header h1 {
-      font-size: 56px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-transform: uppercase;
-      animation: titlePulse 4s ease-in-out infinite;
-    }
-
-    @keyframes titlePulse {
-      0%, 100% { filter: brightness(1); }
-      50% { filter: brightness(1.2); }
-    }
-
-    .page-header .subtitle {
-      font-size: 18px;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-      font-weight: 600;
+    .lib-header-left h1 {
+      font-size: 1.45rem; font-weight: 900; color: #fff;
+      display: flex; align-items: center; gap: 10px;
       letter-spacing: 0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(204,0,0,0.3);
+      margin: 0;
     }
 
-    .total-count {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 24px;
-      background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.1));
-      border: 2px solid var(--border-primary);
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--light-red);
-      letter-spacing: 0.5px;
-      box-shadow: 
-        0 4px 12px rgba(204, 0, 0, 0.2),
-        inset 0 1px 0 var(--highlight-white);
-      animation: badgePulse 2s ease-in-out infinite;
+    .lib-header-left h1 i {
+      color: var(--primary-red); font-size: 1.4rem;
+      filter: drop-shadow(0 0 12px rgba(204,0,0,0.6));
     }
 
-    @keyframes badgePulse {
-      0%, 100% { box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2), inset 0 1px 0 var(--highlight-white); }
-      50% { box-shadow: 0 6px 20px rgba(204, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+    .lib-header-divider { width:1px; height:28px; background:rgba(204,0,0,0.4); }
+
+    .lib-header-subtitle { font-size:0.82rem; color:rgba(255,255,255,0.45); font-weight:500; }
+
+    .lib-header-stats { display:flex; align-items:center; gap:8px; z-index:2; }
+
+    .lib-stat-badge {
+      display:flex; align-items:center; gap:5px;
+      padding:5px 12px;
+      background:rgba(0,0,0,0.45);
+      border:1px solid rgba(204,0,0,0.3);
+      border-radius:20px;
+      font-size:0.8rem; font-weight:700;
+      color:rgba(255,255,255,0.85);
+      backdrop-filter:blur(8px);
+      white-space:nowrap; transition:all 0.3s;
     }
 
-    .total-count i {
-      font-size: 16px;
-      filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.6));
+    .lib-stat-badge i { color:var(--primary-red); font-size:0.7rem; }
+    .lib-stat-badge strong { color:#fff; font-size:0.9rem; }
+    .lib-stat-badge:hover { border-color:rgba(204,0,0,0.6); background:rgba(204,0,0,0.1); }
+
+    /* ── 2-COLUMN LAYOUT ───────────────────────────── */
+    .main-content-wrapper {
+      display:flex;
+      min-height: calc(100vh - 85px - 62px);
+      background:#020000;
+      position:relative;
+    }
+
+    /* ── SIDEBAR ───────────────────────────────────── */
+    .filter-sidebar {
+      width:260px; flex-shrink:0;
+      background:#050000;
+      border-right:2px solid rgba(204,0,0,0.22);
+      position:sticky; top:85px;
+      height:calc(100vh - 85px);
+      overflow-y:auto; overflow-x:hidden;
+      z-index:50;
+      box-shadow:4px 0 20px rgba(0,0,0,0.8);
+    }
+
+    .filter-sidebar::-webkit-scrollbar { width:5px; }
+    .filter-sidebar::-webkit-scrollbar-track { background:rgba(0,0,0,0.3); }
+    .filter-sidebar::-webkit-scrollbar-thumb { background:rgba(204,0,0,0.4); border-radius:3px; }
+    .filter-sidebar::-webkit-scrollbar-thumb:hover { background:rgba(204,0,0,0.6); }
+
+    .filter-header {
+      padding:18px 16px 14px;
+      border-bottom:2px solid rgba(204,0,0,0.18);
+      background:rgba(15,0,0,0.55);
+    }
+
+    .filter-header h3 {
+      font-size:0.88rem; font-weight:800; color:rgba(255,255,255,0.9);
+      display:flex; align-items:center; gap:8px; margin:0;
+    }
+
+    .filter-header h3 i { color:var(--primary-red); font-size:0.82rem; }
+
+    .filter-section { padding:14px 16px; border-bottom:1px solid rgba(204,0,0,0.1); }
+
+    .filter-section-title {
+      font-size:0.72rem; font-weight:700; color:rgba(255,255,255,0.45);
+      text-transform:uppercase; letter-spacing:0.5px;
+      margin-bottom:10px;
+      display:flex; align-items:center; gap:6px;
+    }
+
+    .filter-section-title i { color:var(--primary-red); font-size:0.68rem; }
+
+    /* Search */
+    .search-box { position:relative; }
+
+    .search-input {
+      width:100%; padding:11px 16px 11px 40px;
+      background:rgba(255,255,255,0.05);
+      border:1.5px solid rgba(204,0,0,0.32);
+      border-radius:10px; color:#fff;
+      font-size:13px; font-weight:500;
+      transition:all 0.3s; font-family:inherit;
+    }
+
+    .search-input::placeholder { color:rgba(255,255,255,0.38); }
+    .search-input:focus { outline:none; border-color:var(--primary-red); background:rgba(255,255,255,0.08); box-shadow:0 0 18px rgba(204,0,0,0.25); }
+
+    .search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--primary-red); font-size:13px; pointer-events:none; }
+
+    .clear-search {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      background:none; border:none; color:rgba(255,255,255,0.45); cursor:pointer; font-size:16px; padding:4px; display:none; transition:all 0.2s;
+    }
+    .clear-search.active { display:block; }
+    .clear-search:hover { color:var(--primary-red); }
+
+    /* Dropdown */
+    .filter-dropdown {
+      width:100%; padding:10px 13px;
+      background:rgba(15,0,0,0.9);
+      border:1.5px solid rgba(204,0,0,0.28);
+      border-radius:10px; color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer;
+      transition:all 0.3s; -webkit-appearance:none; appearance:none;
+      color-scheme:dark; font-family:inherit;
+    }
+
+    .filter-dropdown option { background:#1a0000; color:#fff; font-weight:600; }
+    .filter-dropdown:hover { border-color:var(--primary-red); background:rgba(204,0,0,0.08); }
+    .filter-dropdown:focus { outline:none; border-color:var(--primary-red); box-shadow:0 0 14px rgba(204,0,0,0.26); }
+
+    /* Language toggle */
+    .lang-toggle { display:flex; gap:5px; }
+    .lang-btn {
+      flex:1; padding:9px 6px;
+      background:rgba(255,255,255,0.04);
+      border:1.5px solid rgba(204,0,0,0.22);
+      border-radius:9px; color:rgba(255,255,255,0.55);
+      cursor:pointer; transition:all 0.2s;
+      font-size:11.5px; font-weight:700; font-family:inherit; text-align:center;
+    }
+    .lang-btn.active { background:linear-gradient(135deg, var(--primary-red), var(--dark-red)); border-color:var(--primary-red); color:#fff; }
+    .lang-btn:hover:not(.active) { border-color:var(--primary-red); color:#fff; }
+
+    /* Difficulty buttons */
+    .diff-toggle { display:flex; flex-direction:column; gap:5px; }
+    .diff-btn {
+      width:100%; padding:9px 12px;
+      background:rgba(255,255,255,0.03);
+      border:1.5px solid rgba(204,0,0,0.18);
+      border-radius:9px; color:rgba(255,255,255,0.65);
+      font-size:12.5px; font-weight:600; cursor:pointer;
+      text-align:left; transition:all 0.22s;
+      display:flex; align-items:center; gap:8px;
+      font-family:inherit;
+    }
+    .diff-btn .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .diff-btn[data-diff="all"] .dot { background:rgba(255,255,255,0.4); }
+    .diff-btn[data-diff="beginner"] .dot { background:var(--beginner); }
+    .diff-btn[data-diff="intermediate"] .dot { background:var(--intermediate); }
+    .diff-btn[data-diff="advanced"] .dot { background:var(--advanced); }
+    .diff-btn:hover { background:rgba(204,0,0,0.1); border-color:rgba(204,0,0,0.45); color:#fff; }
+    .diff-btn.active { background:linear-gradient(135deg, rgba(204,0,0,0.28), rgba(139,0,0,0.22)); border-color:rgba(204,0,0,0.65); color:#fff; }
+    .diff-btn .cat-count {
+      margin-left:auto; padding:1px 7px;
+      background:rgba(204,0,0,0.22); border:1px solid rgba(204,0,0,0.35);
+      border-radius:12px; font-size:10.5px; font-weight:700; color:rgba(255,255,255,0.8);
+    }
+
+    /* View toggle */
+    .view-toggle { display:flex; gap:6px; }
+    .view-btn {
+      flex:1; padding:9px;
+      background:rgba(255,255,255,0.05);
+      border:1.5px solid rgba(204,0,0,0.26);
+      border-radius:9px; color:rgba(255,255,255,0.55);
+      cursor:pointer; transition:all 0.2s; font-size:13px;
+    }
+    .view-btn.active { background:linear-gradient(135deg, var(--primary-red), var(--dark-red)); border-color:var(--primary-red); color:#fff; }
+    .view-btn:hover:not(.active) { border-color:var(--primary-red); color:#fff; }
+
+    /* Category buttons */
+    .cat-list { display:flex; flex-direction:column; gap:5px; }
+
+    .cat-btn {
+      width:100%; padding:9px 12px;
+      background:rgba(255,255,255,0.03);
+      border:1.5px solid rgba(204,0,0,0.18);
+      border-radius:9px; color:rgba(255,255,255,0.65);
+      font-size:12.5px; font-weight:600; cursor:pointer;
+      text-align:left; transition:all 0.22s;
+      display:flex; align-items:center; gap:8px;
+      font-family:inherit; word-break:break-word;
+    }
+    .cat-btn:hover { background:rgba(204,0,0,0.1); border-color:rgba(204,0,0,0.45); color:#fff; }
+    .cat-btn.active { background:linear-gradient(135deg, rgba(204,0,0,0.28), rgba(139,0,0,0.22)); border-color:rgba(204,0,0,0.65); color:#fff; }
+    .cat-btn .cat-icon { font-size:1rem; flex-shrink:0; }
+    .cat-btn .cat-count {
+      margin-left:auto; padding:1px 7px; flex-shrink:0;
+      background:rgba(204,0,0,0.22); border:1px solid rgba(204,0,0,0.35);
+      border-radius:12px; font-size:10.5px; font-weight:700; color:rgba(255,255,255,0.8);
+    }
+
+    /* Results */
+    .results-info { padding:10px 14px; background:rgba(0,0,0,0.38); border-radius:8px; text-align:center; }
+    .results-count { color:rgba(255,255,255,0.5); font-weight:700; font-size:0.78rem; }
+    .results-count span { color:var(--primary-red); font-weight:800; font-size:1rem; }
+
+    /* ── COURSES ZONE ────────────────────────────────── */
+    .courses-zone {
+      flex:1;
+      background:linear-gradient(180deg, #0f0000 0%, #080000 100%);
+      border-left:2px solid rgba(204,0,0,0.12);
+      box-shadow:inset 0 16px 50px rgba(0,0,0,0.9), inset 2px 0 20px rgba(0,0,0,0.8);
+      overflow-x:hidden;
     }
 
     .courses-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 40px 20px 100px;
+      padding:30px 30px 60px;
+      position:relative; z-index:1; min-height:100%;
     }
 
-    .category-section {
-      margin-bottom: 30px;
-      border: 2px solid var(--border-primary);
-      border-radius: 16px;
-      background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(20px);
-      box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 var(--highlight-white);
-      position: relative;
-    }
-
-    /* Grid Overlay for Category Section */
-    .category-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 25px),
-        repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 25px);
-      pointer-events: none;
-      opacity: 0.3;
-      z-index: 0;
-      border-radius: 16px;
-    }
-
-    .category-section.empty {
-      display: none;
-    }
-
-    .category-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 25px 28px;
-      cursor: pointer;
-      user-select: none;
-      border-bottom: 2px solid transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      z-index: 1;
-    }
-
-    .category-header:hover {
-      background: rgba(204, 0, 0, 0.08);
-    }
-
-    .category-header.active {
-      border-bottom-color: var(--border-primary);
-      background: rgba(204, 0, 0, 0.12);
-    }
-
-    .category-title-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .category-icon {
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-      border-radius: 10px;
-      font-size: 20px;
-      transition: all 0.3s ease;
-      box-shadow: 
-        0 4px 12px rgba(204, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-
-    .category-section:hover .category-icon {
-      transform: scale(1.1) rotate(5deg);
-      box-shadow: 
-        0 6px 20px rgba(204, 0, 0, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
-    .category-title {
-      font-size: 22px;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .category-meta {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .course-count-badge {
-      padding: 6px 16px;
-      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      box-shadow: 
-        0 4px 12px rgba(204, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
-    .expand-icon {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: rgba(204, 0, 0, 0.15);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 2px solid rgba(204, 0, 0, 0.3);
-    }
-
-    .expand-icon i {
-      font-size: 16px;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .category-header.active .expand-icon {
-      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-      border-color: var(--light-red);
-      box-shadow: 0 0 20px rgba(204, 0, 0, 0.4);
-    }
-
-    .category-header.active .expand-icon i {
-      transform: rotate(180deg);
-    }
-
+    /* ── COURSES GRID ──────────────────────────────── */
     .courses-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      padding: 28px;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      z-index: 1;
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(clamp(224px, 21vw, 300px), 1fr));
+      gap:22px 18px;
+      padding:8px 0 20px;
     }
 
-    .courses-grid.active {
-      max-height: 5000px;
-      opacity: 1;
-    }
-
+    /* ── COURSE CARD ───────────────────────────────── */
     .course-card {
-      background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-      border: 2px solid var(--border-primary);
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      backdrop-filter: blur(20px);
-      box-shadow: 
-        0 8px 24px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      background:linear-gradient(160deg,
+        rgba(22,4,4,0.98) 0%,
+        rgba(14,6,6,0.98) 60%,
+        rgba(8,2,2,0.98) 100%);
+      border:1px solid rgba(139,0,0,0.32);
+      border-radius:10px; overflow:hidden; cursor:pointer;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position:relative; display:flex; flex-direction:column;
+      box-shadow:0 4px 18px rgba(0,0,0,0.7);
+      height:100%;
     }
 
-    /* Multi-Layer Engineering Grid Pattern */
-    .course-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 20px),
-        repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 20px),
-        repeating-linear-gradient(45deg, transparent 0 15px, rgba(204, 0, 0, 0.02) 15px 30px);
-      pointer-events: none;
-      opacity: 0.4;
-      z-index: 0;
-    }
-
-    /* Animated Corner Bracket */
     .course-card::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 35px;
-      height: 35px;
-      border-top: 3px solid var(--light-red);
-      border-left: 3px solid var(--light-red);
-      opacity: 0.5;
-      transition: all 0.4s ease;
-      z-index: 2;
-      filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.4));
+      content:''; position:absolute; top:8px; left:8px;
+      width:18px; height:18px;
+      border-top:2px solid var(--primary-red);
+      border-left:2px solid var(--primary-red);
+      opacity:0.2; transition:all 0.3s; pointer-events:none; z-index:30;
     }
 
     .course-card:hover {
-      transform: translateY(-10px) scale(1.03);
-      border-color: var(--light-red);
-      box-shadow: 
-        0 30px 80px rgba(204, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 0 100px rgba(204, 0, 0, 0.3);
-      background: linear-gradient(135deg, rgba(30, 10, 10, 0.95), rgba(20, 15, 15, 0.98));
+      border-color:rgba(204,0,0,0.68);
+      box-shadow:0 16px 40px rgba(139,0,0,0.4), 0 0 55px rgba(204,0,0,0.22);
+      transform:translateY(-4px) scale(1.01);
     }
 
-    .course-card:hover::before {
-      width: 60px;
-      height: 60px;
-      opacity: 1;
-      border-color: var(--accent-white);
-      filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.8));
+    .course-card:hover::before { width:24px; height:24px; opacity:1; border-color:var(--accent-red); top:5px; left:5px; }
+
+    /* Thumbnail 16:9 */
+    .course-thumb {
+      width:100%; aspect-ratio:16/9; overflow:hidden;
+      position:relative; background:#0d0000; flex-shrink:0;
     }
 
-    .course-card:hover::after {
-      opacity: 0.6;
-    }
-    .course-card:hover .course-thumbnail img {
-      transform: scale(1.1);
+    .course-thumb img {
+      width:100%; height:100%; object-fit:cover;
+      transition:transform 0.4s ease; display:block;
     }
 
-    .course-thumbnail {
-      width: 100%;
-      aspect-ratio: 16/9;
-      overflow: hidden;
-      position: relative;
-      background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.1));
-      z-index: 1;
-    }
+    .course-card:hover .course-thumb img { transform:scale(1.07); }
 
-    .course-thumbnail img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
+    /* Play overlay */
     .play-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 
-        0 8px 32px rgba(204, 0, 0, 0.6),
-        inset 0 2px 0 rgba(255, 255, 255, 0.2);
+      position:absolute; inset:0;
+      background:linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.75) 100%);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; transition:opacity 0.25s ease;
     }
 
-    .course-card:hover .play-overlay {
-      background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-      transform: translate(-50%, -50%) scale(1.15);
-      box-shadow: 
-        0 12px 48px rgba(204, 0, 0, 0.8),
-        inset 0 2px 0 rgba(255, 255, 255, 0.3);
+    .course-card:hover .play-overlay { opacity:1; }
+
+    .play-btn {
+      width:54px; height:54px;
+      background:linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:20px;
+      box-shadow:0 6px 24px rgba(204,0,0,0.6); transition:transform 0.2s;
     }
 
-    .play-overlay i {
-      font-size: 28px;
-      color: var(--accent-white);
-      margin-left: 4px;
+    .play-btn i { margin-left:3px; }
+    .course-card:hover .play-btn { transform:scale(1.12); }
+
+    /* Difficulty badge */
+    .diff-badge {
+      position:absolute; top:8px; left:8px;
+      padding:3px 9px; border-radius:6px;
+      font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:0.3px;
+      color:#fff; z-index:10;
     }
 
-    .difficulty-badge {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: white;
-      box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      z-index: 2;
-    }
+    .diff-badge.beginner    { background:rgba(76,175,80,0.88);  border:1px solid var(--beginner); }
+    .diff-badge.intermediate{ background:rgba(255,152,0,0.88); border:1px solid var(--intermediate); }
+    .diff-badge.advanced    { background:rgba(244,67,54,0.88);  border:1px solid var(--advanced); }
 
-    .difficulty-badge.beginner {
-      background: linear-gradient(135deg, var(--beginner), #3E8E41);
-    }
-
-    .difficulty-badge.intermediate {
-      background: linear-gradient(135deg, var(--intermediate), #E68900);
-    }
-
-    .difficulty-badge.advanced {
-      background: linear-gradient(135deg, var(--advanced), #D32F2F);
-    }
-
+    /* PDF badge */
     .pdf-badge {
-      position: absolute;
-      top: 52px;
-      right: 12px;
-      background: linear-gradient(135deg, #00897B 0%, #00695C 100%);
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 800;
-      color: white;
-      box-shadow: 
-        0 4px 12px rgba(0, 137, 123, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      z-index: 2;
+      position:absolute; bottom:8px; left:8px;
+      padding:3px 8px;
+      background:rgba(0,0,0,0.85);
+      border:1px solid rgba(204,0,0,0.4);
+      border-radius:6px; font-size:11px; font-weight:700; color:#fff;
+      backdrop-filter:blur(8px);
     }
 
-    .course-content {
-      padding: 18px;
-      position: relative;
-      z-index: 1;
+    /* Episode count pill */
+    .ep-pill {
+      position:absolute; bottom:8px; right:8px;
+      background:rgba(0,0,0,0.88);
+      border:1px solid rgba(204,0,0,0.4);
+      color:#fff; padding:3px 8px; border-radius:6px;
+      font-size:11px; font-weight:800;
+    }
+
+    /* Card info */
+    .course-info {
+      padding:11px 12px 13px;
+      display:flex; flex-direction:column; gap:6px;
+      flex:1;
     }
 
     .course-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--accent-white);
-      margin-bottom: 10px;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      letter-spacing: 0.3px;
+      font-size:0.9rem; font-weight:800; color:var(--text-primary);
+      line-height:1.35;
+      display:-webkit-box; -webkit-line-clamp:2; line-clamp:2;
+      -webkit-box-orient:vertical; overflow:hidden;
+      letter-spacing:0.05px; transition:color 0.25s; min-height:2.4em;
     }
 
-    .course-card:hover .course-title {
-      color: var(--light-red);
-    }
+    .course-card:hover .course-title { color:var(--accent-red); }
 
     .course-summary {
-      font-size: 14px;
-      color: var(--text-dim);
-      line-height: 1.6;
-      margin-bottom: 14px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      font-weight: 500;
+      font-size:0.72rem; color:rgba(255,255,255,0.45); line-height:1.5;
+      display:-webkit-box; -webkit-line-clamp:2; line-clamp:2;
+      -webkit-box-orient:vertical; overflow:hidden;
     }
 
-    .course-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 14px;
+    .course-meta-row {
+      display:flex; align-items:center; justify-content:space-between; gap:5px;
+      padding-top:6px;
+      border-top:1px solid rgba(139,0,0,0.16); transition:border-color 0.25s;
+      margin-top:auto; flex-wrap:wrap;
     }
 
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 600;
+    .course-card:hover .course-meta-row { border-color:rgba(204,0,0,0.35); }
+
+    .meta-chip {
+      font-size:0.62rem; color:rgba(255,255,255,0.42); font-weight:600;
+      display:flex; align-items:center; gap:4px;
     }
 
-    .meta-item i {
-      font-size: 13px;
-      color: var(--light-red);
-      filter: drop-shadow(0 0 4px rgba(255, 23, 68, 0.4));
+    .meta-chip i { color:var(--primary-red); font-size:0.56rem; }
+
+    .lang-tag {
+      padding:2px 7px;
+      background:rgba(204,0,0,0.18); border:1px solid rgba(204,0,0,0.32);
+      border-radius:5px; font-size:0.6rem; font-weight:800; color:rgba(255,255,255,0.7);
     }
 
-    .course-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 14px;
-      border-top: 2px solid var(--border-primary);
+    /* ── LIST MODE ──────────────────────────────────── */
+    .courses-grid.list-mode { grid-template-columns:1fr !important; gap:10px; }
+    .courses-grid.list-mode .course-card { flex-direction:row !important; height:108px; align-items:stretch; }
+    .courses-grid.list-mode .course-thumb { width:192px !important; min-width:192px; flex-shrink:0; height:100%; aspect-ratio:unset !important; border-right:1px solid rgba(139,0,0,0.28); }
+    .courses-grid.list-mode .course-thumb img { height:100%; object-fit:cover; }
+    .courses-grid.list-mode .course-info { flex:1; padding:10px 14px; justify-content:space-between; }
+    .courses-grid.list-mode .course-title { -webkit-line-clamp:1; line-clamp:1; min-height:unset; }
+    .courses-grid.list-mode .course-summary { display:none; }
+    .courses-grid.list-mode .play-overlay { display:none; }
+
+    /* ── EMPTY / LOADING ───────────────────────────── */
+    .loading-state, .no-courses {
+      text-align:center; padding:60px 20px; color:var(--text-dim);
+    }
+    .loading-state i, .no-courses i { font-size:48px; color:var(--primary-red); margin-bottom:16px; display:block; }
+    .loading-state p, .no-courses p { font-size:15px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin { animation:spin 1s linear infinite; }
+
+    /* ── LOAD MORE ──────────────────────────────────── */
+    .load-more-wrap { text-align:center; margin:36px 0 10px; }
+    .load-more-btn {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:13px 36px;
+      background:linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border:none; border-radius:12px; color:#fff;
+      font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+      transition:all 0.28s; box-shadow:0 4px 16px rgba(204,0,0,0.35);
+    }
+    .load-more-btn:hover { background:linear-gradient(135deg, #e60000, #6b0000); transform:translateY(-2px); box-shadow:0 8px 24px rgba(204,0,0,0.55); }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width:1024px) {
+      .main-content-wrapper { flex-direction:column; }
+      .filter-sidebar { width:100%; height:auto; position:relative; top:0; border-right:none; border-bottom:2px solid rgba(204,0,0,0.22); max-height:380px; overflow-y:auto; }
+      .courses-zone { border-left:none; }
+      .courses-grid { grid-template-columns:repeat(auto-fill, minmax(clamp(180px,26vw,280px),1fr)); }
     }
 
-    .enrolled-count {
-      font-size: 13px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 600;
-    }
-
-    .enrolled-count i {
-      font-size: 12px;
-      color: var(--light-red);
-      filter: drop-shadow(0 0 4px rgba(255, 23, 68, 0.4));
-    }
-
-    .language-badge {
-      padding: 5px 12px;
-      background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(139, 0, 0, 0.15));
-      border: 2px solid var(--border-primary);
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--light-red);
-      box-shadow: 
-        0 2px 8px rgba(204, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .no-courses {
-      text-align: center;
-      padding: 80px 40px;
-      color: var(--text-dim);
-      background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-      border: 2px solid var(--border-primary);
-      border-radius: 16px;
-      backdrop-filter: blur(30px);
-      box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 var(--highlight-white);
-    }
-
-    .no-courses i {
-      font-size: 64px;
-      color: var(--light-red);
-      margin-bottom: 24px;
-      filter: drop-shadow(0 0 20px rgba(255, 23, 68, 0.6));
-    }
-
-    .no-courses p {
-      font-size: 18px;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 80px 40px;
-      color: var(--text-secondary);
-    }
-
-    .loading i {
-      font-size: 48px;
-      color: var(--light-red);
-      animation: spin 1.5s linear infinite;
-      filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.6));
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 768px) {
-      .page-header {
-        padding: 80px 25px 50px;
-        margin: 15px 10px 20px;
-      }
-
-      .page-header::before,
-      .page-header::after {
-        width: 50px;
-        height: 50px;
-        border-width: 3px;
-      }
-
-      .page-header h1 {
-        font-size: 36px;
-      }
-
-      .page-header .subtitle {
-        font-size: 16px;
-      }
-
-      .category-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-      }
-
-      .category-title {
-        font-size: 18px;
-      }
-
-      .courses-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 18px;
-        padding: 20px;
-      }
-
-      .back-to-hub {
-        top: 10px;
-        left: 10px;
-        padding: 10px 16px;
-        font-size: 13px;
-      }
-
-      .play-overlay {
-        width: 60px;
-        height: 60px;
-      }
-
-      .play-overlay i {
-        font-size: 24px;
-      }
-
-      .course-card::before {
-        width: 30px;
-        height: 30px;
-        border-width: 2px;
-      }
-
-      .course-card:hover::before {
-        width: 50px;
-        height: 50px;
-      }
-
-      .no-courses {
-        padding: 60px 30px;
-      }
-
-      .no-courses i {
-        font-size: 48px;
-      }
-
-      .loading {
-        padding: 60px 30px;
-      }
+    @media (max-width:768px) {
+      .lib-header-left h1 { font-size:1.15rem; }
+      .lib-header-subtitle { display:none; }
+      .lib-stat-badge { font-size:0.68rem; padding:4px 9px; }
+      .courses-container { padding:18px 14px 40px; }
+      .courses-grid { grid-template-columns:repeat(auto-fill, minmax(155px,1fr)); gap:14px 10px; }
+      .course-title { font-size:0.8rem; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Desktop Navbar -->
   <nav class="desktop-navbar" id="desktopNavbar">
     <div class="desktop-nav-container">
       <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
@@ -845,324 +512,434 @@
       <ul class="desktop-nav-menu">
         <li class="desktop-nav-item">
           <a href="../../About me/about.html" class="desktop-nav-link" aria-label="About Me">
-            <i class="fas fa-user-circle"></i>
-            <span>About</span>
+            <i class="fas fa-user-circle"></i><span>About</span>
           </a>
         </li>
         <li class="desktop-nav-item">
-          <a href="../../Projects Code/projects.html" class="desktop-nav-link" aria-label="View Projects">
-            <i class="fas fa-folder-open"></i>
-            <span>Projects</span>
+          <a href="../../Projects Code/projects.html" class="desktop-nav-link" aria-label="Projects">
+            <i class="fas fa-folder-open"></i><span>Projects</span>
           </a>
         </li>
         <li class="desktop-nav-item">
           <a href="../hub.html" class="desktop-nav-link active" aria-label="Content Studio">
-            <i class="fas fa-layer-group"></i>
-            <span>Content Studio</span>
+            <i class="fas fa-layer-group"></i><span>Content Studio</span>
           </a>
         </li>
         <li class="desktop-nav-item">
-          <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact Me">
-            <i class="fas fa-envelope"></i>
-            <span>Contact</span>
+          <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact">
+            <i class="fas fa-envelope"></i><span>Contact</span>
           </a>
         </li>
         <li class="desktop-nav-item">
           <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV">
-            <i class="fas fa-download"></i>
-            <span>CV</span>
+            <i class="fas fa-download"></i><span>CV</span>
           </a>
         </li>
       </ul>
     </div>
   </nav>
-  <div class="background-system"></div>
-  
-  <a href="../hub.html" class="back-to-hub">
-    <i class="fas fa-arrow-left"></i>
-    Back to Hub
-  </a>
 
-  <div class="page-header">
-    <h1>📚 Educational Videos</h1>
-    <p class="subtitle">Comprehensive video courses and tutorials</p>
-    <div class="total-count">
-      <i class="fas fa-video"></i>
-      <span id="totalCount">0 Courses</span>
+  <!-- Compact Header Strip -->
+  <div class="lib-header">
+    <div class="lib-header-left">
+      <h1><i class="fas fa-graduation-cap"></i> Educational Courses</h1>
+      <div class="lib-header-divider"></div>
+      <span class="lib-header-subtitle">Video Course Archive</span>
+    </div>
+    <div class="lib-header-stats">
+      <div class="lib-stat-badge">
+        <i class="fas fa-video"></i>
+        <strong id="headerTotalCourses">—</strong>
+        <span>Courses</span>
+      </div>
+      <div class="lib-stat-badge">
+        <i class="fas fa-layer-group"></i>
+        <strong id="headerTotalCats">—</strong>
+        <span>Categories</span>
+      </div>
+      <div class="lib-stat-badge">
+        <i class="fas fa-list-ol"></i>
+        <strong id="headerTotalEps">—</strong>
+        <span>Episodes</span>
+      </div>
     </div>
   </div>
 
-  <div class="courses-container" id="coursesContainer">
-    <div class="loading">
-      <i class="fas fa-spinner"></i>
-      <p>Loading courses...</p>
-    </div>
+  <!-- Main 2-Column Layout -->
+  <div class="main-content-wrapper">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="filter-sidebar">
+
+      <div class="filter-header">
+        <h3><i class="fas fa-sliders-h"></i> Filters</h3>
+      </div>
+
+      <!-- Search -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-search"></i> Search</div>
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search courses…">
+          <button class="clear-search" id="clearSearch" onclick="clearSearch()">×</button>
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-sort"></i> Sort By</div>
+        <select class="filter-dropdown" id="sortFilter">
+          <option value="default">Default</option>
+          <option value="title-asc">Title (A → Z)</option>
+          <option value="title-desc">Title (Z → A)</option>
+          <option value="episodes-desc">Most Episodes</option>
+          <option value="episodes-asc">Fewest Episodes</option>
+        </select>
+      </div>
+
+      <!-- Language -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-language"></i> Language</div>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="all" onclick="setLang('all',this)">All</button>
+          <button class="lang-btn" data-lang="en" onclick="setLang('en',this)">🇬🇧 EN</button>
+          <button class="lang-btn" data-lang="bn" onclick="setLang('bn',this)">🇧🇩 BN</button>
+        </div>
+      </div>
+
+      <!-- Difficulty -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-signal"></i> Difficulty</div>
+        <div class="diff-toggle">
+          <button class="diff-btn active" data-diff="all" onclick="setDiff('all',this)">
+            <span class="dot"></span>All Levels
+            <span class="cat-count" id="diffCountAll">0</span>
+          </button>
+          <button class="diff-btn" data-diff="beginner" onclick="setDiff('beginner',this)">
+            <span class="dot"></span>Beginner
+            <span class="cat-count" id="diffCountBeginner">0</span>
+          </button>
+          <button class="diff-btn" data-diff="intermediate" onclick="setDiff('intermediate',this)">
+            <span class="dot"></span>Intermediate
+            <span class="cat-count" id="diffCountIntermediate">0</span>
+          </button>
+          <button class="diff-btn" data-diff="advanced" onclick="setDiff('advanced',this)">
+            <span class="dot"></span>Advanced
+            <span class="cat-count" id="diffCountAdvanced">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- View Mode -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-th"></i> View</div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid view"><i class="fas fa-th-large"></i></button>
+          <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List view"><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="filter-section">
+        <div class="results-info">
+          <div class="results-count">Showing <span id="resultsCount">0</span> courses</div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-layer-group"></i> Categories</div>
+        <div class="cat-list" id="catList">
+          <button class="cat-btn active" data-cat="all" onclick="filterBy('all',this)">
+            <i class="fas fa-graduation-cap cat-icon"></i> All Courses
+            <span class="cat-count" id="countAll">0</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- COURSES ZONE -->
+    <main class="courses-zone">
+      <div class="courses-container">
+        <div class="loading-state" id="loadingState">
+          <i class="fas fa-spinner spin"></i>
+          <p>Loading courses…</p>
+        </div>
+        <div id="coursesGrid" style="display:none;"></div>
+      </div>
+    </main>
+
   </div>
 
   <script>
-    const categories = [
-      { name: "3D Modeling & CAD", icon: "fas fa-cube", slug: "3d-modeling-cad" },
-      { name: "3D Printing", icon: "fas fa-print", slug: "3d-printing" },
-      { name: "Algorithms & Data Structures", icon: "fas fa-project-diagram", slug: "algorithms-data-structures" },
-      { name: "Android Development", icon: "fab fa-android", slug: "android-development" },
-      { name: "API Development", icon: "fas fa-plug", slug: "api-development" },
-      { name: "Arduino & Microcontrollers", icon: "fas fa-microchip", slug: "arduino-microcontrollers" },
-      { name: "Artificial Intelligence", icon: "fas fa-brain", slug: "artificial-intelligence" },
-      { name: "Augmented Reality", icon: "fas fa-vr-cardboard", slug: "augmented-reality" },
-      { name: "Automation & Control", icon: "fas fa-cogs", slug: "automation-control" },
-      { name: "Backend Development", icon: "fas fa-server", slug: "backend-development" },
-      { name: "Biomedical Engineering", icon: "fas fa-heartbeat", slug: "biomedical-engineering" },
-      { name: "Blockchain", icon: "fas fa-link", slug: "blockchain" },
-      { name: "Business & Entrepreneurship", icon: "fas fa-briefcase", slug: "business-entrepreneurship" },
-      { name: "Circuit Design", icon: "fas fa-microchip", slug: "circuit-design" },
-      { name: "Cloud Computing", icon: "fas fa-cloud", slug: "cloud-computing" },
-      { name: "Communication Skills", icon: "fas fa-comments", slug: "communication-skills" },
-      { name: "Communication Systems", icon: "fas fa-broadcast-tower", slug: "communication-systems" },
-      { name: "Computer Vision", icon: "fas fa-eye", slug: "computer-vision" },
-      { name: "Cybersecurity", icon: "fas fa-shield-alt", slug: "cybersecurity" },
-      { name: "Database Design", icon: "fas fa-database", slug: "database-design" },
-      { name: "Data Science & Analytics", icon: "fas fa-chart-line", slug: "data-science-analytics" },
-      { name: "Data Visualization", icon: "fas fa-chart-bar", slug: "data-visualization" },
-      { name: "DevOps", icon: "fas fa-infinity", slug: "devops" },
-      { name: "Digital Electronics", icon: "fas fa-bolt", slug: "digital-electronics" },
-      { name: "Digital Marketing", icon: "fas fa-bullhorn", slug: "digital-marketing" },
-      { name: "Docker & Kubernetes", icon: "fab fa-docker", slug: "docker-kubernetes" },
-      { name: "Drones & UAV", icon: "fas fa-drone", slug: "drones-uav" },
-      { name: "Electrical Machines", icon: "fas fa-battery-full", slug: "electrical-machines" },
-      { name: "Embedded Systems", icon: "fas fa-memory", slug: "embedded-systems" },
-      { name: "Energy Systems", icon: "fas fa-bolt", slug: "energy-systems" },
-      { name: "Engineering Mathematics", icon: "fas fa-calculator", slug: "engineering-mathematics" },
-      { name: "Frontend Frameworks", icon: "fas fa-code", slug: "frontend-frameworks" },
-      { name: "Game Development", icon: "fas fa-gamepad", slug: "game-development" },
-      { name: "Git & Version Control", icon: "fab fa-git-alt", slug: "git-version-control" },
-      { name: "Hardware Design", icon: "fas fa-toolbox", slug: "hardware-design" },
-      { name: "Home Automation", icon: "fas fa-home", slug: "home-automation" },
-      { name: "Industry 4.0", icon: "fas fa-industry", slug: "industry-4" },
-      { name: "Internet of Things (IoT)", icon: "fas fa-wifi", slug: "internet-of-things" },
-      { name: "JavaScript Frameworks", icon: "fab fa-js", slug: "javascript-frameworks" },
-      { name: "Leadership & Management", icon: "fas fa-users", slug: "leadership-management" },
-      { name: "Linux & System Administration", icon: "fab fa-linux", slug: "linux-system-administration" },
-      { name: "Machine Learning", icon: "fas fa-robot", slug: "machine-learning" },
-      { name: "Machine Vision", icon: "fas fa-camera", slug: "machine-vision" },
-      { name: "Mechanical Engineering", icon: "fas fa-cog", slug: "mechanical-engineering" },
-      { name: "Microservices", icon: "fas fa-sitemap", slug: "microservices" },
-      { name: "Mobile App Development", icon: "fas fa-mobile-alt", slug: "mobile-app-development" },
-      { name: "Networking", icon: "fas fa-network-wired", slug: "networking" },
-      { name: "Operating Systems", icon: "fas fa-desktop", slug: "operating-systems" },
-      { name: "PCB Design & Fabrication", icon: "fas fa-th", slug: "pcb-design-fabrication" },
-      { name: "Personal Finance", icon: "fas fa-wallet", slug: "personal-finance" },
-      { name: "Photography", icon: "fas fa-camera-retro", slug: "photography" },
-      { name: "Power Electronics", icon: "fas fa-plug", slug: "power-electronics" },
-      { name: "Power Systems", icon: "fas fa-charging-station", slug: "power-systems" },
-      { name: "Productivity Tools", icon: "fas fa-tools", slug: "productivity-tools" },
-      { name: "Programming Languages", icon: "fas fa-code", slug: "programming-languages" },
-      { name: "Project Management", icon: "fas fa-tasks", slug: "project-management" },
-      { name: "Python Programming", icon: "fab fa-python", slug: "python-programming" },
-      { name: "Quantum Computing", icon: "fas fa-atom", slug: "quantum-computing" },
-      { name: "React & Angular", icon: "fab fa-react", slug: "react-angular" },
-      { name: "Renewable Energy", icon: "fas fa-solar-panel", slug: "renewable-energy" },
-      { name: "Reverse Engineering", icon: "fas fa-wrench", slug: "reverse-engineering" },
-      { name: "Robotics", icon: "fas fa-robot", slug: "robotics" },
-      { name: "Sensors & Actuators", icon: "fas fa-sensor", slug: "sensors-actuators" },
-      { name: "Signal Processing", icon: "fas fa-wave-square", slug: "signal-processing" },
-      { name: "Simulation & Modeling", icon: "fas fa-project-diagram", slug: "simulation-modeling" },
-      { name: "Simulation Software", icon: "fas fa-laptop-code", slug: "simulation-software" },
-      { name: "Smart Cities", icon: "fas fa-city", slug: "smart-cities" },
-      { name: "Software Architecture", icon: "fas fa-building", slug: "software-architecture" },
-      { name: "SQL & NoSQL", icon: "fas fa-database", slug: "sql-nosql" },
-      { name: "System Design", icon: "fas fa-drafting-compass", slug: "system-design" },
-      { name: "Technical Writing", icon: "fas fa-pen-fancy", slug: "technical-writing" },
-      { name: "Testing & QA", icon: "fas fa-check-double", slug: "testing-qa" },
-      { name: "Time Management", icon: "fas fa-clock", slug: "time-management" },
-      { name: "Troubleshooting & Debugging", icon: "fas fa-bug", slug: "troubleshooting-debugging" },
-      { name: "UI/UX Design", icon: "fas fa-paint-brush", slug: "ui-ux-design" },
-      { name: "Virtual Reality", icon: "fas fa-vr-cardboard", slug: "virtual-reality" },
-      { name: "Wearable Tech", icon: "fas fa-watch", slug: "wearable-tech" },
-      { name: "Web Development", icon: "fas fa-globe", slug: "web-development" },
-      { name: "Wireless Communication", icon: "fas fa-broadcast-tower", slug: "wireless-communication" },
-      { name: "Work-Life Balance", icon: "fas fa-balance-scale", slug: "work-life-balance" }
-    ];
+    // ── State ──────────────────────────────────────────
+    let allCourses   = [];
+    let catMap       = {};    // slug → { name, icon, count }
+    let currentCat   = 'all';
+    let currentDiff  = 'all';
+    let currentLang  = 'all';
+    let currentSort  = 'default';
+    let currentView  = 'grid';
+    let batchSize    = 16;
+    let currentBatch = 1;
 
-    let allCourses = [];
+    // ── CATEGORY ICON MAP (from original) ──────────────
+    const CAT_ICONS = {
+      'Arduino & Microcontrollers': 'fas fa-microchip',
+      'Circuit Design':             'fas fa-bolt',
+      'Embedded Systems':           'fas fa-memory',
+      'Python Programming':         'fab fa-python',
+      'Web Development & Design':   'fas fa-laptop-code',
+      'Machine Learning & Deep Learning': 'fas fa-brain',
+      'Artificial Intelligence':    'fas fa-brain',
+      'Data Science & Analytics':   'fas fa-chart-line',
+      'Robotics & Automation':      'fas fa-robot',
+      'Internet of Things (IoT)':   'fas fa-wifi',
+      'PCB Design & Fabrication':   'fas fa-th',
+      'Electrical Engineering':     'fas fa-plug',
+      'Mechanical Engineering':     'fas fa-cog',
+      '3D Modeling & CAD':          'fas fa-cube',
+      'Computer Science & Programming': 'fas fa-code',
+      'Cybersecurity & Networking': 'fas fa-shield-alt',
+      'Engineering & Technology':   'fas fa-cogs',
+    };
 
+    function getCatIcon(name) {
+      return CAT_ICONS[name] || 'fas fa-tag';
+    }
+
+    // ── Utilities ──────────────────────────────────────
+    function slugify(s) {
+      return (s||'').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    function escHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Load Data ──────────────────────────────────────
     async function loadCourses() {
       try {
-        const response = await fetch('courses.json');
-        const data = await response.json();
-        allCourses = data.courses || [];
-        
-        // Map playlist to episodes for compatibility with manager uploads
-        allCourses = allCourses.map(course => ({
-          ...course,
-          episodes: course.episodes || (course.playlist ? course.playlist.length : 0),
-          instructor: course.institution || 'Md Akhinoor Islam',
-          // Keep playlist for PDF counting
-          playlist: course.playlist || []
+        const res  = await fetch('courses.json');
+        const data = await res.json();
+
+        allCourses = (data.courses || []).map(c => ({
+          ...c,
+          episodes:   c.episodes || (c.playlist ? c.playlist.length : 0),
+          instructor: c.institution || c.instructor || 'Md Akhinoor Islam',
+          playlist:   c.playlist || []
         }));
-        
+
+        // Build category map
+        const seenCats = {};
+        allCourses.forEach(c => {
+          const slug = slugify(c.category || 'other');
+          if (!seenCats[slug]) seenCats[slug] = { name: c.category || 'Other', count: 0 };
+          seenCats[slug].count++;
+          c._catSlug = slug;
+        });
+        catMap = seenCats;
+
+        // Difficulty counts
+        const counts = { beginner:0, intermediate:0, advanced:0 };
+        allCourses.forEach(c => {
+          const d = (c.difficulty||'beginner').toLowerCase();
+          if (counts[d] !== undefined) counts[d]++;
+        });
+
+        // Total episodes
+        const totalEps = allCourses.reduce((sum, c) => sum + (c.episodes || 0), 0);
+
+        // Header stats
+        document.getElementById('headerTotalCourses').textContent = allCourses.length;
+        document.getElementById('headerTotalCats').textContent    = Object.keys(catMap).length;
+        document.getElementById('headerTotalEps').textContent     = totalEps;
+        document.getElementById('countAll').textContent           = allCourses.length;
+
+        // Difficulty count badges
+        document.getElementById('diffCountAll').textContent          = allCourses.length;
+        document.getElementById('diffCountBeginner').textContent     = counts.beginner;
+        document.getElementById('diffCountIntermediate').textContent = counts.intermediate;
+        document.getElementById('diffCountAdvanced').textContent     = counts.advanced;
+
+        buildCatButtons();
         renderCourses();
-      } catch (error) {
-        console.error('Error loading courses:', error);
-        document.getElementById('coursesContainer').innerHTML = `
-          <div class="no-courses">
-            <i class="fas fa-exclamation-triangle"></i>
-            <p>Error loading courses</p>
-            <p style="font-size: 14px; margin-top: 8px;">Please try refreshing the page</p>
-          </div>
-        `;
+
+      } catch (err) {
+        console.error('Error loading courses:', err);
+        document.getElementById('loadingState').innerHTML =
+          '<i class="fas fa-exclamation-triangle"></i><p>Failed to load courses. Please refresh.</p>';
       }
     }
 
+    // ── Build Category Buttons ─────────────────────────
+    function buildCatButtons() {
+      const list = document.getElementById('catList');
+      Array.from(list.children).forEach(el => { if (el.dataset.cat !== 'all') el.remove(); });
+
+      const sorted = Object.entries(catMap).sort((a,b) => b[1].count - a[1].count);
+      sorted.forEach(([slug, info]) => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.dataset.cat = slug;
+        btn.innerHTML = `<i class="${getCatIcon(info.name)} cat-icon"></i>${escHtml(info.name)}<span class="cat-count">${info.count}</span>`;
+        btn.onclick = () => filterBy(slug, btn);
+        list.appendChild(btn);
+      });
+    }
+
+    // ── Filters ────────────────────────────────────────
+    function filterBy(cat, el) {
+      currentCat = cat; currentBatch = 1;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderCourses();
+    }
+
+    function setDiff(diff, el) {
+      currentDiff = diff; currentBatch = 1;
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderCourses();
+    }
+
+    function setLang(lang, el) {
+      currentLang = lang; currentBatch = 1;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderCourses();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearch').classList.remove('active');
+      renderCourses();
+    }
+
+    function setView(mode) {
+      currentView = mode;
+      document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+      document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+      const grid = document.getElementById('coursesGrid').querySelector('.courses-grid');
+      if (grid) grid.classList.toggle('list-mode', mode === 'list');
+    }
+
+    // ── Render ─────────────────────────────────────────
     function renderCourses() {
-      const container = document.getElementById('coursesContainer');
-      
-      if (allCourses.length === 0) {
-        container.innerHTML = `
-          <div class="no-courses">
-            <i class="fas fa-video"></i>
-            <p>No courses available yet</p>
-            <p style="font-size: 14px; margin-top: 8px;">Check back soon for new content!</p>
-          </div>
-        `;
-        document.getElementById('totalCount').textContent = '0 Courses';
+      const container = document.getElementById('coursesGrid');
+      document.getElementById('loadingState').style.display = 'none';
+      container.style.display = 'block';
+
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      let filtered = allCourses.filter(c => {
+        const catOk  = currentCat  === 'all' || c._catSlug === currentCat;
+        const diffOk = currentDiff === 'all' || (c.difficulty||'beginner').toLowerCase() === currentDiff;
+        const langOk = currentLang === 'all' || (c.language||'en') === currentLang;
+        const qOk    = !q
+          || (c.title||'').toLowerCase().includes(q)
+          || (c.summary||'').toLowerCase().includes(q)
+          || (c.category||'').toLowerCase().includes(q)
+          || (c.instructor||'').toLowerCase().includes(q);
+        return catOk && diffOk && langOk && qOk;
+      });
+
+      // Sort
+      switch (currentSort) {
+        case 'title-asc':      filtered.sort((a,b) => (a.title||'').localeCompare(b.title||'')); break;
+        case 'title-desc':     filtered.sort((a,b) => (b.title||'').localeCompare(a.title||'')); break;
+        case 'episodes-desc':  filtered.sort((a,b) => (b.episodes||0) - (a.episodes||0)); break;
+        case 'episodes-asc':   filtered.sort((a,b) => (a.episodes||0) - (b.episodes||0)); break;
+      }
+
+      document.getElementById('resultsCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="no-courses"><i class="fas fa-video-slash"></i><p>No courses found</p></div>`;
         return;
       }
 
-      let html = '';
-      let displayedCategories = 0;
+      const total   = batchSize * currentBatch;
+      const slice   = filtered.slice(0, total);
+      const hasMore = filtered.length > total;
+      const listCls = currentView === 'list' ? ' list-mode' : '';
+      const cards   = slice.map(c => createCourseCard(c)).join('');
 
-      categories.forEach(category => {
-        const categoryCourses = allCourses.filter(course => 
-          course.category === category.name || 
-          course.category.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') === category.slug
-        );
+      container.innerHTML = `
+        <div class="courses-grid${listCls}">${cards}</div>
+        ${hasMore ? `
+        <div class="load-more-wrap">
+          <button class="load-more-btn" id="loadMoreBtn">
+            <i class="fas fa-arrow-down"></i>
+            Load More (${filtered.length - total} remaining)
+          </button>
+        </div>` : ''}`;
 
-        if (categoryCourses.length === 0) return;
-        displayedCategories++;
-
-        html += `
-          <div class="category-section" data-category="${category.slug}">
-            <div class="category-header" onclick="toggleCategory('${category.slug}')">
-              <div class="category-title-wrapper">
-                <div class="category-icon">
-                  <i class="${category.icon}"></i>
-                </div>
-                <h2 class="category-title">${category.name}</h2>
-              </div>
-              <div class="category-meta">
-                <span class="course-count-badge">${categoryCourses.length} ${categoryCourses.length === 1 ? 'course' : 'courses'}</span>
-                <div class="expand-icon">
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-            </div>
-            <div class="courses-grid" id="grid-${category.slug}">
-              ${categoryCourses.map(course => createCourseCard(course)).join('')}
-            </div>
-          </div>
-        `;
+      document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+        currentBatch++;
+        renderCourses();
       });
-
-      container.innerHTML = html;
-      document.getElementById('totalCount').textContent = `${allCourses.length} ${allCourses.length === 1 ? 'Course' : 'Courses'} in ${displayedCategories} ${displayedCategories === 1 ? 'Category' : 'Categories'}`;
     }
 
-    function createCourseCard(course) {
-      const languageName = course.language === 'bn' ? 'বাংলা' : 'English';
-      const languageCode = course.language === 'bn' ? 'BN' : 'EN';
-      const difficulty = (course.difficulty || 'beginner').toLowerCase();
-      const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-      
-      // Count episodes with PDF (check if PDF downloadUrl exists)
-      const pdfCount = course.playlist && Array.isArray(course.playlist) ? 
-        course.playlist.filter(ep => ep.lecturePdf && ep.lecturePdf.downloadUrl).length : 0;
-      
+    // ── Course Card HTML (logic preserved from original) ─
+    function createCourseCard(c) {
+      const lang       = (c.language === 'bn') ? 'BN' : 'EN';
+      const difficulty = (c.difficulty || 'beginner').toLowerCase();
+      const diffLabel  = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+      const pdfCount   = c.playlist.filter(ep => ep.lecturePdf && ep.lecturePdf.downloadUrl).length;
+      const thumb      = c.thumbnail || '../../Content Storage/images/default-course-thumbnail.svg';
+      const eps        = c.episodes || 0;
+      const dur        = c.duration || '';
+
       return `
-        <div class="course-card" onclick="openCourse('${course.id}')">
-          <div class="course-thumbnail">
-            <img src="${course.thumbnail}" alt="${course.title}" loading="lazy" onerror="this.src='../../Content Storage/images/default-course-thumbnail.svg'">
-            <div class="play-overlay">
-              <i class="fas fa-play"></i>
-            </div>
-            <div class="difficulty-badge ${difficulty}">${difficultyLabel}</div>
-            ${pdfCount > 0 ? `<div class="pdf-badge" title="${pdfCount} episodes with PDF materials">📝 ${pdfCount} PDF</div>` : ''}
+        <div class="course-card" onclick="openCourse('${escHtml(c.id)}')">
+          <div class="course-thumb">
+            <img src="${escHtml(thumb)}" alt="${escHtml(c.title)}" loading="lazy"
+                 onerror="this.src='../../Content Storage/images/default-course-thumbnail.svg'">
+            <div class="play-overlay"><div class="play-btn"><i class="fas fa-play"></i></div></div>
+            <div class="diff-badge ${difficulty}">${diffLabel}</div>
+            ${pdfCount > 0 ? `<div class="pdf-badge">📝 ${pdfCount} PDF</div>` : ''}
+            ${eps > 0 ? `<div class="ep-pill"><i class="fas fa-list" style="font-size:9px;margin-right:3px;"></i>${eps} ep</div>` : ''}
           </div>
-          <div class="course-content">
-            <h3 class="course-title">${course.title}</h3>
-            <p class="course-summary">${course.summary}</p>
-            <div class="course-meta">
-              <span class="meta-item">
-                <i class="fas fa-list"></i>
-                ${course.episodes || 0} episodes
-              </span>
-              <span class="meta-item">
-                <i class="fas fa-clock"></i>
-                ${course.duration || 'N/A'}
-              </span>
-              ${course.enrolled ? `
-              <span class="meta-item">
-                <i class="fas fa-users"></i>
-                ${course.enrolled} enrolled
-              </span>
-              ` : ''}
-            </div>
-            <div class="course-footer">
-              <div class="enrolled-count">
-                <i class="fas fa-graduation-cap"></i>
-                ${course.instructor || 'Md Akhinoor Islam'}
-              </div>
-              <span class="language-badge">${languageCode}</span>
+          <div class="course-info">
+            <h3 class="course-title">${escHtml(c.title)}</h3>
+            ${c.summary ? `<p class="course-summary">${escHtml(c.summary)}</p>` : ''}
+            <div class="course-meta-row">
+              ${dur ? `<span class="meta-chip"><i class="fas fa-clock"></i>${dur}</span>` : '<span></span>'}
+              <span class="meta-chip"><i class="fas fa-graduation-cap"></i>${escHtml(c.instructor)}</span>
+              <span class="lang-tag">${lang}</span>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
-    function getCategorySlug(categoryName) {
-      const category = categories.find(c => c.name === categoryName);
-      return category ? category.slug : categoryName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-    }
+    function openCourse(id) { window.location.href = `course-viewer-new.html?id=${id}`; }
 
-    function toggleCategory(slug) {
-      const header = document.querySelector(`[data-category="${slug}"] .category-header`);
-      const grid = document.getElementById(`grid-${slug}`);
-      
-      header.classList.toggle('active');
-      grid.classList.toggle('active');
-    }
+    // ── Event Listeners ────────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', e => {
+      document.getElementById('clearSearch').classList.toggle('active', e.target.value.length > 0);
+      currentBatch = 1;
+      renderCourses();
+    });
 
-    function openCourse(courseId) {
-      window.location.href = `course-viewer-new.html?id=${courseId}`;
-    }
+    document.getElementById('sortFilter').addEventListener('change', e => {
+      currentSort  = e.target.value;
+      currentBatch = 1;
+      renderCourses();
+    });
 
-    // Load courses on page load
+    // ── Navbar scroll ──────────────────────────────────
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('desktopNavbar');
+      if (nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // ── Init ───────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', loadCourses);
-
-    // Background system
-    if (typeof BackgroundSystem !== 'undefined') {
-      const bg = new BackgroundSystem();
-      bg.init();
-    }
   </script>
 
-  <script src="../../Optimization/Background/background-system.js"></script>
   <script src="../../Optimization/navbar-autohide.js"></script>
-
-  <!-- Desktop Navbar Scroll Script -->
-  <script>
-    (function() {
-      window.addEventListener('scroll', function() {
-        const navbar = document.getElementById('desktopNavbar');
-        if (navbar) {
-          if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-          } else {
-            navbar.classList.remove('scrolled');
-          }
-        }
-      });
-    })();
-  </script>
   <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

@@ -13,39 +13,499 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../shared/mobile-common.css">
     <link rel="stylesheet" href="../../shared/mobile-navbar.css">
+    
+    <!-- Page Loading Indicator -->
+    <script src="../../shared/page-loading.js"></script>
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        body{padding-bottom:70px;}
-        .course-header{position:sticky;top:0;z-index:100;padding:12px 16px;background:rgba(0,0,0,0.98);backdrop-filter:blur(10px);border-bottom:1px solid var(--border-primary);display:flex;justify-content:space-between;align-items:center;}
-        .back-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:linear-gradient(135deg, rgba(139, 0, 0, 0.25), rgba(0, 0, 0, 0.5));border:1px solid rgba(178, 34, 34, 0.4);border-top:1px solid rgba(255, 255, 255, 0.12);border-radius:6px;color:#B22222;font-size:13px;font-weight:600;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.3);}
-        .back-btn:active{background:linear-gradient(135deg, rgba(205, 92, 92, 0.25), rgba(0, 0, 0, 0.4));}
-        .video-container{position:relative;width:100%;padding-top:56.25%;background:#000;}
-        .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
-        .course-info{padding:16px;}
-        .course-title{font-size:18px;font-weight:900;margin-bottom:12px;color:var(--text-primary);}
-        .course-stats{display:flex;gap:16px;font-size:13px;color:var(--text-dim);margin-bottom:16px;}
-        .course-desc{font-size:14px;line-height:1.6;color:var(--text-secondary);margin-bottom:16px;}
-        .playlist-section{padding:0 16px 16px;}
-        .playlist-section h3{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--text-primary);}
-        .playlist-item{display:flex;gap:12px;padding:10px;background:var(--bg-card);border:1px solid var(--border-primary);border-radius:8px;margin-bottom:10px;cursor:pointer;transition:all 0.3s ease;}
-        .playlist-item.active{background:linear-gradient(135deg, rgba(220, 20, 60, 0.18), rgba(204, 0, 0, 0.08));border-color:rgba(220, 20, 60, 0.5);border-top:1px solid rgba(255, 255, 255, 0.12);box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(220, 20, 60, 0.2);}
-        .playlist-item:active{transform:scale(0.98);}
-        .playlist-thumb{flex-shrink:0;width:100px;height:56px;background:linear-gradient(135deg, rgba(204, 0, 0, 0.12), rgba(0, 0, 0, 0.4));border-radius:6px;position:relative;border:1px solid rgba(204, 0, 0, 0.3);}
-        .playlist-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
-        .playlist-info h4{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text-primary);}
-        .playlist-info p{font-size:12px;color:var(--text-dim);}
-        .loading{padding:60px 20px;text-align:center;}
-        .loading-spinner{width:40px;height:40px;border:3px solid rgba(204, 0, 0, 0.15);border-top-color:#CC0000;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
-        @keyframes spin{to{transform:rotate(360deg);}}
+        /* ── Base ── */
+        body { padding-bottom: 80px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Header ── */
+        .course-header {
+            position: sticky; top: 0; z-index: 200;
+            padding: 10px 14px;
+            background: rgba(0,0,0,0.97);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(204,0,0,0.25);
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, rgba(139,0,0,0.25), rgba(0,0,0,0.5));
+            border: 1px solid rgba(178,34,34,0.4); border-radius: 6px;
+            color: #B22222; font-size: 13px; font-weight: 600; text-decoration: none;
+            flex-shrink: 0;
+        }
+        .back-btn:active { background: rgba(205,92,92,0.25); }
+        .progress-badge {
+            flex: 1; text-align: center;
+            font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .header-icon-btn {
+            background: none; border: none; padding: 6px 8px;
+            color: var(--text-dim); font-size: 16px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+        }
+
+        /* ── Loading ── */
+        .loading { padding: 60px 20px; text-align: center; }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(204,0,0,0.15); border-top-color: #CC0000;
+            border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+
+        /* ══════════════════════════════════════════
+           VIDEO PLAYER — Gesture Engine (same as video-viewer.html)
+        ══════════════════════════════════════════ */
+        .vp-wrapper {
+            position: relative; width: 100%; background: #000;
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .vp-inner {
+            position: relative; width: 100%; padding-top: 56.25%;
+            background: #000; overflow: hidden;
+        }
+        .vp-inner iframe, .vp-inner > div {
+            position: absolute; inset: 0; width: 100%; height: 100%; border: none;
+        }
+        .vp-placeholder {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #0a0000, #1a0000);
+            z-index: 2; transition: opacity 0.4s ease;
+        }
+        .vp-placeholder.hidden { opacity: 0; pointer-events: none; }
+        .vp-placeholder i { font-size: 64px; color: #CC0000; opacity: 0.5; }
+        .vp-brightness {
+            position: absolute; inset: 0; background: #000;
+            opacity: 0; pointer-events: none; z-index: 3; transition: opacity 0.1s;
+        }
+        .vp-gesture { position: absolute; inset: 0; z-index: 10; }
+        .vp-controls {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+            display: flex; align-items: center; justify-content: flex-end; padding: 0 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+            z-index: 11; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+        }
+        .vp-wrapper.controls-visible .vp-controls { opacity: 1; pointer-events: auto; }
+        .vp-fs-btn {
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .vp-hud {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            background: rgba(0,0,0,0.65); border-radius: 12px; padding: 12px 10px;
+            min-width: 44px; z-index: 15; opacity: 0; transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .vp-hud.visible { opacity: 1; }
+        .vp-hud i { font-size: 18px; color: #fff; }
+        .vp-hud-track {
+            width: 6px; height: 100px; background: rgba(255,255,255,0.2);
+            border-radius: 3px; overflow: hidden; position: relative;
+        }
+        .vp-hud-fill {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: #CC0000; border-radius: 3px; transition: height 0.08s linear;
+        }
+        #volHud { right: 16px; }
+        #briHud { left: 16px; }
+        .vp-tap-ring {
+            position: absolute; width: 60px; height: 60px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
+            transform: translate(-50%,-50%) scale(0); pointer-events: none; z-index: 12;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .vp-tap-ring.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+        .vp-tap-ring.hide { transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+
+        /* ── Media Controls: Prev / Play-Pause / Next ── */
+        .vp-media-controls {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex; align-items: center; gap: 20px;
+            z-index: 14;
+            opacity: 0; transition: opacity 0.28s ease;
+            pointer-events: none;
+        }
+        .vp-wrapper.controls-visible .vp-media-controls {
+            opacity: 1; pointer-events: auto;
+        }
+        .vp-mc-btn {
+            width: 46px; height: 46px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.62);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 50%; color: #fff; font-size: 17px;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.14s cubic-bezier(0.4,0,0.2,1), background 0.14s;
+            backdrop-filter: blur(6px);
+        }
+        .vp-mc-btn.center {
+            width: 56px; height: 56px; font-size: 21px;
+            background: rgba(204,0,0,0.62);
+            border-color: rgba(255,255,255,0.3);
+        }
+        .vp-mc-btn:active:not(.disabled) {
+            transform: scale(0.86);
+            background: rgba(204,0,0,0.88);
+        }
+        .vp-mc-btn.disabled { opacity: 0.28; pointer-events: none; }
+
+        /* ── PiP Button ── */
+        .vp-pip-btn {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px; color: rgba(255,255,255,0.85);
+            font-size: 14px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .vp-pip-btn.active { color: #ff4444; border-color: rgba(204,0,0,0.5); }
+        .vp-controls { gap: 8px; }
+        /* ── PiP Tab-Hidden Toast ── */
+        .vp-pip-toast {
+            position: absolute; bottom: 52px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.88); color: #fff;
+            font-size: 12px; font-weight: 700;
+            padding: 7px 16px; border-radius: 20px;
+            white-space: nowrap; z-index: 20;
+            opacity: 0; transition: opacity 0.3s ease;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; gap: 7px;
+        }
+        .vp-pip-toast.show { opacity: 1; pointer-events: auto; cursor: pointer; }
+        .vp-pip-toast i { color: #ff4444; }
+        /* ── PiP Fallback Mini Remote (iOS / Firefox) ── */
+        .vp-pip-fallback {
+            position: fixed; bottom: 86px; right: 12px; width: 240px;
+            background: linear-gradient(135deg,rgba(10,0,0,0.97),rgba(4,0,0,0.99));
+            border-radius: 14px; overflow: hidden; z-index: 99998;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(204,0,0,0.22);
+            display: none; flex-direction: column;
+            touch-action: none; user-select: none;
+        }
+        .vp-pip-fallback.active { display: flex; }
+        .vp-pip-fb-header {
+            height: 30px; background: rgba(204,0,0,0.82);
+            display: flex; align-items: center; gap: 7px;
+            padding: 0 10px; cursor: grab; flex-shrink: 0;
+        }
+        .vp-pip-fb-header:active { cursor: grabbing; }
+        .vp-pip-fb-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .vp-pip-fb-title {
+            flex: 1; font-size: 10.5px; font-weight: 800;
+            color: rgba(255,255,255,0.9);
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .vp-pip-fb-close {
+            background: none; border: none; color: rgba(255,255,255,0.75);
+            font-size: 13px; cursor: pointer; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .vp-pip-fb-body {
+            display: flex; align-items: center; justify-content: center;
+            padding: 12px 8px; gap: 8px;
+        }
+        .vp-pip-fb-btn {
+            width: 40px; height: 40px; border: none;
+            background: rgba(255,255,255,0.08); color: #fff; font-size: 16px;
+            cursor: pointer; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.14s, transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .vp-pip-fb-btn:active { transform: scale(0.87); background: rgba(204,0,0,0.5); }
+        .vp-pip-fb-btn.play { background: rgba(204,0,0,0.72); font-size: 19px; width: 48px; height: 48px; }
+        .vp-pip-fb-btn.disabled { opacity: 0.28; pointer-events: none; }
+        .vp-wrapper.portrait-fs {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            z-index: 9000; background: #000; display: flex; align-items: center;
+        }
+        .vp-wrapper.portrait-fs .vp-inner { padding-top: 0; height: 100dvh; }
+        .vp-wrapper.portrait-fs ~ * { display: none !important; }
+        .vp-wrapper.portrait-fs .vp-controls { opacity: 1; pointer-events: auto; }
+        :fullscreen .vp-wrapper, :-webkit-full-screen .vp-wrapper { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        :fullscreen .vp-inner, :-webkit-full-screen .vp-inner { padding-top: 0; height: 100vh; }
+        :fullscreen .vp-controls, :-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
+
+        /* ── Episode Info Panel ── */
+        .ep-info-panel {
+            padding: 14px 16px 4px;
+            background: linear-gradient(135deg, rgba(12,0,0,0.98), rgba(8,0,0,0.99));
+            border-bottom: 1px solid rgba(204,0,0,0.2);
+        }
+        .ep-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px;
+            background: rgba(204,0,0,0.15); border: 1px solid rgba(204,0,0,0.35);
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+            color: rgba(255,100,100,0.9); margin-bottom: 8px;
+        }
+        .ep-title {
+            font-size: 16px; font-weight: 900; color: #fff;
+            line-height: 1.35; margin-bottom: 10px;
+        }
+        .ep-meta-strip {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-bottom: 10px;
+        }
+        .ep-meta-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; font-size: 11.5px; font-weight: 600;
+            color: var(--text-dim);
+        }
+        .ep-meta-chip i { color: #CC0000; font-size: 10px; }
+        .ep-pdf-btn {
+            display: none; align-items: center; gap: 7px;
+            padding: 9px 14px; margin-bottom: 10px;
+            background: rgba(204,0,0,0.12); border: 1px solid rgba(204,0,0,0.35);
+            border-radius: 8px; color: rgba(255,160,160,0.9);
+            font-size: 13px; font-weight: 700; text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.2s;
+        }
+        .ep-pdf-btn.show { display: inline-flex; }
+        .ep-pdf-btn:active { background: rgba(204,0,0,0.25); }
+        .ep-nav-row {
+            display: flex; gap: 10px; padding-bottom: 14px;
+        }
+        .ep-nav-btn {
+            flex: 1; padding: 10px 12px;
+            background: linear-gradient(135deg, rgba(12,0,0,0.97), rgba(8,0,0,0.99));
+            border: 1.5px solid rgba(204,0,0,0.3); border-radius: 10px;
+            color: var(--text-secondary); font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ep-nav-btn:active:not(:disabled) { background: linear-gradient(135deg, #8B0000, #CC0000); color: #fff; }
+        .ep-nav-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+        /* ── Course Info ── */
+        .course-info { padding: 14px 16px 6px; }
+        .course-title { font-size: 15px; font-weight: 900; margin-bottom: 8px; color: var(--text-primary); }
+        .course-stats { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+        .course-desc { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 10px; }
+
+        /* ── Playlist ── */
+        .playlist-section { padding: 0 16px 16px; }
+        .playlist-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+        .playlist-item {
+            display: flex; gap: 10px; padding: 9px;
+            background: var(--bg-card); border: 1px solid var(--border-primary);
+            border-radius: 9px; margin-bottom: 8px; cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+            position: relative; align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .playlist-item.active {
+            background: linear-gradient(135deg, rgba(220,20,60,0.18), rgba(204,0,0,0.08));
+            border-color: rgba(220,20,60,0.55);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 3px 10px rgba(204,0,0,0.25);
+        }
+        .playlist-item.watched { opacity: 0.72; }
+        .playlist-item.watched::after {
+            content: '✓'; position: absolute; top: 6px; right: 7px;
+            width: 16px; height: 16px;
+            background: linear-gradient(135deg, #00bb00, #009900);
+            color: #000; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 900;
+        }
+        .playlist-item:active { transform: scale(0.98); }
+        .pl-num {
+            flex-shrink: 0; width: 26px; height: 26px;
+            background: rgba(204,0,0,0.18); border: 1px solid rgba(204,0,0,0.32);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; color: #CC0000;
+        }
+        .playlist-item.active .pl-num { background: #CC0000; color: #fff; }
+        .playlist-thumb {
+            flex-shrink: 0; width: 88px; height: 50px;
+            background: rgba(204,0,0,0.1); border-radius: 6px;
+            overflow: hidden; border: 1px solid rgba(204,0,0,0.25);
+        }
+        .playlist-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .playlist-info { flex: 1; min-width: 0; }
+        .playlist-info h4 {
+            font-size: 13px; font-weight: 700; margin-bottom: 3px;
+            color: var(--text-primary);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .playlist-item.active .playlist-info h4 { color: #fff; }
+        .pl-meta-row { display: flex; align-items: center; gap: 6px; }
+        .playlist-info p { font-size: 11px; color: var(--text-dim); }
+        .pl-pdf-dot {
+            width: 5px; height: 5px; background: #CC0000;
+            border-radius: 50%; flex-shrink: 0;
+        }
+
+        /* ── Related Courses ── */
+        .related-section {
+            padding: 14px 16px 20px;
+            border-top: 1px solid rgba(204,0,0,0.2);
+        }
+        .related-section h3 {
+            font-size: 15px; font-weight: 700; margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex; align-items: center; gap: 7px;
+        }
+        .related-section h3 i { color: #CC0000; }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .rel-card {
+            background: rgba(18,4,4,0.97); border: 1px solid rgba(139,0,0,0.28);
+            border-radius: 10px; overflow: hidden; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .rel-card:active { transform: scale(0.97); border-color: rgba(204,0,0,0.6); }
+        .rel-thumb { width: 100%; aspect-ratio: 16/9; overflow: hidden; position: relative; background: #0d0000; }
+        .rel-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .rel-diff {
+            position: absolute; top: 5px; right: 5px;
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 9px; font-weight: 800; text-transform: uppercase; color: #fff;
+        }
+        .rel-diff.beginner     { background: rgba(76,175,80,0.9); }
+        .rel-diff.intermediate { background: rgba(255,152,0,0.9); }
+        .rel-diff.advanced     { background: rgba(244,67,54,0.9); }
+        .rel-info { padding: 8px 9px 10px; }
+        .rel-title {
+            font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.9);
+            line-height: 1.3; display: -webkit-box;
+            -webkit-line-clamp: 2; line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 5px;
+        }
+        .rel-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 10.5px; color: var(--text-dim); font-weight: 600;
+        }
+        .rel-meta i { color: #CC0000; font-size: 9px; margin-right: 2px; }
+        .rel-lang {
+            padding: 1px 5px; background: rgba(204,0,0,0.15);
+            border: 1px solid rgba(204,0,0,0.28); border-radius: 3px;
+            font-size: 9.5px; font-weight: 800; color: rgba(255,255,255,0.6);
+        }
     </style>
 </head>
 <body>
     <header class="course-header">
-        <a href="course-listing.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Courses</a>
-        <button class="back-btn" id="shareBtn" style="background:none;border:none;padding:8px;"><i class="fas fa-share-alt"></i></button>
+        <a href="course-listing.html" class="back-btn"><i class="fas fa-arrow-left"></i> Courses</a>
+        <span class="progress-badge" id="progressBadge"></span>
+        <button class="header-icon-btn" id="shareBtn"><i class="fas fa-share-alt"></i></button>
     </header>
-    <div class="video-container" id="videoContainer"><div class="loading"><div class="loading-spinner"></div><p style="color:var(--text-dim);">Loading course...</p></div></div>
+
+    <!-- Video Player -->
+    <div class="vp-wrapper" id="vpWrapper">
+        <div class="vp-inner" id="videoPlayerContainer">
+            <div id="ytPlayer"></div>
+            <div class="vp-placeholder" id="vpPlaceholder">
+                <i class="fab fa-youtube"></i>
+            </div>
+            <div class="vp-brightness" id="vpBrightness"></div>
+        </div>
+        <div class="vp-gesture" id="vpGesture"></div>
+        <div class="vp-controls" id="vpControls">
+            <button class="vp-pip-btn" id="vpPipBtn" title="Picture in Picture">
+                <i class="fas fa-external-link-square-alt"></i>
+            </button>
+            <button class="vp-fs-btn" id="vpFsBtn" title="Fullscreen">
+                <i class="fas fa-expand" id="vpFsIcon"></i>
+            </button>
+        </div>
+        <div class="vp-hud" id="briHud" style="left:16px">
+            <i class="fas fa-sun"></i>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:50%"></div></div>
+        </div>
+        <div class="vp-hud" id="volHud" style="right:16px">
+            <i class="fas fa-volume-up" id="volIcon"></i>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="volFill" style="height:80%"></div></div>
+        </div>
+        <div class="vp-tap-ring" id="vpTapRing"></div>
+        <!-- Media Controls: Prev / Play-Pause / Next -->
+        <div class="vp-media-controls" id="vpMediaControls">
+            <button class="vp-mc-btn disabled" id="vpPrevBtn" title="Previous episode">
+                <i class="fas fa-step-backward"></i>
+            </button>
+            <button class="vp-mc-btn center" id="vpPlayPauseBtn" title="Play / Pause">
+                <i class="fas fa-pause" id="vpPlayPauseIcon"></i>
+            </button>
+            <button class="vp-mc-btn disabled" id="vpNextBtn" title="Next episode">
+                <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+        <!-- PiP tab-hidden toast -->
+        <div class="vp-pip-toast" id="vpPipToast">
+            <i class="fas fa-external-link-square-alt"></i> Tap for Picture-in-Picture
+        </div>
+    </div>
+
+    <!-- PiP Fallback Mini Remote (iOS / Firefox) -->
+    <div class="vp-pip-fallback" id="vpPipFallback">
+        <div class="vp-pip-fb-header" id="vpPipFbHeader">
+            <div class="vp-pip-fb-dot"></div>
+            <span class="vp-pip-fb-title" id="vpPipFbTitle">Now Playing</span>
+            <button class="vp-pip-fb-close" id="vpPipFbClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="vp-pip-fb-body">
+            <button class="vp-pip-fb-btn disabled" id="vpPipFbPrev"><i class="fas fa-step-backward"></i></button>
+            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-pause" id="vpPipFbPlayIcon"></i></button>
+            <button class="vp-pip-fb-btn disabled" id="vpPipFbNext"><i class="fas fa-step-forward"></i></button>
+        </div>
+    </div>
+
+    <!-- Episode Info Panel -->
+    <div class="ep-info-panel" id="epInfoPanel" style="display:none">
+        <div class="ep-tag" id="epTag"><i class="fas fa-play"></i> Episode 1</div>
+        <h2 class="ep-title" id="epTitle"></h2>
+        <div class="ep-meta-strip" id="epMeta"></div>
+        <a href="#" class="ep-pdf-btn" id="epPdfBtn" target="_blank" rel="noopener">
+            <i class="fas fa-file-pdf"></i> Download Lecture PDF
+        </a>
+        <div class="ep-nav-row">
+            <button class="ep-nav-btn" id="prevBtn" disabled>
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <button class="ep-nav-btn" id="nextBtn">
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Course Info -->
     <div class="course-info" id="courseInfo"></div>
+
+    <!-- Playlist -->
     <div class="playlist-section" id="playlistSection"></div>
+
+    <!-- Related Courses -->
+    <div class="related-section" id="relatedSection" style="display:none">
+        <h3><i class="fas fa-graduation-cap"></i> More From This Category</h3>
+        <div class="related-grid" id="relatedGrid"></div>
+    </div>
     
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" role="navigation" aria-label="Main mobile navigation">
@@ -78,5 +538,459 @@
     <script src="../../shared/mobile-navbar.js"></script>
     <script src="course-viewer.js"></script>
     <script src="../../pwa-init.js"></script>
+
+    <!-- ══════════════════════════════════════════
+         GESTURE ENGINE — identical to video-viewer
+         ══════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        /* single state string */
+        let state        = 'normal';
+        let ytPlayer     = null;
+        let playerReady  = false;
+        let isPlaying    = false;
+        let currentVol   = 80;
+        let brightness   = 0;
+        let controlsTimer = null;
+
+        const wrapper    = document.getElementById('vpWrapper');
+        const inner      = document.getElementById('videoPlayerContainer');
+        const gesture    = document.getElementById('vpGesture');
+        const placeholder= document.getElementById('vpPlaceholder');
+        const briOverlay = document.getElementById('vpBrightness');
+        const volFill    = document.getElementById('volFill');
+        const briFill    = document.getElementById('briFill');
+        const volIcon    = document.getElementById('volIcon');
+        const volHud     = document.getElementById('volHud');
+        const briHud     = document.getElementById('briHud');
+        const tapRing    = document.getElementById('vpTapRing');
+        const fsBtn      = document.getElementById('vpFsBtn');
+        const fsIcon     = document.getElementById('vpFsIcon');
+        const mcPrev     = document.getElementById('vpPrevBtn');
+        const mcPlay     = document.getElementById('vpPlayPauseBtn');
+        const mcNext     = document.getElementById('vpNextBtn');
+        const mcPlayIcon = document.getElementById('vpPlayPauseIcon');
+
+        /* ── YT Player bridge ── */
+        window._initYTPlayer = function(videoId) {
+            if (ytPlayer) {
+                ytPlayer.loadVideoById(videoId);
+                placeholder.classList.remove('hidden');
+                placeholder.style.opacity = '0';
+                setTimeout(() => placeholder.classList.add('hidden'), 400);
+                return;
+            }
+            ytPlayer = new YT.Player('ytPlayer', {
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1, rel: 0, modestbranding: 1,
+                    playsinline: 1, controls: 1, fs: 0,
+                    iv_load_policy: 3, enablejsapi: 1
+                },
+                events: {
+                    onReady: function(e) {
+                        playerReady = true;
+                        placeholder.classList.add('hidden');
+                        e.target.setVolume(currentVol);
+                        syncVolHud();
+                    },
+                    onStateChange: function(e) {
+                        isPlaying = (e.data === YT.PlayerState.PLAYING);
+                        if (mcPlayIcon) {
+                            mcPlayIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+                        }
+                        if (typeof window._onPipStateChange === 'function') window._onPipStateChange();
+                        /* Notify course-viewer.js when episode ends */
+                        if (e.data === YT.PlayerState.ENDED) {
+                            if (typeof window._onEpEnded === 'function') window._onEpEnded();
+                        }
+                    }
+                }
+            });
+        };
+
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('\u2705 YT IFrame API ready (course-viewer)');
+        };
+
+        /* ── Helpers ── */
+        function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
+        function syncVolHud(){
+            volFill.style.height = currentVol+'%';
+            volIcon.className = currentVol===0?'fas fa-volume-mute':currentVol<50?'fas fa-volume-down':'fas fa-volume-up';
+        }
+        function showHud(el,ms){
+            el.classList.add('visible'); clearTimeout(el._hideT);
+            el._hideT = setTimeout(()=>el.classList.remove('visible'), ms||1400);
+        }
+        function showControls(){
+            wrapper.classList.add('controls-visible'); clearTimeout(controlsTimer);
+            controlsTimer = setTimeout(()=>wrapper.classList.remove('controls-visible'), 2800);
+        }
+        function playPause(){
+            if(!playerReady||!ytPlayer) return;
+            if(isPlaying) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
+        }
+        function showTapRing(x,y){
+            tapRing.style.left=x+'px'; tapRing.style.top=y+'px';
+            tapRing.className='vp-tap-ring show';
+            setTimeout(()=>{tapRing.className='vp-tap-ring hide';},200);
+            setTimeout(()=>{tapRing.className='vp-tap-ring';},460);
+        }
+        function updateFsIcon(){
+            fsIcon.className=(state!=='normal')?'fas fa-compress':'fas fa-expand';
+        }
+
+        /* ── Media Controls — expose API + wire buttons ── */
+        window._updateNavBtns = function(prevDisabled, nextDisabled) {
+            if (mcPrev) mcPrev.classList.toggle('disabled', !!prevDisabled);
+            if (mcNext) mcNext.classList.toggle('disabled', !!nextDisabled);
+        };
+        window._getPlayerState = function() { return state; };
+
+        if (mcPlay) mcPlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            playPause();
+            showControls();
+        });
+        if (mcPrev) mcPrev.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof window._prevVideo === 'function') window._prevVideo();
+        });
+        if (mcNext) mcNext.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof window._nextVideo === 'function') window._nextVideo();
+        });
+
+        /* ── PiP ENGINE — Document PiP + iOS / Firefox fallback mini-remote ── */
+        (function initPiP() {
+            const SUPPORTS_DOC_PIP = ('documentPictureInPicture' in window);
+            const pipBtn      = document.getElementById('vpPipBtn');
+            const pipToast    = document.getElementById('vpPipToast');
+            const pipFb       = document.getElementById('vpPipFallback');
+            const pipFbHead   = document.getElementById('vpPipFbHeader');
+            const pipFbTitle  = document.getElementById('vpPipFbTitle');
+            const pipFbClose  = document.getElementById('vpPipFbClose');
+            const pipFbPrev   = document.getElementById('vpPipFbPrev');
+            const pipFbPlay   = document.getElementById('vpPipFbPlay');
+            const pipFbNext   = document.getElementById('vpPipFbNext');
+            const pipFbPlayIc = document.getElementById('vpPipFbPlayIcon');
+            let pipWin = null, pipPlayer = null, fbOpen = false, toastTimer = null;
+            let pipCurrentVideoId = null; // track which video is loaded in PiP player
+
+            window._setPipMeta = function(title, thumbUrl) {
+                if (!('mediaSession' in navigator)) return;
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title:   title || document.title,
+                    artist:  'A3KM Studio — Md Akhinoor Islam',
+                    artwork: thumbUrl ? [{ src: thumbUrl, sizes: '512x512', type: 'image/jpeg' }] : []
+                });
+                navigator.mediaSession.setActionHandler('play',          () => { if (ytPlayer && playerReady) ytPlayer.playVideo(); });
+                navigator.mediaSession.setActionHandler('pause',         () => { if (ytPlayer && playerReady) ytPlayer.pauseVideo(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { if (typeof window._prevVideo === 'function') window._prevVideo(); });
+                navigator.mediaSession.setActionHandler('nexttrack',     () => { if (typeof window._nextVideo === 'function') window._nextVideo(); });
+                if (pipFbTitle) pipFbTitle.textContent = title || 'Now Playing';
+            };
+            window._onPipStateChange = function() {
+                if (pipFbPlayIc) pipFbPlayIc.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+            };
+            function buildPipContent(pw, videoId, startTime) {
+                const d = pw.document;
+                const st = d.createElement('style');
+                st.textContent =
+                    '*{margin:0;padding:0;box-sizing:border-box}' +
+                    'body{background:#000;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,sans-serif}' +
+                    '#pip-wrap{flex:1;position:relative;min-height:0}' +
+                    '#pip-wrap iframe,#pip-wrap>div{width:100%!important;height:100%!important;border:0;position:absolute;inset:0}' +
+                    '#pip-ctrl{background:linear-gradient(135deg,rgba(10,0,0,.97),rgba(4,0,0,.99));border-top:1px solid rgba(204,0,0,.22);' +
+                    'display:flex;align-items:center;gap:2px;padding:0 6px;flex-shrink:0;height:42px}' +
+                    '.pb{width:34px;height:34px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;' +
+                    'border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .14s;-webkit-tap-highlight-color:transparent}' +
+                    '.pb:active{background:rgba(204,0,0,.5)}' +
+                    '.pb.pl{font-size:19px;color:#ff4444;width:40px;height:40px}' +
+                    '.pb.cl{color:#ff6666;margin-left:auto}' +
+                    '.pb.off{opacity:.25;pointer-events:none}' +
+                    '.pt{flex:1;font-size:10px;color:rgba(255,255,255,.5);font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 4px;min-width:0}' +
+                    '.px{}@media(max-width:199px){.px{display:none!important}}@media(max-width:149px){.pt{display:none}#pip-ctrl{justify-content:center}}';
+                d.head.appendChild(st);
+                const fa = d.createElement('link'); fa.rel='stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                d.head.appendChild(fa);
+                const wrap = d.createElement('div'); wrap.id='pip-wrap';
+                const ytDiv = d.createElement('div'); ytDiv.id='ytPipPlayer';
+                wrap.appendChild(ytDiv); d.body.appendChild(wrap);
+                const ctrl = d.createElement('div'); ctrl.id='pip-ctrl';
+                ctrl.innerHTML =
+                    '<button class="pb px" id="pp-pv"><i class="fas fa-step-backward"></i></button>' +
+                    '<button class="pb pl" id="pp-pp"><i class="fas fa-pause" id="pp-ic"></i></button>' +
+                    '<button class="pb px" id="pp-nx"><i class="fas fa-step-forward"></i></button>' +
+                    '<span class="pt px" id="pp-tt"></span>' +
+                    '<button class="pb cl" id="pp-cl"><i class="fas fa-times"></i></button>';
+                d.body.appendChild(ctrl);
+                pw.addEventListener('resize', () => { ctrl.style.height = pw.innerWidth < 180 ? '34px' : '42px'; });
+                const ttlEl = d.getElementById('pp-tt');
+                if (ttlEl && pipFbTitle) ttlEl.textContent = pipFbTitle.textContent;
+                const ppPv=d.getElementById('pp-pv'), ppNx=d.getElementById('pp-nx');
+                const ppPp=d.getElementById('pp-pp'), ppIc=d.getElementById('pp-ic');
+                if (mcPrev && mcPrev.classList.contains('disabled')) ppPv.classList.add('off');
+                if (mcNext && mcNext.classList.contains('disabled')) ppNx.classList.add('off');
+                pw._syncPipNav = function(po,no){ ppPv.classList.toggle('off',!!po); ppNx.classList.toggle('off',!!no); };
+                d.getElementById('pp-cl').addEventListener('click', ()=>pw.close());
+                ppPv.addEventListener('click', ()=>{ if(typeof window._prevVideo==='function') window._prevVideo(); });
+                ppNx.addEventListener('click', ()=>{ if(typeof window._nextVideo==='function') window._nextVideo(); });
+                ppPp.addEventListener('click', ()=>{
+                    if(!pipPlayer) return;
+                    const s=pipPlayer.getPlayerState?pipPlayer.getPlayerState():-1;
+                    if(s===1) pipPlayer.pauseVideo(); else pipPlayer.playVideo();
+                });
+                const ys=d.createElement('script'); ys.src='https://www.youtube.com/iframe_api';
+                d.body.appendChild(ys);
+                pw.onYouTubeIframeAPIReady = function(){
+                    pipPlayer = new pw.YT.Player('ytPipPlayer',{
+                        videoId: videoId,
+                        playerVars:{autoplay:1,rel:0,modestbranding:1,playsinline:1,controls:0,fs:0,iv_load_policy:3,enablejsapi:1,start:Math.max(0,Math.floor(startTime)-1)},
+                        events:{onStateChange:function(ev){const pl=(ev.data===pw.YT.PlayerState.PLAYING); if(ppIc)ppIc.className=pl?'fas fa-pause':'fas fa-play';}}
+                    });
+                };
+            }
+            async function openDocPiP(){
+                if(!playerReady||!ytPlayer) return;
+                const vd=ytPlayer.getVideoData?ytPlayer.getVideoData():{};
+                const vidId=vd.video_id||'', stT=ytPlayer.getCurrentTime?ytPlayer.getCurrentTime():0;
+                if(!vidId){openFbOverlay();return;}
+                try{
+                    pipWin=await window.documentPictureInPicture.requestWindow({width:300,height:220,disallowReturnToOpener:false});
+                }catch(err){console.warn('[PiP] failed:',err.message);openFbOverlay();return;}
+                ytPlayer.pauseVideo();
+                pipCurrentVideoId = vidId;
+                buildPipContent(pipWin,vidId,stT);
+                setPipActive(true);
+                pipWin.addEventListener('pagehide',()=>{
+                    // Only restore timestamp if PiP is still on the same video
+                    const t2=(pipPlayer&&pipPlayer.getCurrentTime&&pipCurrentVideoId===vidId)
+                        ?pipPlayer.getCurrentTime():null;
+                    if(pipPlayer&&pipPlayer.destroy) pipPlayer.destroy();
+                    pipPlayer=null; pipWin=null; pipCurrentVideoId=null; setPipActive(false);
+                    if(ytPlayer&&playerReady){
+                        if(t2!==null) ytPlayer.seekTo(t2,true);
+                        ytPlayer.playVideo();
+                    }
+                });
+            }
+            /* ── Reload PiP player when episode changes while PiP is open (course only) ── */
+            window._pipReloadVideo = function(videoId, title) {
+                if (!pipWin || !pipPlayer) return;
+                pipCurrentVideoId = videoId;
+                if (pipPlayer.loadVideoById) pipPlayer.loadVideoById(videoId);
+                const ttlEl = pipWin.document.getElementById('pp-tt');
+                if (ttlEl && title) ttlEl.textContent = title;
+                if (pipFbTitle) pipFbTitle.textContent = title || 'Now Playing';
+            };
+            function openFbOverlay(){
+                if(fbOpen||!pipFb) return;
+                fbOpen=true; pipFb.classList.add('active'); setPipActive(true);
+                syncFbIcon(); syncFbNav();
+                if(!pipFb._drag){makeDraggable();pipFb._drag=true;}
+            }
+            function closeFbOverlay(){
+                if(!fbOpen||!pipFb) return;
+                fbOpen=false; pipFb.classList.remove('active'); setPipActive(false);
+            }
+            function syncFbIcon(){ if(pipFbPlayIc) pipFbPlayIc.className=isPlaying?'fas fa-pause':'fas fa-play'; }
+            function syncFbNav(){
+                if(pipFbPrev) pipFbPrev.classList.toggle('disabled', typeof window._prevVideo!=='function');
+                if(pipFbNext) pipFbNext.classList.toggle('disabled', typeof window._nextVideo!=='function');
+            }
+            window._openPiP=function(){
+                if(SUPPORTS_DOC_PIP){pipWin?pipWin.close():openDocPiP();}else{fbOpen?closeFbOverlay():openFbOverlay();}
+            };
+            function setPipActive(on){if(pipBtn)pipBtn.classList.toggle('active',!!on);}
+            const _origNav=window._updateNavBtns;
+            window._updateNavBtns=function(po,no){
+                if(_origNav)_origNav(po,no);
+                if(pipFbPrev)pipFbPrev.classList.toggle('disabled',!!po);
+                if(pipFbNext)pipFbNext.classList.toggle('disabled',!!no);
+                if(pipWin&&pipWin._syncPipNav)pipWin._syncPipNav(po,no);
+            };
+            if(pipBtn) pipBtn.addEventListener('click',function(e){e.stopPropagation();window._openPiP();});
+            if(pipFbClose) pipFbClose.addEventListener('click',closeFbOverlay);
+            if(pipFbPrev) pipFbPrev.addEventListener('click',function(e){e.stopPropagation();if(typeof window._prevVideo==='function')window._prevVideo();});
+            if(pipFbNext) pipFbNext.addEventListener('click',function(e){e.stopPropagation();if(typeof window._nextVideo==='function')window._nextVideo();});
+            if(pipFbPlay) pipFbPlay.addEventListener('click',function(e){e.stopPropagation();playPause();syncFbIcon();});
+            document.addEventListener('visibilitychange',function(){
+                if(!pipToast) return;
+                if(document.hidden&&isPlaying&&!pipWin&&!fbOpen){
+                    pipToast.classList.add('show'); clearTimeout(toastTimer);
+                    toastTimer=setTimeout(()=>pipToast.classList.remove('show'),5000);
+                }else if(!document.hidden){clearTimeout(toastTimer);pipToast.classList.remove('show');}
+            });
+            if(pipToast) pipToast.addEventListener('click',function(){pipToast.classList.remove('show');window._openPiP();});
+            function makeDraggable(){
+                let ox=0,oy=0,sx=0,sy=0,drag=false;
+                function onStart(e){const t=e.touches?e.touches[0]:e;const r=pipFb.getBoundingClientRect();
+                    ox=r.left;oy=r.top;sx=t.clientX;sy=t.clientY;drag=true;
+                    pipFb.style.transition='none';pipFb.style.bottom='auto';pipFb.style.right='auto';
+                    pipFb.style.left=ox+'px';pipFb.style.top=oy+'px';}
+                function onMove(e){if(!drag)return;const t=e.touches?e.touches[0]:e;
+                    const nx=ox+(t.clientX-sx),ny=oy+(t.clientY-sy);
+                    pipFb.style.left=clamp(nx,0,window.innerWidth-pipFb.offsetWidth)+'px';
+                    pipFb.style.top=clamp(ny,0,window.innerHeight-pipFb.offsetHeight)+'px';}
+                function onEnd(){drag=false;}
+                pipFbHead.addEventListener('touchstart',onStart,{passive:true});
+                document.addEventListener('touchmove',onMove,{passive:true});
+                document.addEventListener('touchend',onEnd);
+                pipFbHead.addEventListener('mousedown',onStart);
+                document.addEventListener('mousemove',onMove);
+                document.addEventListener('mouseup',onEnd);
+            }
+            console.log('[PiP] engine ready. DocPiP supported:',SUPPORTS_DOC_PIP);
+        })();
+
+        /* ── Portrait FS ── */
+        function enterPortraitFS(){
+            if(state!=='normal') return;
+            state='portraitFS';
+            wrapper.classList.add('portrait-fs');
+            document.body.style.overflow='hidden';
+            updateFsIcon(); showControls();
+        }
+        function exitPortraitFS(){
+            if(state!=='portraitFS') return;
+            state='normal';
+            wrapper.classList.remove('portrait-fs');
+            document.body.style.overflow='';
+            inner.style.transform='';
+            updateFsIcon();
+        }
+
+        /* ── Landscape FS ── */
+        function enterLandscapeFS(){
+            if(state==='portraitFS'){
+                wrapper.classList.remove('portrait-fs');
+                document.body.style.overflow='';
+                inner.style.transform='';
+            }
+            state='landscapeFS';
+            const el=document.documentElement;
+            const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+            if(req) Promise.resolve(req.call(el)).catch(()=>{});
+            if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{});
+            updateFsIcon(); showControls();
+        }
+        function exitLandscapeFS(){
+            if(state!=='landscapeFS') return;
+            state='normal';
+            if(document.fullscreenElement||document.webkitFullscreenElement){
+                const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
+                if(exit) Promise.resolve(exit.call(document)).catch(()=>{});
+            }
+            try{screen.orientation.unlock();}catch(e){}
+            updateFsIcon();
+        }
+
+        /* ── FS Button: normal/portraitFS → landscapeFS ; landscapeFS → normal ── */
+        fsBtn.addEventListener('click',function(e){
+            e.stopPropagation();
+            if(state==='landscapeFS') exitLandscapeFS();
+            else enterLandscapeFS();
+        });
+
+        function onSystemFSChange(){
+            const inFS=!!(document.fullscreenElement||document.webkitFullscreenElement);
+            if(!inFS&&state==='landscapeFS'){
+                state='normal';
+                try{screen.orientation.unlock();}catch(e){}
+                updateFsIcon();
+            }
+        }
+        document.addEventListener('fullscreenchange',onSystemFSChange);
+        document.addEventListener('webkitfullscreenchange',onSystemFSChange);
+
+        /* ── Gesture Engine ── */
+        const LOCK_THRESH=12;
+        let touchStartX,touchStartY,touchStartTime;
+        let gMode=null,gLocked=false,tapOK=true,lastTapTs=0,pendingSingleTap=null;
+
+        gesture.addEventListener('touchstart',function(e){
+            const t=e.touches[0];
+            touchStartX=t.clientX; touchStartY=t.clientY; touchStartTime=Date.now();
+            gMode=null; gLocked=false; tapOK=true;
+            inner.style.transition=''; inner.style.transform='';
+            showControls();
+        },{passive:true});
+
+        gesture.addEventListener('touchmove',function(e){
+            const t=e.touches[0];
+            const dx=t.clientX-touchStartX, dy=t.clientY-touchStartY;
+            const adx=Math.abs(dx), ady=Math.abs(dy);
+            if(adx>8||ady>8) tapOK=false;
+            if(!gLocked&&(adx>LOCK_THRESH||ady>LOCK_THRESH)){
+                gLocked=true;
+                if(ady>adx){
+                    if(state==='normal'&&dy>0) gMode='swipe-enter';
+                    else if(state==='portraitFS'&&dy<0) gMode='swipe-exit';
+                    else{
+                        const mid=wrapper.getBoundingClientRect().left+wrapper.getBoundingClientRect().width/2;
+                        gMode=t.clientX>=mid?'vol':'bri';
+                    }
+                }
+            }
+            if(!gMode) return;
+            if(gMode==='swipe-enter'){
+                const prog=clamp(dy/130,0,1);
+                inner.style.transition='none';
+                inner.style.transform=`translateY(${prog*18}px) scale(${1-prog*0.03})`;
+                if(prog>=1){inner.style.transform=''; enterPortraitFS(); gMode=null;}
+            } else if(gMode==='swipe-exit'){
+                const prog=clamp((-dy)/130,0,1);
+                inner.style.transition='none';
+                inner.style.transform=`translateY(${-prog*18}px) scale(${1-prog*0.03})`;
+                if(prog>=1){inner.style.transform=''; exitPortraitFS(); gMode=null;}
+            } else if(gMode==='vol'){
+                const h=wrapper.getBoundingClientRect().height||200;
+                const delta=(touchStartY-t.clientY)/(h*0.75)*100;
+                currentVol=clamp(currentVol+delta,0,100); touchStartY=t.clientY;
+                if(ytPlayer&&playerReady) ytPlayer.setVolume(Math.round(currentVol));
+                syncVolHud(); showHud(volHud,1500);
+            } else if(gMode==='bri'){
+                const h=wrapper.getBoundingClientRect().height||200;
+                const delta=(touchStartY-t.clientY)/(h*0.75)*0.70;
+                brightness=clamp(brightness+delta,0,0.70); touchStartY=t.clientY;
+                briOverlay.style.opacity=brightness;
+                briFill.style.height=((1-brightness/0.70)*100)+'%';
+                showHud(briHud,1500);
+            }
+        },{passive:true});
+
+        gesture.addEventListener('touchend',function(e){
+            if(gMode==='swipe-enter'||gMode==='swipe-exit'){
+                inner.style.transition='transform 0.22s cubic-bezier(0.4,0,0.2,1)';
+                inner.style.transform='';
+                setTimeout(()=>{inner.style.transition='';},230);
+            }
+            gMode=null;
+            if(!tapOK||(Date.now()-touchStartTime)>360) return;
+            const now=Date.now(), sinceLast=now-lastTapTs;
+            const t=e.changedTouches[0];
+            const rx=t.clientX-wrapper.getBoundingClientRect().left;
+            const ry=t.clientY-wrapper.getBoundingClientRect().top;
+            if(sinceLast<300){
+                lastTapTs=0; clearTimeout(pendingSingleTap); pendingSingleTap=null;
+                if(state==='landscapeFS') exitLandscapeFS(); else enterLandscapeFS();
+                showTapRing(rx,ry);
+            } else {
+                lastTapTs=now;
+                pendingSingleTap=setTimeout(()=>{
+                    pendingSingleTap=null; playPause(); showTapRing(rx,ry);
+                },240);
+            }
+        },{passive:true});
+
+        console.log('\u2705 Course viewer gesture engine ready');
+    })();
+    </script>
 </body>
 </html>

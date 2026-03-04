@@ -21,7 +21,7 @@
 
     async function loadBooks() {
         try {
-            const res  = await fetch('../../../Content Studio/books-pdfs/books.json');
+            const res  = await fetch('../../../Content%20Studio/books-pdfs/books.json');
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             allBooks   = data.books || [];
@@ -55,9 +55,10 @@
             ? new Date(book.date).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
             : '—';
 
-        /* cover */
+        /* cover with format badge */
+        const formatBadge = `<div class="cover-format-badge">${book.format || 'PDF'}</div>`;
         const coverHTML = book.cover
-            ? `<img src="${book.cover}" alt="${esc(book.title)}" onerror="this.parentElement.innerHTML='<div class=cover-placeholder><i class=fas fa-book></i></div>'">`
+            ? `<img src="${book.cover}" alt="${esc(book.title)}" onerror="this.parentElement.innerHTML='<div class=cover-placeholder><i class=fas fa-book></i></div>'" onload="this.parentElement.classList.add('loaded')">`
             : `<div class="cover-placeholder"><i class="fas fa-book"></i></div>`;
 
         /* summary */
@@ -82,7 +83,12 @@
         document.getElementById('mainContent').innerHTML = `
             <!-- COVER HERO -->
             <div class="cover-hero">
-                <div class="cover-img-wrap">${coverHTML}</div>
+                <div class="cover-img-wrap">
+                    ${coverHTML}
+                    ${formatBadge}
+                </div>
+                
+                <!-- Stats centered below cover -->
                 <div class="cover-stats">
                     <div class="stat-chip">
                         <i class="fas fa-file-alt"></i>
@@ -96,20 +102,6 @@
                         <div class="stat-chip-info">
                             <span class="stat-label">Size</span>
                             <span class="stat-value">${book.size || '—'}</span>
-                        </div>
-                    </div>
-                    <div class="stat-chip">
-                        <i class="fas fa-language"></i>
-                        <div class="stat-chip-info">
-                            <span class="stat-label">Language</span>
-                            <span class="stat-value">${langLabel}</span>
-                        </div>
-                    </div>
-                    <div class="stat-chip">
-                        <i class="fas fa-file-pdf"></i>
-                        <div class="stat-chip-info">
-                            <span class="stat-label">Format</span>
-                            <span class="stat-value">${book.format || 'PDF'}</span>
                         </div>
                     </div>
                 </div>
@@ -144,7 +136,7 @@
                 <!-- ACTION STRIP -->
                 <div class="action-strip">
                     <a class="btn-read" href="book-reader.html?id=${bookId}">
-                        <i class="fas fa-book-reader"></i> Read PDF
+                        <i class="fas fa-book-reader"></i> Read Book
                     </a>
                     <a class="btn-3d" href="book-reader.html?id=${bookId}&bookmode=true">
                         <i class="fas fa-book-open"></i> Book Mode
@@ -174,7 +166,10 @@
                     </div>
                     <div class="download-body" id="downloadBody">
                         <div class="download-body-inner">
-                            <p>বইটি ডাউনলোড করতে লেখকের সাথে যোগাযোগ করুন। Reading is free — download requires permission.</p>
+                            <div class="download-note">
+                                <i class="fas fa-info-circle"></i>
+                                <p>বইটি ডাউনলোড করতে লেখকের সাথে যোগাযোগ করুন। Reading is free — download requires permission.</p>
+                            </div>
                             <a href="../../../Contact/contact.html" class="contact-btn">
                                 <i class="fas fa-envelope"></i> Contact Us
                             </a>
@@ -189,9 +184,18 @@
                     <div class="related-grid">${relatedHTML}</div>
                 </div>` : ''}
 
-                <div style="height: 16px;"></div>
+                <div style="height: 20px;"></div>
             </div>
         `;
+
+        // Trigger cover animation after render
+        requestAnimationFrame(() => {
+            const coverWrap = document.querySelector('.cover-img-wrap');
+            if (coverWrap && !coverWrap.querySelector('img')) {
+                // No image, so manually trigger loaded class
+                coverWrap.classList.add('loaded');
+            }
+        });
     }
 
     // ── Toggle Summary ────────────────────────────────────────────────────────

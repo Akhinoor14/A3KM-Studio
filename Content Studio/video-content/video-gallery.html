@@ -704,7 +704,25 @@
 
     const videoStatsCache = new Map();
     const CACHE_DURATION  = typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.CACHE_DURATION : 3600000;
-    const useYouTubeAPI   = typeof validateYouTubeConfig === 'function' ? validateYouTubeConfig() : false;
+
+    // API key: prefer localStorage (set by Only-boss Command Center) ─────────
+    let YT_API_KEY = localStorage.getItem('youtube_api_key') ||
+                     (typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.API_KEY : '');
+    const getApiKey = () => localStorage.getItem('youtube_api_key') ||
+                            (typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.API_KEY : '');
+
+    // Listen for key changes from Only-boss (cross-tab / same-tab save)
+    window.addEventListener('storage', async e => {
+      if (e.key === 'youtube_api_key' && e.newValue) {
+        YT_API_KEY = e.newValue;
+        // Invalidate cache so next fetch gets fresh data
+        videoStatsCache.clear();
+        try { localStorage.removeItem('ytStatsCache_gallery'); } catch(e){}
+        await fetchYouTubeStats();
+        renderVideos();
+        console.log('✅ Video Gallery: YouTube API key updated, stats refreshed');
+      }
+    });
 
     // ── Load Data ───────────────────────────────────────
     async function loadVideos() {
@@ -737,8 +755,8 @@
         // Load cached YouTube stats
         loadStatsCache();
 
-        // Fetch fresh YouTube stats
-        if (useYouTubeAPI) await fetchYouTubeStats();
+        // Fetch fresh YouTube stats (if API key available)
+        await fetchYouTubeStats();
 
         // First render
         renderVideos();
@@ -893,32 +911,36 @@
 
     // ── YouTube Stats ────────────────────────────────────
     async function fetchYouTubeStats() {
-      if (!useYouTubeAPI) return;
+      const apiKey = getApiKey();
+      if (!apiKey) return;   // No key available — skip silently
       try {
-        const ids     = [...new Set(allVideos.map(v => v.videoId))];
+        const ids     = [...new Set(allVideos.map(v => v.videoId).filter(Boolean))];
         const now     = Date.now();
         const missing = ids.filter(id => { const c = videoStatsCache.get(id); return !c || (now - c.timestamp) > CACHE_DURATION; });
         if (!missing.length) return;
 
-        const bsz = YOUTUBE_CONFIG.MAX_IDS_PER_REQUEST || 50;
-        for (let i = 0; i < missing.length; i += bsz) {
-          const batch = missing.slice(i, i + bsz).join(',');
-          const parts = (YOUTUBE_CONFIG.PARTS||['contentDetails','statistics']).join(',');
-          const url   = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?part=${parts}&id=${batch}&key=${YOUTUBE_CONFIG.API_KEY}`;
+        const endpoint = (typeof YOUTUBE_CONFIG !== 'undefined' && YOUTUBE_CONFIG.VIDEOS_ENDPOINT)
+                          ? YOUTUBE_CONFIG.VIDEOS_ENDPOINT
+                          : 'https://www.googleapis.com/youtube/v3/videos';
+
+        for (let i = 0; i < missing.length; i += 50) {
+          const batch = missing.slice(i, i + 50).join(',');
+          const url   = `${endpoint}?part=contentDetails,statistics&id=${batch}&key=${apiKey}`;
           const res   = await fetch(url);
           const json  = await res.json();
-          if (json.error) { console.error('YouTube API error:', json.error.message); break; }
+          if (json.error) { console.warn('YouTube API error:', json.error.message); break; }
           (json.items||[]).forEach(item => {
             videoStatsCache.set(item.id, {
-              duration:  parseDuration(item.contentDetails.duration),
-              views:     fmtViews(item.statistics.viewCount),
+              duration:  parseDuration(item.contentDetails?.duration),
+              views:     fmtViews(item.statistics?.viewCount),
               timestamp: now
             });
           });
         }
 
-        // Persist
+        // Persist to localStorage cache
         try { localStorage.setItem('ytStatsCache_gallery', JSON.stringify([...videoStatsCache.entries()])); } catch(e){}
+        console.log(`✅ Video Gallery: fetched stats for ${missing.length} videos`);
       } catch (err) { console.warn('YouTube API fetch failed:', err); }
     }
 
@@ -967,6 +989,17 @@
 
     // ── Init ─────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', loadVideos);
+
+    // Auto-refresh stats every 30 minutes (keeps durations/views fresh)
+    setInterval(async () => {
+      if (allVideos.length && getApiKey()) {
+        videoStatsCache.clear();
+        try { localStorage.removeItem('ytStatsCache_gallery'); } catch(e){}
+        await fetchYouTubeStats();
+        renderVideos();
+        console.log('🔄 Video Gallery: auto-refreshed YouTube stats');
+      }
+    }, 1800000); // 30 minutes
   </script>
 
   <script src="../../Optimization/navbar-autohide.js"></script>

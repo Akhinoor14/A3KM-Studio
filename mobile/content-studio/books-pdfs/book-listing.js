@@ -27,7 +27,7 @@
             showLoadingState();
             
             // ✅ Load directly from desktop JSON file
-            const response = await fetch('../../../Content Studio/books-pdfs/books.json');
+            const response = await fetch('../../../Content%20Studio/books-pdfs/books.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();

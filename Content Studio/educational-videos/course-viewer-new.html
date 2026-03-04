@@ -1,1990 +1,797 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="theme-color" content="#0a0000">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Immediate Mobile Detection -->
-    <script>
-        (function() {
-            function isMobile() {
-                const ua = navigator.userAgent || '';
-                return /android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) || 
-                       (navigator.userAgentData && navigator.userAgentData.mobile);
-            }
-            if (isMobile()) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const id = urlParams.get('id');
-                window.location.replace('../../mobile/content-studio/educational-courses/course-viewer.html' + (id ? '?id=' + id : ''));
-            }
-        })();
-    </script>
-
-    
-
-    
-    <title>Course Episodes Viewer - A3KM Studio</title>
-    <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
-    <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-red: #CC0000;
-            --dark-red: #8B0000;
-            --light-red: #FF1744;
-            --bg-dark: #000000;
-            --bg-secondary: #0f0f0f;
-            --bg-card: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.85);
-            --border-color: rgba(204, 0, 0, 0.3);
-            --border-primary: rgba(204, 0, 0, 0.3);
-            --success-green: #00CC00;
-            --hover-bg: #333333;
-            --accent-white: rgba(255, 255, 255, 0.95);
-            --grid-color: rgba(255, 255, 255, 0.08);
-            --highlight-white: rgba(255, 255, 255, 0.15);
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #000000;
-            color: var(--text-primary);
-            line-height: 1.6;
-            position: relative;
-            padding-top: 85px;
-        }
-
-        /* Premium Engineering Grid Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 40px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 40px),
-                repeating-linear-gradient(45deg, transparent 0 20px, rgba(204, 0, 0, 0.02) 20px 40px);
-            pointer-events: none;
-            z-index: 0;
-            animation: gridPulse 8s ease-in-out infinite;
-        }
-
-        @keyframes gridPulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        /* White Accent Splash */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -50%;
-            right: -20%;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-            animation: splash 12s ease-in-out infinite;
-        }
-
-        @keyframes splash {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-100px, 50px) scale(1.2); }
-        }
-
-        /* Ensure content is above background */
-        body > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            padding: 18px 40px;
-            border-bottom: 2px solid var(--border-primary);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 40px rgba(204, 0, 0, 0.1);
-        }
-
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            color: var(--light-red);
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        /* Sliding highlight effect */
-        .back-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--highlight-white), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .back-button:hover::before {
-            left: 100%;
-        }
-
-        .back-button:hover {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-color: var(--light-red);
-            transform: translateX(-4px);
-            color: var(--accent-white);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 40px rgba(204, 0, 0, 0.3);
-        }
-
-        /* Course Header */
-        .course-header {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            padding: 30px 40px;
-            margin: 20px;
-            border-radius: 16px;
-            border: 2px solid var(--border-primary);
-            border-left: 4px solid var(--light-red);
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 40px rgba(204, 0, 0, 0.15);
-            position: relative;
-        }
-
-        /* Grid overlay for course header */
-        .course-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 25px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 25px);
-            pointer-events: none;
-            opacity: 0.2;
-            z-index: 0;
-            border-radius: 14px;
-        }
-
-        .course-title {
-            font-size: 32px;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .course-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-            align-items: center;
-            margin-top: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-secondary);
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .meta-item i {
-            color: var(--light-red);
-            font-size: 18px;
-            filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.6));
-        }
-
-        .difficulty-badge {
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
-
-        .difficulty-beginner {
-            background: linear-gradient(135deg, #00CC00, #00AA00);
-            color: #000;
-        }
-
-        .difficulty-intermediate {
-            background: linear-gradient(135deg, #FFA500, #FF8C00);
-            color: #000;
-        }
-
-        .difficulty-advanced {
-            background: linear-gradient(135deg, #CC0000, #AA0000);
-            color: #fff;
-        }
-
-        /* Progress Bar */
-        .progress-section {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            padding: 20px 40px;
-            margin: 0 20px 20px 20px;
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 10px 40px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .progress-text {
-            font-size: 15px;
-            color: var(--text-secondary);
-            font-weight: 700;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 10px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid rgba(204, 0, 0, 0.2);
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-red) 0%, var(--light-red) 100%);
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(204, 0, 0, 0.6);
-        }
-
-        /* Main Content */
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 1rem;
-            padding: 1rem;
-            max-width: 1800px;
-            margin: 0 auto;
-        }
-
-        /* Video Player Section */
-        .player-section {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 16px;
-            overflow: hidden;
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(30px);
-            position: relative;
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 60px rgba(204, 0, 0, 0.2);
-        }
-
-        /* Animated corner brackets */
-        .player-section::before,
-        .player-section::after {
-            content: '';
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border: 4px solid var(--light-red);
-            z-index: 10;
-            pointer-events: none;
-            animation: bracketGlow 3s ease-in-out infinite;
-        }
-
-        .player-section::before {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-            border-top-left-radius: 16px;
-        }
-
-        .player-section::after {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-            border-bottom-right-radius: 16px;
-        }
-
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .player-controls {
-            padding: 24px 30px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-top: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            box-shadow: inset 0 1px 0 var(--highlight-white);
-        }
-
-        .current-episode-title {
-            font-size: 22px;
-            margin-bottom: 16px;
-            color: var(--accent-white);
-            font-weight: 800;
-            letter-spacing: 0.3px;
-        }
-
-        .control-buttons {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 700;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Sliding highlight for buttons */
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--highlight-white), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            color: white;
-            border: 2px solid var(--border-primary);
-            box-shadow: 
-                0 4px 12px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                0 0 40px rgba(204, 0, 0, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.1), rgba(139, 0, 0, 0.2));
-            color: var(--light-red);
-            border: 2px solid var(--border-primary);
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(139, 0, 0, 0.3));
-            color: var(--accent-white);
-            transform: translateY(-2px);
-            box-shadow: 
-                0 6px 18px rgba(204, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .autoplay-toggle {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 10px;
-            border: 2px solid var(--border-primary);
-            color: var(--text-secondary);
-            font-weight: 700;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 56px;
-            height: 28px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            border-radius: 34px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid rgba(204, 0, 0, 0.3);
-        }
-
-        .toggle-switch.active {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-color: var(--light-red);
-            box-shadow: 0 0 20px rgba(204, 0, 0, 0.6);
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-            border-radius: 50%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(204, 0, 0, 0.4);
-        }
-
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(26px);
-            background: linear-gradient(135deg, #fff, var(--accent-white));
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-        }
-
-        /* Course Description */
-        .description-section {
-            margin: 24px 0;
-            padding: 24px 30px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 10px 40px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        .description-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 8px 0;
-        }
-
-        .description-header h3 {
-            font-size: 20px;
-            color: var(--accent-white);
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .collapse-icon {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--light-red);
-            font-size: 24px;
-            filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.6));
-        }
-
-        .collapse-icon.collapsed {
-            transform: rotate(-180deg);
-        }
-
-        .description-content {
-            margin-top: 16px;
-            color: var(--text-secondary);
-            line-height: 1.9;
-            max-height: 1000px;
-            overflow: hidden;
-            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 15px;
-        }
-
-        .description-content.hidden {
-            max-height: 0;
-            margin-top: 0;
-        }
-
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        .tag {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.2));
-            border: 2px solid var(--border-primary);
-            border-radius: 20px;
-            font-size: 14px;
-            color: var(--light-red);
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        /* Resources Section */
-        .resources-section {
-            margin: 24px 0;
-            padding: 24px 30px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 10px 40px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        .resources-section h3 {
-            font-size: 20px;
-            margin-bottom: 18px;
-            color: var(--accent-white);
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .resource-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border: 2px solid var(--border-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .resource-item:hover {
-            transform: translateX(6px);
-            border-color: var(--light-red);
-            box-shadow: 
-                0 6px 18px rgba(204, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .resource-name {
-            color: var(--text-primary);
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .download-btn {
-            padding: 8px 20px;
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
-        }
-
-        .download-btn:hover {
-            background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 
-                0 6px 18px rgba(204, 0, 0, 0.5),
-                0 0 30px rgba(204, 0, 0, 0.4);
-        }
-
-        /* Playlist Sidebar */
-        .playlist-sidebar {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 16px;
-            border: 2px solid var(--border-primary);
-            overflow: hidden;
-            max-height: calc(100vh - 150px);
-            display: flex;
-            flex-direction: column;
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 60px rgba(204, 0, 0, 0.2);
-        }
-
-        .playlist-header {
-            padding: 24px 30px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(15, 15, 15, 0.98));
-            border-bottom: 2px solid var(--border-primary);
-            box-shadow: inset 0 1px 0 var(--highlight-white);
-        }
-
-        .playlist-header h2 {
-            font-size: 22px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-        }
-
-        .playlist-stats {
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .playlist-stats i {
-            color: var(--light-red);
-            filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.6));
-        }
-
-        .playlist-episodes {
-            overflow-y: auto;
-            padding: 12px;
-            flex: 1;
-            position: relative;
-        }
-
-        /* Grid overlay for episodes container */
-        .playlist-episodes::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 20px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 20px);
-            pointer-events: none;
-            opacity: 0.15;
-            z-index: 0;
-        }
-
-        .playlist-episodes::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        .playlist-episodes::-webkit-scrollbar-track {
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            border-radius: 10px;
-        }
-
-        .playlist-episodes::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-radius: 10px;
-            border: 2px solid rgba(0, 0, 0, 0.3);
-        }
-
-        .playlist-episodes::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, var(--light-red), var(--primary-red));
-            box-shadow: 0 0 20px rgba(204, 0, 0, 0.6);
-        }
-
-        .episode-card {
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            padding: 16px 18px;
-            margin-bottom: 12px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid rgba(204, 0, 0, 0.2);
-            position: relative;
-            z-index: 1;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        /* Grid overlay for episode cards */
-        .episode-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 15px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 15px);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 0;
-            border-radius: 10px;
-        }
-
-        .episode-card:hover {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.2));
-            transform: translateX(8px) scale(1.02);
-            border-color: var(--light-red);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 40px rgba(204, 0, 0, 0.3);
-        }
-
-        .episode-card:hover::before {
-            opacity: 0.3;
-        }
-
-        .episode-card.active {
-            border-color: var(--light-red);
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(139, 0, 0, 0.3));
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 60px rgba(204, 0, 0, 0.4);
-        }
-
-        .episode-card.active::before {
-            opacity: 0.4;
-        }
-
-        .episode-card.completed::after {
-            content: '✓';
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: linear-gradient(135deg, var(--success-green), #00AA00);
-            color: #000;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 16px;
-            z-index: 2;
-            box-shadow: 
-                0 4px 12px rgba(0, 204, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        .episode-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            color: white;
-            border-radius: 50%;
-            font-weight: 900;
-            font-size: 16px;
-            margin-bottom: 10px;
-            box-shadow: 
-                0 4px 12px rgba(204, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            z-index: 2;
-            position: relative;
-        }
-        
-        .episode-card.active .episode-number {
-            background: linear-gradient(135deg, var(--success-green), #00AA00);
-            box-shadow: 
-                0 4px 12px rgba(0, 204, 0, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                0 0 30px rgba(0, 204, 0, 0.4);
-            animation: badgePulse 2s ease-in-out infinite;
-        }
-
-        .episode-title {
-            font-size: 15px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            z-index: 2;
-            position: relative;
-        }
-
-        .episode-duration {
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 600;
-            z-index: 2;
-            position: relative;
-        }
-
-        /* Related Courses */
-        .related-section {
-            margin: 24px 0;
-            padding: 24px 30px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 10px 40px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        .related-section h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: var(--accent-white);
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .related-courses {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        .related-course-card {
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            padding: 18px 20px;
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        /* Grid overlay for related course cards */
-        .related-course-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 18px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 18px);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 0;
-            border-radius: 10px;
-        }
-
-        .related-course-card:hover {
-            border-color: var(--light-red);
-            transform: translateY(-8px) scale(1.03);
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.2));
-            box-shadow: 
-                0 12px 36px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 60px rgba(204, 0, 0, 0.3);
-        }
-
-        .related-course-card:hover::before {
-            opacity: 0.3;
-        }
-
-        .related-course-title {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-            font-weight: 800;
-            letter-spacing: 0.3px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .related-course-info {
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Share Button */
-        .share-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.1), rgba(139, 0, 0, 0.2));
-            color: var(--light-red);
-            border: 2px solid var(--border-primary);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        /* Sliding highlight for share button */
-        .share-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--highlight-white), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .share-button:hover::before {
-            left: 100%;
-        }
-
-        .share-button:hover {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-color: var(--light-red);
-            color: var(--accent-white);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 40px rgba(204, 0, 0, 0.4);
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 32px;
-            right: 32px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.98), rgba(10, 10, 10, 0.99));
-            color: var(--text-primary);
-            padding: 18px 28px;
-            border-radius: 12px;
-            border-left: 4px solid var(--light-red);
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 12px 32px rgba(0, 0, 0, 0.7),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 60px rgba(204, 0, 0, 0.3);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Loading State */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 60vh;
-            font-size: 20px;
-            color: var(--text-secondary);
-            font-weight: 700;
-        }
-
-        .spinner {
-            border: 4px solid rgba(204, 0, 0, 0.1);
-            border-top: 4px solid var(--light-red);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1.5s linear infinite;
-            margin-right: 20px;
-            box-shadow: 
-                0 4px 12px rgba(204, 0, 0, 0.4),
-                inset 0 0 20px rgba(204, 0, 0, 0.2);
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* PDF Section Styles - Dark Red Engineering Theme */
-        .pdf-section {
-            margin: 1.5rem 0;
-            padding: 1.8rem;
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15) 0%, rgba(139, 0, 0, 0.08) 100%);
-            border-radius: 12px;
-            border: 2px solid rgba(204, 0, 0, 0.4);
-            box-shadow: 
-                0 4px 20px rgba(204, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pdf-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(90deg, rgba(204, 0, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(0deg, rgba(204, 0, 0, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        .pdf-section h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: #CC0000;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 10px rgba(204, 0, 0, 0.3);
-        }
-
-        .pdf-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .pdf-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.9rem 1.8rem;
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.8), rgba(139, 0, 0, 0.9));
-            color: white;
-            text-decoration: none;
-            border: 2px solid rgba(204, 0, 0, 0.5);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.2);
-        }
-
-        .pdf-btn:hover {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 1), rgba(139, 0, 0, 1));
-            transform: translateY(-3px);
-            box-shadow: 0 6px 25px rgba(204, 0, 0, 0.4);
-            border-color: rgba(255, 0, 0, 0.7);
-        }
-
-        .pdf-btn.download {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.8), rgba(80, 0, 0, 0.9));
-            border-color: rgba(139, 0, 0, 0.6);
-        }
-
-        .pdf-btn.download:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 1), rgba(80, 0, 0, 1));
-            box-shadow: 0 6px 25px rgba(139, 0, 0, 0.4);
-        }
-
-        .pdf-info {
-            margin-top: 0.5rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.95rem;
-            font-weight: 500;
-            position: relative;
-            z-index: 1;
-            padding: 0.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 6px;
-            border-left: 3px solid rgba(204, 0, 0, 0.6);
-        }
-
-        .episode-pdf {
-            margin-top: 0.3rem;
-            padding: 0.4rem 0.8rem;
-            background: rgba(204, 0, 0, 0.25);
-            border: 1px solid rgba(204, 0, 0, 0.4);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: #FF6666;
-            display: inline-block;
-            font-weight: 600;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .playlist-sidebar {
-                max-height: 500px;
-                margin-top: 20px;
-            }
-
-            .player-section::before,
-            .player-section::after {
-                width: 50px;
-                height: 50px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            /* Header responsive */
-            .header {
-                padding: 14px 20px;
-            }
-
-            .back-button {
-                padding: 10px 18px;
-                font-size: 14px;
-                gap: 8px;
-            }
-
-            /* Course header responsive */
-            .course-header {
-                padding: 24px 20px;
-                margin: 12px;
-            }
-
-            .course-title {
-                font-size: 26px;
-                margin-bottom: 14px;
-            }
-
-            .course-meta {
-                gap: 16px;
-            }
-
-            .meta-item {
-                font-size: 14px;
-            }
-
-            .meta-item i {
-                font-size: 16px;
-            }
-
-            .difficulty-badge {
-                padding: 6px 14px;
-                font-size: 13px;
-            }
-
-            /* Progress section responsive */
-            .progress-section {
-                padding: 16px 20px;
-                margin: 0 12px 12px 12px;
-            }
-
-            .progress-text {
-                font-size: 13px;
-            }
-
-            .progress-bar-container {
-                height: 8px;
-            }
-
-            /* Main content responsive */
-            .main-content {
-                padding: 0 8px;
-                gap: 12px;
-            }
-
-            /* Video player responsive */
-            .player-section {
-                border-radius: 12px;
-            }
-
-            .player-section::before,
-            .player-section::after {
-                width: 40px;
-                height: 40px;
-                border: 3px solid var(--light-red);
-            }
-
-            /* Player controls responsive */
-            .player-controls {
-                padding: 18px 20px;
-            }
-
-            .current-episode-title {
-                font-size: 18px;
-                margin-bottom: 14px;
-            }
-
-            .control-buttons {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .btn {
-                width: 100%;
-                text-align: center;
-                justify-content: center;
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-
-            .autoplay-toggle {
-                width: 100%;
-                justify-content: space-between;
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-
-            /* Description section responsive */
-            .description-section,
-            .resources-section,
-            .related-section {
-                margin: 16px 0;
-                padding: 18px 20px;
-            }
-
-            .description-header h3,
-            .resources-section h3,
-            .related-section h3 {
-                font-size: 18px;
-            }
-
-            .collapse-icon {
-                font-size: 20px;
-            }
-
-            .description-content {
-                font-size: 14px;
-                line-height: 1.7;
-            }
-
-            .tag {
-                padding: 6px 12px;
-                font-size: 13px;
-            }
-
-            /* Resources responsive */
-            .resource-item {
-                padding: 14px 16px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .resource-name {
-                font-size: 14px;
-            }
-
-            .download-btn {
-                width: 100%;
-                text-align: center;
-                justify-content: center;
-                padding: 10px 18px;
-                font-size: 13px;
-            }
-
-            /* Playlist sidebar responsive */
-            .playlist-sidebar {
-                max-height: 400px;
-                border-radius: 12px;
-            }
-
-            .playlist-header {
-                padding: 18px 20px;
-            }
-
-            .playlist-header h2 {
-                font-size: 18px;
-            }
-
-            .playlist-stats {
-                font-size: 13px;
-            }
-
-            .playlist-episodes {
-                padding: 10px;
-            }
-
-            .episode-card {
-                padding: 14px 16px;
-                margin-bottom: 10px;
-            }
-
-            .episode-number {
-                min-width: 32px;
-                height: 32px;
-                font-size: 14px;
-            }
-
-            .episode-title {
-                font-size: 14px;
-            }
-
-            .episode-duration {
-                font-size: 12px;
-            }
-
-            /* Related courses responsive */
-            .related-courses {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .related-course-card {
-                padding: 16px 18px;
-            }
-
-            .related-course-title {
-                font-size: 15px;
-            }
-
-            .related-course-info {
-                font-size: 13px;
-            }
-
-            /* Share button responsive */
-            .share-button {
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-
-            /* Toast responsive */
-            .toast {
-                bottom: 16px;
-                right: 16px;
-                left: 16px;
-                padding: 16px 20px;
-                font-size: 14px;
-            }
-
-            /* Loading responsive */
-            .loading {
-                font-size: 16px;
-            }
-
-            .spinner {
-                width: 48px;
-                height: 48px;
-                margin-right: 16px;
-            }
-        }
-
-        /* Night Mode (default is already dark) */
-        body.light-mode {
-            --bg-dark: #f5f5f5;
-            --bg-secondary: #ffffff;
-            --bg-card: #fafafa;
-            --text-primary: #000000;
-            --text-secondary: #666666;
-            --border-color: #e0e0e0;
-            --hover-bg: #f0f0f0;
-        }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Mobile redirect -->
+  <script>
+    (function() {
+      const ua = navigator.userAgent || '';
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        const p = new URLSearchParams(window.location.search);
+        window.location.replace('../../mobile/content-studio/educational-courses/course-viewer.html?' + p.toString());
+      }
+    })();
+  </script>
+
+  <title>Course Viewer – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- YouTube IFrame API (connected via localStorage key from Only-boss) -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --light-red: #FF1744;
+      --accent-red: #FF2020;
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.85);
+      --text-dim: rgba(255,255,255,0.55);
+      --border-red: rgba(204,0,0,0.3);
+      --border-hover: rgba(255,23,68,0.6);
+      --highlight: rgba(255,255,255,0.08);
+      --grid-line: rgba(255,255,255,0.04);
+      --success: #00CC00;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter','Noto Sans Bengali','Segoe UI',sans-serif;
+      background: #000;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      padding-top: 85px;
+    }
+
+    body::before {
+      content:''; position:fixed; top:0; left:0; width:100%; height:100%;
+      background-image:
+        repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 40px),
+        repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 40px);
+      pointer-events:none; z-index:0;
+      animation:gridPulse 8s ease-in-out infinite;
+    }
+    @keyframes gridPulse { 0%,100%{opacity:0.5;} 50%{opacity:0.8;} }
+
+    body > * { position:relative; z-index:1; }
+
+    /* ── Viewer Header ───────────────────── */
+    .viewer-header {
+      background:linear-gradient(135deg,rgba(10,0,0,0.97),rgba(6,0,0,0.99));
+      border-bottom:2px solid var(--border-red);
+      padding:14px 28px;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:12px;
+      backdrop-filter:blur(30px);
+      box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 0 40px rgba(204,0,0,0.08);
+      position:sticky; top:85px; z-index:100;
+    }
+
+    .back-btn {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 20px;
+      background:linear-gradient(135deg,rgba(15,0,0,0.97),rgba(10,0,0,0.99));
+      border:2px solid var(--border-red); border-radius:11px;
+      color:var(--light-red); text-decoration:none;
+      font-weight:700; font-size:14px; transition:all 0.3s; white-space:nowrap;
+    }
+    .back-btn:hover { background:linear-gradient(135deg,var(--primary-red),var(--dark-red)); border-color:var(--light-red); color:#fff; transform:translateX(-3px); box-shadow:0 8px 24px rgba(204,0,0,0.4); }
+
+    .header-center { flex:1; text-align:center; max-width:560px; margin:0 auto; }
+    .header-course-title { font-size:15px; font-weight:800; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:1; line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+    .header-ep-label { font-size:12px; color:rgba(204,0,0,0.85); font-weight:600; margin-top:2px; }
+
+    .progress-badge {
+      padding:6px 14px;
+      background:rgba(204,0,0,0.1); border:1px solid rgba(204,0,0,0.3);
+      border-radius:20px; font-size:12px; font-weight:700; color:rgba(255,255,255,0.7);
+      white-space:nowrap;
+    }
+
+    /* ── Main Container ──────────────────── */
+    .main-container {
+      display:grid;
+      grid-template-columns:1fr 380px;
+      gap:20px;
+      padding:22px 24px 28px;
+      align-items:start;
+    }
+
+    /* ── Player Section ──────────────────── */
+    .player-section { display:flex; flex-direction:column; gap:20px; }
+
+    .player-wrapper {
+      position:relative; padding-bottom:56.25%;
+      background:#000; border-radius:14px; overflow:visible;
+      border:2px solid var(--border-red);
+      box-shadow:0 12px 48px rgba(0,0,0,0.7), 0 0 60px rgba(204,0,0,0.15);
+    }
+
+    .player-wrapper::before {
+      content:''; position:absolute; top:-2px; left:-2px;
+      width:55px; height:55px;
+      border-top:3px solid var(--light-red); border-left:3px solid var(--light-red);
+      z-index:3; pointer-events:none;
+      animation:bAnim 3s ease-in-out infinite;
+    }
+    .player-wrapper::after {
+      content:''; position:absolute; bottom:-2px; right:-2px;
+      width:55px; height:55px;
+      border-bottom:3px solid var(--light-red); border-right:3px solid var(--light-red);
+      z-index:3; pointer-events:none;
+      animation:bAnim 3s ease-in-out infinite;
+    }
+    @keyframes bAnim { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+
+    .player-wrapper iframe {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      border-radius:12px; pointer-events:auto;
+    }
+
+    #ytPlayerDiv { position:absolute; inset:0; border-radius:12px; overflow:hidden; }
+
+    .video-placeholder {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,rgba(12,0,0,0.98),rgba(8,0,0,0.99));
+      border-radius:12px; color:var(--text-dim); z-index:2;
+    }
+    .video-placeholder i { font-size:60px; color:var(--light-red); margin-bottom:18px; filter:drop-shadow(0 0 18px rgba(255,23,68,0.5)); }
+    .video-placeholder h3 { font-size:18px; font-weight:800; color:rgba(255,255,255,0.75); }
+
+    /* Video Info Panel */
+    .video-info {
+      background:linear-gradient(135deg,rgba(12,0,0,0.97),rgba(8,0,0,0.99));
+      border:2px solid var(--border-red); border-radius:14px; padding:22px;
+      backdrop-filter:blur(20px);
+      box-shadow:0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 var(--highlight);
+    }
+
+    .ep-tag {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 12px; background:rgba(204,0,0,0.15); border:1px solid rgba(204,0,0,0.4);
+      border-radius:20px; font-size:12px; font-weight:700; color:rgba(255,100,100,0.9);
+      margin-bottom:12px;
+    }
+
+    .ep-title-large {
+      font-size:1.35rem; font-weight:900; color:#fff; line-height:1.3; margin-bottom:14px;
+      text-shadow:0 2px 10px rgba(0,0,0,0.7);
+    }
+
+    .ep-meta-strip {
+      display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px;
+      padding-bottom:14px; border-bottom:1px solid rgba(204,0,0,0.15);
+    }
+    .ep-meta-item { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-dim); font-weight:600; }
+    .ep-meta-item i { color:var(--primary-red); font-size:12px; }
+
+    .ep-description { font-size:14px; line-height:1.7; color:var(--text-secondary); margin-bottom:14px; }
+
+    /* PDF Button */
+    .pdf-btn {
+      display:none; align-items:center; gap:9px;
+      padding:11px 20px;
+      background:linear-gradient(135deg,rgba(204,0,0,0.18),rgba(139,0,0,0.12));
+      border:1.5px solid rgba(204,0,0,0.45);
+      border-radius:10px; color:rgba(255,160,160,0.9);
+      font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+      text-decoration:none; transition:all 0.3s; margin-bottom:14px;
+    }
+    .pdf-btn.show { display:inline-flex; }
+    .pdf-btn:hover { background:linear-gradient(135deg,var(--primary-red),var(--dark-red)); border-color:var(--light-red); color:#fff; transform:translateY(-2px); box-shadow:0 8px 20px rgba(204,0,0,0.4); }
+
+    /* Nav buttons */
+    .video-navigation { display:flex; gap:12px; margin-top:4px; }
+    .nav-btn {
+      flex:1; padding:12px 16px;
+      background:linear-gradient(135deg,rgba(12,0,0,0.97),rgba(8,0,0,0.99));
+      border:2px solid var(--border-red); border-radius:11px;
+      color:var(--text-secondary); cursor:pointer; font-family:inherit;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      font-weight:700; font-size:14px; transition:all 0.3s; position:relative; overflow:hidden;
+    }
+    .nav-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,var(--highlight),transparent); transition:left 0.5s; }
+    .nav-btn:hover:not(:disabled)::before { left:100%; }
+    .nav-btn:hover:not(:disabled) { background:linear-gradient(135deg,var(--primary-red),var(--dark-red)); border-color:var(--light-red); color:#fff; transform:translateY(-2px); box-shadow:0 8px 22px rgba(204,0,0,0.4); }
+    .nav-btn:disabled { opacity:0.28; cursor:not-allowed; }
+
+    /* ── Playlist Sidebar ────────────────── */
+    .playlist-section {
+      display:flex; flex-direction:column;
+      background:linear-gradient(135deg,rgba(10,0,0,0.98),rgba(6,0,0,0.99));
+      border:2px solid var(--border-red); border-radius:14px; overflow:hidden;
+      max-height:calc(100vh - 85px - 60px - 44px);
+      position:sticky; top:calc(85px + 60px + 22px);
+      backdrop-filter:blur(20px);
+      box-shadow:0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 var(--highlight);
+    }
+
+    .playlist-header {
+      padding:18px 18px 14px; flex-shrink:0;
+      background:linear-gradient(135deg,rgba(18,0,0,0.92),rgba(12,0,0,0.97));
+      border-bottom:2px solid var(--border-red);
+    }
+    .playlist-course-title {
+      font-size:14px; font-weight:800; color:var(--text-secondary); line-height:1.35;
+      display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      margin-bottom:6px;
+    }
+    .playlist-stats { font-size:12px; color:var(--text-dim); font-weight:600; }
+    .playlist-stats span { color:var(--primary-red); font-weight:800; }
+
+    .playlist-list { overflow-y:auto; flex:1; padding:10px; }
+    .playlist-list::-webkit-scrollbar { width:5px; }
+    .playlist-list::-webkit-scrollbar-track { background:rgba(0,0,0,0.3); }
+    .playlist-list::-webkit-scrollbar-thumb { background:linear-gradient(180deg,var(--primary-red),var(--dark-red)); border-radius:3px; }
+
+    /* Playlist Item */
+    .pl-item {
+      display:flex; align-items:center; gap:10px;
+      padding:10px; margin-bottom:7px;
+      background:rgba(12,0,0,0.75);
+      border:1.5px solid rgba(204,0,0,0.14);
+      border-radius:10px; cursor:pointer;
+      transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+      position:relative;
+    }
+    .pl-item:last-child { margin-bottom:0; }
+    .pl-item:hover { border-color:var(--border-hover); transform:translateX(4px); background:rgba(204,0,0,0.08); box-shadow:0 4px 14px rgba(204,0,0,0.2); }
+    .pl-item.active { border-color:var(--light-red); background:linear-gradient(135deg,rgba(204,0,0,0.2),rgba(139,0,0,0.14)); box-shadow:0 6px 20px rgba(204,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05); }
+    .pl-item.watched::after { content:'✓'; position:absolute; top:6px; right:7px; width:18px; height:18px; background:linear-gradient(135deg,var(--success),#00aa00); color:#000; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:10px; }
+
+    .pl-num {
+      min-width:26px; height:26px;
+      background:rgba(204,0,0,0.2); border:1px solid rgba(204,0,0,0.35);
+      border-radius:6px; display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:800; color:var(--primary-red); flex-shrink:0; transition:all 0.2s;
+    }
+    .pl-item.active .pl-num { background:var(--primary-red); color:#fff; box-shadow:0 0 10px rgba(204,0,0,0.5); }
+
+    .pl-thumb { width:68px; height:40px; border-radius:6px; overflow:hidden; flex-shrink:0; background:#0d0000; border:1px solid rgba(139,0,0,0.22); }
+    .pl-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; }
+    .pl-item:hover .pl-thumb img, .pl-item.active .pl-thumb img { transform:scale(1.08); }
+
+    .pl-info { flex:1; min-width:0; }
+    .pl-title { font-size:12px; font-weight:700; color:var(--text-secondary); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; transition:color 0.2s; }
+    .pl-item:hover .pl-title, .pl-item.active .pl-title { color:#fff; }
+    .pl-meta { display:flex; align-items:center; gap:6px; margin-top:3px; }
+    .pl-dur { font-size:10.5px; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:3px; }
+    .pl-dur i { color:var(--primary-red); font-size:9px; }
+    .pl-pdf { width:5px; height:5px; background:var(--primary-red); border-radius:50%; flex-shrink:0; }
+
+    /* ── Related Courses ─────────────────── */
+    .related-section {
+      padding:28px 24px 60px;
+      border-top:2px solid rgba(204,0,0,0.18);
+      background:linear-gradient(180deg,rgba(8,0,0,0.7) 0%,rgba(3,0,0,0.95) 100%);
+    }
+
+    .related-title {
+      font-size:19px; font-weight:900; color:#fff;
+      display:flex; align-items:center; gap:10px; margin-bottom:18px;
+      padding-bottom:12px; border-bottom:2px solid rgba(204,0,0,0.22);
+    }
+    .related-title i { color:var(--primary-red); }
+
+    .related-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(clamp(170px,17vw,250px),1fr));
+      gap:16px 12px;
+    }
+
+    .rel-card {
+      background:linear-gradient(160deg,rgba(18,4,4,0.97) 0%,rgba(10,4,4,0.97) 100%);
+      border:1px solid rgba(139,0,0,0.28); border-radius:10px; overflow:hidden;
+      cursor:pointer; transition:all 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 4px 14px rgba(0,0,0,0.65);
+    }
+    .rel-card:hover { border-color:rgba(204,0,0,0.6); transform:translateY(-4px); box-shadow:0 14px 34px rgba(139,0,0,0.38); }
+
+    .rel-thumb { width:100%; aspect-ratio:16/9; overflow:hidden; position:relative; background:#0d0000; }
+    .rel-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.35s; }
+    .rel-card:hover .rel-thumb img { transform:scale(1.07); }
+
+    .rel-diff {
+      position:absolute; top:6px; right:6px;
+      padding:2px 7px; border-radius:5px;
+      font-size:9.5px; font-weight:800; text-transform:uppercase; color:#fff;
+    }
+    .rel-diff.beginner    { background:rgba(76,175,80,0.88); }
+    .rel-diff.intermediate{ background:rgba(255,152,0,0.88); }
+    .rel-diff.advanced    { background:rgba(244,67,54,0.88); }
+
+    .rel-info { padding:9px 11px 11px; }
+    .rel-title-text { font-size:12.5px; font-weight:800; color:var(--text-secondary); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; transition:color 0.2s; }
+    .rel-card:hover .rel-title-text { color:#fff; }
+    .rel-meta-row { display:flex; align-items:center; justify-content:space-between; margin-top:5px; }
+    .rel-eps { font-size:11px; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:3px; }
+    .rel-eps i { color:var(--primary-red); font-size:9.5px; }
+    .rel-lang { padding:2px 6px; background:rgba(204,0,0,0.15); border:1px solid rgba(204,0,0,0.28); border-radius:4px; font-size:10px; font-weight:800; color:rgba(255,255,255,0.65); }
+
+    /* Loading / Empty */
+    .state-msg { text-align:center; padding:40px 20px; color:var(--text-dim); font-size:13px; font-weight:600; }
+    .state-msg i { display:block; font-size:32px; color:var(--primary-red); margin-bottom:10px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin { animation:spin 1s linear infinite; }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width:1100px) {
+      .main-container { grid-template-columns:1fr; }
+      .playlist-section { max-height:400px; position:relative; top:0; }
+    }
+    @media (max-width:768px) {
+      .main-container { padding:14px 12px 18px; gap:14px; }
+      .viewer-header { padding:10px 14px; }
+      .related-section { padding:18px 14px 40px; }
+    }
+    @media (max-width:480px) {
+      .pl-thumb { display:none; }
+      .ep-title-large { font-size:1.1rem; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="desktop-navbar" id="desktopNavbar">
-        <div class="desktop-nav-container">
-            <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-                <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
-                <div class="desktop-nav-brand">
-                    <span class="desktop-nav-brand-name">A3KM Studio</span>
-                    <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
-                </div>
-            </a>
-            <ul class="desktop-nav-menu">
-                <li class="desktop-nav-item">
-                    <a href="../../About me/about.html" class="desktop-nav-link" aria-label="About Me">
-                        <i class="fas fa-user-circle"></i>
-                        <span>About</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../Projects Code/projects.html" class="desktop-nav-link" aria-label="View Projects">
-                        <i class="fas fa-folder-open"></i>
-                        <span>Projects</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../hub.html" class="desktop-nav-link active" aria-label="Content Studio">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Content Studio</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact Me">
-                        <i class="fas fa-envelope"></i>
-                        <span>Contact</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV">
-                        <i class="fas fa-download"></i>
-                        <span>CV</span>
-                    </a>
-                </li>
-            </ul>
+
+  <!-- Desktop Navbar -->
+  <nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+        <div class="desktop-nav-brand">
+          <span class="desktop-nav-brand-name">A3KM Studio</span>
+          <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
         </div>
-    </nav>
-    <div class="header">
-        <a href="course-listing-new.html" class="back-button">
-            ← Back to Courses
+      </a>
+      <ul class="desktop-nav-menu">
+        <li class="desktop-nav-item">
+          <a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download>
+            <i class="fas fa-download"></i><span>CV</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Viewer Header Strip -->
+  <div class="viewer-header">
+    <a href="" id="backToDetail" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Course
+    </a>
+    <div class="header-center">
+      <div class="header-course-title" id="headerCourseTitle">Loading…</div>
+      <div class="header-ep-label" id="headerEpLabel"></div>
+    </div>
+    <span class="progress-badge" id="progressBadge">—</span>
+  </div>
+
+  <!-- 2-Column: Player + Sidebar -->
+  <div class="main-container">
+
+    <!-- LEFT: Player + Info -->
+    <div class="player-section">
+
+      <div class="player-wrapper" id="playerWrapper">
+        <div class="video-placeholder" id="videoPlaceholder">
+          <i class="fas fa-spinner spin"></i>
+          <h3>Loading episode…</h3>
+        </div>
+        <div id="ytPlayerDiv"></div>
+      </div>
+
+      <!-- Episode info -->
+      <div class="video-info" id="videoInfo" style="display:none;">
+        <div class="ep-tag" id="epTag"><i class="fas fa-play"></i> Episode 1</div>
+        <h1 class="ep-title-large" id="epTitle">—</h1>
+        <div class="ep-meta-strip" id="epMeta"></div>
+        <p class="ep-description" id="epDesc" style="display:none;"></p>
+        <a href="#" class="pdf-btn" id="pdfBtn" target="_blank" rel="noopener">
+          <i class="fas fa-file-pdf"></i> Download Lecture PDF
         </a>
-    </div>
-
-    <div id="app">
-        <div class="loading">
-            <div class="spinner"></div>
-            Loading course...
+        <div class="video-navigation">
+          <button class="nav-btn" id="prevBtn" onclick="goEp(currentEpIdx-1)" disabled>
+            <i class="fas fa-chevron-left"></i> Previous
+          </button>
+          <button class="nav-btn" id="nextBtn" onclick="goEp(currentEpIdx+1)">
+            Next <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
+      </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <!-- RIGHT: Playlist Sidebar -->
+    <div class="playlist-section">
+      <div class="playlist-header">
+        <div class="playlist-course-title" id="sidebarTitle">Loading…</div>
+        <div class="playlist-stats" id="sidebarStats"><span>0</span> episodes</div>
+      </div>
+      <div class="playlist-list" id="playlistList">
+        <div class="state-msg"><i class="fas fa-spinner spin"></i>Loading…</div>
+      </div>
+    </div>
 
-    <script>
-        // Global state
-        let currentCourse = null;
-        let currentEpisodeIndex = 0;
-        let autoplayEnabled = false;
-        let completedEpisodes = new Set();
-        let allCourses = [];
+  </div>
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCourse();
+  <!-- Related Courses Section -->
+  <div class="related-section" id="relatedSection" style="display:none;">
+    <h2 class="related-title">
+      <i class="fas fa-graduation-cap"></i> More From This Category
+    </h2>
+    <div class="related-grid" id="relatedGrid"></div>
+  </div>
+
+  <script>
+    // ════════════════════════════════════════════════
+    // YouTube API Key — managed from Only-boss Command Center
+    // localStorage key: 'youtube_api_key'
+    // ════════════════════════════════════════════════
+    let YT_API_KEY = localStorage.getItem('youtube_api_key') || '';
+
+    // ── State ───────────────────────────────────────
+    let courseData   = null;
+    let allCourses   = [];
+    let currentEpIdx = 0;
+    let ytPlayer     = null;
+    let playerReady  = false;
+    let durCache     = {};       // videoId → duration string
+
+    const params   = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId') || '';
+    const initEp   = Math.max(0, parseInt(params.get('ep') || '0', 10));
+
+    // ── Helpers ─────────────────────────────────────
+    function esc(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function ytThumb(vid) { return vid ? `https://img.youtube.com/vi/${vid}/mqdefault.jpg` : ''; }
+
+    function parseDuration(iso) {
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!m) return '';
+      const h = parseInt(m[1]||0), mn = parseInt(m[2]||0), s = parseInt(m[3]||0);
+      return h > 0
+        ? `${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+        : `${mn}:${String(s).padStart(2,'0')}`;
+    }
+
+    // ── Watched Progress (localStorage) ─────────────
+    function getWatched() {
+      return JSON.parse(localStorage.getItem('cw_' + courseId) || '[]');
+    }
+    function markWatched(idx) {
+      const arr = getWatched();
+      if (!arr.includes(idx)) {
+        arr.push(idx);
+        localStorage.setItem('cw_' + courseId, JSON.stringify(arr));
+      }
+    }
+
+    // ── YouTube Data API v3 — fetch durations ────────
+    async function fetchDurations(videoIds) {
+      if (!YT_API_KEY || !videoIds.length) return {};
+      const result = {};
+      // Process in 50-ID chunks (YT API limit)
+      for (let i = 0; i < videoIds.length; i += 50) {
+        const chunk = videoIds.slice(i, i+50);
+        try {
+          const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${chunk.join(',')}&key=${YT_API_KEY}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          (data.items || []).forEach(item => {
+            result[item.id] = parseDuration(item.contentDetails.duration);
+          });
+        } catch {/* API unavailable → fall back to playlist[ep].duration */}
+      }
+      return result;
+    }
+
+    // ════════════════════════════════════════════════
+    // YouTube IFrame API ready callback
+    // ════════════════════════════════════════════════
+    function onYouTubeIframeAPIReady() {
+      playerReady = true;
+      if (courseData) _playVideo(courseData.playlist[currentEpIdx]?.videoId);
+    }
+
+    function _playVideo(videoId) {
+      if (!videoId) return;
+      document.getElementById('videoPlaceholder').style.display = 'none';
+      if (ytPlayer) {
+        ytPlayer.loadVideoById(videoId);
+      } else {
+        ytPlayer = new YT.Player('ytPlayerDiv', {
+          videoId,
+          playerVars: { autoplay:1, rel:0, modestbranding:1, showinfo:0, enablejsapi:1, fs:1 },
+          events: {
+            onReady: (e) => {
+              document.getElementById('videoPlaceholder').style.display = 'none';
+            },
+            onStateChange: (e) => {
+              // Episode finished → mark watched + auto-advance
+              if (e.data === YT.PlayerState.ENDED) {
+                markWatched(currentEpIdx);
+                refreshPlaylistHighlights();
+                const next = currentEpIdx + 1;
+                if (next < courseData.playlist.length) {
+                  setTimeout(() => goEp(next), 1800);
+                }
+              }
+            }
+          }
         });
+      }
+    }
 
-        // Get course ID from URL
-        function getCourseIdFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+    // ── Load Episode ─────────────────────────────────
+    function loadEpisode(idx, pushState = true) {
+      if (!courseData) return;
+      const list   = courseData.playlist;
+      if (idx < 0 || idx >= list.length) return;
+      currentEpIdx = idx;
+      const ep     = list[idx];
+
+      // Update URL
+      if (pushState) {
+        const u = new URL(window.location.href);
+        u.searchParams.set('ep', idx);
+        history.replaceState(null, '', u.toString());
+      }
+
+      // Header
+      document.getElementById('headerEpLabel').textContent = `Episode ${idx+1} of ${list.length}`;
+      document.getElementById('progressBadge').textContent = `${idx+1} / ${list.length}`;
+
+      // Player
+      if (ep.videoId) {
+        if (playerReady) {
+          _playVideo(ep.videoId);
+        } else {
+          const ph = document.getElementById('videoPlaceholder');
+          ph.style.display = 'flex';
+          ph.innerHTML = '<i class="fas fa-spinner spin"></i><h3>Starting player…</h3>';
         }
+      } else {
+        const ph = document.getElementById('videoPlaceholder');
+        ph.style.display = 'flex';
+        ph.innerHTML = '<i class="fas fa-video-slash" style="font-size:52px;color:var(--primary-red);margin-bottom:16px;"></i><h3>No video available</h3>';
+      }
 
-        // Load course data
-        async function loadCourse() {
-            const courseId = getCourseIdFromUrl();
-            
-            if (!courseId) {
-                showToast('No course ID provided');
-                window.location.href = 'course-listing-new.html';
-                return;
-            }
+      // Info panel
+      const info = document.getElementById('videoInfo');
+      info.style.display = 'block';
 
-            try {
-                const response = await fetch('courses.json');
-                const data = await response.json();
-                allCourses = data.courses || [];
-                
-                // Map playlist to episodes for compatibility
-                allCourses = allCourses.map(course => ({
-                    ...course,
-                    episodes: course.playlist || course.episodes || [],
-                    instructor: course.institution || 'Md Akhinoor Islam',
-                    description: course.summary || course.description || ''
-                }));
-                
-                currentCourse = allCourses.find(course => course.id === courseId);
-                
-                if (!currentCourse) {
-                    showToast('Course not found');
-                    window.location.href = 'course-listing-new.html';
-                    return;
-                }
+      document.getElementById('epTag').innerHTML  = `<i class="fas fa-play"></i> Episode ${idx+1}`;
+      document.getElementById('epTitle').textContent = ep.title || `Episode ${idx+1}`;
 
-                loadProgress();
-                renderCourse();
-                loadVideo(0);
-            } catch (error) {
-                console.error('Error loading course:', error);
-                showToast('Failed to load course');
-            }
+      // Meta chips
+      const dur = durCache[ep.videoId] || ep.duration || '';
+      const metaHtml = [
+        dur ? `<span class="ep-meta-item"><i class="fas fa-clock"></i>${esc(dur)}</span>` : '',
+        courseData.instructor ? `<span class="ep-meta-item"><i class="fas fa-chalkboard-teacher"></i>${esc(courseData.instructor)}</span>` : '',
+        ep.lecturePdf?.downloadUrl ? `<span class="ep-meta-item" style="color:rgba(255,130,130,0.8);"><i class="fas fa-file-pdf"></i>Lecture PDF available</span>` : ''
+      ].join('');
+      document.getElementById('epMeta').innerHTML = metaHtml;
+
+      // Description
+      const descEl = document.getElementById('epDesc');
+      if (ep.description) { descEl.textContent = ep.description; descEl.style.display = 'block'; }
+      else { descEl.style.display = 'none'; }
+
+      // PDF
+      const pdfBtn = document.getElementById('pdfBtn');
+      if (ep.lecturePdf?.downloadUrl) {
+        pdfBtn.href = ep.lecturePdf.downloadUrl;
+        pdfBtn.classList.add('show');
+      } else {
+        pdfBtn.classList.remove('show');
+      }
+
+      // Nav
+      document.getElementById('prevBtn').disabled = idx <= 0;
+      document.getElementById('nextBtn').disabled = idx >= list.length - 1;
+
+      // Sidebar highlight + scroll
+      refreshPlaylistHighlights();
+      setTimeout(() => {
+        document.querySelector('.pl-item.active')?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      }, 120);
+    }
+
+    function goEp(idx) { loadEpisode(idx); }
+
+    // ── Rebuild playlist sidebar ─────────────────────
+    function buildPlaylist() {
+      const list    = courseData.playlist;
+      const watched = getWatched();
+      document.getElementById('sidebarTitle').textContent = courseData.title;
+      document.getElementById('sidebarStats').innerHTML   = `<span>${list.length}</span> episodes${courseData.duration ? ' · ' + courseData.duration : ''}`;
+
+      document.getElementById('playlistList').innerHTML = list.map((ep, idx) => {
+        const dur    = durCache[ep.videoId] || ep.duration || '';
+        const thumb  = ytThumb(ep.videoId);
+        const hasPdf = !!(ep.lecturePdf?.downloadUrl);
+        const isW    = watched.includes(idx);
+        return `
+          <div class="pl-item ${isW ? 'watched' : ''}" id="pl-${idx}" onclick="loadEpisode(${idx})">
+            <div class="pl-num">${idx+1}</div>
+            ${thumb ? `<div class="pl-thumb"><img src="${esc(thumb)}" alt="" loading="lazy"></div>` : ''}
+            <div class="pl-info">
+              <div class="pl-title">${esc(ep.title || `Episode ${idx+1}`)}</div>
+              <div class="pl-meta">
+                ${dur ? `<span class="pl-dur"><i class="fas fa-clock"></i>${dur}</span>` : ''}
+                ${hasPdf ? '<span class="pl-pdf" title="PDF available"></span>' : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function refreshPlaylistHighlights() {
+      const watched = getWatched();
+      courseData.playlist.forEach((_, idx) => {
+        const el = document.getElementById(`pl-${idx}`);
+        if (!el) return;
+        el.classList.toggle('active',   idx === currentEpIdx);
+        el.classList.toggle('watched',  watched.includes(idx) && idx !== currentEpIdx);
+      });
+    }
+
+    // ── Related Courses ──────────────────────────────
+    function buildRelated() {
+      const related = allCourses.filter(c =>
+        c.id !== courseData.id &&
+        (c.category||'') === (courseData.category||'')
+      ).slice(0, 8);
+
+      if (!related.length) return;
+
+      document.getElementById('relatedSection').style.display = 'block';
+      document.getElementById('relatedGrid').innerHTML = related.map(c => {
+        const diff  = (c.difficulty || 'beginner').toLowerCase();
+        const dLabel = diff.charAt(0).toUpperCase() + diff.slice(1);
+        const thumb = c.playlist?.[0]?.videoId ? ytThumb(c.playlist[0].videoId) : (c.thumbnail || '');
+        const eps   = c.episodes || c.playlist?.length || 0;
+        const lang  = c.language === 'bn' ? 'BN' : 'EN';
+        return `
+          <div class="rel-card" onclick="openCourse('${esc(c.id)}')">
+            <div class="rel-thumb">
+              ${thumb ? `<img src="${esc(thumb)}" alt="${esc(c.title)}" loading="lazy">` : ''}
+              <span class="rel-diff ${diff}">${dLabel}</span>
+            </div>
+            <div class="rel-info">
+              <div class="rel-title-text">${esc(c.title)}</div>
+              <div class="rel-meta-row">
+                <span class="rel-eps"><i class="fas fa-list-ol"></i>${eps} ep</span>
+                <span class="rel-lang">${lang}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openCourse(id) {
+      window.location.href = `course-detail.html?id=${encodeURIComponent(id)}`;
+    }
+
+    // ════════════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════════════
+    async function init() {
+      if (!courseId) {
+        document.getElementById('videoPlaceholder').innerHTML =
+          '<i class="fas fa-exclamation-circle"></i><h3>No course specified</h3>';
+        return;
+      }
+
+      document.getElementById('backToDetail').href = `course-detail.html?id=${encodeURIComponent(courseId)}`;
+
+      // Load courses.json
+      let data;
+      try {
+        const res = await fetch('courses.json');
+        data = await res.json();
+      } catch {
+        document.getElementById('videoPlaceholder').innerHTML =
+          '<i class="fas fa-exclamation-triangle"></i><h3>Failed to load data</h3>';
+        return;
+      }
+
+      allCourses = (data.courses || []).map(c => ({
+        ...c,
+        episodes:   c.episodes   || (c.playlist ? c.playlist.length : 0),
+        instructor: c.institution || c.instructor || 'Md Akhinoor Islam',
+        playlist:   c.playlist   || []
+      }));
+
+      courseData = allCourses.find(c => c.id === courseId);
+      if (!courseData) {
+        document.getElementById('videoPlaceholder').innerHTML =
+          '<i class="fas fa-search"></i><h3>Course not found</h3>';
+        return;
+      }
+
+      document.title = `${courseData.title} – A3KM Studio`;
+      document.getElementById('headerCourseTitle').textContent = courseData.title;
+
+      // Fetch durations from YouTube Data API
+      const vids = courseData.playlist.map(ep => ep.videoId).filter(Boolean);
+      if (vids.length) {
+        const fetched = await fetchDurations(vids);
+        Object.assign(durCache, fetched);
+      }
+
+      // Build sidebar
+      buildPlaylist();
+
+      // Load starting episode
+      const startIdx = Math.min(initEp, Math.max(0, courseData.playlist.length - 1));
+      loadEpisode(startIdx, false);
+
+      // Related courses
+      buildRelated();
+    }
+
+    // Listen for API key updates from Only-boss — re-fetch durations live
+    window.addEventListener('storage', async e => {
+      if (e.key === 'youtube_api_key' && e.newValue && courseData) {
+        YT_API_KEY = e.newValue;
+        const vids = courseData.playlist.map(ep => ep.videoId).filter(Boolean);
+        if (vids.length) {
+          const fetched = await fetchDurations(vids);
+          Object.assign(durCache, fetched);
+          buildPlaylist();   // Rebuild sidebar with real durations
+          // Also update the currently-shown episode meta strip
+          const ep = courseData.playlist[currentEpIdx];
+          const durEl = document.getElementById('epDuration');
+          if (durEl && ep?.videoId && durCache[ep.videoId]) durEl.textContent = durCache[ep.videoId];
         }
+        console.log('✅ Course Viewer: YouTube API key updated, durations refreshed');
+      }
+    });
 
-        // Render course UI
-        function renderCourse() {
-            const app = document.getElementById('app');
-            
-            const totalEpisodes = currentCourse.episodes.length;
-            const completedCount = completedEpisodes.size;
-            const progressPercentage = Math.round((completedCount / totalEpisodes) * 100);
+    window.addEventListener('scroll', () => {
+      document.getElementById('desktopNavbar')?.classList.toggle('scrolled', window.scrollY > 50);
+    });
 
-            app.innerHTML = `
-                <div class="course-header">
-                    <h1 class="course-title">${currentCourse.title}</h1>
-                    <div class="course-meta">
-                        <div class="meta-item">
-                            <span>👨‍🏫</span>
-                            <span>${currentCourse.instructor}</span>
-                        </div>
-                        <span class="difficulty-badge difficulty-${currentCourse.difficulty.toLowerCase()}">
-                            ${currentCourse.difficulty}
-                        </span>
-                        <div class="meta-item">
-                            <span>📹</span>
-                            <span>${totalEpisodes} Episodes</span>
-                        </div>
-                        <div class="meta-item">
-                            <span>⏱️</span>
-                            <span>${currentCourse.duration}</span>
-                        </div>
-                    </div>
-                </div>
+    document.addEventListener('DOMContentLoaded', init);
 
-                <div class="progress-section">
-                    <div class="progress-header">
-                        <span class="progress-text">
-                            Progress: ${completedCount}/${totalEpisodes} episodes completed (${progressPercentage}%)
-                        </span>
-                        <button class="btn btn-secondary" onclick="resetProgress()">Reset Progress</button>
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" style="width: ${progressPercentage}%"></div>
-                    </div>
-                </div>
-
-                <div class="main-content">
-                    <div class="player-section">
-                        <div class="video-container" id="video-container">
-                            <!-- YouTube iframe will be injected here -->
-                        </div>
-                        <div class="player-controls">
-                            <h3 class="current-episode-title" id="current-episode-title"></h3>
-                            <div class="control-buttons">
-                                <button class="btn btn-primary" onclick="markAsCompleted()">
-                                    ✓ Mark as Completed
-                                </button>
-                                <button class="btn btn-secondary" onclick="shareButton()">
-                                    📤 Share Course
-                                </button>
-                                <div class="autoplay-toggle">
-                                    <span>Autoplay Next</span>
-                                    <div class="toggle-switch" id="autoplay-toggle" onclick="toggleAutoplay()">
-                                        <div class="toggle-slider"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="description-section">
-                            <div class="description-header" onclick="toggleDescription()">
-                                <h3>📝 Course Description</h3>
-                                <span class="collapse-icon" id="collapse-icon">▼</span>
-                            </div>
-                            <div class="description-content" id="description-content">
-                                <p>${currentCourse.description}</p>
-                                ${currentCourse.tags ? `
-                                    <div class="tags-container">
-                                        ${currentCourse.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-
-                        ${currentCourse.resources && currentCourse.resources.length > 0 ? `
-                            <div class="resources-section">
-                                <h3>📚 Course Resources</h3>
-                                ${currentCourse.resources.map(resource => `
-                                    <div class="resource-item">
-                                        <span class="resource-name">${resource.name}</span>
-                                        <a href="${resource.url}" class="download-btn" download>Download</a>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
-
-                        <div class="related-section">
-                            <h3>🎓 Related Courses</h3>
-                            <div class="related-courses" id="related-courses"></div>
-                        </div>
-                    </div>
-
-                    <div class="playlist-sidebar">
-                        <div class="playlist-header">
-                            <h2>📋 Course Episodes</h2>
-                            <div class="playlist-stats">
-                                ${totalEpisodes} episodes • ${currentCourse.duration}
-                            </div>
-                        </div>
-                        <div class="playlist-episodes" id="playlist-episodes"></div>
-                    </div>
-                </div>
-            `;
-
-            renderPlaylist();
-            renderRelatedCourses();
+    // Auto-refresh durations every 30 minutes
+    setInterval(async () => {
+      if (YT_API_KEY && courseData) {
+        const vids = courseData.playlist.map(ep => ep.videoId).filter(Boolean);
+        if (vids.length) {
+          const fetched = await fetchDurations(vids);
+          Object.assign(durCache, fetched);
+          buildPlaylist();
+          console.log('🔄 Course Viewer: auto-refreshed durations');
         }
+      }
+    }, 1800000); // 30 minutes
+  </script>
 
-        // Render episode playlist
-        function renderPlaylist() {
-            const playlistContainer = document.getElementById('playlist-episodes');
-            
-            playlistContainer.innerHTML = currentCourse.episodes.map((episode, index) => {
-                const isActive = index === currentEpisodeIndex;
-                const isCompleted = completedEpisodes.has(index);
-                
-                return `
-                    <div class="episode-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-                         onclick="loadVideo(${index})">
-                        <div class="episode-number">${episode.episodeNo || (index + 1)}</div>
-                        <div class="episode-title">${episode.title}</div>
-                        <div class="episode-duration">⏱️ ${episode.duration}</div>
-                        ${episode.lecturePdf && episode.lecturePdf.downloadUrl ? '<div class="episode-pdf">📝 PDF Available</div>' : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Load video in player
-        function loadVideo(index) {
-            currentEpisodeIndex = index;
-            const episode = currentCourse.episodes[index];
-            
-            const videoContainer = document.getElementById('video-container');
-            const episodeTitle = document.getElementById('current-episode-title');
-            
-            episodeTitle.textContent = `Episode ${index + 1}: ${episode.title}`;
-            
-            // Extract YouTube video ID
-            const videoId = extractYouTubeId(episode.videoUrl || episode.youtubeUrl || '');
-            
-            if (videoId) {
-                videoContainer.innerHTML = `
-                    <iframe
-                        src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowfullscreen
-                        id="youtube-player"
-                    ></iframe>
-                `;
-
-                // Setup autoplay listener
-                if (autoplayEnabled) {
-                    setupAutoplay();
-                }
-            } else {
-                videoContainer.innerHTML = `
-                    <div style="display: flex; justify-content: center; align-items: center; height: 100%; color: var(--text-secondary);">
-                        Invalid video URL
-                    </div>
-                `;
-            }
-
-            renderPlaylist();
-            scrollToCurrentEpisode();
-            renderPdfSection(episode);
-        }
-
-        // Render PDF section if available
-        function renderPdfSection(episode) {
-            // Check if PDF section already exists
-            let pdfSection = document.getElementById('pdf-section');
-            
-            if (episode.lecturePdf && episode.lecturePdf.downloadUrl) {
-                const pdfHtml = `
-                    <div class="pdf-section" id="pdf-section">
-                        <h3>📝 Lecture Materials</h3>
-                        <div class="pdf-info">📄 ${episode.lecturePdf.fileName} (${(episode.lecturePdf.size / 1024).toFixed(0)} KB)</div>
-                        <div class="pdf-buttons">
-                            <a href="${episode.lecturePdf.downloadUrl}" target="_blank" class="pdf-btn" title="View PDF in new tab">
-                                👁️ View PDF
-                            </a>
-                            <a href="${episode.lecturePdf.downloadUrl}" download class="pdf-btn download" title="Download PDF to device">
-                                ⬇️ Download PDF
-                            </a>
-                        </div>
-                    </div>
-                `;
-                
-                if (pdfSection) {
-                    pdfSection.outerHTML = pdfHtml;
-                } else {
-                    // Insert after video actions
-                    const videoActions = document.querySelector('.video-actions');
-                    if (videoActions) {
-                        videoActions.insertAdjacentHTML('afterend', pdfHtml);
-                    }
-                }
-            } else {
-                // Remove PDF section if no PDF available
-                if (pdfSection) {
-                    pdfSection.remove();
-                }
-            }
-        }
-
-        // Extract YouTube video ID from URL
-        function extractYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        // Setup autoplay for next video
-        function setupAutoplay() {
-            const iframe = document.getElementById('youtube-player');
-            if (!iframe) return;
-
-            // YouTube IFrame API would be needed for true autoplay detection
-            // This is a simplified version
-            setTimeout(() => {
-                if (currentEpisodeIndex < currentCourse.episodes.length - 1) {
-                    loadVideo(currentEpisodeIndex + 1);
-                }
-            }, 300000); // Fallback: 5 minutes
-        }
-
-        // Toggle autoplay
-        function toggleAutoplay() {
-            autoplayEnabled = !autoplayEnabled;
-            const toggle = document.getElementById('autoplay-toggle');
-            
-            if (autoplayEnabled) {
-                toggle.classList.add('active');
-                showToast('Autoplay enabled');
-            } else {
-                toggle.classList.remove('active');
-                showToast('Autoplay disabled');
-            }
-
-            saveAutoplayPreference();
-        }
-
-        // Mark current episode as completed
-        function markAsCompleted() {
-            completedEpisodes.add(currentEpisodeIndex);
-            saveProgress();
-            renderCourse();
-            showToast('Episode marked as completed!');
-        }
-
-        // Reset progress
-        function resetProgress() {
-            if (confirm('Are you sure you want to reset your progress for this course?')) {
-                completedEpisodes.clear();
-                saveProgress();
-                renderCourse();
-                showToast('Progress reset successfully');
-            }
-        }
-
-        // Toggle description
-        function toggleDescription() {
-            const content = document.getElementById('description-content');
-            const icon = document.getElementById('collapse-icon');
-            
-            content.classList.toggle('hidden');
-            icon.classList.toggle('collapsed');
-        }
-
-        // Share button
-        function shareButton() {
-            const url = window.location.href;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: currentCourse.title,
-                    text: `Check out this course: ${currentCourse.title}`,
-                    url: url
-                }).catch(() => {});
-            } else {
-                navigator.clipboard.writeText(url);
-                showToast('Course link copied to clipboard!');
-            }
-        }
-
-        // Render related courses
-        function renderRelatedCourses() {
-            const relatedContainer = document.getElementById('related-courses');
-            
-            // Filter related courses by same category or similar tags
-            const related = allCourses
-                .filter(course => 
-                    course.id !== currentCourse.id && 
-                    (course.category === currentCourse.category || 
-                     course.tags?.some(tag => currentCourse.tags?.includes(tag)))
-                )
-                .slice(0, 4);
-
-            if (related.length === 0) {
-                relatedContainer.innerHTML = '<p style="color: var(--text-secondary);">No related courses found.</p>';
-                return;
-            }
-
-            relatedContainer.innerHTML = related.map(course => `
-                <a href="course-viewer-new.html?id=${course.id}" class="related-course-card">
-                    <div class="related-course-title">${course.title}</div>
-                    <div class="related-course-info">
-                        ${course.instructor} • ${course.episodes.length} episodes
-                    </div>
-                </a>
-            `).join('');
-        }
-
-        // Scroll to current episode in playlist
-        function scrollToCurrentEpisode() {
-            const playlist = document.getElementById('playlist-episodes');
-            const activeCard = playlist.querySelector('.episode-card.active');
-            
-            if (activeCard) {
-                activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }
-
-        // LocalStorage functions
-        function loadProgress() {
-            const saved = localStorage.getItem(`course_progress_${currentCourse.id}`);
-            if (saved) {
-                const data = JSON.parse(saved);
-                completedEpisodes = new Set(data.completed || []);
-            }
-
-            const autoplaySaved = localStorage.getItem('autoplay_enabled');
-            if (autoplaySaved !== null) {
-                autoplayEnabled = JSON.parse(autoplaySaved);
-                if (autoplayEnabled) {
-                    setTimeout(() => {
-                        document.getElementById('autoplay-toggle')?.classList.add('active');
-                    }, 100);
-                }
-            }
-        }
-
-        function saveProgress() {
-            const data = {
-                completed: Array.from(completedEpisodes),
-                lastWatched: currentEpisodeIndex,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(`course_progress_${currentCourse.id}`, JSON.stringify(data));
-        }
-
-        function saveAutoplayPreference() {
-            localStorage.setItem('autoplay_enabled', JSON.stringify(autoplayEnabled));
-        }
-
-        // Toast notification
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Arrow keys for navigation
-            if (e.key === 'ArrowRight' && currentEpisodeIndex < currentCourse.episodes.length - 1) {
-                loadVideo(currentEpisodeIndex + 1);
-            } else if (e.key === 'ArrowLeft' && currentEpisodeIndex > 0) {
-                loadVideo(currentEpisodeIndex - 1);
-            }
-        });
-
-        // Auto-save progress periodically
-        setInterval(() => {
-            if (currentCourse) {
-                saveProgress();
-            }
-        }, 30000); // Save every 30 seconds
-    </script>
-    <script src="../../Only-boss/managers/Content-studio/youtube-integration.js"></script>
-    <script src="../../Optimization/navbar-autohide.js"></script>
-
-    <!-- Desktop Navbar Scroll Script -->
-    <script>
-        (function() {
-            window.addEventListener('scroll', function() {
-                const navbar = document.getElementById('desktopNavbar');
-                if (navbar) {
-                    if (window.scrollY > 50) {
-                        navbar.classList.add('scrolled');
-                    } else {
-                        navbar.classList.remove('scrolled');
-                    }
-                }
-            });
-        })();
-    </script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

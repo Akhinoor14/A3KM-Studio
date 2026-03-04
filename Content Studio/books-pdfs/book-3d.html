@@ -180,8 +180,8 @@
       box-shadow: 
         inset 0 0 40px rgba(0,0,0,0.08),
         0 20px 50px rgba(0,0,0,0.4);
-      width: 42vw;
-      max-width: 650px;
+      width: 50vw;  /* Increased from 42vw for wider display */
+      max-width: 900px;  /* Increased from 650px for large screens */
     }
     body.single-page-mode .book-spine {
       display: none;
@@ -190,9 +190,9 @@
     /* Book pages - realistic dimensions + performance */
     .book-p {
       position: relative;
-      width: 40vw;
+      width: 45vw;  /* Increased from 40vw for wider pages */
       min-width: 280px;
-      max-width: 550px;
+      max-width: 750px;  /* Increased from 550px for large screens */
       height: 100%;
       background: #fefefe;
       overflow: hidden;
@@ -666,6 +666,18 @@
     /* ──────────────────────────────────────────────────
        RESPONSIVE OPTIMIZATION
     ────────────────────────────────────────────────── */
+    
+    /* Large Desktop - Maximum width utilization for big screens */
+    @media (min-width: 1400px) {
+      .book-p {
+        width: 48vw;
+        max-width: 850px;
+      }
+      body.single-page-mode .book-p.right-p {
+        width: 55vw;
+        max-width: 1000px;
+      }
+    }
     
     /* Tablet - Force single page for better readability */
     @media (max-width: 1024px) {
@@ -1300,21 +1312,25 @@
         const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
         
-        // ADAPTIVE SCALING: Prioritize width for better readability
-        // Works perfectly for both A4 (1:1.41) and custom ratios (2:3)
+        // ULTRA-SHARP RENDERING: Higher base scale for crystal-clear text
         const pageRatio = vp.height / vp.width;
         const containerRatio = cH / cW;
         
-        // Width-priority scaling for maximum text size
-        const widthScale = (cW * 0.98) / vp.width;
-        const heightScale = (cH * 0.98) / vp.height;
+        // Calculate optimal scale to maximize width usage
+        const widthScale = (cW * 0.92) / vp.width;  // Slightly reduced for padding
+        const heightScale = (cH * 0.92) / vp.height;
         
-        // Use width scaling, but limit by height if page is extremely tall
-        const sc = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
+        // Use width scaling to maximize screen usage
+        let baseScale = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
         
-        const scaled = page.getViewport({scale: sc});
-        // MAXIMUM QUALITY: Use device pixel ratio (capped at 3 for performance)
-        const dpr = Math.min(window.devicePixelRatio || 2, 3);
+        // CRITICAL: Boost scale by 1.4x for sharp text (reduced from 1.5x for better fit)
+        baseScale *= 1.4;
+        
+        const scaled = page.getViewport({scale: baseScale});
+        
+        // MAXIMUM QUALITY: Higher DPR for ultra-sharp rendering
+        // Use actual device pixel ratio (up to 4x for retina displays)
+        const dpr = Math.min(window.devicePixelRatio || 2, 4);
 
         const canvas = document.createElement('canvas');
         const ctx    = canvas.getContext('2d', {alpha:false, willReadFrequently: false});
@@ -1337,6 +1353,8 @@
           viewport:   scaled,
           transform:  dpr !== 1 ? [dpr,0,0,dpr,0,0] : null,
           intent:     'display',
+          renderInteractiveForms: false,
+          enableWebGL: false,
         }).promise;
 
         // Create wrapper for canvas + textLayer + annotations
@@ -1346,8 +1364,9 @@
         wrap.style.width = '100%';
         wrap.style.height = '100%';
         wrap.style.display = 'flex';
-        wrap.style.alignItems = 'center';
+        wrap.style.alignItems = 'flex-start';  // Top align for scrolling
         wrap.style.justifyContent = 'center';
+        wrap.style.overflow = 'auto';  // Enable scrolling for larger canvas
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
@@ -1355,6 +1374,10 @@
         textDiv.className = 'textLayer';
         textDiv.style.width = Math.floor(scaled.width) + 'px';
         textDiv.style.height = Math.floor(scaled.height) + 'px';
+        textDiv.style.position = 'absolute';
+        textDiv.style.top = '0';
+        textDiv.style.left = '50%';
+        textDiv.style.transform = 'translateX(-50%)';
         wrap.appendChild(textDiv);
 
         container.innerHTML = '';

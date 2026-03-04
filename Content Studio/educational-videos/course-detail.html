@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0a0000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Mobile redirect -->
+  <script>
+    (function() {
+      const ua = navigator.userAgent || '';
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        const id = new URLSearchParams(window.location.search).get('id');
+        window.location.replace('../../mobile/content-studio/educational-courses/course-detail.html' + (id ? '?id=' + id : ''));
+      }
+    })();
+  </script>
+
+  <title>Course Detail – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../Optimization/styles.css" />
+  <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --accent-red: #FF2020;
+      --light-red: #FF1744;
+      --border-red: rgba(139,0,0,0.4);
+      --border-strong: rgba(204,0,0,0.7);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.85);
+      --text-dim: rgba(255,255,255,0.5);
+      --text-muted: rgba(255,255,255,0.35);
+      --beginner: #4CAF50;
+      --intermediate: #FF9800;
+      --advanced: #F44336;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter','Noto Sans Bengali','Segoe UI',sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, #0a0000 0%, #030000 100%);
+      min-height: 100vh;
+      padding-top: 85px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content:''; position:fixed; left:0; top:85px; bottom:0; width:3px;
+      background:linear-gradient(180deg, transparent 0%, rgba(204,0,0,0.3) 15%, rgba(204,0,0,0.15) 50%, rgba(204,0,0,0.3) 85%, transparent 100%);
+      pointer-events:none; z-index:100; opacity:0.5;
+    }
+
+    /* ── Back Button ─────────────────────── */
+    .back-btn {
+      position:fixed; top:96px; left:22px; z-index:200;
+      display:flex; align-items:center; gap:8px;
+      padding:9px 16px;
+      background:rgba(12,0,0,0.92);
+      border:1px solid var(--border-red);
+      border-radius:10px;
+      color:rgba(255,255,255,0.8);
+      text-decoration:none; font-size:13px; font-weight:700;
+      backdrop-filter:blur(16px); transition:all 0.3s;
+    }
+
+    .back-btn:hover { background:var(--primary-red); border-color:var(--accent-red); color:#fff; transform:translateX(-3px); box-shadow:0 6px 20px rgba(204,0,0,0.45); }
+
+    /* ── Page ─────────────────────────────── */
+    .detail-page {
+      max-width:1200px; margin:0 auto;
+      padding:30px 24px 80px;
+      position:relative; z-index:1;
+    }
+
+    /* Loading */
+    .state-msg { text-align:center; padding:100px 20px; color:var(--text-dim); }
+    .state-msg i { font-size:52px; color:var(--primary-red); margin-bottom:20px; display:block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin { animation:spin 1.2s linear infinite; }
+
+    /* ── Detail Grid ─────────────────────── */
+    .detail-grid {
+      display:grid;
+      grid-template-columns:290px 1fr;
+      gap:44px; align-items:start;
+    }
+
+    /* ── Cover Column ────────────────────── */
+    .cover-wrap { position:sticky; top:110px; }
+
+    .course-thumb-3d {
+      width:100%; aspect-ratio:16/9;
+      border-radius:12px; overflow:hidden;
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.8),
+        0 0 60px rgba(204,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      transition:transform 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s;
+      border:2px solid rgba(139,0,0,0.3);
+      position:relative;
+    }
+
+    .course-thumb-3d:hover {
+      transform:perspective(900px) rotateY(-4deg) scale(1.02);
+      box-shadow:
+        0 30px 70px rgba(0,0,0,0.9),
+        0 0 80px rgba(204,0,0,0.25);
+    }
+
+    .course-thumb-3d img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .thumb-diff-badge {
+      position:absolute; top:10px; right:10px;
+      padding:4px 10px; border-radius:7px;
+      font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.3px;
+      color:#fff; z-index:10;
+    }
+    .thumb-diff-badge.beginner    { background:rgba(76,175,80,0.9); border:1px solid var(--beginner); }
+    .thumb-diff-badge.intermediate{ background:rgba(255,152,0,0.9); border:1px solid var(--intermediate); }
+    .thumb-diff-badge.advanced    { background:rgba(244,67,54,0.9); border:1px solid var(--advanced); }
+
+    /* Stats strip */
+    .cover-stats { margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+    .cstat {
+      padding:10px; background:rgba(14,4,4,0.85);
+      border:1px solid rgba(139,0,0,0.3); border-radius:10px;
+      text-align:center; backdrop-filter:blur(8px); transition:all 0.3s;
+    }
+    .cstat:hover { border-color:rgba(204,0,0,0.5); background:rgba(204,0,0,0.06); }
+    .cstat i { color:var(--primary-red); font-size:15px; margin-bottom:4px; display:block; }
+    .cstat .cstat-val { font-size:15px; font-weight:800; color:#fff; }
+    .cstat .cstat-lbl { font-size:10px; color:var(--text-muted); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:0.4px; }
+
+    /* Start Course button (full-width under stats) */
+    .btn-start-course {
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      margin-top:14px; padding:15px;
+      background:linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border:none; border-radius:12px; color:#fff;
+      font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;
+      text-decoration:none;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 6px 22px rgba(204,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+      position:relative; overflow:hidden;
+    }
+    .btn-start-course::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent); transform:translateX(-100%); transition:transform 0.5s; }
+    .btn-start-course:hover::before { transform:translateX(100%); }
+    .btn-start-course:hover { transform:translateY(-3px); box-shadow:0 12px 35px rgba(204,0,0,0.6); }
+
+    /* ── Info Column ─────────────────────── */
+    .info-col { display:flex; flex-direction:column; gap:20px; }
+
+    .badge-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .badge {
+      padding:4px 12px; border-radius:20px;
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+    }
+    .badge-cat { background:rgba(204,0,0,0.15); border:1px solid rgba(204,0,0,0.45); color:rgba(255,100,100,0.95); }
+    .badge-lang { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); color:rgba(255,255,255,0.75); }
+    .badge-diff.beginner    { background:rgba(76,175,80,0.15); border:1px solid rgba(76,175,80,0.4); color:rgba(100,200,100,0.9); }
+    .badge-diff.intermediate{ background:rgba(255,152,0,0.15); border:1px solid rgba(255,152,0,0.4); color:rgba(255,180,80,0.9); }
+    .badge-diff.advanced    { background:rgba(244,67,54,0.15); border:1px solid rgba(244,67,54,0.4); color:rgba(255,100,100,0.9); }
+
+    .course-title {
+      font-size:clamp(1.5rem,3vw,2.1rem); font-weight:900; line-height:1.25; color:#fff;
+      text-shadow:0 2px 12px rgba(0,0,0,0.8), 0 0 30px rgba(204,0,0,0.2);
+    }
+
+    .instructor-line {
+      display:flex; align-items:center; gap:10px;
+      font-size:15px; color:var(--text-secondary); font-weight:600;
+    }
+    .instructor-line i { color:var(--primary-red); font-size:13px; }
+
+    .meta-chips { display:flex; gap:10px; flex-wrap:wrap; }
+    .chip {
+      display:flex; align-items:center; gap:6px;
+      padding:7px 14px;
+      background:rgba(14,4,4,0.85); border:1px solid rgba(139,0,0,0.3);
+      border-radius:8px; font-size:13px; font-weight:600; color:var(--text-secondary);
+      backdrop-filter:blur(8px);
+    }
+    .chip i { color:var(--primary-red); font-size:11px; }
+
+    /* Description */
+    .course-desc-box {
+      padding:20px; background:rgba(10,0,0,0.6);
+      border:1px solid rgba(139,0,0,0.2); border-radius:12px;
+    }
+    .course-desc-box h4 { font-size:13px; color:rgba(255,100,100,0.7); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+    .course-desc-box p { font-size:14px; line-height:1.7; color:var(--text-secondary); }
+
+    /* ── Episode List Section ────────────── */
+    .episodes-section { margin-top:8px; }
+
+    .section-title {
+      display:flex; align-items:center; gap:10px;
+      font-size:18px; font-weight:800; color:#fff;
+      margin-bottom:16px; padding-bottom:12px;
+      border-bottom:2px solid rgba(204,0,0,0.25);
+    }
+    .section-title i { color:var(--primary-red); }
+
+    .episode-list { display:flex; flex-direction:column; gap:10px; }
+
+    .episode-item {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 16px;
+      background:rgba(10,0,0,0.65);
+      border:1px solid rgba(139,0,0,0.2);
+      border-radius:11px; cursor:pointer;
+      transition:all 0.28s cubic-bezier(0.4,0,0.2,1);
+      position:relative; overflow:hidden;
+    }
+
+    .episode-item::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:0;
+      background:linear-gradient(90deg, rgba(204,0,0,0.18), transparent);
+      transition:width 0.3s;
+    }
+
+    .episode-item:hover { border-color:rgba(204,0,0,0.55); background:rgba(204,0,0,0.06); transform:translateX(4px); box-shadow:0 4px 18px rgba(0,0,0,0.5); }
+    .episode-item:hover::before { width:100%; }
+
+    .ep-num {
+      min-width:36px; height:36px;
+      background:rgba(204,0,0,0.18); border:1px solid rgba(204,0,0,0.35);
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:800; color:var(--primary-red); flex-shrink:0;
+      transition:all 0.25s;
+    }
+    .episode-item:hover .ep-num { background:var(--primary-red); color:#fff; }
+
+    .ep-thumb {
+      width:105px; height:60px; border-radius:8px; overflow:hidden; flex-shrink:0;
+      background:#0d0000; border:1px solid rgba(139,0,0,0.25);
+      position:relative;
+    }
+    .ep-thumb img { width:100%; height:100%; object-fit:cover; }
+    .ep-thumb-overlay {
+      position:absolute; inset:0;
+      background:rgba(0,0,0,0); display:flex; align-items:center; justify-content:center;
+      transition:all 0.2s;
+    }
+    .episode-item:hover .ep-thumb-overlay { background:rgba(0,0,0,0.45); }
+    .ep-play-icon {
+      width:26px; height:26px; background:var(--primary-red); border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:10px; opacity:0; transform:scale(0.6);
+      transition:all 0.2s;
+    }
+    .episode-item:hover .ep-play-icon { opacity:1; transform:scale(1); }
+
+    .ep-info { flex:1; min-width:0; position:relative; z-index:1; }
+    .ep-title {
+      font-size:14px; font-weight:700; color:var(--text-secondary); line-height:1.4;
+      display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      transition:color 0.2s;
+    }
+    .episode-item:hover .ep-title { color:#fff; }
+
+    .ep-meta { display:flex; align-items:center; gap:10px; margin-top:5px; flex-wrap:wrap; }
+    .ep-dur { font-size:12px; color:var(--text-muted); font-weight:600; display:flex; align-items:center; gap:4px; }
+    .ep-dur i { color:var(--primary-red); font-size:10px; }
+    .ep-pdf-badge {
+      padding:2px 8px; background:rgba(204,0,0,0.12); border:1px solid rgba(204,0,0,0.3);
+      border-radius:5px; font-size:11px; font-weight:700; color:rgba(255,150,150,0.85);
+    }
+
+    /* Responsive */
+    @media (max-width:900px) {
+      .detail-grid { grid-template-columns:1fr; gap:28px; }
+      .cover-wrap { position:static; }
+    }
+    @media (max-width:600px) {
+      .detail-page { padding:20px 16px 60px; }
+      .back-btn { top:90px; left:14px; font-size:12px; padding:8px 12px; }
+      .ep-thumb { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Navbar -->
+  <nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+        <div class="desktop-nav-brand">
+          <span class="desktop-nav-brand-name">A3KM Studio</span>
+          <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+        </div>
+      </a>
+      <ul class="desktop-nav-menu">
+        <li class="desktop-nav-item">
+          <a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Projects Code/projects.html" class="desktop-nav-link"><i class="fas fa-folder-open"></i><span>Projects</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../hub.html" class="desktop-nav-link active"><i class="fas fa-layer-group"></i><span>Content Studio</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download>
+            <i class="fas fa-download"></i><span>CV</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <a href="course-listing-new.html" class="back-btn" id="backBtn">
+    <i class="fas fa-arrow-left"></i> All Courses
+  </a>
+
+  <div class="detail-page">
+    <div class="state-msg" id="stateMsg">
+      <i class="fas fa-spinner spin"></i>
+      <p>Loading course…</p>
+    </div>
+
+    <div class="detail-grid" id="detailGrid" style="display:none;">
+
+      <!-- LEFT: Cover + Stats -->
+      <div class="cover-wrap">
+        <div class="course-thumb-3d" id="thumbWrap">
+          <img id="courseCover" src="" alt="">
+          <span class="thumb-diff-badge" id="diffBadge"></span>
+        </div>
+        <div class="cover-stats" id="coverStats"></div>
+        <a href="" id="startBtn" class="btn-start-course">
+          <i class="fas fa-play"></i> Start Course
+        </a>
+      </div>
+
+      <!-- RIGHT: Info + Episodes -->
+      <div class="info-col">
+        <div class="badge-row" id="badgeRow"></div>
+        <h1 class="course-title" id="courseTitle"></h1>
+        <div class="instructor-line" id="instructorLine"></div>
+        <div class="meta-chips" id="metaChips"></div>
+        <div class="course-desc-box" id="descBox" style="display:none;">
+          <h4><i class="fas fa-info-circle" style="color:var(--primary-red);margin-right:6px;"></i>About This Course</h4>
+          <p id="courseDesc"></p>
+        </div>
+
+        <!-- Episode List -->
+        <div class="episodes-section">
+          <h2 class="section-title" id="episodeHeader">
+            <i class="fas fa-list-ol"></i> <span id="epHeaderText">Episodes</span>
+          </h2>
+          <div class="episode-list" id="episodeList"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── YouTube API from localStorage (set from Only-boss Command Center) ──
+    let YT_API_KEY = localStorage.getItem('youtube_api_key') || '';
+
+    // If key is updated in Only-boss while this page is open, re-load to get real durations
+    window.addEventListener('storage', e => {
+      if (e.key === 'youtube_api_key' && e.newValue) {
+        YT_API_KEY = e.newValue;
+        loadCourse(); // Re-render episode list with real durations
+        console.log('✅ Course Detail: YouTube API key updated, refreshing durations');
+      }
+    });
+
+    function escHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function ytThumb(videoId) {
+      return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    }
+
+    // ── Fetch real duration from YT API ──────────────────
+    async function fetchDurations(videoIds) {
+      if (!YT_API_KEY || !videoIds.length) return {};
+      try {
+        const ids = videoIds.join(',');
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${YT_API_KEY}`;
+        const res = await fetch(url);
+        if (!res.ok) return {};
+        const data = await res.json();
+        const map = {};
+        (data.items || []).forEach(item => {
+          map[item.id] = parseDuration(item.contentDetails.duration);
+        });
+        return map;
+      } catch { return {}; }
+    }
+
+    function parseDuration(iso) {
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!m) return '';
+      const h = parseInt(m[1]||0);
+      const min = parseInt(m[2]||0);
+      const s = parseInt(m[3]||0);
+      if (h > 0) return `${h}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${min}:${String(s).padStart(2,'0')}`;
+    }
+
+    // ── Format duration string ───────────────────────────
+    function fmtDur(d) { return d || ''; }
+
+    // ── Main Load ────────────────────────────────────────
+    async function loadCourse() {
+      const courseId = new URLSearchParams(window.location.search).get('id');
+      if (!courseId) {
+        document.getElementById('stateMsg').innerHTML = '<i class="fas fa-exclamation-circle"></i><p>No course ID provided.</p>';
+        return;
+      }
+
+      let course;
+      try {
+        const res  = await fetch('courses.json');
+        const data = await res.json();
+        course = (data.courses || []).find(c => c.id === courseId);
+      } catch(e) {
+        document.getElementById('stateMsg').innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Failed to load course data.</p>';
+        return;
+      }
+
+      if (!course) {
+        document.getElementById('stateMsg').innerHTML = '<i class="fas fa-search"></i><p>Course not found.</p>';
+        return;
+      }
+
+      // Normalise fields
+      course.playlist = course.playlist || [];
+      course.episodes  = course.episodes  || course.playlist.length;
+      course.instructor= course.instructor || course.institution || 'Md Akhinoor Islam';
+      const difficulty = (course.difficulty || 'beginner').toLowerCase();
+      const langLabel  = course.language === 'bn' ? 'বাংলা (BN)' : 'English (EN)';
+      const diffLabel  = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+
+      // Update page title
+      document.title = `${course.title} – A3KM Studio`;
+
+      // Thumbnail
+      const coverImg = document.getElementById('courseCover');
+      if (course.playlist[0]?.videoId) {
+        coverImg.src = ytThumb(course.playlist[0].videoId);
+      } else {
+        coverImg.src = course.thumbnail || '';
+      }
+      coverImg.alt = course.title;
+      if (!coverImg.src && !course.thumbnail) {
+        document.getElementById('thumbWrap').style.background = 'rgba(20,0,0,0.9)';
+      }
+
+      // Difficulty badge
+      const dbadge = document.getElementById('diffBadge');
+      dbadge.textContent = diffLabel;
+      dbadge.className = `thumb-diff-badge ${difficulty}`;
+
+      // Cover stats
+      const statsHtml = [
+        { icon:'fas fa-list-ol',  val: course.episodes || course.playlist.length, lbl:'Episodes' },
+        { icon:'fas fa-clock',    val: course.duration || '—',        lbl:'Duration' },
+        { icon:'fas fa-users',    val: course.enrolled || '—',        lbl:'Enrolled' },
+        { icon:'fas fa-file-pdf', val: course.playlist.filter(ep=>ep.lecturePdf?.downloadUrl).length || 0, lbl:'PDFs' }
+      ].map(s => `
+        <div class="cstat">
+          <i class="${s.icon}"></i>
+          <div class="cstat-val">${escHtml(String(s.val))}</div>
+          <div class="cstat-lbl">${s.lbl}</div>
+        </div>`).join('');
+      document.getElementById('coverStats').innerHTML = statsHtml;
+
+      // Start button
+      document.getElementById('startBtn').href = `course-viewer-new.html?courseId=${encodeURIComponent(courseId)}&ep=0`;
+
+      // Badges
+      document.getElementById('badgeRow').innerHTML = `
+        <span class="badge badge-cat">${escHtml(course.category || 'Course')}</span>
+        <span class="badge badge-diff ${difficulty}">${diffLabel}</span>
+        <span class="badge badge-lang">${langLabel}</span>`;
+
+      // Title + instructor
+      document.getElementById('courseTitle').textContent = course.title;
+      document.getElementById('instructorLine').innerHTML = `
+        <i class="fas fa-chalkboard-teacher"></i>
+        <span>${escHtml(course.instructor)}</span>`;
+
+      // Meta chips
+      const metaItems = [];
+      if (course.episodes || course.playlist.length) metaItems.push({ icon:'fas fa-list-ol', text:`${course.episodes || course.playlist.length} Episodes` });
+      if (course.duration)  metaItems.push({ icon:'fas fa-clock',  text:course.duration });
+      if (course.enrolled)  metaItems.push({ icon:'fas fa-users',  text:`${course.enrolled} Enrolled` });
+      document.getElementById('metaChips').innerHTML = metaItems.map(m =>
+        `<span class="chip"><i class="${m.icon}"></i>${escHtml(m.text)}</span>`).join('');
+
+      // Description
+      if (course.summary || course.description) {
+        document.getElementById('descBox').style.display = 'block';
+        document.getElementById('courseDesc').textContent = course.summary || course.description;
+      }
+
+      // Episode header
+      document.getElementById('epHeaderText').textContent = `${course.playlist.length} Episodes`;
+
+      // ── Fetch real YT durations ──
+      const videoIds = course.playlist.map(ep => ep.videoId).filter(Boolean);
+      const durMap   = videoIds.length ? await fetchDurations(videoIds) : {};
+
+      // Episodes
+      const epList = document.getElementById('episodeList');
+      if (!course.playlist.length) {
+        epList.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:20px 0;">No episodes published yet.</div>';
+      } else {
+        epList.innerHTML = course.playlist.map((ep, idx) => {
+          const dur     = durMap[ep.videoId] || fmtDur(ep.duration) || '';
+          const hasPdf  = !!(ep.lecturePdf?.downloadUrl);
+          const thumb   = ep.videoId ? ytThumb(ep.videoId) : (ep.thumbnail || '');
+          return `
+            <div class="episode-item" onclick="openEpisode('${escHtml(courseId)}',${idx})">
+              <div class="ep-num">${idx+1}</div>
+              ${thumb ? `
+              <div class="ep-thumb">
+                <img src="${escHtml(thumb)}" alt="" loading="lazy">
+                <div class="ep-thumb-overlay">
+                  <div class="ep-play-icon"><i class="fas fa-play" style="margin-left:2px;font-size:9px;"></i></div>
+                </div>
+              </div>` : ''}
+              <div class="ep-info">
+                <div class="ep-title">${escHtml(ep.title || `Episode ${idx+1}`)}</div>
+                <div class="ep-meta">
+                  ${dur ? `<span class="ep-dur"><i class="fas fa-clock"></i>${dur}</span>` : ''}
+                  ${hasPdf ? `<span class="ep-pdf-badge">📝 PDF</span>` : ''}
+                </div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:rgba(204,0,0,0.4);flex-shrink:0;font-size:13px;transition:all 0.2s;"></i>
+            </div>`;
+        }).join('');
+      }
+
+      // Show grid
+      document.getElementById('stateMsg').style.display = 'none';
+      document.getElementById('detailGrid').style.display = 'grid';
+    }
+
+    function openEpisode(courseId, epIdx) {
+      window.location.href = `course-viewer-new.html?courseId=${encodeURIComponent(courseId)}&ep=${epIdx}`;
+    }
+
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+      document.getElementById('desktopNavbar')?.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadCourse);
+
+    // Auto-refresh episode durations every 30 minutes
+    setInterval(async () => {
+      if (YT_API_KEY) {
+        loadCourse();
+        console.log('🔄 Course Detail: auto-refreshed durations');
+      }
+    }, 1800000); // 30 minutes
+  </script>
+
+  <script src="../../Optimization/navbar-autohide.js"></script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
+</body>
+</html>

@@ -28,7 +28,7 @@
     // ========== LOAD BOOKS FROM JSON ==========
     async function loadBooksFromJSON() {
         try {
-            const response = await fetch('../../../Content Studio/books-pdfs/books.json');
+            const response = await fetch('../../../Content%20Studio/books-pdfs/books.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
@@ -109,7 +109,8 @@
                 title: currentBook.title,
                 downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
                 showDownload: true,
-                allowZoom: true
+                allowZoom: true,
+                password: 'MOUnoor21014'  // Explicit A3KM password for all books
             });
             
             // Activate Book Mode if requested

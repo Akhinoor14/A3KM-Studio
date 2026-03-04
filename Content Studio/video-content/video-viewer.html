@@ -1243,6 +1243,61 @@
     let ytPlayer = null;
     let playerReady = false;
     let videosData = null;
+
+    // YouTube API Duration Cache
+    let durCache = {};
+    let YT_API_KEY = localStorage.getItem('youtube_api_key') || '';
+
+    // Listen for API key update from Only-boss Command Center / Site Settings
+    window.addEventListener('storage', e => {
+      if (e.key === 'youtube_api_key') {
+        YT_API_KEY = e.newValue || '';
+        if (YT_API_KEY && allVideos.length) fetchAndUpdateDurations();
+      }
+    });
+
+    // Parse ISO 8601 duration (PT1H2M3S) → "1:02:03"
+    function parseDuration(iso) {
+      if (!iso) return '';
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!m) return '';
+      const h = parseInt(m[1]||0), min = parseInt(m[2]||0), sec = parseInt(m[3]||0);
+      if (h > 0) return `${h}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+      return `${min}:${String(sec).padStart(2,'0')}`;
+    }
+
+    // Fetch real durations from YouTube Data API v3 (50 per request)
+    async function fetchDurations(videoIds) {
+      if (!YT_API_KEY || !videoIds.length) return {};
+      const result = {};
+      const chunks = [];
+      for (let i = 0; i < videoIds.length; i += 50) chunks.push(videoIds.slice(i, i + 50));
+      for (const chunk of chunks) {
+        try {
+          const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${chunk.join(',')}&key=${YT_API_KEY}`;
+          const res = await fetch(url);
+          if (!res.ok) { console.warn('YT API error:', res.status); continue; }
+          const data = await res.json();
+          (data.items || []).forEach(item => {
+            const dur = parseDuration(item.contentDetails?.duration);
+            if (dur) result[item.id] = dur;
+          });
+        } catch (err) { console.warn('fetchDurations failed:', err); }
+      }
+      return result;
+    }
+
+    // Fetch durations for all loaded videos then re-render with real times
+    async function fetchAndUpdateDurations() {
+      const ids = allVideos.map(v => v.videoId).filter(Boolean);
+      if (!ids.length) return;
+      const fetched = await fetchDurations(ids);
+      if (Object.keys(fetched).length) {
+        Object.assign(durCache, fetched);
+        renderVideos();
+        console.log(`✅ Fetched ${Object.keys(fetched).length} real durations from YouTube API`);
+      }
+    }
     
     // Intercept YouTube link clicks and open in our viewer
     document.addEventListener('click', function(e) {
@@ -1402,7 +1457,7 @@
             <img src="https://img.youtube.com/vi/${video.videoId || video.id}/maxresdefault.jpg" 
                  alt="${video.title}"
                  onerror="this.src='https://img.youtube.com/vi/${video.videoId || video.id}/hqdefault.jpg'">
-            <div class="suggestion-duration">${video.duration}</div>
+            <div class="suggestion-duration">${durCache[video.videoId] || video.duration}</div>
           </div>
           <div class="suggestion-info">
             <div class="suggestion-title">${video.title}</div>
@@ -1468,6 +1523,9 @@
       }
 
       console.log(`📺 Loaded ${allVideos.length} videos`);
+
+      // Fetch real durations from YouTube API (resolves async, re-renders when done)
+      fetchAndUpdateDurations();
     }
 
     // Render Category Tabs
@@ -1554,7 +1612,7 @@
               <img src="${getYouTubeThumbnail(video.videoId)}" 
                    alt="${video.title}"
                    loading="lazy" />
-              <span class="video-duration">${video.duration}</span>
+              <span class="video-duration">${durCache[video.videoId] || video.duration}</span>
             </div>
             <div class="video-card-info">
               <div class="video-card-title">${video.title}</div>
@@ -1606,7 +1664,7 @@
         </div>
         <div class="meta-item">
           <i class="fas fa-clock"></i>
-          <span>${video.duration}</span>
+          <span>${durCache[video.videoId] || video.duration}</span>
         </div>
         <div class="meta-item">
           <i class="fas fa-eye"></i>
@@ -1749,6 +1807,15 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', loadVideosData);
+
+    // Auto-refresh durations every 30 minutes
+    setInterval(async () => {
+      if (allVideos.length && YT_API_KEY) {
+        durCache = {};
+        await fetchAndUpdateDurations();
+        console.log('🔄 Video Viewer: auto-refreshed durations');
+      }
+    }, 1800000); // 30 minutes
   </script>
   <script src="../../Optimization/navbar-autohide.js"></script>
 

@@ -106,18 +106,76 @@
 
         // Check saved state from localStorage
         checkSavedState();
+
+        // Set MediaSession metadata + PiP title
+        if (typeof window._setPipMeta === 'function') {
+            window._setPipMeta(
+                currentVideo.title,
+                currentVideo.thumbnail || ''
+            );
+        }
+
+        // ── Build Prev/Next navigation (same subcategory) ──────────────────
+        (function buildNavigation() {
+            var sub      = currentVideo.subcategory || '';
+            var catList  = sub
+                ? allVideos.filter(function(v) { return v.subcategory === sub; })
+                : allVideos;
+            var catIdx   = catList.findIndex(function(v) { return v.id === currentVideo.id; });
+            var isPrevOff = catIdx <= 0;
+            var isNextOff = catIdx < 0 || catIdx >= catList.length - 1;
+
+            var navigate = function(targetId) {
+                var s = (typeof window._getPlayerState === 'function')
+                    ? window._getPlayerState() : 'normal';
+                if (s !== 'normal') sessionStorage.setItem('vpRestoreState', s);
+                document.body.style.transition = 'opacity 0.18s ease';
+                document.body.style.opacity    = '0';
+                setTimeout(function() {
+                    location.href = 'video-viewer.html?id=' + targetId;
+                }, 190);
+            };
+
+            window._prevVideo = isPrevOff ? null
+                : function() { navigate(catList[catIdx - 1].id); };
+            window._nextVideo = isNextOff ? null
+                : function() { navigate(catList[catIdx + 1].id); };
+
+            (function applyNavBtns() {
+                if (typeof window._updateNavBtns === 'function') {
+                    window._updateNavBtns(isPrevOff, isNextOff);
+                } else {
+                    setTimeout(applyNavBtns, 200);
+                }
+            })();
+        })();
     }
 
-    // ========== LOAD YOUTUBE PLAYER ==========
+    // ========== LOAD YOUTUBE PLAYER (via IFrame API gesture engine) ==========
     function loadYouTubePlayer(videoId) {
-        // For demo, show placeholder. In production, embed actual YouTube iframe
-        videoPlayerContainer.innerHTML = `
-            <iframe 
-                src="https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-            </iframe>
-        `;
+        if (typeof window._initYTPlayer === 'function') {
+            // Gesture engine is ready — delegate to it
+            window._initYTPlayer(videoId);
+        } else {
+            // IFrame API not yet ready — wait and retry
+            const poll = setInterval(() => {
+                if (typeof window._initYTPlayer === 'function') {
+                    clearInterval(poll);
+                    window._initYTPlayer(videoId);
+                }
+            }, 150);
+            // Fallback: if still not ready after 5 s, embed raw iframe
+            setTimeout(() => {
+                clearInterval(poll);
+                if (!videoPlayerContainer.querySelector('iframe, [id^="ytPlayer"]>iframe')) {
+                    videoPlayerContainer.innerHTML = `
+                        <iframe
+                            src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen></iframe>`;
+                }
+            }, 5000);
+        }
     }
 
     // ========== RENDER VIDEO INFO ==========
@@ -372,6 +430,32 @@
             });
         }
     }
+
+    // Listen for API key update → re-fetch current video data
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'youtube_api_key' && e.newValue && currentVideo) {
+            if (window.youtubeFetcher) window.youtubeFetcher.refreshKey();
+            window.youtubeFetcher?.enhanceVideoData(currentVideo).then(enhanced => {
+                currentVideo = enhanced;
+                renderVideoInfo();
+                renderRelatedVideos();
+                console.log('✅ Video Viewer (mobile): re-fetched with updated API key');
+            }).catch(() => {});
+        }
+    });
+
+    // Auto-refresh current video data every 30 minutes
+    setInterval(() => {
+        if (currentVideo && window.youtubeFetcher?.hasValidKey) {
+            window.youtubeFetcher.cache.clear();
+            window.youtubeFetcher.enhanceVideoData(currentVideo).then(enhanced => {
+                currentVideo = enhanced;
+                renderVideoInfo();
+                renderRelatedVideos();
+                console.log('🔄 Video Viewer (mobile): auto-refreshed video data');
+            }).catch(() => {});
+        }
+    }, 1800000); // 30 minutes
 
     // Wait for DOM
     if (document.readyState === 'loading') {

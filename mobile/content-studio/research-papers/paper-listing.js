@@ -139,7 +139,7 @@
 
     // ========== OPEN PAPER VIEWER ==========
     window.openPaper = function(paperId) {
-        window.location.href = `paper-viewer.html?id=${paperId}`;
+        window.location.href = `paper-detail.html?id=${paperId}`;
     };
 
     // ========== CITE PAPER ==========
