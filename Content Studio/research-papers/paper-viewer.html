@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0a0000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Mobile redirect -->
+  <script>
+    (function() {
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(navigator.userAgent) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        const id = new URLSearchParams(window.location.search).get('id');
+        window.location.replace('../../mobile/content-studio/research-papers/paper-viewer.html' + (id ? '?id='+id : ''));
+      }
+    })();
+  </script>
+
+  <title>Paper Viewer – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --accent-red: #FF2020;
+      --border-red: rgba(139,0,0,0.45);
+      --bar-bg: rgba(8,2,2,0.97);
+      --card-bg: rgba(14,4,4,0.96);
+      --text-primary: #FFFFFF;
+      --text-dim: rgba(255,255,255,0.55);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a; color: var(--text-primary);
+      height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── TOP BAR ─────────────────────────────────────── */
+    .top-bar {
+      position: fixed; top:0; left:0; right:0; height:54px;
+      background: var(--bar-bg);
+      border-bottom: 1px solid var(--border-red);
+      backdrop-filter: blur(20px);
+      display: flex; align-items: center; gap:10px; padding:0 16px;
+      z-index: 1000; transition: transform 0.35s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    .top-bar.hidden { transform: translateY(-100%); }
+
+    .bar-btn {
+      height: 36px; min-width: 36px;
+      display: flex; align-items: center; justify-content: center; gap:7px;
+      padding: 0 12px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: rgba(255,255,255,0.75);
+      font-size: 13px; font-weight:600; cursor: pointer;
+      transition: all 0.2s; white-space:nowrap; font-family:'Inter',sans-serif;
+    }
+    .bar-btn:hover { background:rgba(204,0,0,0.15); border-color:var(--border-red); color:#fff; }
+    .bar-btn.active { background:rgba(204,0,0,0.2); border-color:rgba(204,0,0,0.6); color:#fff; }
+    .bar-btn:disabled { opacity:0.35; cursor:default; }
+    .bar-btn i { font-size:13px; }
+
+    .bar-red { background:var(--primary-red) !important; border-color:var(--primary-red) !important; color:#fff !important; }
+    .bar-red:hover { background:var(--dark-red) !important; transform:translateY(-1px); box-shadow:0 4px 14px rgba(204,0,0,0.4); }
+
+    .bar-title {
+      flex:1; font-size:13px; font-weight:700; color:rgba(255,255,255,0.65);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;
+    }
+    .bar-sep { width:1px; height:24px; background:rgba(255,255,255,0.1); flex-shrink:0; }
+
+    .page-input-wrap { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-dim); font-weight:600; }
+    .page-num-input {
+      width:52px; height:32px;
+      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+      border-radius:7px; color:#fff; font-size:13px; font-weight:700; text-align:center;
+      font-family:'Inter',sans-serif; transition:border-color 0.2s;
+    }
+    .page-num-input:focus { outline:none; border-color:var(--border-red); }
+    .zoom-display { min-width:52px; text-align:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); }
+
+    /* ── READING AREA ────────────────────────────────── */
+    .reader-area {
+      flex:1; padding-top:54px; overflow-y:auto; overflow-x:auto;
+      background:#111; scroll-behavior:smooth; position:relative;
+    }
+    .reader-area::-webkit-scrollbar { width:8px; height:8px; }
+    .reader-area::-webkit-scrollbar-track { background:#0a0a0a; }
+    .reader-area::-webkit-scrollbar-thumb { background:rgba(204,0,0,0.4); border-radius:4px; }
+    .reader-area::-webkit-scrollbar-thumb:hover { background:rgba(204,0,0,0.65); }
+
+    #pdfViewport {
+      min-height:100%; display:flex; align-items:flex-start;
+      justify-content:center; padding:24px 16px 80px;
+    }
+    .canvas-wrap {
+      position:relative; display:inline-block;
+      box-shadow:0 12px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(139,0,0,0.3);
+      border-radius:2px; background:#fff; transition:box-shadow 0.3s, transform 0.3s;
+    }
+    .canvas-wrap:hover {
+      box-shadow:0 18px 60px rgba(0,0,0,0.9), 0 0 30px rgba(204,0,0,0.15), 0 0 0 1px rgba(204,0,0,0.5);
+    }
+    #pdfCanvas { display:block; image-rendering:-webkit-optimize-contrast; }
+
+    .textLayer {
+      position:absolute; top:0; left:0; pointer-events:all; overflow:hidden;
+    }
+    .textLayer span { color:transparent; cursor:text; position:absolute; white-space:pre; transform-origin:0 0; }
+    .textLayer ::selection { background:rgba(204,0,0,0.25); }
+
+    .canvas-wrap.fade-out { opacity:0; transform:scale(0.985); }
+    .canvas-wrap.fade-in  { opacity:1; transform:scale(1); transition:opacity 0.2s ease, transform 0.2s ease; }
+
+    /* Loading / Error states */
+    .center-state {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      min-height:80vh; text-align:center; color:rgba(255,255,255,0.5); gap:16px;
+    }
+    .center-state i { font-size:52px; color:var(--primary-red); }
+    .spin { animation:spin 1.2s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .center-state p { font-size:15px; font-weight:600; }
+    .center-state small { font-size:13px; color:rgba(255,255,255,0.3); max-width:500px; line-height:1.6; }
+    .dl-fallback-btn, .back-btn {
+      display:inline-flex; align-items:center; gap:8px; margin-top:16px;
+      padding:12px 24px; border-radius:10px; text-decoration:none;
+      font-weight:700; font-size:13px; transition:all 0.2s;
+    }
+    .dl-fallback-btn { background:var(--primary-red); color:#fff; }
+    .dl-fallback-btn:hover { background:var(--accent-red); transform:translateY(-2px); box-shadow:0 4px 12px rgba(204,0,0,0.4); }
+    .back-btn { background:rgba(255,255,255,0.05); color:var(--text-dim); border:1px solid rgba(255,255,255,0.1); }
+    .back-btn:hover { background:rgba(255,255,255,0.08); color:var(--text-primary); border-color:rgba(255,255,255,0.2); }
+
+    /* ── ADBLOCKER POPUP ─────────────────────────────── */
+    .adblocker-notification {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
+      display:none; align-items:center; justify-content:center;
+      z-index:10000; animation:fadeIn 0.3s ease;
+    }
+    .adblocker-notification.active { display:flex; }
+    .notif-content {
+      background:linear-gradient(145deg,rgba(20,2,2,0.98),rgba(8,0,0,0.98));
+      border:1px solid rgba(204,0,0,0.3); border-radius:16px; padding:40px;
+      max-width:500px; width:90%;
+      box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(204,0,0,0.15);
+      text-align:center; position:relative; animation:slideUp 0.4s ease;
+    }
+    .notif-icon {
+      width:80px; height:80px; margin:0 auto 20px;
+      background:linear-gradient(135deg,var(--primary-red),var(--dark-red));
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 8px 24px rgba(204,0,0,0.4);
+    }
+    .notif-icon i { font-size:36px; color:#fff; }
+    .notif-title { font-size:24px; font-weight:800; color:var(--text-primary); margin-bottom:12px; letter-spacing:-0.3px; }
+    .notif-msg { font-size:14px; line-height:1.7; color:rgba(255,255,255,0.65); margin-bottom:28px; max-width:400px; margin-left:auto; margin-right:auto; }
+    .notif-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .notif-btn { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; font-family:inherit; }
+    .notif-btn-primary { background:linear-gradient(135deg,var(--primary-red),var(--dark-red)); color:#fff; box-shadow:0 4px 12px rgba(204,0,0,0.3); }
+    .notif-btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(204,0,0,0.5); }
+    .notif-btn-secondary { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.15); }
+    .notif-btn-secondary:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); border-color:rgba(255,255,255,0.25); }
+    .notif-close {
+      position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%;
+      background:rgba(255,255,255,0.05); border:none; color:rgba(255,255,255,0.4);
+      cursor:pointer; transition:all 0.2s; font-size:14px;
+    }
+    .notif-close:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); transform:rotate(90deg); }
+    @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
+
+    /* ── PROGRESS BAR ────────────────────────────────── */
+    .progress-bar { position:fixed; bottom:0; left:0; right:0; height:3px; background:rgba(204,0,0,0.15); z-index:1000; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,var(--primary-red),#FF4444); transition:width 0.3s ease; box-shadow:0 0 8px rgba(204,0,0,0.6); }
+    .page-label {
+      position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+      padding:5px 16px; background:rgba(8,2,2,0.92); border:1px solid var(--border-red);
+      border-radius:20px; font-size:12px; font-weight:700; color:rgba(255,255,255,0.6);
+      pointer-events:none; z-index:999; backdrop-filter:blur(10px);
+      opacity:0; transition:opacity 0.3s;
+    }
+    .page-label.show { opacity:1; }
+
+    /* ── BOOKMARKS PANEL ─────────────────────────────── */
+    .bm-panel {
+      position:fixed; top:0; right:-320px; width:300px; height:100vh;
+      background:rgba(10,2,2,0.98); border-left:1px solid var(--border-red);
+      z-index:1100; transition:right 0.35s cubic-bezier(0.4,0,0.2,1);
+      display:flex; flex-direction:column; backdrop-filter:blur(20px);
+      box-shadow:-12px 0 40px rgba(0,0,0,0.7);
+    }
+    .bm-panel.open { right:0; }
+    .bm-head { padding:18px 18px 14px; border-bottom:1px solid var(--border-red); display:flex; align-items:center; justify-content:space-between; }
+    .bm-head h3 { font-size:15px; font-weight:800; color:#fff; }
+    .bm-close { width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:rgba(204,0,0,0.15); border:1px solid var(--border-red); border-radius:50%; color:rgba(255,255,255,0.7); cursor:pointer; transition:all 0.2s; font-size:13px; }
+    .bm-close:hover { background:var(--primary-red); color:#fff; }
+    .bm-list { flex:1; overflow-y:auto; padding:12px; }
+    .bm-item { padding:12px; background:rgba(204,0,0,0.08); border:1px solid var(--border-red); border-radius:8px; margin-bottom:8px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:space-between; }
+    .bm-item:hover { background:rgba(204,0,0,0.18); border-color:rgba(204,0,0,0.7); }
+    .bm-item-page { font-size:14px; font-weight:800; color:var(--primary-red); }
+    .bm-item-date { font-size:11px; color:var(--text-dim); margin-top:2px; }
+    .bm-del { color:var(--text-dim); font-size:11px; cursor:pointer; padding:4px 6px; border-radius:4px; transition:all 0.2s; }
+    .bm-del:hover { color:#fff; background:rgba(204,0,0,0.3); }
+    .bm-empty { text-align:center; padding:40px 16px; color:var(--text-dim); font-size:13px; }
+
+    /* ── NIGHT / SEPIA ───────────────────────────────── */
+    body.night-mode .reader-area { background:#050505; }
+    body.night-mode .canvas-wrap { filter:invert(0.9) hue-rotate(180deg); }
+    body.sepia-mode .reader-area { background:#1a1208; }
+    body.sepia-mode .canvas-wrap { filter:sepia(0.6) brightness(0.95); }
+
+    /* ── KEYBOARD HINT ───────────────────────────────── */
+    .key-hint {
+      position:fixed; bottom:26px; right:20px; padding:8px 14px;
+      background:rgba(8,2,2,0.9); border:1px solid rgba(204,0,0,0.25); border-radius:8px;
+      font-size:11px; color:var(--text-dim); pointer-events:none; opacity:0; transition:opacity 0.4s; z-index:1200;
+    }
+    .key-hint.show { opacity:1; }
+    .key-hint span { color:rgba(255,150,150,0.8); font-weight:700; }
+
+    /* ── ANNOTATION SYSTEM ───────────────────────────── */
+    :root {
+      --hl-yellow:rgba(255,229,80,0.6); --hl-green:rgba(110,210,90,0.6);
+      --hl-blue:rgba(90,170,245,0.6);   --hl-pink:rgba(245,140,190,0.6);
+      --hl-orange:rgba(255,170,60,0.6);
+    }
+    .hl-toolbar {
+      position:fixed; background:rgba(10,2,2,0.97); border:1px solid rgba(204,0,0,0.4);
+      border-radius:14px; padding:7px 10px; display:flex; align-items:center; gap:5px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.85); z-index:2500;
+      opacity:0; transform:translateY(8px) scale(0.9);
+      transition:opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events:none; backdrop-filter:blur(16px); user-select:none;
+    }
+    .hl-toolbar.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
+    .hl-toolbar-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.5px; margin-right:2px; }
+    .hl-color { width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1), border-color 0.15s; flex-shrink:0; }
+    .hl-color:hover { transform:scale(1.3); border-color:rgba(255,255,255,0.5); }
+    .hl-color[data-c="yellow"]{background:#FFE550;} .hl-color[data-c="green"]{background:#6ED25A;}
+    .hl-color[data-c="blue"]{background:#5AAAF5;}   .hl-color[data-c="pink"]{background:#F58CBE;}
+    .hl-color[data-c="orange"]{background:#FFAA3C;}
+    .hl-sep { width:1px; height:18px; background:rgba(255,255,255,0.1); margin:0 3px; flex-shrink:0; }
+    .hl-action { width:28px; height:28px; border-radius:7px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; transition:all 0.15s; flex-shrink:0; }
+    .hl-action:hover { background:rgba(204,0,0,0.3); border-color:rgba(204,0,0,0.5); color:#fff; }
+
+    .textLayer .hl-yellow { background:rgba(255,229,80,0.55)  !important; border-bottom:2px solid rgba(220,190,0,0.6)  !important; border-radius:2px; cursor:pointer; }
+    .textLayer .hl-green  { background:rgba(110,210,90,0.55)  !important; border-bottom:2px solid rgba(60,180,40,0.6)   !important; border-radius:2px; cursor:pointer; }
+    .textLayer .hl-blue   { background:rgba(90,170,245,0.55)  !important; border-bottom:2px solid rgba(40,130,220,0.6)  !important; border-radius:2px; cursor:pointer; }
+    .textLayer .hl-pink   { background:rgba(245,140,190,0.55) !important; border-bottom:2px solid rgba(210,80,150,0.6)  !important; border-radius:2px; cursor:pointer; }
+    .textLayer .hl-orange { background:rgba(255,170,60,0.55)  !important; border-bottom:2px solid rgba(220,130,0,0.6)   !important; border-radius:2px; cursor:pointer; }
+    .textLayer [class*="hl-"]:hover { filter:brightness(1.15); }
+
+    .hl-del-tip { position:fixed; background:rgba(10,2,2,0.97); border:1px solid rgba(204,0,0,0.3); border-radius:8px; padding:5px 10px; z-index:2600; opacity:0; transition:opacity 0.15s; pointer-events:none; }
+    .hl-del-tip.visible { opacity:1; pointer-events:all; }
+    .hl-del-tip button { background:none; border:none; color:rgba(255,120,100,0.9); font-size:12px; font-family:'Inter',sans-serif; cursor:pointer; padding:2px 4px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+    .hl-del-tip button:hover { color:#fff; }
+
+    .bm-ribbon-wrap { position:absolute; top:0; right:14px; width:22px; height:40px; cursor:pointer; z-index:60; transition:filter 0.2s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .bm-ribbon-wrap:hover { transform:translateY(-3px) scale(1.05); filter:drop-shadow(0 5px 10px rgba(204,0,0,0.5)); }
+
+    .note-pin { position:absolute; width:26px; height:26px; background:#FFE550; border:2px solid rgba(180,150,0,0.7); border-radius:50% 50% 50% 0; transform:rotate(-45deg) translate(-50%,-50%); transform-origin:bottom left; cursor:pointer; z-index:60; box-shadow:0 3px 10px rgba(0,0,0,0.4); transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .note-pin:hover { transform:rotate(-45deg) translate(-50%,-50%) scale(1.2); }
+    .note-pin.blue  { background:#5AAAF5; border-color:rgba(30,110,220,0.7); }
+    .note-pin.green { background:#6ED25A; border-color:rgba(30,160,30,0.7); }
+    .note-pin.red   { background:#F06050; border-color:rgba(190,40,20,0.7); }
+
+    .note-tooltip { position:fixed; background:rgba(10,2,2,0.97); border:1px solid rgba(255,220,60,0.3); border-radius:12px; padding:12px 14px; max-width:270px; min-width:180px; z-index:3000; opacity:0; transform:translateY(6px) scale(0.93); transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; box-shadow:0 12px 40px rgba(0,0,0,0.8); backdrop-filter:blur(16px); }
+    .note-tooltip.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
+    .note-tooltip-hd { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,220,60,0.7); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+    .note-tooltip-body { font-size:13px; color:rgba(255,255,255,0.85); line-height:1.5; max-height:120px; overflow-y:auto; word-break:break-word; }
+    .note-tooltip-body::-webkit-scrollbar { width:4px; }
+    .note-tooltip-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
+    .note-tooltip-acts { display:flex; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.07); }
+    .note-tt-btn { flex:1; padding:5px 8px; border-radius:7px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); font-size:11px; font-family:'Inter',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; transition:all 0.15s; }
+    .note-tt-btn:hover { background:rgba(255,255,255,0.1); color:#fff; }
+    .note-tt-btn.del:hover { background:rgba(200,30,30,0.35); border-color:rgba(200,30,30,0.5); }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:3998; opacity:0; transition:opacity 0.25s; pointer-events:none; }
+    .modal-overlay.visible { opacity:1; pointer-events:all; }
+    .note-modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.9); background:rgba(10,2,2,0.99); border:1px solid rgba(204,0,0,0.45); border-radius:18px; padding:22px; width:340px; z-index:3999; opacity:0; transition:opacity 0.25s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; box-shadow:0 24px 80px rgba(0,0,0,0.95); backdrop-filter:blur(20px); }
+    .note-modal.visible { opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:all; }
+    .note-modal h4 { font-size:14px; font-weight:700; color:#fff; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+    .note-modal h4 i { color:var(--primary-red); }
+    .note-modal textarea { width:100%; height:110px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:rgba(255,255,255,0.9); font-family:'Inter',sans-serif; font-size:13px; padding:10px 12px; resize:none; outline:none; transition:border-color 0.2s; }
+    .note-modal textarea:focus { border-color:rgba(204,0,0,0.5); }
+    .note-modal-colors { display:flex; gap:9px; margin:12px 0 6px; align-items:center; }
+    .note-modal-colors span { font-size:11px; color:rgba(255,255,255,0.4); }
+    .note-c-opt { width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform 0.15s, border-color 0.15s; }
+    .note-c-opt:hover { transform:scale(1.2); }
+    .note-c-opt.sel { border-color:rgba(255,255,255,0.8); transform:scale(1.1); }
+    .note-c-opt[data-c="yellow"]{background:#FFE550;} .note-c-opt[data-c="blue"]{background:#5AAAF5;}
+    .note-c-opt[data-c="green"]{background:#6ED25A;}  .note-c-opt[data-c="red"]{background:#F06050;}
+    .note-modal-btns { display:flex; gap:8px; margin-top:14px; }
+    .nm-btn { flex:1; padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.75); font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; }
+    .nm-btn:hover { background:rgba(255,255,255,0.1); }
+    .nm-btn.primary { background:rgba(204,0,0,0.4); border-color:rgba(204,0,0,0.6); color:#fff; }
+    .nm-btn.primary:hover { background:rgba(204,0,0,0.65); }
+
+    .annot-panel { position:fixed; top:0; right:0; width:290px; height:100vh; background:rgba(8,2,2,0.98); border-left:1px solid rgba(204,0,0,0.2); z-index:1400; transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); display:flex; flex-direction:column; box-shadow:-12px 0 50px rgba(0,0,0,0.7); backdrop-filter:blur(20px); }
+    .annot-panel.open { transform:translateX(0); }
+    .annot-panel-hd { padding:60px 16px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .annot-panel-title { font-size:13px; font-weight:800; color:#fff; text-transform:uppercase; letter-spacing:1px; padding-bottom:12px; display:flex; align-items:center; gap:8px; }
+    .annot-panel-title i { color:var(--primary-red); }
+    .annot-close { position:absolute; top:16px; right:14px; width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.5); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.15s; }
+    .annot-close:hover { background:rgba(204,0,0,0.25); color:#fff; border-color:rgba(204,0,0,0.4); }
+    .annot-tabs { display:flex; margin:0 -16px; }
+    .annot-tab { flex:1; padding:10px 4px; text-align:center; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.35); cursor:pointer; border-bottom:2px solid transparent; transition:color 0.2s, border-color 0.2s; user-select:none; }
+    .annot-tab:hover { color:rgba(255,255,255,0.65); }
+    .annot-tab.active { color:#fff; border-bottom-color:var(--primary-red); }
+    .annot-body { flex:1; overflow-y:auto; padding:12px; }
+    .annot-body::-webkit-scrollbar { width:4px; }
+    .annot-body::-webkit-scrollbar-thumb { background:rgba(204,0,0,0.3); border-radius:2px; }
+    .annot-empty { text-align:center; color:rgba(255,255,255,0.28); font-size:12px; padding:36px 12px; line-height:1.7; }
+    .annot-empty i { display:block; font-size:26px; margin-bottom:10px; opacity:0.4; }
+    .annot-item { padding:9px 10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; margin-bottom:7px; cursor:pointer; transition:background 0.18s, border-color 0.18s; position:relative; }
+    .annot-item:hover { background:rgba(204,0,0,0.1); border-color:rgba(204,0,0,0.22); }
+    .annot-item-pg { font-size:10px; font-weight:800; color:rgba(204,0,0,0.75); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; display:flex; align-items:center; gap:4px; }
+    .annot-item-txt { font-size:12px; color:rgba(255,255,255,0.65); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; }
+    .annot-item-del { position:absolute; top:7px; right:7px; width:20px; height:20px; border-radius:50%; background:rgba(200,30,30,0.12); border:1px solid rgba(200,30,30,0.2); color:rgba(255,100,100,0.5); font-size:9px; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:all 0.15s; }
+    .annot-item:hover .annot-item-del { opacity:1; }
+    .annot-item-del:hover { background:rgba(200,30,30,0.5); color:#fff; opacity:1 !important; }
+    .hl-dot { display:inline-block; width:9px; height:9px; border-radius:3px; flex-shrink:0; }
+    .bar-btn.tool-active { background:rgba(204,0,0,0.25); border-color:rgba(204,0,0,0.6); color:#fff; }
+    body.note-mode .canvas-wrap { cursor:crosshair !important; }
+    body.note-mode .textLayer   { pointer-events:none !important; }
+
+    /* Citation toast */
+    .cite-toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+      padding:10px 22px; background:rgba(10,2,2,0.95); border:1px solid rgba(76,175,80,0.5);
+      border-radius:10px; font-size:13px; font-weight:700; color:rgba(130,220,130,0.95);
+      backdrop-filter:blur(12px); z-index:9000; opacity:0;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1); pointer-events:none; white-space:nowrap;
+    }
+    .cite-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* Responsive */
+    @media (max-width:1024px) { .reader-area { padding-top:54px; } #pdfViewport { padding:20px 15px; } }
+    @media (max-width:768px)  { .top-bar { height:52px; padding:0 10px; gap:6px; } .reader-area { padding-top:52px; } .bar-btn { height:34px; min-width:34px; padding:0 10px; font-size:12px; } #pdfViewport { padding:15px 10px; } }
+    @media (max-width:480px)  { .top-bar { height:48px; padding:0 8px; gap:5px; } .reader-area { padding-top:48px; } .bar-btn { height:32px; min-width:32px; padding:0 8px; font-size:11px; } .bar-btn span { display:none; } #pdfViewport { padding:10px 5px; } }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar" id="topBar">
+    <!-- Back to detail -->
+    <a class="bar-btn" id="backBtn" href="paper-listing.html" style="text-decoration:none;">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <div class="bar-sep"></div>
+
+    <!-- Prev / Page / Next -->
+    <button class="bar-btn" id="prevBtn" onclick="changePage(-1)" disabled><i class="fas fa-chevron-left"></i></button>
+    <div class="page-input-wrap">
+      <input type="number" class="page-num-input" id="pageInput" min="1" value="1" onchange="goToPage()">
+      <span>/ <span id="totalPages">0</span></span>
+    </div>
+    <button class="bar-btn" id="nextBtn" onclick="changePage(1)" disabled><i class="fas fa-chevron-right"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- Zoom -->
+    <button class="bar-btn" onclick="zoom(-0.2)" title="Zoom out"><i class="fas fa-search-minus"></i></button>
+    <span class="zoom-display" id="zoomDisplay">100%</span>
+    <button class="bar-btn" onclick="zoom(+0.2)" title="Zoom in"><i class="fas fa-search-plus"></i></button>
+    <button class="bar-btn" onclick="resetZoom()" title="Fit page"><i class="fas fa-compress-arrows-alt"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- Title -->
+    <span class="bar-title" id="barTitle">Loading…</span>
+
+    <div class="bar-sep"></div>
+
+    <!-- Tools -->
+    <button class="bar-btn" onclick="toggleBookmarkCurrent()" title="Bookmark this page (B)"><i class="fas fa-bookmark"></i></button>
+    <button class="bar-btn" id="noteModeBtn" onclick="toggleNoteMode()" title="Add note (N)"><i class="fas fa-sticky-note"></i></button>
+    <button class="bar-btn" id="annotPanelBtn" onclick="toggleAnnotPanel()" title="Annotations (A)"><i class="fas fa-layer-group"></i></button>
+    <button class="bar-btn" onclick="cycleTheme()" title="Reading theme" id="themeBtn"><i class="fas fa-adjust"></i></button>
+    <button class="bar-btn" onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
+
+    <div class="bar-sep"></div>
+
+    <!-- Paper detail + Cite -->
+    <a class="bar-btn" id="detailBackBtn" href="#" style="text-decoration:none;" title="Paper info">
+      <i class="fas fa-info-circle"></i>
+    </a>
+    <button class="bar-btn bar-red" onclick="citePaperFromViewer()" title="Export citation">
+      <i class="fas fa-quote-left"></i> <span>Cite</span>
+    </button>
+  </div>
+
+  <!-- READING AREA -->
+  <div class="reader-area" id="readerArea">
+    <div id="pdfViewport">
+      <div class="center-state" id="loadingState">
+        <i class="fas fa-spinner spin"></i>
+        <p>Loading PDF…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADBLOCKER WARNING -->
+  <div class="adblocker-notification" id="adblockNotification">
+    <div class="notif-content">
+      <div class="notif-icon"><i class="fas fa-shield-alt"></i></div>
+      <h3 class="notif-title">AdBlocker Detected</h3>
+      <p class="notif-msg">It looks like your browser extension is blocking the PDF. Please disable your AdBlocker for this site to view the paper directly.</p>
+      <div class="notif-actions">
+        <button class="notif-btn notif-btn-primary" onclick="retryPDFLoad()"><i class="fas fa-redo"></i> Try Again</button>
+        <button class="notif-btn notif-btn-secondary" onclick="continueWithFallback()"><i class="fas fa-forward"></i> Continue Anyway</button>
+      </div>
+      <button class="notif-close" onclick="closeAdblockNotif()"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+
+  <!-- BOTTOM PROGRESS -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="page-label" id="pageLabel">Page 1</div>
+
+  <!-- HIGHLIGHT TOOLBAR -->
+  <div class="hl-toolbar" id="hlToolbar">
+    <span class="hl-toolbar-label">Highlight</span>
+    <button class="hl-color" data-c="yellow" title="Yellow" onclick="applyHighlight('yellow')"></button>
+    <button class="hl-color" data-c="green"  title="Green"  onclick="applyHighlight('green')"></button>
+    <button class="hl-color" data-c="blue"   title="Blue"   onclick="applyHighlight('blue')"></button>
+    <button class="hl-color" data-c="pink"   title="Pink"   onclick="applyHighlight('pink')"></button>
+    <button class="hl-color" data-c="orange" title="Orange" onclick="applyHighlight('orange')"></button>
+    <div class="hl-sep"></div>
+    <button class="hl-action" title="Copy"  onclick="copySelectedText()"><i class="fas fa-copy"></i></button>
+    <button class="hl-action" title="Close" onclick="hideHlToolbar()"><i class="fas fa-times"></i></button>
+  </div>
+
+  <!-- HIGHLIGHT DELETE TOOLTIP -->
+  <div class="hl-del-tip" id="hlDeleteTooltip"></div>
+
+  <!-- NOTE TOOLTIP -->
+  <div class="note-tooltip" id="noteTooltip"></div>
+
+  <!-- MODAL OVERLAY -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeNoteModal()"></div>
+
+  <!-- NOTE MODAL -->
+  <div class="note-modal" id="noteModal">
+    <h4><i class="fas fa-sticky-note"></i> Add Note</h4>
+    <textarea id="noteTextarea" placeholder="Write your note here&#8230;" onkeydown="if(event.key==='Enter'&&event.ctrlKey)saveNote()"></textarea>
+    <div class="note-modal-colors">
+      <span>Color:</span>
+      <button class="note-c-opt sel" data-c="yellow" title="Yellow" onclick="setNoteColor('yellow')"></button>
+      <button class="note-c-opt"     data-c="blue"   title="Blue"   onclick="setNoteColor('blue')"></button>
+      <button class="note-c-opt"     data-c="green"  title="Green"  onclick="setNoteColor('green')"></button>
+      <button class="note-c-opt"     data-c="red"    title="Red"    onclick="setNoteColor('red')"></button>
+    </div>
+    <div class="note-modal-btns">
+      <button class="nm-btn" onclick="closeNoteModal()">Cancel</button>
+      <button class="nm-btn primary" onclick="saveNote()"><i class="fas fa-check"></i> Save Note</button>
+    </div>
+  </div>
+
+  <!-- ANNOTATION PANEL -->
+  <div class="annot-panel" id="annotPanel">
+    <div class="annot-close" onclick="toggleAnnotPanel()"><i class="fas fa-times"></i></div>
+    <div class="annot-panel-hd">
+      <div class="annot-panel-title"><i class="fas fa-layer-group"></i> Annotations</div>
+      <div class="annot-tabs">
+        <div class="annot-tab active" data-tab="bookmarks" onclick="setAnnotTab('bookmarks')">&#128204; Bookmarks</div>
+        <div class="annot-tab"        data-tab="highlights" onclick="setAnnotTab('highlights')">&#9998; Highlights</div>
+        <div class="annot-tab"        data-tab="notes"      onclick="setAnnotTab('notes')">&#128221; Notes</div>
+      </div>
+    </div>
+    <div class="annot-body" id="annotBody"></div>
+  </div>
+
+  <!-- Keyboard hint -->
+  <div class="key-hint" id="keyHint">
+    <span>←→</span> Page &nbsp; <span>+/-</span> Zoom &nbsp; <span>F</span> Fullscreen
+  </div>
+
+  <!-- Citation toast -->
+  <div class="cite-toast" id="citeToast">
+    <i class="fas fa-check" style="margin-right:6px;"></i> Citation copied to clipboard
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const A3KM_PDF_PASSWORD = 'MOUnoor21014';
+
+    const params  = new URLSearchParams(window.location.search);
+    const paperId = params.get('id');
+    let pdfDoc    = null;
+    let curPage   = 1;
+    let totalPg   = 0;
+    let curZoom   = 1.0;
+    let paperData = null;
+    let bookmarks = [];
+    let barHideTimer;
+    let themes    = ['default','night','sepia'];
+    let themeIdx  = 0;
+    let pageLabelTimer;
+    let barVisible = true;
+
+    // ── Bootstrap ──────────────────────────────────────
+    async function init() {
+      if (!paperId) { showErr('No paper ID in URL.'); return; }
+      try {
+        const res  = await fetch('papers.json');
+        const data = await res.json();
+        paperData  = data.papers.find(p => p.id === paperId);
+        if (!paperData) { showErr('Paper not found.'); return; }
+
+        document.getElementById('barTitle').textContent = paperData.title;
+        document.getElementById('detailBackBtn').href   = `paper-detail.html?id=${paperId}`;
+        document.getElementById('backBtn').href         = `paper-detail.html?id=${paperId}`;
+        document.title = paperData.title + ' – A3KM Studio';
+
+        loadBookmarks();
+        loadHighlights();
+        loadNotes();
+        await loadPDF(paperData.downloadUrl || paperData.pdf || '');
+        loadLastPage();
+        showKeyHint();
+      } catch (e) {
+        showErr('Failed to load: ' + e.message);
+      }
+    }
+
+    // ── Citation from viewer ────────────────────────────
+    function citePaperFromViewer() {
+      if (!paperData) return;
+      const authors = Array.isArray(paperData.authors) ? paperData.authors : (paperData.authors ? [paperData.authors] : ['Unknown Author']);
+      const authorStr = authors.length <= 2 ? authors.join(', & ') : authors[0] + ', et al.';
+      const year    = paperData.year || new Date().getFullYear();
+      const journal = paperData.journal || 'Unpublished';
+      const doi     = paperData.doi ? ` https://doi.org/${paperData.doi}` : '';
+      const citation = `${authorStr} (${year}). ${paperData.title}. ${journal}.${doi}`;
+
+      navigator.clipboard.writeText(citation).then(() => {
+        const toast = document.getElementById('citeToast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }).catch(() => {
+        prompt('Copy this citation:', citation);
+      });
+    }
+
+    // ── PDF Loading ─────────────────────────────────────
+    function normalizeGithubUrl(url) {
+      let u = url;
+      try { u = decodeURIComponent(u); } catch(e) {}
+      if (u.includes('github.com') && u.includes('/blob/')) {
+        u = u.replace('github.com','raw.githubusercontent.com').replace('/blob/','/');
+      } else if (u.includes('github.com') && !u.includes('/raw/')) {
+        u = u.replace('/blob/','/raw/');
+      }
+      return u;
+    }
+
+    async function tryLoadPDF(pdfUrl) {
+      const loadingTask = pdfjsLib.getDocument({
+        url: pdfUrl,
+        password: A3KM_PDF_PASSWORD,
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+        enableXfa: true, disableFontFace: false, useSystemFonts: false,
+      });
+      loadingTask.onPassword = (updatePassword, reason) => {
+        if (reason === 1) { updatePassword(A3KM_PDF_PASSWORD); }
+        else if (reason === 2) { throw new Error('Incorrect PDF password'); }
+      };
+      return loadingTask.promise;
+    }
+
+    let loadAttempts = [];
+    let currentPdfUrl = '';
+    let skipAdblockWarning = false;
+
+    async function loadPDF(url, startFromIndex = 0) {
+      const rawUrl  = normalizeGithubUrl(url);
+      currentPdfUrl = rawUrl;
+      const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
+
+      loadAttempts = isGithub ? [
+        { url: rawUrl, label: 'Direct GitHub' },
+        { url: `https://cdn.jsdelivr.net/gh/${extractGithubPath(rawUrl)}`, label: 'jsDelivr CDN' },
+        { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl), label: 'AllOrigins Proxy' },
+        { url: 'https://corsproxy.io/?' + encodeURIComponent(rawUrl), label: 'CORS Proxy' },
+      ] : [{ url: rawUrl, label: 'Direct' }];
+
+      let lastErr;
+      for (let i = startFromIndex; i < loadAttempts.length; i++) {
+        const attempt = loadAttempts[i];
+        try {
+          console.log(`[PDF Loader] Attempt ${i+1}/${loadAttempts.length}: ${attempt.label}`);
+          updateLoadingState(`Loading PDF (${attempt.label})...`);
+          pdfDoc  = await tryLoadPDF(attempt.url);
+          totalPg = pdfDoc.numPages;
+          document.getElementById('totalPages').textContent = totalPg;
+          document.getElementById('pageInput').max = totalPg;
+          await renderPage(1);
+          console.log(`[PDF Loader] ✓ Success via ${attempt.label}`);
+          return;
+        } catch(e) {
+          console.warn(`[PDF Loader] ✗ Failed ${attempt.label}:`, e.message);
+          lastErr = e;
+          const errStr  = e.message || e.toString();
+          const isBlocked = errStr.includes('ERR_BLOCKED_BY_CLIENT') || errStr.includes('net::ERR') || errStr.includes('Failed to fetch') || errStr.includes('NetworkError');
+          if (i === 0 && !skipAdblockWarning && isGithub && isBlocked) {
+            showAdblockNotification();
+            throw new Error('AdBlocker_Detected');
+          }
+        }
+      }
+      showErrWithDownload(rawUrl);
+      throw lastErr;
+    }
+
+    function extractGithubPath(url) {
+      const match = url.match(/githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)/);
+      if (match) return `${match[1]}/${match[2]}@${match[3]}/${match[4]}`;
+      return url;
+    }
+    function updateLoadingState(msg) {
+      const el = document.getElementById('loadingState');
+      if (el) el.innerHTML = `<i class="fas fa-spinner spin"></i><p>${msg}</p>`;
+    }
+    function showErrWithDownload(pdfUrl) {
+      document.getElementById('pdfViewport').innerHTML = `
+        <div class="center-state">
+          <i class="fas fa-exclamation-triangle" style="animation:none;"></i>
+          <p>Unable to load PDF in viewer</p>
+          <small style="margin-bottom:16px;">Your browser or extensions may be blocking the PDF. Try disabling ad blockers.</small>
+          <a href="${pdfUrl}" download class="dl-fallback-btn"><i class="fas fa-download"></i> Download PDF Instead</a>
+          <a href="paper-detail.html?id=${paperId}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Paper Details</a>
+        </div>`;
+    }
+    function showAdblockNotification() { document.getElementById('adblockNotification').classList.add('active'); }
+    function closeAdblockNotif()       { document.getElementById('adblockNotification').classList.remove('active'); }
+    function retryPDFLoad() {
+      closeAdblockNotif(); skipAdblockWarning = false;
+      loadPDF(currentPdfUrl, 0).catch(e => { if (e.message !== 'AdBlocker_Detected') console.error('Retry failed:', e); });
+    }
+    function continueWithFallback() {
+      closeAdblockNotif(); skipAdblockWarning = true;
+      loadPDF(currentPdfUrl, 1).catch(e => console.error('Fallback failed:', e));
+    }
+
+    // ── Render ──────────────────────────────────────────
+    async function renderPage(n, skipTransition) {
+      if (!pdfDoc) return;
+      curPage = n;
+      saveLastPage(n);
+      document.getElementById('pageInput').value = n;
+      updateProgress();
+      showPageLabel(n);
+
+      const viewport_wrap = document.getElementById('pdfViewport');
+      const oldWrap = viewport_wrap.querySelector('.canvas-wrap');
+      if (oldWrap && !skipTransition) { oldWrap.classList.add('fade-out'); await delay(180); }
+
+      try {
+        const page = await pdfDoc.getPage(n);
+        const readerArea = document.getElementById('readerArea');
+        const areaW  = readerArea.clientWidth - 48;
+        const areaH  = readerArea.clientHeight - 100;
+        const vp     = page.getViewport({scale:1});
+        const pageRatio = vp.height / vp.width;
+        const widthScale  = areaW / vp.width;
+        const heightScale = areaH / vp.height;
+        const baseScale   = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
+        const scale       = baseScale * curZoom;
+        const scaledVP    = page.getViewport({scale});
+        const dpr         = 4.0;
+
+        const wrap   = document.createElement('div');
+        wrap.className = 'canvas-wrap';
+        wrap.style.width  = scaledVP.width  + 'px';
+        wrap.style.height = scaledVP.height + 'px';
+
+        const canvas = document.createElement('canvas');
+        canvas.id = 'pdfCanvas';
+        const ctx = canvas.getContext('2d', {alpha:false, willReadFrequently:false});
+        canvas.width  = Math.floor(scaledVP.width  * dpr);
+        canvas.height = Math.floor(scaledVP.height * dpr);
+        canvas.style.width  = scaledVP.width  + 'px';
+        canvas.style.height = scaledVP.height + 'px';
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.textRendering = 'optimizeLegibility';
+        wrap.appendChild(canvas);
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'textLayer';
+        textDiv.style.width  = scaledVP.width  + 'px';
+        textDiv.style.height = scaledVP.height + 'px';
+        wrap.appendChild(textDiv);
+
+        viewport_wrap.innerHTML = '';
+        viewport_wrap.appendChild(wrap);
+
+        await page.render({
+          canvasContext: ctx, viewport: scaledVP,
+          transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null, intent: 'display'
+        }).promise;
+
+        const tc = await page.getTextContent();
+        pdfjsLib.renderTextLayer({
+          textContentSource: tc, container: textDiv,
+          viewport: scaledVP, textDivs: [], enhanceTextSelection: true,
+        });
+
+        wrap.classList.add('fade-in');
+        updateNav();
+        wrap.addEventListener('click', handleCanvasClick);
+        textDiv.addEventListener('mouseup', () => setTimeout(onTextSelectionEnd, 30));
+        const _pageNum = n;
+        setTimeout(() => {
+          applyHighlightsToPage(_pageNum);
+          renderNotesOnPage(_pageNum);
+          updateBookmarkRibbon();
+        }, 220);
+      } catch (err) { showErr('Render error: ' + err.message); }
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function changePage(d) { const np = curPage + d; if (np >= 1 && np <= totalPg) renderPage(np); }
+    function goToPage() { const v = parseInt(document.getElementById('pageInput').value); if (v >= 1 && v <= totalPg) renderPage(v); }
+    function updateNav() { document.getElementById('prevBtn').disabled = curPage <= 1; document.getElementById('nextBtn').disabled = curPage >= totalPg; }
+    function updateProgress() { document.getElementById('progressFill').style.width = (curPage/totalPg*100) + '%'; }
+    function showPageLabel(n) {
+      const el = document.getElementById('pageLabel');
+      el.textContent = typeof n === 'string' ? n : `Page ${n} of ${totalPg}`;
+      el.classList.add('show');
+      clearTimeout(pageLabelTimer);
+      pageLabelTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+
+    function zoom(delta) {
+      curZoom = Math.max(0.4, Math.min(4.0, curZoom + delta));
+      document.getElementById('zoomDisplay').textContent = Math.round(curZoom*100) + '%';
+      renderPage(curPage, true);
+    }
+    function resetZoom() {
+      curZoom = 1.0;
+      document.getElementById('zoomDisplay').textContent = '100%';
+      renderPage(curPage, true);
+    }
+    function cycleTheme() {
+      document.body.classList.remove('night-mode','sepia-mode');
+      themeIdx = (themeIdx+1) % 3;
+      if (themeIdx === 1) { document.body.classList.add('night-mode');  showPageLabel('Night mode'); }
+      if (themeIdx === 2) { document.body.classList.add('sepia-mode');  showPageLabel('Sepia mode'); }
+      if (themeIdx === 0) showPageLabel('Default mode');
+    }
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+      else { document.exitFullscreen && document.exitFullscreen(); }
+    }
+
+    // ── Top bar auto-hide ───────────────────────────────
+    function showBar() { document.getElementById('topBar').classList.remove('hidden'); barVisible = true; resetBarTimer(); }
+    function hideBar() { document.getElementById('topBar').classList.add('hidden'); barVisible = false; }
+    function resetBarTimer() { clearTimeout(barHideTimer); barHideTimer = setTimeout(hideBar, 3500); }
+    document.getElementById('readerArea').addEventListener('mousemove', showBar);
+    document.getElementById('readerArea').addEventListener('click', () => { barVisible ? resetBarTimer() : showBar(); });
+    resetBarTimer();
+
+    // ═══════════════════════════════════════════════════
+    //  ANNOTATION SYSTEM
+    // ═══════════════════════════════════════════════════
+    let highlights = {};
+    let notes      = {};
+    let noteModeActive  = false;
+    let annotTab        = 'bookmarks';
+    let hlSelection     = null;
+    let hlHideTimer     = null;
+    let pendingNote     = null;
+    let noteColor       = 'yellow';
+    let noteTooltipTimer = null;
+
+    const SK = {
+      lastPage:   () => `rdr_last_${paperId}`,
+      highlights: () => `rdr_hl_${paperId}`,
+      notes:      () => `rdr_notes_${paperId}`,
+    };
+
+    // ── Last page ──────────────────────────────────────
+    function saveLastPage(n) { try { localStorage.setItem(SK.lastPage(), String(n)); } catch(e) {} }
+    function loadLastPage() {
+      try {
+        const n = parseInt(localStorage.getItem(SK.lastPage()));
+        if (n >= 2 && n <= totalPg) { renderPage(n); showPageLabel('Resumed from page ' + n); }
+      } catch(e) {}
+    }
+
+    // ── Bookmarks ───────────────────────────────────────
+    function loadBookmarks() { try { bookmarks = JSON.parse(localStorage.getItem('pm-'+paperId)||'[]'); } catch(e) { bookmarks=[]; } }
+    function saveBookmarks() { try { localStorage.setItem('pm-'+paperId, JSON.stringify(bookmarks)); } catch(e) {} }
+    function toggleBookmarkCurrent() {
+      const idx = bookmarks.findIndex(b => b.p === curPage);
+      if (idx >= 0) { bookmarks.splice(idx,1); showPageLabel('Bookmark removed'); }
+      else {
+        if (bookmarks.length >= 50) { showPageLabel('Max 50 bookmarks reached'); return; }
+        bookmarks.push({ p: curPage, d: new Date().toLocaleDateString() });
+        showPageLabel('Page ' + curPage + ' bookmarked');
+      }
+      saveBookmarks(); updateBookmarkRibbon(); refreshAnnotPanel();
+    }
+    function removeBookmark(p) { bookmarks = bookmarks.filter(b => b.p !== p); saveBookmarks(); updateBookmarkRibbon(); refreshAnnotPanel(); }
+    function jumpTo(p) { renderPage(p); document.getElementById('annotPanel').classList.remove('open'); }
+    function toggleBmPanel() { toggleAnnotPanel(); }
+
+    function updateBookmarkRibbon() {
+      const old = document.getElementById('pageRibbon'); if (old) old.remove();
+      const wrap = document.querySelector('.canvas-wrap'); if (!wrap) return;
+      const marked = bookmarks.some(b => b.p === curPage);
+      const ribbon = document.createElement('div');
+      ribbon.id = 'pageRibbon'; ribbon.className = 'bm-ribbon-wrap';
+      ribbon.title = marked ? 'Remove bookmark (B)' : 'Bookmark this page (B)';
+      ribbon.onclick = () => toggleBookmarkCurrent();
+      ribbon.innerHTML = `<svg viewBox="0 0 22 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2h18v34l-9-7-9 7V2z"
+          fill="${marked ? 'rgba(204,0,0,0.87)' : 'rgba(255,255,255,0.07)'}"
+          stroke="${marked ? 'rgba(220,20,20,0.9)' : 'rgba(255,255,255,0.18)'}"
+          stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+      ribbon.style.opacity = '0'; ribbon.style.transition = 'opacity 0.3s ease';
+      wrap.appendChild(ribbon);
+      requestAnimationFrame(() => { ribbon.style.opacity = '1'; });
+    }
+
+    // ── Highlights ──────────────────────────────────────
+    function loadHighlights()  { try { highlights = JSON.parse(localStorage.getItem(SK.highlights())||'{}'); } catch(e) { highlights={}; } }
+    function saveHighlights()  { try { localStorage.setItem(SK.highlights(), JSON.stringify(highlights)); } catch(e) { showPageLabel('Storage full'); } }
+    function onTextSelectionEnd() {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.toString().trim().length < 2) { setTimeout(hideHlToolbar, 300); return; }
+      const text  = sel.toString().trim();
+      const range = sel.getRangeAt(0);
+      const rect  = range.getBoundingClientRect();
+      hlSelection = { text };
+      const tb  = document.getElementById('hlToolbar');
+      const tbW = 236;
+      let x = rect.left + rect.width/2 - tbW/2;
+      let y = rect.top - 50;
+      x = Math.max(8, Math.min(x, window.innerWidth - tbW - 8));
+      y = Math.max(64, y);
+      tb.style.left = x + 'px'; tb.style.top = y + 'px';
+      tb.classList.add('visible');
+      clearTimeout(hlHideTimer);
+      hlHideTimer = setTimeout(hideHlToolbar, 10000);
+    }
+    function hideHlToolbar() { document.getElementById('hlToolbar').classList.remove('visible'); hlSelection = null; }
+    function copySelectedText() { const t = window.getSelection()?.toString(); if (t) navigator.clipboard.writeText(t).then(() => showPageLabel('Copied!')); hideHlToolbar(); }
+    function applyHighlight(color) {
+      if (!hlSelection) return;
+      const { text } = hlSelection;
+      const pg = String(curPage);
+      if (!highlights[pg]) highlights[pg] = [];
+      const dupe = highlights[pg].findIndex(h => h.text.trim() === text.trim());
+      if (dupe >= 0) highlights[pg][dupe].color = color;
+      else highlights[pg].push({ id: Date.now(), text, color });
+      saveHighlights(); window.getSelection().removeAllRanges(); hideHlToolbar();
+      applyHighlightsToPage(curPage); refreshAnnotPanel();
+    }
+    function applyHighlightsToPage(pageNum) {
+      const pageHls = highlights[String(pageNum)]; if (!pageHls || !pageHls.length) return;
+      const textLayer = document.querySelector('.textLayer'); if (!textLayer) return;
+      const spans = Array.from(textLayer.querySelectorAll('span'));
+      pageHls.forEach(hl => {
+        const target = hl.text.trim(); if (!target) return;
+        for (let i = 0; i < spans.length; i++) {
+          if (spans[i].textContent.includes(target)) {
+            spans[i].classList.add('hl-'+hl.color); spans[i].dataset.hlId = String(hl.id);
+            spans[i].addEventListener('click', (e) => { if (noteModeActive) return; e.stopPropagation(); showHlDeleteTip(hl.id, e); }, { once:true }); return;
+          }
+          let combo = '';
+          for (let j = i; j < Math.min(i+5, spans.length); j++) {
+            combo += spans[j].textContent;
+            if (combo.includes(target)) {
+              for (let k = i; k <= j; k++) { spans[k].classList.add('hl-'+hl.color); spans[k].dataset.hlId = String(hl.id); }
+              spans[i].addEventListener('click', (e) => { if (noteModeActive) return; e.stopPropagation(); showHlDeleteTip(hl.id, e); }, { once:true }); return;
+            }
+          }
+        }
+      });
+    }
+    function showHlDeleteTip(hlId, e) {
+      const tt = document.getElementById('hlDeleteTooltip');
+      tt.innerHTML = `<button onclick="removeHighlightById(${hlId})"><i class="fas fa-eraser"></i> Remove highlight</button>`;
+      tt.style.left = Math.min(e.clientX, window.innerWidth-175) + 'px';
+      tt.style.top  = (e.clientY - 40) + 'px';
+      tt.classList.add('visible');
+      clearTimeout(tt._t); tt._t = setTimeout(() => tt.classList.remove('visible'), 4000);
+    }
+    function removeHighlightById(id) {
+      Object.keys(highlights).forEach(pg => { highlights[pg] = highlights[pg].filter(h => h.id !== id); if (!highlights[pg].length) delete highlights[pg]; });
+      saveHighlights(); document.getElementById('hlDeleteTooltip').classList.remove('visible');
+      renderPage(curPage, true); refreshAnnotPanel();
+    }
+
+    // ── Notes ───────────────────────────────────────────
+    function loadNotes()  { try { notes = JSON.parse(localStorage.getItem(SK.notes())||'{}'); } catch(e) { notes={}; } }
+    function saveNotes()  { try { localStorage.setItem(SK.notes(), JSON.stringify(notes)); } catch(e) { showPageLabel('Storage full'); } }
+    function toggleNoteMode() {
+      noteModeActive = !noteModeActive;
+      document.body.classList.toggle('note-mode', noteModeActive);
+      document.getElementById('noteModeBtn').classList.toggle('tool-active', noteModeActive);
+      showPageLabel(noteModeActive ? 'Click on the page to drop a note' : 'Note mode off');
+    }
+    function setNoteColor(c) { noteColor = c; document.querySelectorAll('.note-c-opt').forEach(el => el.classList.toggle('sel', el.dataset.c === c)); }
+    function handleCanvasClick(e) {
+      if (!noteModeActive) return;
+      const wrap = e.currentTarget; const rect = wrap.getBoundingClientRect();
+      pendingNote = { xPct: (e.clientX-rect.left)/wrap.offsetWidth, yPct: (e.clientY-rect.top)/wrap.offsetHeight };
+      document.getElementById('noteTextarea').value = '';
+      setNoteColor(noteColor);
+      document.getElementById('noteModal').classList.add('visible');
+      document.getElementById('modalOverlay').classList.add('visible');
+      setTimeout(() => document.getElementById('noteTextarea').focus(), 120);
+    }
+    function saveNote() {
+      const content = document.getElementById('noteTextarea').value.trim();
+      if (!content || !pendingNote) { closeNoteModal(); return; }
+      const pg = String(curPage); if (!notes[pg]) notes[pg] = [];
+      if (notes[pg].length >= 20) { showPageLabel('Max 20 notes per page'); closeNoteModal(); return; }
+      notes[pg].push({ id: Date.now(), xPct: pendingNote.xPct, yPct: pendingNote.yPct, content, color: noteColor });
+      saveNotes(); closeNoteModal(); renderNotesOnPage(curPage); refreshAnnotPanel();
+    }
+    function closeNoteModal() { document.getElementById('noteModal').classList.remove('visible'); document.getElementById('modalOverlay').classList.remove('visible'); pendingNote = null; }
+    function renderNotesOnPage(pageNum) {
+      document.querySelectorAll('.note-pin').forEach(p => p.remove());
+      const wrap = document.querySelector('.canvas-wrap'); if (!wrap) return;
+      const pgNotes = notes[String(pageNum)]; if (!pgNotes || !pgNotes.length) return;
+      pgNotes.forEach(note => {
+        const pin = document.createElement('div');
+        pin.className = 'note-pin' + (note.color !== 'yellow' ? ' '+note.color : '');
+        pin.dataset.noteId = String(note.id);
+        pin.style.left = (note.xPct*100) + '%'; pin.style.top = (note.yPct*100) + '%';
+        pin.addEventListener('mouseenter', (e) => showNoteTooltip(note, e.currentTarget));
+        pin.addEventListener('mouseleave', () => { noteTooltipTimer = setTimeout(hideNoteTooltip, 250); });
+        wrap.appendChild(pin);
+      });
+    }
+    function showNoteTooltip(note, pinEl) {
+      clearTimeout(noteTooltipTimer);
+      const colorMap = { yellow:'#FFE550', blue:'#5AAAF5', green:'#6ED25A', red:'#F06050' };
+      const tt = document.getElementById('noteTooltip');
+      tt.innerHTML = `
+        <div class="note-tooltip-hd">
+          <span style="color:${colorMap[note.color]||'#FFE550'}">&#128204; Note</span>
+          <span style="color:rgba(255,255,255,0.3);font-size:10px">Page ${curPage}</span>
+        </div>
+        <div class="note-tooltip-body">${note.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+        <div class="note-tooltip-acts">
+          <button class="note-tt-btn del" onclick="deleteNoteById(${note.id},${curPage})"><i class="fas fa-trash-alt"></i> Delete</button>
+          <button class="note-tt-btn"     onclick="editNote(${note.id},${curPage})"><i class="fas fa-edit"></i> Edit</button>
+        </div>`;
+      const pinRect = pinEl.getBoundingClientRect();
+      let x = pinRect.right + 12; let y = pinRect.top - 12;
+      if (x + 280 > window.innerWidth) x = pinRect.left - 282;
+      y = Math.max(64, Math.min(y, window.innerHeight - 210));
+      tt.style.left = x + 'px'; tt.style.top = y + 'px';
+      tt.classList.add('visible');
+      tt.onmouseenter = () => clearTimeout(noteTooltipTimer);
+      tt.onmouseleave = () => { noteTooltipTimer = setTimeout(hideNoteTooltip, 250); };
+    }
+    function hideNoteTooltip() { document.getElementById('noteTooltip').classList.remove('visible'); }
+    function deleteNoteById(id, pg) {
+      const k = String(pg); notes[k] = (notes[k]||[]).filter(n => n.id !== id); if (!notes[k].length) delete notes[k];
+      saveNotes(); if (pg === curPage) renderNotesOnPage(curPage); hideNoteTooltip(); refreshAnnotPanel();
+    }
+    function editNote(id, pg) {
+      const k = String(pg); const note = (notes[k]||[]).find(n => n.id === id); if (!note) return;
+      notes[k] = notes[k].filter(n => n.id !== id); saveNotes();
+      pendingNote = { xPct: note.xPct, yPct: note.yPct }; noteColor = note.color;
+      document.getElementById('noteTextarea').value = note.content;
+      setNoteColor(note.color);
+      document.getElementById('noteModal').classList.add('visible');
+      document.getElementById('modalOverlay').classList.add('visible');
+      setTimeout(() => document.getElementById('noteTextarea').focus(), 120);
+      hideNoteTooltip();
+      if (pg === curPage) renderNotesOnPage(curPage);
+    }
+
+    // ── Annotation panel ────────────────────────────────
+    function toggleAnnotPanel() { const panel = document.getElementById('annotPanel'); panel.classList.toggle('open'); if (panel.classList.contains('open')) renderAnnotPanel(); }
+    function setAnnotTab(tab) { annotTab = tab; document.querySelectorAll('.annot-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab)); renderAnnotBody(); }
+    function renderAnnotPanel() { document.querySelectorAll('.annot-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===annotTab)); renderAnnotBody(); }
+    function refreshAnnotPanel() { if (document.getElementById('annotPanel').classList.contains('open')) renderAnnotBody(); }
+    function renderAnnotBody() {
+      const body = document.getElementById('annotBody');
+      if (annotTab === 'bookmarks') {
+        if (!bookmarks.length) { body.innerHTML = '<div class="annot-empty"><i class="fas fa-bookmark"></i>No bookmarks yet.<br>Click the ribbon on a page or press B.</div>'; return; }
+        body.innerHTML = bookmarks.sort((a,b) => a.p-b.p).map(b => `
+          <div class="annot-item" onclick="jumpTo(${b.p})">
+            <div class="annot-item-del" onclick="event.stopPropagation();removeBookmark(${b.p})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><i class="fas fa-bookmark"></i> Page ${b.p}</div>
+            <div class="annot-item-txt">${b.d}</div>
+          </div>`).join('');
+        return;
+      }
+      if (annotTab === 'highlights') {
+        const all = Object.entries(highlights).flatMap(([pg,hls]) => hls.map(h=>({...h,pg:parseInt(pg)}))).sort((a,b)=>a.pg-b.pg);
+        if (!all.length) { body.innerHTML = '<div class="annot-empty"><i class="fas fa-highlighter"></i>No highlights yet.<br>Select text on the page and pick a color.</div>'; return; }
+        body.innerHTML = all.map(h => `
+          <div class="annot-item" onclick="renderPage(${h.pg})">
+            <div class="annot-item-del" onclick="event.stopPropagation();removeHighlightById(${h.id})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><span class="hl-dot" style="background:var(--hl-${h.color})"></span> Page ${h.pg}</div>
+            <div class="annot-item-txt">&ldquo;${h.text.substring(0,80)}${h.text.length>80?'&hellip;':''}&rdquo;</div>
+          </div>`).join('');
+        return;
+      }
+      if (annotTab === 'notes') {
+        const all = Object.entries(notes).flatMap(([pg,ns]) => ns.map(n=>({...n,pg:parseInt(pg)}))).sort((a,b)=>a.pg-b.pg);
+        if (!all.length) { body.innerHTML = '<div class="annot-empty"><i class="fas fa-sticky-note"></i>No notes yet.<br>Enable note mode and click on the page.</div>'; return; }
+        body.innerHTML = all.map(n => `
+          <div class="annot-item" onclick="renderPage(${n.pg})">
+            <div class="annot-item-del" onclick="event.stopPropagation();deleteNoteById(${n.id},${n.pg})"><i class="fas fa-times"></i></div>
+            <div class="annot-item-pg"><i class="fas fa-sticky-note"></i> Page ${n.pg}</div>
+            <div class="annot-item-txt">${n.content.substring(0,80)}${n.content.length>80?'&hellip;':''}</div>
+          </div>`).join('');
+      }
+    }
+
+    // ── Keyboard hints ──────────────────────────────────
+    function showKeyHint() { const el = document.getElementById('keyHint'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3500); }
+    function showErr(msg) { document.getElementById('pdfViewport').innerHTML = `<div class="center-state"><i class="fas fa-exclamation-triangle" style="animation:none;"></i><p>${msg}</p><a href="paper-detail.html?id=${paperId}" class="back-btn" style="margin-top:16px;"><i class="fas fa-arrow-left"></i> Back to Paper Details</a></div>`; }
+
+    // ── Keyboard shortcuts ───────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      switch(e.key) {
+        case 'ArrowLeft': case 'ArrowUp':                    changePage(-1); break;
+        case 'ArrowRight': case 'ArrowDown': case ' ':  e.preventDefault(); changePage(1); break;
+        case '+': case '=': zoom(+0.2); break;
+        case '-':           zoom(-0.2); break;
+        case '0':           resetZoom(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'b': case 'B': toggleBookmarkCurrent(); break;
+        case 'n': case 'N': toggleNoteMode(); break;
+        case 'a': case 'A': toggleAnnotPanel(); break;
+        case 'Escape':
+          document.getElementById('annotPanel').classList.remove('open');
+          closeNoteModal(); hideHlToolbar(); hideNoteTooltip();
+          if (noteModeActive) toggleNoteMode(); break;
+      }
+    });
+
+    // ── Scroll auto-hide bar ───────────────────────────
+    let lastScroll = 0;
+    document.getElementById('readerArea').addEventListener('scroll', (e) => {
+      const now = e.target.scrollTop;
+      if (now > lastScroll + 40) hideBar();
+      else if (now < lastScroll - 10) showBar();
+      lastScroll = now;
+    });
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
+</body>
+</html>

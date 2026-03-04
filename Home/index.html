@@ -19,6 +19,17 @@
     <!-- Favicon -->
     <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
     
+    <!-- PWA & App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="A3KM Studio">
+    <meta name="application-name" content="A3KM Studio">
+    <link rel="manifest" href="../Optimization/manifest.json">
+    <link rel="apple-touch-icon" href="../icons/icon-180.png">
+
+    <!-- PWA Universal Initializer -->
+    <script src="../Optimization/pwa-init.js" defer></script>
+
     <!-- Navbar Styles -->
     <link rel="stylesheet" href="../Optimization/navbar/desktop-navbar.css">
     <!-- Note: navbar-autohide.css excluded intentionally - home page navbar always visible -->
@@ -1947,8 +1958,114 @@ body {
     }
 }
 </style>
+
+<!-- Splash Screen Styles -->
+<style>
+    .app-splash {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #0a0000 0%, #1a0000 60%, #0d0000 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .app-splash.removing {
+        pointer-events: none;
+        cursor: default;
+    }
+    .splash-logo {
+        width: 140px;
+        height: 140px;
+        margin-bottom: 35px;
+        animation: logoReveal 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .splash-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 40px rgba(139, 0, 0, 0.7));
+    }
+    .splash-title {
+        font-size: 32px;
+        font-weight: 900;
+        color: #fff;
+        margin-bottom: 14px;
+        opacity: 0;
+        animation: textSlideUp 0.8s ease forwards 0.3s;
+        font-family: 'Rajdhani', 'Inter', sans-serif;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    .splash-subtitle {
+        font-size: 13px;
+        color: rgba(204, 0, 0, 0.8);
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        opacity: 0;
+        animation: textSlideUp 0.8s ease forwards 0.5s;
+        font-family: 'Rajdhani', 'Inter', sans-serif;
+    }
+    .splash-loader {
+        margin-top: 50px;
+        width: 48px;
+        height: 48px;
+        border: 2px solid rgba(139, 0, 0, 0.2);
+        border-top-color: #8B0000;
+        border-radius: 50%;
+        opacity: 0;
+        animation: loaderFadeIn 0.4s ease forwards 0.7s, splashSpin 0.8s linear infinite 0.7s;
+    }
+    .splash-hint {
+        position: absolute;
+        bottom: 50px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.3);
+        font-weight: 500;
+        opacity: 0;
+        animation: textSlideUp 0.8s ease forwards 1s;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 1px;
+    }
+    @keyframes logoReveal {
+        from { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+        to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes textSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes loaderFadeIn { to { opacity: 1; } }
+    @keyframes splashSpin   { to { transform: rotate(360deg); } }
+    @keyframes splashFadeOut {
+        to { opacity: 0; visibility: hidden; pointer-events: none; }
+    }
+    body.splash-active {
+        overflow: hidden;
+        height: 100vh;
+        max-height: 100vh;
+        position: fixed;
+        width: 100%;
+    }
+</style>
 </head>
-<body>
+<body class="splash-active">
+
+<!-- Splash Screen -->
+<div class="app-splash" id="appSplash">
+    <div class="splash-logo">
+        <img src="../images/logo.svg" alt="A3KM Studio Logo">
+    </div>
+    <h1 class="splash-title">A3KM Studio</h1>
+    <p class="splash-subtitle">Engineering · Education · Innovation</p>
+    <div class="splash-loader"></div>
+    <p class="splash-hint">Click anywhere to continue</p>
+</div>
 
 <!-- Background System -->
 <div class="page-background">
@@ -1981,47 +2098,47 @@ body {
 
 <!-- Navigation - Standard Desktop Navbar -->
 <nav class="desktop-navbar" id="desktopNavbar">
-  <div class="desktop-nav-container">
-    <a href="index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
-      <img src="../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
-      <div class="desktop-nav-brand">
-        <span class="desktop-nav-brand-name">A3KM Studio</span>
-        <span class="desktop-nav-brand-tagline">Engineering · Innovation</span>
-      </div>
-    </a>
-    <ul class="desktop-nav-menu">
-      <li class="desktop-nav-item">
-        <a href="../About me/about.html" class="desktop-nav-link" id="nav-about">
-          <i class="fas fa-user-circle"></i>
-          <span>About</span>
+    <div class="desktop-nav-container">
+        <a href="index.html" class="desktop-nav-logo" title="A3KM Studio - Home" aria-label="A3KM Studio Home">
+            <img src="../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
         </a>
-      </li>
-      <li class="desktop-nav-item">
-        <a href="../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects">
-          <i class="fas fa-folder-open"></i>
-          <span>Projects</span>
-        </a>
-      </li>
-      <li class="desktop-nav-item">
-        <a href="../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio">
-          <i class="fas fa-layer-group"></i>
-          <span>Content Studio</span>
-        </a>
-      </li>
-      <li class="desktop-nav-item">
-        <a href="../Contact/contact.html" class="desktop-nav-link" id="nav-contact">
-          <i class="fas fa-envelope"></i>
-          <span>Contact</span>
-        </a>
-      </li>
-      <li class="desktop-nav-item">
-        <a href="/About%20me/CV/Md%20Akhinoor%20Islam%27s%20CV%20%402026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV">
-          <i class="fas fa-download"></i>
-          <span>CV</span>
-        </a>
-      </li>
-    </ul>
-  </div>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item">
+                <a href="../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    <span>About</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    <span>Content Studio</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                    <span>Contact</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <span>CV</span>
+                </a>
+            </li>
+        </ul>
+    </div>
 </nav>
 
 <!-- Hero Section -->
@@ -2130,6 +2247,11 @@ body {
                     <span class="btn-text">Documentation</span>
                     <span class="btn-icon">📖</span>
                 </a>
+                <!-- PWA Install Button (Hidden by default, shown when installable) -->
+                <button id="hero-install-btn" class="btn btn-secondary" style="display: none;" aria-label="Install A3KM Studio App">
+                    <span class="btn-text">Install App</span>
+                    <span class="btn-icon">📱</span>
+                </button>
             </div>
         </div>
         
@@ -2459,6 +2581,9 @@ body {
             <a href="https://wa.me/8801724812042" class="social-link" target="_blank" rel="noopener" title="WhatsApp">
                 <i class="fab fa-whatsapp"></i>
             </a>
+            <a href="../Only-boss/auth/only-boss.html" class="social-link" title="Only Boss" aria-label="Only Boss Portal">
+                <i class="fas fa-crown"></i>
+            </a>
         </div>
     </div>
 </footer>
@@ -2618,6 +2743,135 @@ window.addEventListener('scroll', () => {
 </script>
 
 <!-- Navbar script: autohide removed for home page (main page navbar always visible) -->
+
+<!-- Splash Screen Logic -->
+<script>
+(function() {
+    'use strict';
+    let splashRemoved = false;
+    const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
+
+    const removeSplashScreen = () => {
+        if (splashRemoved) return;
+        splashRemoved = true;
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.classList.add('removing');
+            splash.style.animation = 'splashFadeOut 0.5s ease forwards';
+        }
+        setTimeout(() => {
+            document.body.classList.remove('splash-active');
+            if (splash) splash.remove();
+        }, 500);
+        sessionStorage.setItem('splashShown', 'true');
+    };
+
+    if (splashAlreadyShown) {
+        document.body.classList.remove('splash-active');
+        const splash = document.getElementById('appSplash');
+        if (splash) splash.remove();
+        splashRemoved = true;
+    } else {
+        // Failsafe: max 4s before auto-remove
+        setTimeout(() => { document.body.classList.remove('splash-active'); }, 4000);
+
+        const splash = document.getElementById('appSplash');
+        if (splash) splash.addEventListener('click', removeSplashScreen);
+
+        const removeSplash = () => setTimeout(removeSplashScreen, 1600);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeSplash);
+        } else {
+            removeSplash();
+        }
+    }
+})();
+</script>
+
+<!-- Desktop Navbar Auto-Activation + Scroll State -->
+<script>
+(function() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const pageMap = {
+        'index.html': 'nav-home',
+        '': 'nav-home',
+        'about.html': 'nav-about',
+        'projects.html': 'nav-projects',
+        'contact.html': 'nav-contact'
+    };
+    const navId = pageMap[currentPage];
+    if (navId) {
+        const activeLink = document.getElementById(navId);
+        if (activeLink) activeLink.classList.add('active');
+    }
+    window.addEventListener('scroll', function() {
+        const navbar = document.getElementById('desktopNavbar');
+        if (navbar) {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        }
+    });
+})();
+</script>
+
+<!-- PWA Install Button Handler -->
+<script>
+(function() {
+    let deferredPrompt;
+    const heroInstallBtn = document.getElementById('hero-install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (heroInstallBtn && !localStorage.getItem('a3km_pwa_installed')) {
+            heroInstallBtn.style.display = 'inline-flex';
+        }
+    });
+
+    if (heroInstallBtn) {
+        heroInstallBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                alert('App installation is not available in this browser. Try Chrome or Edge!');
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                localStorage.setItem('a3km_pwa_installed', 'true');
+                heroInstallBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
+        });
+    }
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        localStorage.setItem('a3km_pwa_installed', 'true');
+        if (heroInstallBtn) heroInstallBtn.style.display = 'none';
+    }
+})();
+</script>
+
+<!-- Auto-Update Systems -->
+<script src="../Optimization/github-projects-detector.js"></script>
+<script src="../Optimization/auto-refresh.js"></script>
+<script src="../Optimization/realtime-github-sync.js"></script>
+
+<!-- Centralized PDF Viewer System -->
+<script>
+    window.CV_PDF_PATH = '../About me/CV/Akhinoor_Islam_CV_2026.pdf';
+</script>
+<script src="../Optimization/pdf-viewer/pdf-viewer.js"></script>
+
+<!-- PWA & Offline Systems -->
+<script src="../Optimization/pwa-install-prompt.js" defer></script>
+<script src="../Optimization/update-notifier.js" defer></script>
+<script src="../Optimization/offline-content-manager.js" defer></script>
+
+<!-- Fullscreen Init -->
+<script src="../Optimization/fullscreen-init.js"></script>
 
 </body>
 </html>

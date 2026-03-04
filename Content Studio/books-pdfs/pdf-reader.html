@@ -197,7 +197,14 @@
       box-shadow: 0 18px 60px rgba(0,0,0,0.9), 0 0 30px rgba(204,0,0,0.15), 0 0 0 1px rgba(204,0,0,0.5);
     }
 
-    #pdfCanvas { display: block; image-rendering: -webkit-optimize-contrast; }
+    #pdfCanvas { 
+      display: block; 
+      image-rendering: auto;
+      image-rendering: -webkit-optimize-contrast;
+      -ms-interpolation-mode: bicubic;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
     /* Text layer (selectable text) */
     .textLayer {
@@ -1078,8 +1085,8 @@
         const scale = baseScale * curZoom;
         const scaledVP = page.getViewport({scale});
         
-        // MAXIMUM QUALITY: 4x DPI for ultra-sharp text rendering (same as 3D viewer)
-        const dpr = 4.0;
+        // MAXIMUM QUALITY: Use device pixel ratio (capped at 3 for performance)
+        const dpr = Math.min(window.devicePixelRatio || 2, 3);
 
         // Build canvas-wrap
         const wrap = document.createElement('div');
@@ -1094,10 +1101,14 @@
         canvas.height = Math.floor(scaledVP.height * dpr);
         canvas.style.width  = scaledVP.width  + 'px';
         canvas.style.height = scaledVP.height + 'px';
-        // Maximum sharpness for text
-        ctx.imageSmoothingEnabled = false;
+        
+        // CRITICAL: Enable smoothing for crisp high-DPI text rendering
+        ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.textRendering = 'optimizeLegibility';
+        
+        // Additional rendering optimizations
+        canvas.style.imageRendering = 'auto';
+        canvas.style.webkitFontSmoothing = 'antialiased';
 
         wrap.appendChild(canvas);
 

@@ -3124,7 +3124,7 @@ const comprehensiveContentData = {
     researchPapers: {
         title: "Research Papers - Complete",
         description: "Academic publications and research paper repository",
-        filePath: "Content Studio/research-papers/paper-listing-new.html",
+        filePath: "Content Studio/research-papers/paper-listing.html",
         sections: [
             {
                 id: "page_header",

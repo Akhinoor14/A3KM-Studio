@@ -1,1409 +1,975 @@
 ﻿<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="theme-color" content="#0a0000">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Immediate Mobile Detection -->
-    <script>
-        (function() {
-            function isMobile() {
-                const ua = navigator.userAgent || '';
-                return /android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) || 
-                       (navigator.userAgentData && navigator.userAgentData.mobile);
-            }
-            if (isMobile()) {
-                window.location.replace('../../mobile/content-studio/video-blogs/video-gallery.html');
-            }
-        })();
-    </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <meta name="description" content="Video Blog Gallery - Browse all video tutorials and educational content">
-    <title>Video Vlogs Gallery - A3KM Studio</title>
-    
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../../Optimization/styles.css">
-    <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <!-- Immediate Mobile Detection -->
+  <script>
+    (function() {
+      const ua = navigator.userAgent || '';
+      if (/android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) ||
+          (navigator.userAgentData && navigator.userAgentData.mobile)) {
+        window.location.replace('../../mobile/content-studio/video-blogs/video-gallery.html');
+      }
+    })();
+  </script>
+
+  <title>Video Vlogs Gallery – A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../../Optimization/styles.css" />
   <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
-    <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
-    
-    <!-- YouTube API Configuration -->
-    <script src="youtube-api-config.js"></script>
-    <script src="unified-video-sync.js"></script>
-    
-    <style>
-        :root {
-            --youtube-red: #FF0000;
-            --primary-red: #CC0000;
-            --dark-red: #8B0000;
-            --light-red: #FF1744;
-            --accent-white: #FFFFFF;
-            --bg-dark: #000000;
-            --bg-card: rgba(15, 15, 15, 0.95);
-            --border-primary: rgba(204, 0, 0, 0.4);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.85);
-            --text-dim: rgba(255, 255, 255, 0.65);
-            --grid-color: rgba(255, 255, 255, 0.08);
-            --highlight-white: rgba(255, 255, 255, 0.15);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #000000;
-            color: var(--text-primary);
-            font-family: 'Inter', -apple-system, sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding: 85px 0 0 0;
-            position: relative;
-        }
-
-        /* Premium Engineering Grid Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 40px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 40px),
-                repeating-linear-gradient(45deg, transparent 0 20px, rgba(204, 0, 0, 0.02) 20px 40px);
-            background-size: 40px 40px, 40px 40px, 80px 80px;
-            pointer-events: none;
-            z-index: 0;
-            animation: gridPulse 8s ease-in-out infinite;
-        }
-
-        @keyframes gridPulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        /* White Accent Splash */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -30%;
-            right: -15%;
-            width: 80%;
-            height: 80%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-            animation: splash 12s ease-in-out infinite;
-        }
-
-        @keyframes splash {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-8%, 8%) scale(1.15); }
-        }
-
-        body > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Back Button */
-        .back-btn {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            color: var(--accent-white);
-            padding: 10px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            margin: 15px 0 0 20px;
-            font-size: 14px;
-            backdrop-filter: blur(20px);
-            display: none; /* Hidden - desktop navbar replaces this */
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 40px rgba(204, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .back-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .back-btn:hover::before {
-            left: 100%;
-        }
-
-        .back-btn:hover {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-color: var(--light-red);
-            transform: translateX(-4px);
-            box-shadow: 
-                0 12px 40px rgba(204, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                0 0 60px rgba(204, 0, 0, 0.4);
-        }
-
-        /* Hero Header */
-        .gallery-hero {
-            padding: 120px 40px 80px;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            border-radius: 20px;
-            position: relative;
-            margin: 20px auto 30px;
-            max-width: 1400px;
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white),
-                0 0 80px rgba(204, 0, 0, 0.15);
-            overflow: visible;
-        }
-
-        /* Animated Corner Brackets */
-        .gallery-hero::before,
-        .gallery-hero::after {
-            content: '';
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            border-color: var(--light-red);
-            z-index: 10;
-            animation: bracketGlow 3s ease-in-out infinite;
-        }
-
-        .gallery-hero::before {
-            top: -2px;
-            left: -2px;
-            border-top: 4px solid;
-            border-left: 4px solid;
-        }
-
-        .gallery-hero::after {
-            bottom: -2px;
-            right: -2px;
-            border-bottom: 4px solid;
-            border-right: 4px solid;
-        }
-
-        @keyframes bracketGlow {
-            0%, 100% { 
-                opacity: 0.6;
-                border-color: var(--light-red);
-                filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.3));
-            }
-            50% { 
-                opacity: 1;
-                border-color: var(--accent-white);
-                filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.6));
-            }
-        }
-
-        .gallery-hero h1 {
-            font-size: 56px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            animation: titlePulse 4s ease-in-out infinite;
-        }
-
-        @keyframes titlePulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
-        }
-
-        .gallery-hero h1 i {
-            color: var(--youtube-red);
-            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.6));
-        }
-
-        .gallery-hero .subtitle {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            letter-spacing: 0.5px;
-        }
-
-        .gallery-stats {
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-        .stat-badge {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.15), rgba(139, 0, 0, 0.1));
-            border: 2px solid var(--border-primary);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 800;
-            color: var(--accent-white);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            box-shadow: 
-                0 4px 12px rgba(204, 0, 0, 0.2),
-                inset 0 1px 0 var(--highlight-white);
-            animation: badgePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes badgePulse {
-            0%, 100% { box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2), inset 0 1px 0 var(--highlight-white); }
-            50% { box-shadow: 0 6px 20px rgba(204, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        }
-
-        .stat-badge i {
-            color: var(--youtube-red);
-            font-size: 16px;
-            filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.6));
-        }
-
-        /* Search & Filter */
-        .controls-section {
-            max-width: 1400px;
-            margin: 0 auto 30px;
-            padding: 0 20px;
-        }
-
-        .search-filter-row {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 350px;
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 14px 45px 14px 45px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            border-radius: 12px;
-            color: var(--accent-white);
-            font-size: 15px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--light-red);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 40px rgba(204, 0, 0, 0.3);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--light-red);
-            font-size: 18px;
-            filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.6));
-        }
-
-        .filter-select {
-            padding: 14px 45px 14px 20px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            border-radius: 12px;
-            color: var(--accent-white);
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 180px;
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .filter-select:hover {
-            border-color: var(--light-red);
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 40px rgba(204, 0, 0, 0.2);
-        }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--light-red);
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 40px rgba(204, 0, 0, 0.3);
-        }
-
-        /* Category Tabs */
-        .category-tabs {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .category-tab {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-            border: 2px solid rgba(204, 0, 0, 0.3);
-            border-radius: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .category-tab:hover {
-            background: rgba(255, 0, 0, 0.2);
-            border-color: var(--light-red);
-            color: var(--accent-white);
-            transform: translateY(-2px);
-            box-shadow: 
-                0 6px 20px rgba(204, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .category-tab.active {
-            background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-            border-color: var(--light-red);
-            color: var(--accent-white);
-            animation: badgePulse 2s ease-in-out infinite;
-            box-shadow: 
-                0 8px 24px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 40px rgba(204, 0, 0, 0.3);
-        }
-
-        /* Videos Container */
-        .videos-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 15px 15px;
-        }
-
-        /* Category Section */
-        .category-section {
-            margin-bottom: 40px;
-            position: relative;
-            padding: 25px;
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 10px 40px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        /* Grid Overlay for Category Section */
-        .category-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 25px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 25px);
-            pointer-events: none;
-            opacity: 0.3;
-            z-index: 0;
-            border-radius: 16px;
-        }
-
-        .category-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--border-primary);
-            position: relative;
-            z-index: 1;
-        }
-
-        .category-icon {
-            font-size: 48px;
-            color: var(--light-red);
-            filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.6));
-            transition: all 0.3s ease;
-        }
-
-        .category-section:hover .category-icon {
-            transform: scale(1.1) rotate(5deg);
-            filter: drop-shadow(0 0 24px rgba(255, 23, 68, 0.8));
-        }
-
-        .category-title {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            flex: 1;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .category-count {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(139, 0, 0, 0.15));
-            border: 2px solid var(--border-primary);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--youtube-red);
-            letter-spacing: 0.5px;
-            box-shadow: 
-                0 4px 12px rgba(204, 0, 0, 0.3),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        /* Videos Grid */
-        .videos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Video Card - Premium Engineering Theme */
-        .video-card {
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            border: 2px solid var(--border-primary);
-            border-radius: 16px;
-            overflow: hidden;
-            backdrop-filter: blur(20px);
-            box-shadow: 
-                0 8px 24px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        /* Multi-Layer Engineering Grid Inside Card */
-        .video-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, var(--grid-color) 0 1px, transparent 1px 20px),
-                repeating-linear-gradient(90deg, var(--grid-color) 0 1px, transparent 1px 20px),
-                repeating-linear-gradient(45deg, transparent 0 15px, rgba(204, 0, 0, 0.02) 15px 30px);
-            pointer-events: none;
-            opacity: 0.4;
-            z-index: 0;
-        }
-
-        /* Animated Corner Bracket */
-        .video-card::before {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 35px;
-            height: 35px;
-            border-top: 3px solid var(--light-red);
-            border-left: 3px solid var(--light-red);
-            opacity: 0.5;
-            transition: all 0.4s ease;
-            z-index: 2;
-            filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.4));
-        }
-
-        .video-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            border-color: var(--light-red);
-            box-shadow: 
-                0 30px 80px rgba(204, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 0 100px rgba(204, 0, 0, 0.3);
-            background: linear-gradient(135deg, rgba(30, 10, 10, 0.95), rgba(20, 15, 15, 0.98));
-        }
-
-        .video-card:hover::before {
-            width: 60px;
-            height: 60px;
-            opacity: 1;
-            border-color: var(--accent-white);
-            filter: drop-shadow(0 0 16px rgba(255, 23, 68, 0.8));
-        }
-
-        .video-card:hover::after {
-            opacity: 0.6;
-        }
-
-        .video-thumbnail {
-            position: relative;
-            width: 100%;
-            padding-top: 45%; /* Tighter ratio - minimal black space */
-            background: #0f0f0f;
-            overflow: hidden;
-            border-radius: 12px 12px 0 0;
-            z-index: 1;
-        }
-
-        .video-thumbnail iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .video-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .video-card:hover .video-overlay {
-            opacity: 1;
-        }
-
-        .play-button {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--youtube-red), var(--primary-red));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-white);
-            font-size: 32px;
-            box-shadow: 
-                0 8px 32px rgba(255, 0, 0, 0.6),
-                inset 0 2px 0 rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .play-button:hover {
-            transform: scale(1.1);
-            box-shadow: 
-                0 12px 48px rgba(255, 0, 0, 0.8),
-                inset 0 2px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        .video-duration {
-            position: absolute;
-            bottom: 14px;
-            right: 14px;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 0, 0.95));
-            color: var(--accent-white);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            border: 1px solid rgba(204, 0, 0, 0.4);
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            letter-spacing: 0.5px;
-        }
-
-        .video-info {
-            padding: 14px 16px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .video-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--accent-white);
-            margin-bottom: 10px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            letter-spacing: 0.3px;
-        }
-
-        .video-card:hover .video-title {
-            color: var(--light-red);
-        }
-
-        .video-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 0;
-            gap: 10px;
-        }
-
-        .video-date {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .video-date i {
-            color: var(--light-red);
-            filter: drop-shadow(0 0 4px rgba(255, 23, 68, 0.4));
-        }
-
-        .video-views {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .video-views i {
-            color: var(--light-red);
-            filter: drop-shadow(0 0 4px rgba(255, 23, 68, 0.4));
-        }
-
-        .video-description {
-            display: none;
-        }
-
-        .video-tags {
-            display: none;
-        }
-
-        .tag {
-            display: none;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 120px 40px;
-            color: var(--text-secondary);
-            background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
-            border: 2px solid var(--border-primary);
-            border-radius: 20px;
-            backdrop-filter: blur(30px);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 var(--highlight-white);
-        }
-
-        .empty-state i {
-            font-size: 80px;
-            color: var(--light-red);
-            margin-bottom: 30px;
-            opacity: 0.7;
-            filter: drop-shadow(0 0 24px rgba(255, 23, 68, 0.6));
-        }
-
-        .empty-state h3 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, var(--accent-white), var(--light-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 70px;
-            }
-
-            .gallery-hero {
-                padding: 80px 25px 50px;
-                margin: 15px 10px 20px;
-            }
-
-            .gallery-hero::before,
-            .gallery-hero::after {
-                width: 50px;
-                height: 50px;
-                border-width: 3px;
-            }
-
-            .gallery-hero h1 {
-                font-size: 36px;
-            }
-
-            .gallery-hero .subtitle {
-                font-size: 15px;
-            }
-
-            .stat-badge {
-                padding: 8px 14px;
-                font-size: 12px;
-            }
-
-            .back-btn {
-                top: 80px;
-                left: 10px;
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-
-            .search-input {
-                padding: 12px 40px;
-                font-size: 14px;
-            }
-
-            .filter-select {
-                padding: 12px 40px 12px 16px;
-                font-size: 14px;
-                min-width: 160px;
-            }
-
-            .category-section {
-                padding: 20px;
-                margin-bottom: 30px;
-            }
-
-            .category-icon {
-                font-size: 36px;
-            }
-
-            .category-title {
-                font-size: 22px;
-            }
-
-            .videos-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .category-tabs {
-                gap: 10px;
-            }
-
-            .category-tab {
-                padding: 8px 16px;
-                font-size: 13px;
-            }
-
-            .empty-state {
-                padding: 80px 30px;
-            }
-
-            .empty-state i {
-                font-size: 60px;
-            }
-
-            .empty-state h3 {
-                font-size: 22px;
-            }
-        }
-    </style>
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- YouTube API Config -->
+  <script src="youtube-api-config.js"></script>
+  <script src="unified-video-sync.js"></script>
+
+  <style>
+    :root {
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --light-red: #FF1744;
+      --accent-red: #FF0000;
+      --bg-dark: #000000;
+      --bg-card: rgba(15,15,15,0.95);
+      --border-primary: rgba(139,0,0,0.4);
+      --border-strong: rgba(204,0,0,0.8);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.85);
+      --text-dim: rgba(255,255,255,0.55);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      background: linear-gradient(180deg, #0a0000 0%, #030000 100%);
+      padding-top: 85px;
+      min-height: 100vh;
+    }
+
+    /* ── COMPACT HEADER STRIP ──────────────────────── */
+    .lib-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 22px 30px;
+      background: linear-gradient(160deg,
+        rgba(80,0,0,0.35) 0%,
+        rgba(40,0,0,0.25) 50%,
+        rgba(15,2,2,0.85) 100%);
+      border-top: 1px solid rgba(204,0,0,0.2);
+      border-bottom: 2px solid rgba(204,0,0,0.45);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .lib-header::before {
+      content: '';
+      position: absolute;
+      top:0; left:-50%; width:200%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(204,0,0,0.07), transparent);
+      pointer-events: none;
+    }
+
+    .lib-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2;
+    }
+
+    .lib-header-left h1 {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(204,0,0,0.3);
+      margin: 0;
+    }
+
+    .lib-header-left h1 i {
+      color: var(--primary-red);
+      font-size: 1.4rem;
+      filter: drop-shadow(0 0 12px rgba(204,0,0,0.6));
+    }
+
+    .lib-header-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(204,0,0,0.4);
+    }
+
+    .lib-header-subtitle {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.45);
+      font-weight: 500;
+    }
+
+    .lib-header-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .lib-stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+
+    .lib-stat-badge i { color: var(--primary-red); font-size: 0.7rem; }
+    .lib-stat-badge strong { color: #fff; font-size: 0.9rem; }
+    .lib-stat-badge:hover { border-color: rgba(204,0,0,0.6); background: rgba(204,0,0,0.1); }
+
+    /* ── 2-COLUMN LAYOUT ───────────────────────────── */
+    .main-content-wrapper {
+      display: flex;
+      min-height: calc(100vh - 85px - 62px);
+      background: #020000;
+      position: relative;
+    }
+
+    /* ── LEFT FILTER SIDEBAR ───────────────────────── */
+    .filter-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: #050000;
+      border-right: 2px solid rgba(204,0,0,0.22);
+      position: sticky;
+      top: 85px;
+      height: calc(100vh - 85px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 50;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.8);
+    }
+
+    .filter-sidebar::-webkit-scrollbar { width: 5px; }
+    .filter-sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    .filter-sidebar::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.4); border-radius: 3px; }
+    .filter-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(204,0,0,0.6); }
+
+    .filter-header {
+      padding: 18px 16px 14px;
+      border-bottom: 2px solid rgba(204,0,0,0.18);
+      background: rgba(15,0,0,0.55);
+    }
+
+    .filter-header h3 {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .filter-header h3 i { color: var(--primary-red); font-size: 0.82rem; }
+
+    .filter-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(204,0,0,0.1);
+    }
+
+    .filter-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-section-title i { color: var(--primary-red); font-size: 0.68rem; }
+
+    /* Search */
+    .search-box { position: relative; margin-bottom: 0; }
+
+    .search-input {
+      width: 100%;
+      padding: 11px 16px 11px 40px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(204,0,0,0.32);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .search-input::placeholder { color: rgba(255,255,255,0.38); }
+    .search-input:focus { outline: none; border-color: var(--primary-red); background: rgba(255,255,255,0.08); box-shadow: 0 0 18px rgba(204,0,0,0.25); }
+
+    .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--primary-red); font-size: 13px; pointer-events: none; }
+
+    .clear-search {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: rgba(255,255,255,0.45); cursor: pointer; font-size: 16px; padding: 4px; display: none; transition: all 0.2s;
+    }
+    .clear-search.active { display: block; }
+    .clear-search:hover { color: var(--primary-red); }
+
+    /* Dropdowns */
+    .filter-dropdown {
+      width: 100%;
+      padding: 10px 13px;
+      background: rgba(15,0,0,0.9);
+      border: 1.5px solid rgba(204,0,0,0.28);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      -webkit-appearance: none;
+      appearance: none;
+      color-scheme: dark;
+      margin-bottom: 8px;
+      font-family: inherit;
+    }
+
+    .filter-dropdown option { background: #1a0000; color: #fff; font-weight: 600; }
+    .filter-dropdown:hover { border-color: var(--primary-red); background: rgba(204,0,0,0.08); }
+    .filter-dropdown:focus { outline: none; border-color: var(--primary-red); box-shadow: 0 0 14px rgba(204,0,0,0.26); }
+
+    /* Category buttons in sidebar */
+    .cat-list { display: flex; flex-direction: column; gap: 5px; }
+
+    .cat-btn {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid rgba(204,0,0,0.18);
+      border-radius: 9px;
+      color: rgba(255,255,255,0.65);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.22s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .cat-btn:hover { background: rgba(204,0,0,0.1); border-color: rgba(204,0,0,0.45); color: #fff; }
+
+    .cat-btn.active {
+      background: linear-gradient(135deg, rgba(204,0,0,0.28), rgba(139,0,0,0.22));
+      border-color: rgba(204,0,0,0.65);
+      color: #fff;
+    }
+
+    .cat-btn .cat-count {
+      margin-left: auto;
+      padding: 1px 7px;
+      background: rgba(204,0,0,0.22);
+      border: 1px solid rgba(204,0,0,0.35);
+      border-radius: 12px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Results info */
+    .results-info {
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.38);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .results-count { color: rgba(255,255,255,0.5); font-weight: 700; font-size: 0.78rem; }
+    .results-count span { color: var(--primary-red); font-weight: 800; font-size: 1rem; }
+
+    /* View toggle */
+    .view-toggle { display: flex; gap: 6px; }
+    .view-btn {
+      flex: 1; padding: 9px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(204,0,0,0.26);
+      border-radius: 9px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s; font-size: 13px;
+    }
+    .view-btn.active { background: linear-gradient(135deg, var(--primary-red), var(--dark-red)); border-color: var(--primary-red); color: #fff; }
+    .view-btn:hover:not(.active) { border-color: var(--primary-red); color: #fff; }
+
+    /* ── VIDEO ZONE ─────────────────────────────────── */
+    .videos-zone {
+      flex: 1;
+      background: linear-gradient(180deg, #0f0000 0%, #080000 100%);
+      border-left: 2px solid rgba(204,0,0,0.12);
+      box-shadow: inset 0 16px 50px rgba(0,0,0,0.9), inset 2px 0 20px rgba(0,0,0,0.8);
+      overflow-x: hidden;
+    }
+
+    .videos-container {
+      padding: 30px 30px 60px;
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
+    }
+
+    /* ── VIDEO GRID ─────────────────────────────────── */
+    .videos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(200px, 20vw, 280px), 1fr));
+      gap: 22px 18px;
+      padding: 8px 0 20px;
+    }
+
+    /* ── VIDEO CARD ─────────────────────────────────── */
+    .video-card {
+      background: linear-gradient(160deg,
+        rgba(22,4,4,0.98) 0%,
+        rgba(14,6,6,0.98) 60%,
+        rgba(8,2,2,0.98) 100%);
+      border: 1px solid rgba(139,0,0,0.32);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7);
+      height: 100%;
+    }
+
+    /* Corner bracket */
+    .video-card::before {
+      content: '';
+      position: absolute; top:8px; left:8px;
+      width:18px; height:18px;
+      border-top: 2px solid var(--primary-red);
+      border-left: 2px solid var(--primary-red);
+      opacity: 0.2; transition: all 0.3s; pointer-events:none; z-index:30;
+    }
+
+    .video-card:hover {
+      border-color: rgba(204,0,0,0.68);
+      box-shadow: 0 16px 40px rgba(139,0,0,0.4), 0 0 55px rgba(204,0,0,0.22);
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    .video-card:hover::before { width:24px; height:24px; opacity:1; border-color: var(--accent-red); top:5px; left:5px; }
+
+    /* Thumbnail – 16:9 */
+    .video-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      position: relative;
+      background: #0d0000;
+      flex-shrink: 0;
+    }
+
+    .video-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+      display: block;
+    }
+
+    .video-card:hover .video-thumb img { transform: scale(1.07); }
+
+    /* Overlay */
+    .video-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.75) 100%);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+
+    .video-card:hover .video-overlay { opacity: 1; }
+
+    .play-btn {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px;
+      box-shadow: 0 6px 24px rgba(204,0,0,0.6);
+      transition: transform 0.2s;
+    }
+
+    .play-btn i { margin-left: 3px; }
+    .video-card:hover .play-btn { transform: scale(1.12); }
+
+    /* Duration pill */
+    .video-duration {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.88);
+      border: 1px solid rgba(204,0,0,0.4);
+      color: #fff; padding: 3px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+    }
+
+    /* Category badge */
+    .video-cat-badge {
+      position: absolute; top: 8px; left: 8px;
+      padding: 2px 8px;
+      background: rgba(0,0,0,0.82);
+      border: 1px solid rgba(139,0,0,0.55);
+      border-radius: 5px;
+      font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.3px; color: var(--accent-red); z-index: 10;
+      backdrop-filter: blur(8px);
+      max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* Info strip */
+    .video-info {
+      padding: 10px 10px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      flex: 1;
+    }
+
+    .video-title {
+      font-size: 0.88rem; font-weight: 800; color: var(--text-primary);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      letter-spacing: 0.06px; transition: color 0.25s;
+      min-height: 2.4em;
+    }
+
+    .video-card:hover .video-title { color: var(--accent-red); }
+
+    .video-meta-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 5px;
+      padding-top: 5px;
+      border-top: 1px solid rgba(139,0,0,0.16); transition: border-color 0.25s;
+    }
+
+    .video-card:hover .video-meta-row { border-color: rgba(204,0,0,0.35); }
+
+    .meta-date, .meta-views {
+      font-size: 0.64rem; color: rgba(255,255,255,0.42); font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .meta-date i, .meta-views i { color: var(--primary-red); font-size: 0.56rem; }
+
+    /* ── LIST MODE ──────────────────────────────────── */
+    .videos-grid.list-mode {
+      grid-template-columns: 1fr !important;
+      gap: 10px;
+    }
+
+    .videos-grid.list-mode .video-card {
+      flex-direction: row !important;
+      height: 108px;
+      align-items: stretch;
+    }
+
+    .videos-grid.list-mode .video-thumb {
+      width: 192px !important; min-width: 192px;
+      flex-shrink: 0; height: 100%; aspect-ratio: unset !important;
+      border-right: 1px solid rgba(139,0,0,0.28);
+    }
+
+    .videos-grid.list-mode .video-thumb img { height: 100%; object-fit: cover; }
+
+    .videos-grid.list-mode .video-info { flex:1; padding: 10px 14px; justify-content:space-between; }
+
+    .videos-grid.list-mode .video-title { -webkit-line-clamp:1; line-clamp:1; min-height: unset; }
+
+    .videos-grid.list-mode .video-overlay { display: none; }
+
+    /* ── EMPTY / LOADING ────────────────────────────── */
+    .no-videos, .loading-state {
+      text-align: center; padding: 60px 20px; color: var(--text-dim);
+    }
+
+    .no-videos i, .loading-state i { font-size: 48px; color: var(--primary-red); margin-bottom: 16px; }
+    .no-videos p, .loading-state p { font-size: 15px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* ── LOAD MORE ──────────────────────────────────── */
+    .load-more-wrap { text-align: center; margin: 36px 0 10px; }
+
+    .load-more-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 13px 36px;
+      background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+      border: none; border-radius: 12px; color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: all 0.28s; box-shadow: 0 4px 16px rgba(204,0,0,0.35);
+    }
+
+    .load-more-btn:hover { background: linear-gradient(135deg, #e60000, #6b0000); transform:translateY(-2px); box-shadow: 0 8px 24px rgba(204,0,0,0.55); }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width:1024px) {
+      .main-content-wrapper { flex-direction: column; }
+      .filter-sidebar { width:100%; height:auto; position:relative; top:0; border-right:none; border-bottom:2px solid rgba(204,0,0,0.22); max-height:380px; overflow-y:auto; }
+      .videos-zone { border-left:none; }
+      .videos-grid { grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 22vw, 240px),1fr)); }
+    }
+
+    @media (max-width:768px) {
+      .lib-header-left h1 { font-size:1.15rem; }
+      .lib-header-subtitle { display:none; }
+      .lib-stat-badge { font-size:0.68rem; padding:4px 9px; }
+      .videos-container { padding:18px 14px 40px; }
+      .videos-grid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:14px 10px; }
+      .video-title { font-size:0.78rem; }
+    }
+  </style>
 </head>
 <body>
-    <!-- Desktop Navigation -->
-    <nav class="desktop-navbar" id="desktopNavbar">
-        <div class="desktop-nav-container">
-            <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home" aria-label="A3KM Studio Home">
-                <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
-                <div class="desktop-nav-brand">
-                    <span class="desktop-nav-brand-name">A3KM Studio</span>
-                    <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
-                </div>
-            </a>
-            <ul class="desktop-nav-menu">
-                <li class="desktop-nav-item">
-                    <a href="../../About me/about.html" class="desktop-nav-link" aria-label="About Me">
-                        <i class="fas fa-user-circle"></i>
-                        <span>About</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../Projects Code/projects.html" class="desktop-nav-link" aria-label="View Projects">
-                        <i class="fas fa-folder-open"></i>
-                        <span>Projects</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../hub.html" class="desktop-nav-link active" aria-label="Content Studio">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Content Studio</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact Me">
-                        <i class="fas fa-envelope"></i>
-                        <span>Contact</span>
-                    </a>
-                </li>
-                <li class="desktop-nav-item">
-                    <a href="../../About me/CV/2313014 CV.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV.pdf" title="Download CV" aria-label="Download CV PDF">
-                        <i class="fas fa-download"></i>
-                        <span>CV</span>
-                    </a>
-                </li>
-            </ul>
+
+  <!-- Desktop Navbar -->
+  <nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+        <div class="desktop-nav-brand">
+          <span class="desktop-nav-brand-name">A3KM Studio</span>
+          <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
         </div>
-    </nav>
-
-    <!-- CENTRALIZED BACKGROUND SYSTEM -->
-    <div class="bg-system-container">
-        <div class="bg-hero-bg-elements">
-            <div class="bg-geometric-shapes">
-                <div class="bg-shape bg-shape-1"></div>
-                <div class="bg-shape bg-shape-2"></div>
-                <div class="bg-shape bg-shape-3"></div>
-                <div class="bg-shape bg-shape-4"></div>
-                <div class="bg-shape bg-shape-5"></div>
-            </div>
-            <div class="bg-gradient-orbs">
-                <div class="bg-orb bg-orb-1"></div>
-                <div class="bg-orb bg-orb-2"></div>
-                <div class="bg-orb bg-orb-3"></div>
-            </div>
-            <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
-        </div>
-        <div class="bg-system-overlay"></div>
-        
-        <div class="bg-system-content">
-            <!-- Back Button -->
-            <a href="../hub.html" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-                Back
-            </a>
-
-            <!-- Hero Section -->
-            <header class="gallery-hero">
-                <h1><i class="fab fa-youtube"></i> Video Blog Gallery</h1>
-                <p class="subtitle">Browse all video tutorials, educational content, and technical guides</p>
-                
-                <div class="gallery-stats">
-                    <span class="stat-badge">
-                        <i class="fas fa-play-circle"></i> <span id="totalVideos">0</span> Videos
-                    </span>
-                    <span class="stat-badge">
-                        <i class="fas fa-layer-group"></i> <span id="totalCategories">0</span> Categories
-                    </span>
-                    <span class="stat-badge">
-                        <i class="fab fa-youtube"></i> YouTube Powered
-                    </span>
-                </div>
-            </header>
-
-            <!-- Search & Filter Controls -->
-            <section class="controls-section">
-                <div class="search-filter-row">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" id="searchInput" placeholder="Search videos by title, tags, or topics...">
-                    </div>
-                    
-                    <select class="filter-select" id="sortFilter">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="title-asc">Title (A-Z)</option>
-                        <option value="title-desc">Title (Z-A)</option>
-                    </select>
-                </div>
-
-                <div class="category-tabs" id="categoryTabs">
-                    <button class="category-tab active" data-category="all">
-                        <i class="fas fa-th"></i> All Videos
-                    </button>
-                </div>
-            </section>
-
-            <!-- Videos Container -->
-            <main class="videos-container" id="videosContainer">
-                <!-- Videos will be loaded dynamically -->
-            </main>
-        </div>
+      </a>
+      <ul class="desktop-nav-menu">
+        <li class="desktop-nav-item">
+          <a href="../../About me/about.html" class="desktop-nav-link" aria-label="About Me">
+            <i class="fas fa-user-circle"></i><span>About</span>
+          </a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Projects Code/projects.html" class="desktop-nav-link" aria-label="Projects">
+            <i class="fas fa-folder-open"></i><span>Projects</span>
+          </a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../hub.html" class="desktop-nav-link active" aria-label="Content Studio">
+            <i class="fas fa-layer-group"></i><span>Content Studio</span>
+          </a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact">
+            <i class="fas fa-envelope"></i><span>Contact</span>
+          </a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV">
+            <i class="fas fa-download"></i><span>CV</span>
+          </a>
+        </li>
+      </ul>
     </div>
+  </nav>
 
-    <script src="../../Optimization/script.js"></script>
-    <script>
-        let allVideos = [];
-        let categories = {};
-        let currentCategory = 'all';
-        let currentSort = 'newest';
-        let videosPerBatch = 12; // Load 12 videos at a time
-        let currentBatch = 1; // Current batch number
-        
-        // Video stats cache with timestamp
-        const videoStatsCache = new Map();
-        const CACHE_DURATION = YOUTUBE_CONFIG.CACHE_DURATION; // 1 hour
-        
-        // Check if API is configured
-        const useYouTubeAPI = validateYouTubeConfig();
+  <!-- Compact Header Strip -->
+  <div class="lib-header">
+    <div class="lib-header-left">
+      <h1><i class="fab fa-youtube"></i> Video Vlogs</h1>
+      <div class="lib-header-divider"></div>
+      <span class="lib-header-subtitle">Video Blog Archive</span>
+    </div>
+    <div class="lib-header-stats">
+      <div class="lib-stat-badge">
+        <i class="fas fa-play-circle"></i>
+        <strong id="headerTotalVideos">—</strong>
+        <span>Videos</span>
+      </div>
+      <div class="lib-stat-badge">
+        <i class="fas fa-layer-group"></i>
+        <strong id="headerTotalCategories">—</strong>
+        <span>Categories</span>
+      </div>
+      <div class="lib-stat-badge">
+        <i class="fab fa-youtube"></i>
+        <strong>YouTube</strong>
+        <span>Powered</span>
+      </div>
+    </div>
+  </div>
 
-        // Load videos from JSON
-        async function loadVideos() {
-            try {
-                const response = await fetch('../../Content Code/content.json');
-                const data = await response.json();
-                
-                // Load videos from flat array structure
-                allVideos = data['video-blogs'] || [];
-                
-                // Extract unique categories from subcategory field and build category structure
-                const uniqueCategories = [...new Set(allVideos.map(v => v.subcategory))].filter(Boolean);
-                
-                // Build categories object for compatibility with existing code
-                categories = {};
-                uniqueCategories.forEach(subcategory => {
-                    const categorySlug = subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    categories[categorySlug] = {
-                        name: subcategory,
-                        icon: '📹',
-                        color: '#CC0000',
-                        videos: allVideos.filter(v => v.subcategory === subcategory)
-                    };
-                });
-                
-                // Add category info to each video for display
-                allVideos = allVideos.map(video => {
-                    const categorySlug = video.subcategory ? video.subcategory.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'other';
-                    return {
-                        ...video,
-                        category: categorySlug,
-                        categoryName: video.subcategory || 'Other',
-                        categoryIcon: '📹',
-                        categoryColor: '#CC0000'
-                    };
-                });
-                
-                console.log('Loaded video-blog videos:', allVideos.length);
-                console.log('Categories:', Object.keys(categories).length);
-                
-                // Update stats
-                document.getElementById('totalVideos').textContent = allVideos.length;
-                document.getElementById('totalCategories').textContent = Object.keys(categories).length;
-                
-                // Create category tabs
-                createCategoryTabs();
-                
-                // Load cached stats from localStorage
-                loadCacheFromStorage();
-                
-                // Fetch real YouTube stats for all videos
-                await fetchYouTubeStats();
-                
-                // Render videos
-                renderVideos();
-            } catch (error) {
-                console.error('Error loading videos:', error);
-                document.getElementById('videosContainer').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error loading videos</h3>
-                        <p>Please try refreshing the page</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // Fetch real YouTube stats (duration and views)
-        async function fetchYouTubeStats() {
-            // Skip if API not configured
-            if (!useYouTubeAPI) {
-                console.info('📊 Using static data from videos.json (API not configured)');
-                return;
-            }
-            
-            try {
-                // Get all unique video IDs
-                const videoIds = [...new Set(allVideos.map(v => v.videoId))];
-                
-                // Check cache first
-                const now = Date.now();
-                const uncachedIds = videoIds.filter(id => {
-                    const cached = videoStatsCache.get(id);
-                    return !cached || (now - cached.timestamp) > CACHE_DURATION;
-                });
-                
-                if (uncachedIds.length === 0) {
-                    console.log('✅ All video stats loaded from cache');
-                    return;
-                }
-                
-                console.log(`📡 Fetching stats for ${uncachedIds.length} videos...`);
-                
-                // YouTube API allows up to 50 IDs per request
-                const batchSize = YOUTUBE_CONFIG.MAX_IDS_PER_REQUEST;
-                const batches = [];
-                
-                for (let i = 0; i < uncachedIds.length; i += batchSize) {
-                    batches.push(uncachedIds.slice(i, i + batchSize));
-                }
-                
-                // Fetch stats for each batch
-                let successCount = 0;
-                for (const batch of batches) {
-                    const ids = batch.join(',');
-                    const parts = YOUTUBE_CONFIG.PARTS.join(',');
-                    const url = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?part=${parts}&id=${ids}&key=${YOUTUBE_CONFIG.API_KEY}`;
-                    
-                    try {
-                        const response = await fetch(url);
-                        const data = await response.json();
-                        
-                        if (data.error) {
-                            console.error('YouTube API error:', data.error.message);
-                            if (data.error.code === 403) {
-                                console.error('❌ API key invalid or quota exceeded');
-                                console.info('💡 Check: https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas');
-                            }
-                            break;
-                        }
-                        
-                        if (data.items) {
-                            data.items.forEach(item => {
-                                videoStatsCache.set(item.id, {
-                                    duration: parseYouTubeDuration(item.contentDetails.duration),
-                                    views: formatViews(item.statistics.viewCount),
-                                    timestamp: now
-                                });
-                                successCount++;
-                            });
-                        }
-                    } catch (err) {
-                        console.warn('Failed to fetch stats for batch:', err);
-                    }
-                }
-                
-                console.log(`✅ Fetched stats for ${successCount} videos`);
-                
-                // Save cache to localStorage for persistence
-                try {
-                    const cacheData = Array.from(videoStatsCache.entries());
-                    localStorage.setItem('youtubeStatsCache', JSON.stringify(cacheData));
-                } catch (e) {
-                    console.warn('Failed to save cache:', e);
-                }
-            } catch (error) {
-                console.warn('YouTube API error:', error);
-                console.info('📊 Falling back to static data from videos.json');
-            }
-        }
-        
-        // Load cache from localStorage on startup
-        function loadCacheFromStorage() {
-            try {
-                const cached = localStorage.getItem('youtubeStatsCache');
-                if (cached) {
-                    const entries = JSON.parse(cached);
-                    const now = Date.now();
-                    let validCount = 0;
-                    
-                    entries.forEach(([id, data]) => {
-                        // Only restore cache entries that are still valid
-                        if (now - data.timestamp < CACHE_DURATION) {
-                            videoStatsCache.set(id, data);
-                            validCount++;
-                        }
-                    });
-                    
-                    if (validCount > 0) {
-                        console.log(`📦 Loaded ${validCount} cached stats from storage`);
-                    }
-                }
-            } catch (e) {
-                console.warn('Failed to load cache:', e);
-            }
-        }
-        
-        // Parse YouTube duration format (PT1H2M10S -> 1:02:10)
-        function parseYouTubeDuration(duration) {
-            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-            if (!match) return '0:00';
-            
-            const hours = parseInt(match[1] || 0);
-            const minutes = parseInt(match[2] || 0);
-            const seconds = parseInt(match[3] || 0);
-            
-            if (hours > 0) {
-                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }
-        
-        // Format view count (1234567 -> 1.2M)
-        function formatViews(views) {
-            const num = parseInt(views);
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1) + 'M';
-            } else if (num >= 1000) {
-                return (num / 1000).toFixed(1) + 'K';
-            }
-            return num.toString();
-        }
+  <!-- Main 2-Column Layout -->
+  <div class="main-content-wrapper">
 
-        // Create category tabs
-        function createCategoryTabs() {
-            const tabsContainer = document.getElementById('categoryTabs');
-            const allButton = tabsContainer.querySelector('.category-tab[data-category="all"]');
-            
-            // Add event listener to "All Videos" button
-            if (allButton) {
-                allButton.addEventListener('click', () => filterByCategory('all', allButton));
-            }
-            
-            // Only add tabs for categories that have videos
-            Object.entries(categories).forEach(([categoryName, categoryData]) => {
-                if (categoryData.videos && categoryData.videos.length > 0) {
-                    const tab = document.createElement('button');
-                    tab.className = 'category-tab';
-                    tab.dataset.category = categoryName;
-                    const icon = categoryData.icon || '📹';
-                    const iconHtml = icon.startsWith('fas ') || icon.startsWith('far ') || icon.startsWith('fab ') 
-                        ? `<i class="${icon}"></i>` 
-                        : icon;
-                    tab.innerHTML = `${iconHtml} ${categoryData.name || categoryName}`;
-                    tab.addEventListener('click', () => filterByCategory(categoryName, tab));
-                    tabsContainer.appendChild(tab);
-                }
+    <!-- LEFT SIDEBAR -->
+    <aside class="filter-sidebar">
+
+      <div class="filter-header">
+        <h3><i class="fas fa-sliders-h"></i> Filters</h3>
+      </div>
+
+      <!-- Search -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-search"></i> Search</div>
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search videos…">
+          <button class="clear-search" id="clearSearch" onclick="clearSearch()">×</button>
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-sort"></i> Sort By</div>
+        <select class="filter-dropdown" id="sortFilter">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="title-asc">Title (A → Z)</option>
+          <option value="title-desc">Title (Z → A)</option>
+        </select>
+      </div>
+
+      <!-- View Mode -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-th"></i> View</div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid view"><i class="fas fa-th-large"></i></button>
+          <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List view"><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="filter-section">
+        <div class="results-info">
+          <div class="results-count">Showing <span id="resultsCount">0</span> videos</div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-layer-group"></i> Categories</div>
+        <div class="cat-list" id="catList">
+          <button class="cat-btn active" data-category="all" onclick="filterBy('all', this)">
+            <i class="fas fa-play-circle"></i> All Videos
+            <span class="cat-count" id="countAll">0</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- VIDEO ZONE -->
+    <main class="videos-zone">
+      <div class="videos-container">
+        <div class="loading-state" id="loadingState">
+          <i class="fas fa-spinner spin"></i>
+          <p>Loading videos…</p>
+        </div>
+        <div id="videosGrid" style="display:none;"></div>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // ── State ───────────────────────────────────────────
+    let allVideos     = [];
+    let categories    = {};
+    let currentCat    = 'all';
+    let currentSort   = 'newest';
+    let currentView   = 'grid';
+    let batchSize     = 16;
+    let currentBatch  = 1;
+
+    const videoStatsCache = new Map();
+    const CACHE_DURATION  = typeof YOUTUBE_CONFIG !== 'undefined' ? YOUTUBE_CONFIG.CACHE_DURATION : 3600000;
+    const useYouTubeAPI   = typeof validateYouTubeConfig === 'function' ? validateYouTubeConfig() : false;
+
+    // ── Load Data ───────────────────────────────────────
+    async function loadVideos() {
+      try {
+        const res  = await fetch('../../Content Code/content.json');
+        const data = await res.json();
+
+        allVideos = data['video-blogs'] || [];
+
+        // Build category map from subcategory field
+        const seenCats = {};
+        allVideos.forEach(v => {
+          const name = v.subcategory || 'Other';
+          const slug = slugify(name);
+          if (!seenCats[slug]) seenCats[slug] = { name, count: 0 };
+          seenCats[slug].count++;
+          v._catSlug = slug;
+          v._catName = name;
+        });
+        categories = seenCats;
+
+        // Update header stats
+        document.getElementById('headerTotalVideos').textContent     = allVideos.length;
+        document.getElementById('headerTotalCategories').textContent = Object.keys(categories).length;
+        document.getElementById('countAll').textContent              = allVideos.length;
+
+        // Build sidebar category buttons
+        buildCatButtons();
+
+        // Load cached YouTube stats
+        loadStatsCache();
+
+        // Fetch fresh YouTube stats
+        if (useYouTubeAPI) await fetchYouTubeStats();
+
+        // First render
+        renderVideos();
+
+      } catch (err) {
+        console.error('Failed to load videos:', err);
+        document.getElementById('loadingState').innerHTML = `
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to load videos. Please refresh.</p>`;
+      }
+    }
+
+    // ── Utilities ───────────────────────────────────────
+    function slugify(str) {
+      return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    // ── Category Buttons ────────────────────────────────
+    function buildCatButtons() {
+      const list = document.getElementById('catList');
+      // clear existing except "All"
+      Array.from(list.children).forEach(el => { if (el.dataset.category !== 'all') el.remove(); });
+
+      const sorted = Object.entries(categories).sort((a,b) => b[1].count - a[1].count);
+      sorted.forEach(([slug, info]) => {
+        const btn = document.createElement('button');
+        btn.className   = 'cat-btn';
+        btn.dataset.category = slug;
+        btn.innerHTML   = `<i class="fas fa-play"></i>${info.name}<span class="cat-count">${info.count}</span>`;
+        btn.onclick     = () => filterBy(slug, btn);
+        list.appendChild(btn);
+      });
+    }
+
+    // ── Filter / Sort / View ─────────────────────────────
+    function filterBy(cat, el) {
+      currentCat = cat;
+      currentBatch = 1;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderVideos();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearch').classList.remove('active');
+      renderVideos();
+    }
+
+    function setView(mode) {
+      currentView = mode;
+      document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+      document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+      const grid = document.getElementById('videosGrid').querySelector('.videos-grid');
+      if (grid) grid.classList.toggle('list-mode', mode === 'list');
+    }
+
+    // ── Render ───────────────────────────────────────────
+    function renderVideos() {
+      const container = document.getElementById('videosGrid');
+      document.getElementById('loadingState').style.display = 'none';
+      container.style.display = 'block';
+
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      let filtered = allVideos.filter(v => {
+        const catOk = currentCat === 'all' || v._catSlug === currentCat;
+        const qOk   = !q || v.title.toLowerCase().includes(q)
+                         || (v.description||'').toLowerCase().includes(q)
+                         || (v.tags||[]).some(t => t.toLowerCase().includes(q));
+        return catOk && qOk;
+      });
+
+      // Sort
+      switch (currentSort) {
+        case 'oldest':    filtered.sort((a,b) => new Date(a.date) - new Date(b.date)); break;
+        case 'title-asc': filtered.sort((a,b) => a.title.localeCompare(b.title)); break;
+        case 'title-desc':filtered.sort((a,b) => b.title.localeCompare(a.title)); break;
+        default:          filtered.sort((a,b) => new Date(b.date) - new Date(a.date)); break;
+      }
+
+      // Update count
+      document.getElementById('resultsCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="no-videos"><i class="fas fa-video-slash"></i><p>No videos found</p></div>`;
+        return;
+      }
+
+      const total  = batchSize * currentBatch;
+      const slice  = filtered.slice(0, total);
+      const hasMore = filtered.length > total;
+
+      const listClass = currentView === 'list' ? ' list-mode' : '';
+      const cards = slice.map(v => createVideoCard(v)).join('');
+
+      container.innerHTML = `
+        <div class="videos-grid${listClass}">${cards}</div>
+        ${hasMore ? `
+        <div class="load-more-wrap">
+          <button class="load-more-btn" id="loadMoreBtn">
+            <i class="fas fa-arrow-down"></i>
+            Load More (${filtered.length - total} remaining)
+          </button>
+        </div>` : ''}`;
+
+      document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+        currentBatch++;
+        renderVideos();
+      });
+    }
+
+    // ── Video Card HTML ──────────────────────────────────
+    function createVideoCard(v) {
+      const stats    = videoStatsCache.get(v.videoId);
+      const duration = stats?.duration || v.duration || '';
+      const views    = stats?.views    || v.views    || '';
+      const catName  = v._catName || v.subcategory || '';
+      const dateStr  = v.date ? fmtDate(v.date) : '';
+      const thumb    = `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`;
+      const thumbFb  = `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`;
+
+      return `
+        <div class="video-card" onclick="openVideo('${v.videoId}')">
+          <div class="video-thumb">
+            <img src="${thumb}" alt="${escHtml(v.title)}" loading="lazy"
+                 onerror="this.src='${thumbFb}'">
+            <div class="video-overlay">
+              <div class="play-btn"><i class="fas fa-play"></i></div>
+            </div>
+            ${duration ? `<div class="video-duration">${duration}</div>` : ''}
+            ${catName  ? `<div class="video-cat-badge">${escHtml(catName)}</div>` : ''}
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">${escHtml(v.title)}</h3>
+            <div class="video-meta-row">
+              ${dateStr ? `<span class="meta-date"><i class="far fa-calendar-alt"></i>${dateStr}</span>` : '<span></span>'}
+              ${views   ? `<span class="meta-views"><i class="far fa-eye"></i>${views}</span>`          : '<span></span>'}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function openVideo(id) { window.location.href = `video-viewer.html?id=${id}`; }
+
+    function fmtDate(d) {
+      const dt = new Date(d);
+      return dt.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+    }
+
+    function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // ── YouTube Stats ────────────────────────────────────
+    async function fetchYouTubeStats() {
+      if (!useYouTubeAPI) return;
+      try {
+        const ids     = [...new Set(allVideos.map(v => v.videoId))];
+        const now     = Date.now();
+        const missing = ids.filter(id => { const c = videoStatsCache.get(id); return !c || (now - c.timestamp) > CACHE_DURATION; });
+        if (!missing.length) return;
+
+        const bsz = YOUTUBE_CONFIG.MAX_IDS_PER_REQUEST || 50;
+        for (let i = 0; i < missing.length; i += bsz) {
+          const batch = missing.slice(i, i + bsz).join(',');
+          const parts = (YOUTUBE_CONFIG.PARTS||['contentDetails','statistics']).join(',');
+          const url   = `${YOUTUBE_CONFIG.VIDEOS_ENDPOINT}?part=${parts}&id=${batch}&key=${YOUTUBE_CONFIG.API_KEY}`;
+          const res   = await fetch(url);
+          const json  = await res.json();
+          if (json.error) { console.error('YouTube API error:', json.error.message); break; }
+          (json.items||[]).forEach(item => {
+            videoStatsCache.set(item.id, {
+              duration:  parseDuration(item.contentDetails.duration),
+              views:     fmtViews(item.statistics.viewCount),
+              timestamp: now
             });
+          });
         }
 
-        // Filter by category
-        function filterByCategory(category, clickedTab) {
-            currentCategory = category;
-            
-            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-            clickedTab.classList.add('active');
-            
-            renderVideos();
-        }
+        // Persist
+        try { localStorage.setItem('ytStatsCache_gallery', JSON.stringify([...videoStatsCache.entries()])); } catch(e){}
+      } catch (err) { console.warn('YouTube API fetch failed:', err); }
+    }
 
-        // Render videos with lazy loading
-        function renderVideos(append = false) {
-            const container = document.getElementById('videosContainer');
-            
-            // Filter videos
-            let filteredVideos = allVideos.filter(video => {
-                const categoryMatch = currentCategory === 'all' || video.category === currentCategory;
-                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-                const searchMatch = searchTerm === '' || 
-                    video.title.toLowerCase().includes(searchTerm) ||
-                    video.description.toLowerCase().includes(searchTerm) ||
-                    (video.tags && video.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
-                
-                return categoryMatch && searchMatch;
-            });
+    function loadStatsCache() {
+      try {
+        const raw = localStorage.getItem('ytStatsCache_gallery');
+        if (!raw) return;
+        const now = Date.now();
+        JSON.parse(raw).forEach(([id, d]) => { if (now - d.timestamp < CACHE_DURATION) videoStatsCache.set(id, d); });
+      } catch(e){}
+    }
 
-            // Sort videos
-            filteredVideos = sortVideos(filteredVideos);
+    function parseDuration(d) {
+      const m = (d||'').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!m) return '';
+      const h = +m[1]||0, min = +m[2]||0, s = +m[3]||0;
+      if (h) return `${h}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${min}:${String(s).padStart(2,'0')}`;
+    }
 
-            // Reset batch when not appending
-            if (!append) {
-                currentBatch = 1;
-            }
+    function fmtViews(n) {
+      const v = parseInt(n)||0;
+      if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
+      if (v >= 1e3) return (v/1e3).toFixed(1)+'K';
+      return v.toString();
+    }
 
-            // Render
-            if (filteredVideos.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-video-slash"></i>
-                        <h3>No videos found</h3>
-                        <p>Try adjusting your filters or search term</p>
-                    </div>
-                `;
-                return;
-            }
+    // ── Event Listeners ──────────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', e => {
+      document.getElementById('clearSearch').classList.toggle('active', e.target.value.length > 0);
+      currentBatch = 1;
+      renderVideos();
+    });
 
-            // Calculate videos to show
-            const totalToShow = videosPerBatch * currentBatch;
-            const videosToShow = filteredVideos.slice(0, totalToShow);
-            const hasMore = filteredVideos.length > totalToShow;
+    document.getElementById('sortFilter').addEventListener('change', e => {
+      currentSort = e.target.value;
+      currentBatch = 1;
+      renderVideos();
+    });
 
-            // Render videos in batches
-            const videosHtml = `
-                <div class="videos-grid">
-                    ${videosToShow.map((video, index) => {
-                        // Get real stats from cache or fallback to JSON data
-                        const stats = videoStatsCache.get(video.videoId);
-                        const duration = stats?.duration || video.duration || '0:00';
-                        const views = stats?.views || video.views || '0';
-                        
-                        return `
-                        <div class="video-card" onclick="openVideo('${video.videoId}')">
-                            <div class="video-thumbnail">
-                                <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg" alt="${video.title}" onerror="this.src='https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg'">
-                                <div class="video-overlay">
-                                    <div class="play-button">
-                                        <i class="fas fa-play"></i>
-                                    </div>
-                                </div>
-                                <div class="video-duration">${duration}</div>
-                            </div>
-                            <div class="video-info">
-                                <h3 class="video-title">${video.title}</h3>
-                                <div class="video-meta">
-                                    <span class="video-date">
-                                        <i class="far fa-calendar"></i> ${formatDate(video.date)}
-                                    </span>
-                                    <span class="video-views">
-                                        <i class="far fa-eye"></i> ${views}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-`;
-                    }).join('')}
-                </div>
-                ${hasMore ? `
-                    <div style="text-align: center; margin: 40px 0;">
-                        <button id="loadMoreBtn" style="
-                            padding: 15px 40px;
-                            background: linear-gradient(135deg, #CC0000, #990000);
-                            border: 2px solid rgba(204, 0, 0, 0.5);
-                            border-radius: 12px;
-                            color: white;
-                            font-size: 1rem;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(204,0,0,0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
-                            <i class="fas fa-arrow-down"></i> Load More (${filteredVideos.length - totalToShow} remaining)
-                        </button>
-                    </div>
-                ` : ''}
-            `;
+    // ── Navbar scroll ────────────────────────────────────
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('desktopNavbar');
+      if (nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
 
-            container.innerHTML = videosHtml;
-            
-            // Add event listener to Load More button
-            if (hasMore) {
-                document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
-                    currentBatch++;
-                    renderVideos(true);
-                    window.scrollTo({ top: document.querySelector('.videos-grid').offsetTop + 200, behavior: 'smooth' });
-                });
-            }
-        }
+    // ── Init ─────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', loadVideos);
+  </script>
 
-        // Sort videos
-        function sortVideos(videos) {
-            const sorted = [...videos];
-            
-            switch(currentSort) {
-                case 'newest':
-                    return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-                case 'oldest':
-                    return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
-                case 'title-asc':
-                    return sorted.sort((a, b) => a.title.localeCompare(b.title));
-                case 'title-desc':
-                    return sorted.sort((a, b) => b.title.localeCompare(a.title));
-                default:
-                    return sorted;
-            }
-        }
-
-        // Format date
-        function formatDate(dateString) {
-            if (!dateString) return 'Recent';
-            const date = new Date(dateString);
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
-        }
-
-        // Get YouTube video ID
-        function getYouTubeId(url) {
-            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            return match ? match[1] : '';
-        }
-
-        // Open video in viewer
-        function openVideo(videoId) {
-            window.location.href = `video-viewer.html?id=${videoId}`;
-        }
-
-        // Sort filter
-        document.getElementById('sortFilter').addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            renderVideos();
-        });
-
-        // Search
-        document.getElementById('searchInput').addEventListener('input', () => {
-            renderVideos();
-        });
-
-        // Initialize
-        loadVideos();
-
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.getElementById('desktopNavbar');
-            if (navbar) {
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            }
-        });
-    </script>
-  <script src="../../Optimization/fullscreen-init.js"></script>
   <script src="../../Optimization/navbar-autohide.js"></script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

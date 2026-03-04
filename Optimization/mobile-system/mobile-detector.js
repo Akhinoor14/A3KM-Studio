@@ -67,8 +67,8 @@
             { desktop: '/content studio/educational-videos/course-viewer-new.html', mobile: '/mobile/content-studio/educational-courses/course-viewer.html' },
             { desktop: '/content studio/books-pdfs/book-listing-new.html', mobile: '/mobile/content-studio/books-pdfs/book-listing.html' },
             { desktop: '/content studio/books-pdfs/book-detail.html', mobile: '/mobile/content-studio/books-pdfs/book-reader.html' },
-            { desktop: '/content studio/research-papers/paper-listing-new.html', mobile: '/mobile/content-studio/research-papers/paper-listing.html' },
-            { desktop: '/content studio/research-papers/paper-viewer-new.html', mobile: '/mobile/content-studio/research-papers/paper-viewer.html' }
+            { desktop: '/content studio/research-papers/paper-listing.html', mobile: '/mobile/content-studio/research-papers/paper-listing.html' },
+            { desktop: '/content studio/research-papers/paper-viewer.html', mobile: '/mobile/content-studio/research-papers/paper-viewer.html' }
         ];
 
         for (const mapping of mappings) {
@@ -96,8 +96,8 @@
             { mobile: '/mobile/content-studio/educational-courses/course-viewer.html', desktop: '/Content Studio/educational-videos/course-viewer-new.html' },
             { mobile: '/mobile/content-studio/books-pdfs/book-listing.html', desktop: '/Content Studio/books-pdfs/book-listing-new.html' },
             { mobile: '/mobile/content-studio/books-pdfs/book-reader.html', desktop: '/Content Studio/books-pdfs/book-detail.html' },
-            { mobile: '/mobile/content-studio/research-papers/paper-listing.html', desktop: '/Content Studio/research-papers/paper-listing-new.html' },
-            { mobile: '/mobile/content-studio/research-papers/paper-viewer.html', desktop: '/Content Studio/research-papers/paper-viewer-new.html' }
+            { mobile: '/mobile/content-studio/research-papers/paper-listing.html', desktop: '/Content Studio/research-papers/paper-listing.html' },
+            { mobile: '/mobile/content-studio/research-papers/paper-viewer.html', desktop: '/Content Studio/research-papers/paper-viewer.html' }
         ];
 
         for (const mapping of mappings) {

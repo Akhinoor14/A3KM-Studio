@@ -230,15 +230,15 @@
       max-height: 100%;
       width: auto !important;
       height: auto !important;
-      /* Force crisp rendering for text */
+      /* Optimized rendering for high-DPI PDF text */
+      image-rendering: auto;
       image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
-      image-rendering: pixelated;
-      -ms-interpolation-mode: nearest-neighbor;
+      -ms-interpolation-mode: bicubic;
       /* Hardware acceleration */
       transform: translateZ(0);
       backface-visibility: hidden;
-      -webkit-font-smoothing: subpixel-antialiased;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .book-p .pg-canvas-wrap {
@@ -1313,20 +1313,24 @@
         const sc = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
         
         const scaled = page.getViewport({scale: sc});
-        // MAXIMUM QUALITY: 4x DPI for ultra-sharp text rendering
-        const dpr    = 4.0;
+        // MAXIMUM QUALITY: Use device pixel ratio (capped at 3 for performance)
+        const dpr = Math.min(window.devicePixelRatio || 2, 3);
 
         const canvas = document.createElement('canvas');
-        const ctx    = canvas.getContext('2d', {alpha:false});
+        const ctx    = canvas.getContext('2d', {alpha:false, willReadFrequently: false});
         canvas.width  = Math.floor(scaled.width  * dpr);
         canvas.height = Math.floor(scaled.height * dpr);
         canvas.style.width  = Math.floor(scaled.width)  + 'px';
         canvas.style.height = Math.floor(scaled.height) + 'px';
-        // Maximum sharpness settings
-        ctx.imageSmoothingEnabled = false; // Disable smoothing for crisp text
+        
+        // CRITICAL: Enable smoothing for crisp high-DPI text rendering
+        ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        // Font rendering optimization
-        ctx.textRendering = 'optimizeLegibility';
+        
+        // Additional rendering optimizations
+        canvas.style.imageRendering = 'auto';
+        canvas.style.fontSmooth = 'always';
+        canvas.style.webkitFontSmoothing = 'antialiased';
 
         await page.render({
           canvasContext: ctx,
