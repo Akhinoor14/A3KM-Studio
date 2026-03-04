@@ -233,6 +233,44 @@ class GitHubContentUploader {
         }
     }
 
+    /**
+     * Delete all files inside a folder (recursively) from GitHub
+     * @param {string} folderPath - Folder path in repository
+     * @param {string} message - Commit message
+     */
+    async deleteFolder(folderPath, message) {
+        try {
+            const items = await this.makeRequest(
+                `${this.apiUrl}/contents/${folderPath}`,
+                'GET'
+            );
+
+            if (!items || !Array.isArray(items)) {
+                console.warn(`⚠️ Folder not found or empty: ${folderPath}`);
+                return { success: true, deleted: 0 };
+            }
+
+            let deleted = 0;
+            for (const item of items) {
+                if (item.type === 'file') {
+                    await this.deleteFile(item.path, message || `Delete ${item.path}`);
+                    deleted++;
+                } else if (item.type === 'dir') {
+                    // Recursively delete sub-folders
+                    const sub = await this.deleteFolder(item.path, message);
+                    deleted += sub.deleted || 0;
+                }
+            }
+
+            console.log(`✅ Deleted folder: ${folderPath} (${deleted} files)`);
+            return { success: true, deleted, path: folderPath };
+
+        } catch (error) {
+            console.warn(`⚠️ deleteFolder warning for ${folderPath}: ${error.message}`);
+            return { success: false, error: error.message };
+        }
+    }
+
     // ==================== FOLDER OPERATIONS ====================
 
     /**
@@ -452,11 +490,11 @@ class GitHubContentUploader {
                 basePath = `${pathConfig.storagePath}/${categoryGroup}/${categorySlug}`;
             } else if (contentType === 'books-pdfs' || contentType === 'research-papers') {
                 // ✅ FOLDER-BASED STRUCTURE: Each book/paper gets its own folder
-                // Format: books-pdfs/{book-title-id}/
-                // Benefits: organized, easy to delete, scalable, all files in one place
+                // Format: books-pdfs/{book-title-slug}/
+                // Using ONLY the title slug (no timestamp) so re-uploading the same book
+                // overwrites the existing folder instead of creating a new duplicate.
                 const fileSlug = this.slugify(title);
-                const timestamp = Date.now();
-                bookFolderName = `${fileSlug}-${contentId || timestamp}`;
+                bookFolderName = fileSlug;
                 basePath = `${pathConfig.storagePath}/${bookFolderName}`;
                 console.log(`📁 Using folder-based structure for ${contentType}: ${basePath}`);
             } else {

@@ -253,6 +253,17 @@ class ContentManager {
                     await this.githubUploader.deleteFile(item.files.metadata, 'Delete metadata');
                 }
             }
+
+            // For books/papers: delete entire folder (covers, pdf, thumbnail all in one folder)
+            // folderPath is stored in JSON entry by github-content-uploader.js
+            if (item.folderPath) {
+                try {
+                    await this.githubUploader.deleteFolder(item.folderPath, `Delete folder: ${item.title}`);
+                    console.log(`✅ Deleted book/paper folder: ${item.folderPath}`);
+                } catch (folderError) {
+                    console.warn('⚠️ Folder delete failed (may already be gone):', folderError.message);
+                }
+            }
             
             // Delete markdown file if exists (for written posts)
             if (item.markdownFile || item.contentPath) {

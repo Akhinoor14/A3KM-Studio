@@ -317,10 +317,8 @@
         injectStyles();
         registerServiceWorker();
         
-        // Load install prompt (only if not installed)
-        if (!isInstalled) {
-            loadInstallScript();
-        }
+        // pwa-install-prompt.js is directly included in HTML pages
+        // loadInstallScript() disabled to prevent duplicate install prompts
     }
     
     // Run initialization
