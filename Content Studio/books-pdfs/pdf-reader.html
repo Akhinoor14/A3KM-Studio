@@ -836,6 +836,9 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    // Default password for all A3KM Studio PDFs
+    const A3KM_PDF_PASSWORD = 'MOUnoor21014';
+
     const params   = new URLSearchParams(window.location.search);
     const bookId   = params.get('id');
     let pdfDoc     = null;
@@ -892,15 +895,29 @@
     }
 
     async function tryLoadPDF(pdfUrl) {
-      return pdfjsLib.getDocument({
+      const loadingTask = pdfjsLib.getDocument({
         url: pdfUrl,
+        password: A3KM_PDF_PASSWORD,  // Auto-apply A3KM password
         cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
         cMapPacked: true,
         standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
         enableXfa: true,
         disableFontFace: false,
         useSystemFonts: false,
-      }).promise;
+      });
+      
+      // Handle password requirement
+      loadingTask.onPassword = (updatePassword, reason) => {
+        if (reason === 1) { // NEED_PASSWORD
+          console.log('🔐 PDF requires password, using default A3KM password...');
+          updatePassword(A3KM_PDF_PASSWORD);
+        } else if (reason === 2) { // INCORRECT_PASSWORD
+          console.error('❌ Incorrect password provided');
+          throw new Error('Incorrect PDF password');
+        }
+      };
+      
+      return loadingTask.promise;
     }
 
     let loadAttempts = [];

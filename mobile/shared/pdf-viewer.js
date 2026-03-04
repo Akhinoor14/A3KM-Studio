@@ -7,6 +7,9 @@
  * ============================================================================
  */
 
+// Default password for all A3KM Studio PDFs
+const A3KM_PDF_PASSWORD = 'MOUnoor21014';
+
 const UniversalPDFViewer = {
     // Core state
     currentModal: null,
@@ -39,6 +42,9 @@ const UniversalPDFViewer = {
     
     // Configuration
     config: {},
+    
+    // PDF password
+    pdfPassword: null,
     
     // PDF.js CDN
     pdfjsLib: null,
@@ -93,8 +99,12 @@ async function openUniversalPDFViewer(options = {}) {
             title: options.title || '📄 PDF Viewer',
             showDownload: options.showDownload !== false,
             allowZoom: options.allowZoom !== false,
-            downloadName: options.downloadName || 'document.pdf'
+            downloadName: options.downloadName || 'document.pdf',
+            password: options.password !== undefined ? options.password : A3KM_PDF_PASSWORD
         };
+        
+        // Store password for PDF loading
+        UniversalPDFViewer.pdfPassword = UniversalPDFViewer.config.password;
         
         console.log('📱 Opening Universal PDF Viewer...');
         
@@ -593,7 +603,32 @@ async function loadPDF(url) {
         
         console.log('✅ PDF fetched as blob, loading with PDF.js...');
         
-        const loadingTask = UniversalPDFViewer.pdfjsLib.getDocument(blobUrl);
+        // Prepare PDF loading options with password support
+        const loadingOptions = { url: blobUrl };
+        
+        // Add password if provided
+        if (UniversalPDFViewer.pdfPassword) {
+            loadingOptions.password = UniversalPDFViewer.pdfPassword;
+            console.log('🔐 Loading password-protected PDF...');
+        }
+        
+        const loadingTask = UniversalPDFViewer.pdfjsLib.getDocument(loadingOptions);
+        
+        // Handle password requirement
+        loadingTask.onPassword = (updatePassword, reason) => {
+            if (reason === 1) { // NEED_PASSWORD
+                console.log('🔐 PDF requires password, using default A3KM password...');
+                if (UniversalPDFViewer.pdfPassword) {
+                    updatePassword(UniversalPDFViewer.pdfPassword);
+                } else {
+                    throw new Error('This PDF is password-protected');
+                }
+            } else if (reason === 2) { // INCORRECT_PASSWORD
+                console.error('❌ Incorrect password provided');
+                throw new Error('Incorrect PDF password');
+            }
+        };
+        
         UniversalPDFViewer.pdfDoc = await loadingTask.promise;
         UniversalPDFViewer.totalPages = UniversalPDFViewer.pdfDoc.numPages;
         
