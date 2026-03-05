@@ -139,6 +139,12 @@
       justify-content: center;
       width: 100%;
       height: 100vh;
+      /* NO perspective here permanently — it forces ALL children into 3D rendering
+         context, causing Chrome to composite canvas layers at lower quality.
+         Perspective is applied only during actual flip animations via :has() below. */
+    }
+    /* Apply perspective ONLY while a flip animation is running */
+    .book-stage:has(.flipping-left, .flipping-right, .page-turning-single) {
       perspective: 2400px;
     }
 
@@ -167,14 +173,13 @@
       transition: box-shadow 0.4s ease;
       pointer-events: none;
     }
-    .open-book:hover {
-      transform: translateY(-5px);
-    }
     .open-book:hover::before {
       box-shadow:
         0 38px 70px rgba(0,0,0,0.55),
         0 0 40px rgba(204,0,0,0.12);
     }
+    /* No translateY hover on open-book — with perspective active during animation,
+       any transform on .open-book would composite all children as 3D layer. */
     
     /* Single-page mode */
     body.single-page-mode .open-book {
