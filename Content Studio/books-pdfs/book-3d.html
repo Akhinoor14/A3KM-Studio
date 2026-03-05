@@ -72,11 +72,11 @@
        TOP STRIP (auto-hide)
     ────────────────────────────────────────────────── */
     /* ── BAR VISIBILITY SYSTEM ──────────────────────────────
-       body.bars-visible  → both bars shown, book pushed down 102px
-       body (default)     → both bars hidden (slide up), book fills full screen
-       Same 0.35s transition on bars + book-stage so they move together — no black gap.
+       body.bars-visible  → single nav-bar shown, book pushed down 50px
+       body (default)     → nav-bar hidden (slide up), book fills full screen
+       Same 0.35s transition on bar + book-stage so they move together — no black gap.
     ────────────────────────────────────────────────── */
-    .top-strip {
+    .nav-bar {
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 50px;
@@ -85,18 +85,24 @@
       backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
-      padding: 0 16px;
-      gap: 14px;
+      padding: 0 12px;
+      gap: 5px;
       z-index: 500;
       transform: translateY(-100%);
       opacity: 0;
       pointer-events: none;
       transition: transform 0.35s ease, opacity 0.35s ease;
     }
-    body.bars-visible .top-strip {
+    body.bars-visible .nav-bar {
       transform: translateY(0);
       opacity: 1;
       pointer-events: auto;
+    }
+    .nav-sep {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,0.1);
+      flex-shrink: 0;
     }
 
     .ts-zoom-display {
@@ -166,7 +172,7 @@
       transition: padding-top 0.35s ease;  /* same timing as bars */
     }
     body.bars-visible .book-stage {
-      padding-top: 102px;          /* top-strip 50px + ctrl-bar 52px */
+      padding-top: 50px;           /* single nav-bar 50px */
     }
     /* Apply perspective ONLY while a flip animation is running */
     .book-stage:has(.flipping-left, .flipping-right, .page-turning-single) {
@@ -445,29 +451,6 @@
     /* ──────────────────────────────────────────────────
        BOTTOM CONTROLS (auto-appearing)
     ────────────────────────────────────────────────── */
-    .ctrl-bar {
-      position: fixed;
-      top: 50px; left: 0; right: 0;
-      height: 52px;
-      background: var(--ctrl-bg);
-      border-bottom: 1px solid var(--ctrl-border);
-      backdrop-filter: blur(16px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 0 16px;
-      z-index: 499;
-      transform: translateY(-200%);  /* hidden: slide both bars off screen */
-      opacity: 0;
-      pointer-events: none;
-      transition: transform 0.35s ease, opacity 0.35s ease;
-    }
-    body.bars-visible .ctrl-bar {
-      transform: translateY(0);
-      opacity: 1;
-      pointer-events: auto;
-    }
 
     .ctrl-btn {
       width: 36px;
@@ -962,12 +945,33 @@
     </div>
   </div>
 
-  <!-- TOP STRIP -->
-  <div class="top-strip" id="topStrip">
+  <!-- SINGLE NAV BAR -->
+  <div class="nav-bar" id="navBar">
+    <!-- Left: back + navigation -->
     <a class="ts-btn" id="backToDetail" href="#" style="flex-shrink:0">
       <i class="fas fa-arrow-left"></i> Back
     </a>
+    <div class="nav-sep"></div>
+    <button class="ctrl-btn" onclick="goToFirstPage()" title="First page">
+      <i class="fas fa-step-backward"></i>
+    </button>
+    <button class="ctrl-btn" id="prevBtn" onclick="prevPages()" disabled title="Previous (←)">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="ctrl-page" id="ctrlPage">—</span>
+    <div class="ctrl-progress">
+      <div class="ctrl-progress-fill" id="ctrlProgressFill" style="width:0%"></div>
+    </div>
+    <button class="ctrl-btn" id="nextBtn" onclick="nextPages()" disabled title="Next (→)">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <button class="ctrl-btn" onclick="goToLastPage()" title="Last page">
+      <i class="fas fa-step-forward"></i>
+    </button>
+    <div class="nav-sep"></div>
+    <!-- Center: title -->
     <span class="ts-title" id="topTitle">Loading…</span>
+    <!-- Right: features -->
     <a class="ts-btn" id="switchToPdfBtn" href="#" style="flex-shrink:0">
       <i class="fas fa-file-pdf"></i> PDF View
     </a>
@@ -983,19 +987,25 @@
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
     </button>
-    <!-- Zoom controls -->
-    <button class="ts-btn" onclick="zoomBook(-0.1)" title="Zoom out">
-      <i class="fas fa-search-minus"></i>
+    <div class="nav-sep"></div>
+    <button class="ts-btn tool-active" id="vmStretchBtn" onclick="setViewMode('stretch')" title="Stretch — fill width &amp; height, no scroll (cepta)">
+      <i class="fas fa-expand-arrows-alt"></i>
     </button>
-    <span class="ts-zoom-display" id="zoomDisplay">100%</span>
-    <button class="ts-btn" onclick="zoomBook(0.1)" title="Zoom in">
-      <i class="fas fa-search-plus"></i>
+    <button class="ts-btn" id="vmScrollBtn" onclick="setViewMode('scroll')" title="Fill width — scroll height">
+      <i class="fas fa-arrows-alt-v"></i>
     </button>
+    <button class="ts-btn" id="vmFitBtn" onclick="setViewMode('fit')" title="Fit — full page visible, centered, no scroll">
+      <i class="fas fa-compress"></i>
+    </button>
+    <div class="nav-sep"></div>
     <button class="ts-btn" onclick="toggleReadingMode()" id="readingModeBtn" title="Toggle single/dual page">
       <i class="fas fa-book-open"></i> Dual Page
     </button>
     <button class="ts-btn red" onclick="toggleFullscreen()" title="Fullscreen (F)">
       <i class="fas fa-expand"></i>
+    </button>
+    <button class="ctrl-btn red-btn" onclick="goBack()" title="Back to details (Esc)">
+      <i class="fas fa-times"></i>
     </button>
   </div>
 
@@ -1019,41 +1029,6 @@
         <div class="click-zone right-zone" onclick="nextPages()" title="Next pages"></div>
       </div>
     </div>
-  </div>
-
-  <!-- BOTTOM CONTROLS -->
-  <div class="ctrl-bar" id="ctrlBar">
-    <button class="ctrl-btn" id="prevBtn" onclick="prevPages()" disabled title="Previous (←)">
-      <i class="fas fa-chevron-left"></i>
-    </button>
-
-    <div class="ctrl-sep"></div>
-
-    <span class="ctrl-page" id="ctrlPage">—</span>
-    <div class="ctrl-progress">
-      <div class="ctrl-progress-fill" id="ctrlProgressFill" style="width:0%"></div>
-    </div>
-
-    <div class="ctrl-sep"></div>
-
-    <button class="ctrl-btn" id="nextBtn" onclick="nextPages()" disabled title="Next (→)">
-      <i class="fas fa-chevron-right"></i>
-    </button>
-
-    <div class="ctrl-sep"></div>
-
-    <button class="ctrl-btn" onclick="goToFirstPage()" title="First page">
-      <i class="fas fa-step-backward"></i>
-    </button>
-    <button class="ctrl-btn" onclick="goToLastPage()" title="Last page">
-      <i class="fas fa-step-forward"></i>
-    </button>
-
-    <div class="ctrl-sep"></div>
-
-    <button class="ctrl-btn red-btn" onclick="goBack()" title="Back to details (Esc)">
-      <i class="fas fa-times"></i>
-    </button>
   </div>
 
   <!-- KEYBOARD HINT -->
@@ -1129,8 +1104,9 @@
     let bookData  = null;
     let flipping  = false;
     let isNight   = false;
-    let bookZoom     = 1.0;  // render zoom multiplier
-    let maxBookZoom  = 4.0;  // dynamically updated per page based on screen size
+    let bookZoom     = 1.0;  // render zoom multiplier (zoom buttons removed; stays at 1)
+    let maxBookZoom  = 4.0;  // kept for compat, unused
+    let viewMode     = 'stretch'; // 'stretch' | 'scroll' | 'fit'
 
     // Annotation system
     let bookmarks = [];
@@ -1342,24 +1318,20 @@
         // Scale that fits width exactly, then check if height overflows
         const widthScale  = (basePw - 4) / vp.width;
         const heightScale = (basePh - 4) / vp.height;
-        // Use whichever is smaller so page fits fully within both dimensions (contain mode)
-        const fitScale  = Math.min(widthScale, heightScale);
-        const baseScale = fitScale * bookZoom;
+        // Scale based on current view mode
+        const fitScale = (viewMode === 'fit')
+          ? Math.min(widthScale, heightScale)
+          : widthScale;
+        const baseScale = fitScale;
 
-        // At zoom=1 the effective page width may be less than basePw (height-limited pages)
-        const effectivePw = Math.round(vp.width * fitScale * bookZoom);
+        const effectivePw = Math.round(vp.width * fitScale);
         const pageW = Math.max(280, effectivePw);
 
-        // Apply the zoomed width to .book-p and container
+        // Apply width to .book-p and container
         const bookP = container.parentElement;
         if (bookP) { bookP.style.width = pageW + 'px'; bookP.style.maxWidth = 'none'; }
         container.style.width = pageW + 'px';
 
-        // Dynamic max zoom from screen dims
-        const maxZoomW = window.innerWidth  / (vp.width  * fitScale);
-        const maxZoomH = window.innerHeight / (vp.height * fitScale);
-        maxBookZoom = Math.round(Math.max(maxZoomW, maxZoomH) * 10) / 10;
-        
         const scaled = page.getViewport({scale: baseScale});
         
         // MAXIMUM QUALITY: Use devicePixelRatio, minimum 2x for crisp text
@@ -1371,6 +1343,8 @@
         // CSS display size = fits the container
         const cssW = Math.floor(scaled.width);
         const cssH = Math.floor(scaled.height);
+        // Stretch mode: CSS-squish height to fill stage box exactly (aspect ratio distorted)
+        const displayH = (viewMode === 'stretch') ? Math.max(200, basePh - 4) : cssH;
 
         const canvas = document.createElement('canvas');
         const ctx    = canvas.getContext('2d', {alpha:false, willReadFrequently: false});
@@ -1378,7 +1352,7 @@
         canvas.height = Math.floor(cssH * renderDpr);
         // Set inline CSS size so the canvas displays exactly at container-fit dimensions
         canvas.style.width  = cssW + 'px';
-        canvas.style.height = cssH + 'px';
+        canvas.style.height = displayH + 'px';
         
         // CRITICAL: Enable smoothing for crisp high-DPI text rendering
         ctx.imageSmoothingEnabled = true;
@@ -1403,9 +1377,9 @@
         wrap.style.width    = '100%';
         wrap.style.height   = '100%';
         wrap.style.display  = 'flex';
-        wrap.style.alignItems = 'center';
+        wrap.style.alignItems    = (viewMode === 'scroll') ? 'flex-start' : 'center';
         wrap.style.justifyContent = 'center';
-        wrap.style.overflowY = 'auto';
+        wrap.style.overflowY = (viewMode === 'scroll') ? 'auto' : 'hidden';
         wrap.style.overflowX = 'visible';
         wrap.appendChild(canvas);
 
@@ -1413,7 +1387,7 @@
         const textDiv = document.createElement('div');
         textDiv.className = 'textLayer';
         textDiv.style.width = cssW + 'px';
-        textDiv.style.height = cssH + 'px';
+        textDiv.style.height = displayH + 'px';
         textDiv.style.position = 'absolute';
         // Use margin:auto centering via flex parent — NO transform to avoid stacking context
         textDiv.style.top = '0';
@@ -1480,9 +1454,9 @@
       currentL += increment;
       saveLastPage(currentL);
       if (isSinglePageMode) {
-        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; showCtrl(); });
+        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; });
       } else {
-        spread(currentL, true).finally(() => { flipping = false; showCtrl(); });
+        spread(currentL, true).finally(() => { flipping = false; });
       }
     }
 
@@ -1493,9 +1467,9 @@
       currentL = Math.max(1, currentL - decrement);
       saveLastPage(currentL);
       if (isSinglePageMode) {
-        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; showCtrl(); });
+        renderPageTo(currentL, 'rightPage', 'rightRibbon').finally(() => { flipping = false; });
       } else {
-        spreadBack(currentL).finally(() => { flipping = false; showCtrl(); });
+        spreadBack(currentL).finally(() => { flipping = false; });
       }
     }
 
@@ -1503,7 +1477,6 @@
       if (flipping) return;
       currentL = 1;
       spread(1, false);
-      showCtrl();
     }
 
     function goToLastPage() {
@@ -1511,7 +1484,6 @@
       // Make it land on odd (left) page
       currentL = totalPg % 2 === 0 ? totalPg - 1 : totalPg;
       spread(currentL, false);
-      showCtrl();
     }
 
     // ── Update UI ─────────────────────────────────────────
@@ -1539,9 +1511,8 @@
     }
 
     // ── Controls: show when cursor near top edge, hide after leaving ──────────
-    // bars-visible → book-stage padding-top: 102px (bars shown)
-    // !bars-visible → book-stage padding-top: 0     (bars hidden, book fills screen)
-    // Both bars + book-stage have transition: 0.35s → move together, zero black gap.
+    // bars-visible → book-stage padding-top: 50px (nav-bar shown)
+    // !bars-visible → book-stage padding-top: 0   (nav-bar hidden, book fills screen)
     let barsTimer;
     function showBars() {
       document.body.classList.add('bars-visible');
@@ -1578,10 +1549,8 @@
     }, { passive: true });
 
     // Keep bars visible while hovering over them
-    document.getElementById('ctrlBar').addEventListener('mouseenter', keepBars);
-    document.getElementById('ctrlBar').addEventListener('mouseleave', resumeBars);
-    document.getElementById('topStrip').addEventListener('mouseenter', keepBars);
-    document.getElementById('topStrip').addEventListener('mouseleave', resumeBars);
+    document.getElementById('navBar').addEventListener('mouseenter', keepBars);
+    document.getElementById('navBar').addEventListener('mouseleave', resumeBars);
 
     // Init: show bars briefly on load then hide
     showBars();
@@ -1615,7 +1584,26 @@
     }
 
     // Reading mode toggle: single-page vs dual-page
-    // ── Zoom ─────────────────────────────────────────────
+    // ── View Mode ─────────────────────────────────────────
+    // stretch: widthScale render, CSS height squished to stage — fills screen, no scroll, cepta
+    // scroll:  widthScale render, natural height — fills width, overflows vertically with scroll
+    // fit:     Math.min(widthScale,heightScale) — full page in box, centered, no scroll
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.getElementById('vmStretchBtn').classList.toggle('tool-active', mode === 'stretch');
+      document.getElementById('vmScrollBtn').classList.toggle('tool-active',  mode === 'scroll');
+      document.getElementById('vmFitBtn').classList.toggle('tool-active',     mode === 'fit');
+      // Re-render current pages in new mode
+      if (isSinglePageMode) {
+        renderBookPage(currentL, 'rightCanvas', 'rightRibbon');
+      } else {
+        const rightNum = Math.min(currentL + 1, totalPg);
+        renderBookPage(currentL,   'leftCanvas',  'leftRibbon');
+        renderBookPage(rightNum,   'rightCanvas', 'rightRibbon');
+      }
+    }
+
+    // ── Zoom (kept for compat, not exposed in UI) ─────────
     function zoomBook(delta) {
       // maxBookZoom is computed dynamically in renderBookPage from screen dimensions
       bookZoom = Math.round(Math.min(Math.max(bookZoom + delta, 0.5), maxBookZoom) * 10) / 10;
