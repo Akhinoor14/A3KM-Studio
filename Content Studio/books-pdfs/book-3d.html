@@ -143,10 +143,13 @@
       position: relative;
       z-index: 10;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       width: 100%;
       height: 100vh;
+      overflow: auto;              /* scroll when book is larger than viewport at high zoom */
+      padding: clamp(20px, 4vh, 50px) 0;
+      box-sizing: border-box;
       /* NO perspective here permanently — it forces ALL children into 3D rendering
          context, causing Chrome to composite canvas layers at lower quality.
          Perspective is applied only during actual flip animations via :has() below. */
@@ -161,8 +164,7 @@
       position: relative;
       display: flex;
       align-items: stretch;
-      height: 85vh;
-      max-height: 900px;
+      height: auto;        /* grows with canvas content — book-stage scrolls */
       /* NO filter, NO will-change, NO transform-style here.
          CSS filter() forces entire subtree into ONE GPU texture → blurs canvas text.
          Shadow is handled via ::before pseudo-element so it doesn't affect children. */
@@ -213,13 +215,13 @@
       position: relative;
       width: 45vw;
       min-width: 280px;
-      max-width: 750px;
-      height: 100%;
+      max-width: 750px;    /* JS overrides this at zoom > 1 via inline style */
+      min-height: 200px;   /* prevent collapse before first render */
       background: #fefefe;
       /* NO overflow:hidden here — combined with border-radius it triggers Chrome
          GPU compositing layer promotion, causing canvas to be resampled at screen
-         DPI instead of rendering at full canvas resolution. 
-         Content clipping is handled inside .pg-canvas-wrap. */
+         DPI instead of rendering at full canvas resolution.
+         Height is auto — page grows with canvas content, stage scrolls. */
     }
 
     .book-p.left-p {
@@ -259,29 +261,12 @@
 
     .book-p .pg-canvas-wrap {
       width: 100%;
-      height: 100%;
+      height: auto;        /* sized to canvas — no clipping */
       display: flex;
-      align-items: flex-start;  /* top-align so scroll starts from top of page */
+      align-items: flex-start;
       justify-content: center;
-      overflow-y: auto;   /* scroll vertically when zoomed in */
-      overflow-x: hidden;
+      overflow: visible;   /* no clip — book-stage scrolls the whole view */
       background: #fefefe;
-      /* NO translateZ, NO backface, NO will-change.
-         These create GPU composite sub-layers causing text blur.
-         Canvas renders directly to screen at full DPR quality. */
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar {
-      width: 4px;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.15);
-      border-radius: 2px;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb:hover {
-      background: rgba(0,0,0,0.35);
     }
 
     /* Page corner curl - subtle professional */
@@ -700,10 +685,6 @@
     
     /* Tablet - Force single page for better readability */
     @media (max-width: 1024px) {
-      .open-book {
-        height: 90vh;
-        max-height: none;
-      }
       body:not(.single-page-mode) .book-p.left-p {
         display: none;
       }
@@ -722,11 +703,6 @@
     
     /* Mobile - Optimized for vertical reading */
     @media (max-width: 768px) {
-      .open-book {
-        height: 88vh;
-        /* NO perspective transform here — rotateX(0deg) is visually nothing
-           but perspective() forces entire subtree into 3D compositing → canvas blur */
-      }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
       body:not(.single-page-mode) .book-p.right-p {
@@ -746,9 +722,6 @@
     
     /* Small mobile - Maximum readability */
     @media (max-width: 480px) {
-      .open-book {
-        height: 85vh;
-      }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
       body:not(.single-page-mode) .book-p.right-p {
@@ -1338,27 +1311,25 @@
         const page = await pdfDoc.getPage(pageNum);
         const container = document.getElementById(containerId);
 
-        const cW = container.offsetWidth  || 480;
-        const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
-        
-        // Fill container width × bookZoom. At zoom=1 page fills width exactly.
-        // Height may exceed container → pg-canvas-wrap scrolls vertically.
-        const widthScale  = (cW - 4) / vp.width;
-        const heightScale = (cH - 4) / vp.height;
-        // Never go below height fit so text doesn't get too small at zoom < 1
-        const baseScale = Math.max(widthScale, heightScale) === heightScale && bookZoom < 1
-          ? heightScale * bookZoom
-          : widthScale * bookZoom;
 
-        // Dynamically compute max zoom: how much can we zoom before hitting screen bounds.
-        // At zoom=1: cssW = cW-4, cssH = vp.height * widthScale
-        // Max zoom where cssW fills screen width:  maxW = innerWidth  / (cW - 4)
-        // Max zoom where cssH fills screen height: maxH = innerHeight / (vp.height * widthScale)
-        // Take Math.max so user can reach either dimension fully (the other can scroll/clip)
-        const cssH_at_zoom1 = vp.height * widthScale;
-        const maxZoomW = window.innerWidth  / (cW - 4);
-        const maxZoomH = window.innerHeight / cssH_at_zoom1;
+        // Compute target page width from bookZoom directly (not from container.offsetWidth).
+        // At zoom=1 the page fills its CSS-set width (45vw / 70vw / 92vw depending on screen).
+        // At zoom>1 the page grows wider; .book-stage scrolls to reveal the full content.
+        // Nothing clips — zoom = whole-page scale, both width AND height grow proportionally.
+        const basePw    = getBasePageW();
+        const pageW     = Math.max(280, basePw * bookZoom);
+        const baseScale = (pageW - 4) / vp.width;
+
+        // Apply the zoomed width to .book-p and to the outer container wrapper
+        const bookP = container.parentElement;
+        if (bookP) { bookP.style.width = pageW + 'px'; bookP.style.maxWidth = 'none'; }
+        container.style.width = pageW + 'px';
+
+        // Dynamic max zoom: user can expand to fill screen width OR screen height
+        const pageH_at_zoom1 = vp.height * ((basePw - 4) / vp.width);
+        const maxZoomW = window.innerWidth  / basePw;
+        const maxZoomH = window.innerHeight / pageH_at_zoom1;
         maxBookZoom = Math.round(Math.max(maxZoomW, maxZoomH) * 10) / 10;
         
         const scaled = page.getViewport({scale: baseScale});
@@ -1401,12 +1372,10 @@
         const wrap = document.createElement('div');
         wrap.className = 'pg-canvas-wrap';
         wrap.style.position = 'relative';
-        wrap.style.width = '100%';
-        wrap.style.height = '100%';
-        wrap.style.display = 'flex';
-        wrap.style.alignItems = 'center';
-        wrap.style.justifyContent = 'center';
-        wrap.style.overflow = 'hidden';  // No scrolling - page fits container
+        wrap.style.width    = cssW + 'px';
+        wrap.style.height   = cssH + 'px';  /* exact canvas size — no fixed parent height to inherit */
+        wrap.style.display  = 'block';
+        wrap.style.overflow = 'visible';     /* no clipping */
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
@@ -1582,6 +1551,20 @@
       document.body.classList.toggle('night', isNight);
     }
     
+    // Returns base page width (at bookZoom=1) matching CSS breakpoints.
+    function getBasePageW() {
+      const w = window.innerWidth;
+      if (isSinglePageMode) {
+        if (w > 1200) return Math.min(w * 0.50, 900);
+        if (w > 1024) return w * 0.55;
+        return w * 0.70;
+      }
+      if (w > 1024) return Math.min(w * 0.45, 750);
+      if (w > 768)  return w * 0.70;
+      if (w > 480)  return w * 0.92;
+      return w * 0.96;
+    }
+
     // Reading mode toggle: single-page vs dual-page
     // ── Zoom ─────────────────────────────────────────────
     function zoomBook(delta) {
