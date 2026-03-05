@@ -87,6 +87,37 @@
     }
     .top-strip.hidden { transform: translateY(-100%); opacity: 0; }
 
+    .ts-zoom-group {
+      display: flex;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 2px;
+      gap: 0;
+    }
+    .ts-zoom-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.55);
+      padding: 4px 9px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+      font-family: 'Inter',sans-serif;
+    }
+    .ts-zoom-btn.active {
+      background: var(--primary-red);
+      color: #fff;
+    }
+    .ts-zoom-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
     .ts-title {
       flex: 1;
       font-size: 13px;
@@ -253,23 +284,24 @@
       width: 100%;
       height: 100%;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      align-items: flex-start;  /* inner wrap starts at top */
+      justify-content: flex-start; /* enables horizontal scroll (center clips both sides) */
+      overflow: auto;
       background: #fefefe;
       /* NO translateZ, NO backface, NO will-change.
          These create GPU composite sub-layers causing text blur.
          Canvas renders directly to screen at full DPR quality. */
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
+      height: 4px;
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar-track {
       background: transparent;
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.2);
-      border-radius: 3px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 2px;
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb:hover {
       background: rgba(0,0,0,0.35);
@@ -977,6 +1009,13 @@
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
     </button>
+    <!-- Zoom mode presets -->
+    <div class="ts-zoom-group">
+      <button class="ts-zoom-btn active" data-mode="fit"        onclick="setZoomMode('fit')"        title="Fit page in view"><i class="fas fa-compress-arrows-alt"></i> Fit</button>
+      <button class="ts-zoom-btn"        data-mode="max-width"  onclick="setZoomMode('max-width')"  title="Fill screen width"><i class="fas fa-arrows-alt-h"></i> Width</button>
+      <button class="ts-zoom-btn"        data-mode="max-height" onclick="setZoomMode('max-height')" title="Fill screen height"><i class="fas fa-arrows-alt-v"></i> Height</button>
+      <button class="ts-zoom-btn"        data-mode="fill"       onclick="setZoomMode('fill')"       title="Fill entire screen"><i class="fas fa-expand-arrows-alt"></i> Fill</button>
+    </div>
     <button class="ts-btn" onclick="toggleReadingMode()" id="readingModeBtn" title="Toggle single/dual page">
       <i class="fas fa-book-open"></i> Dual Page
     </button>
@@ -1117,6 +1156,7 @@
     let ctrlTimer;
     let stripTimer;
     let isNight   = false;
+    let zoomMode = 'fit'; // 'fit' | 'max-width' | 'max-height' | 'fill'
 
     // Annotation system
     let bookmarks = [];
@@ -1323,17 +1363,23 @@
         const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
         
-        // ULTRA-SHARP RENDERING: Fit page to container exactly, use DPR for pixel density
-        const pageRatio = vp.height / vp.width;
-        
-        // Calculate scale to fill container with small padding
-        const widthScale = (cW - 8) / vp.width;
-        const heightScale = (cH - 8) / vp.height;
-        
-        // Fit entire page in container (no overflow, no scrolling)
-        const baseScale = Math.min(widthScale, heightScale);
-        
-        const scaled = page.getViewport({scale: baseScale});
+        // Scale based on chosen zoom mode:
+        // fit        → both page dimensions fit within container, no scroll
+        // max-width  → both pages fill screen width (each page = innerWidth/2)
+        // max-height → page height fills screen height
+        // fill       → whichever of max-width/max-height results in larger scale
+        let scale;
+        if (zoomMode === 'fit') {
+          scale = Math.min((cW - 4) / vp.width, (cH - 4) / vp.height);
+        } else if (zoomMode === 'max-width') {
+          scale = (window.innerWidth / 2) / vp.width;
+        } else if (zoomMode === 'max-height') {
+          scale = window.innerHeight / vp.height;
+        } else { // 'fill'
+          scale = Math.max((window.innerWidth / 2) / vp.width, window.innerHeight / vp.height);
+        }
+
+        const scaled = page.getViewport({scale});
         
         // MAXIMUM QUALITY: Use devicePixelRatio, minimum 2x for crisp text
         // Extra quality multiplier compensates for any compositing softness
@@ -1369,16 +1415,18 @@
           enableWebGL: false,
         }).promise;
 
-        // Create wrapper for canvas + textLayer + annotations
+        // Create wrapper for canvas + textLayer + annotations.
+        // minWidth: 100% ensures it fills container when canvas is small,
+        // but grows wider when canvas exceeds container (outer div scrolls).
+        // No height constraint → auto-grows to canvas height (outer div scrolls vertically).
         const wrap = document.createElement('div');
         wrap.className = 'pg-canvas-wrap';
-        wrap.style.position = 'relative';
-        wrap.style.width = '100%';
-        wrap.style.height = '100%';
-        wrap.style.display = 'flex';
-        wrap.style.alignItems = 'center';
+        wrap.style.position      = 'relative';
+        wrap.style.minWidth      = '100%';
+        wrap.style.display       = 'flex';
+        wrap.style.alignItems    = 'flex-start';
         wrap.style.justifyContent = 'center';
-        wrap.style.overflow = 'hidden';  // No scrolling - page fits container
+        wrap.style.overflow      = 'visible'; // outer .pg-canvas-wrap handles scrolling
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
@@ -1555,6 +1603,19 @@
     }
     
     // Reading mode toggle: single-page vs dual-page
+    // ── Zoom mode presets ────────────────────────────────
+    function setZoomMode(mode) {
+      zoomMode = mode;
+      document.querySelectorAll('.ts-zoom-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === mode)
+      );
+      const rightNum = Math.min(currentL + 1, totalPg);
+      Promise.all([
+        renderBookPage(currentL, 'leftCanvas',  'leftRibbon'),
+        renderBookPage(rightNum, 'rightCanvas', 'rightRibbon'),
+      ]);
+    }
+
     let isSinglePageMode = false;
     function toggleReadingMode() {
       isSinglePageMode = !isSinglePageMode;
