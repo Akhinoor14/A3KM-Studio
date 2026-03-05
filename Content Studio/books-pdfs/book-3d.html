@@ -87,36 +87,13 @@
     }
     .top-strip.hidden { transform: translateY(-100%); opacity: 0; }
 
-    .ts-zoom-group {
-      display: flex;
-      background: rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 2px;
-      gap: 0;
-    }
-    .ts-zoom-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255,255,255,0.55);
-      padding: 4px 9px;
-      border-radius: 16px;
-      cursor: pointer;
-      font-size: 11px;
+    .ts-zoom-display {
+      font-size: 12px;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.2s, color 0.2s;
-      white-space: nowrap;
-      font-family: 'Inter',sans-serif;
-    }
-    .ts-zoom-btn.active {
-      background: var(--primary-red);
-      color: #fff;
-    }
-    .ts-zoom-btn:hover:not(.active) {
-      background: rgba(255,255,255,0.12);
-      color: #fff;
+      color: rgba(255,255,255,0.6);
+      min-width: 38px;
+      text-align: center;
+      user-select: none;
     }
     .ts-title {
       flex: 1;
@@ -284,9 +261,10 @@
       width: 100%;
       height: 100%;
       display: flex;
-      align-items: flex-start;  /* inner wrap starts at top */
-      justify-content: flex-start; /* enables horizontal scroll (center clips both sides) */
-      overflow: auto;
+      align-items: flex-start;  /* top-align so scroll starts from top of page */
+      justify-content: center;
+      overflow-y: auto;   /* scroll vertically when zoomed in */
+      overflow-x: hidden;
       background: #fefefe;
       /* NO translateZ, NO backface, NO will-change.
          These create GPU composite sub-layers causing text blur.
@@ -294,7 +272,6 @@
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar {
       width: 4px;
-      height: 4px;
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar-track {
       background: transparent;
@@ -1009,13 +986,14 @@
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
     </button>
-    <!-- Zoom mode presets -->
-    <div class="ts-zoom-group">
-      <button class="ts-zoom-btn active" data-mode="fit"        onclick="setZoomMode('fit')"        title="Fit page in view"><i class="fas fa-compress-arrows-alt"></i> Fit</button>
-      <button class="ts-zoom-btn"        data-mode="max-width"  onclick="setZoomMode('max-width')"  title="Fill screen width"><i class="fas fa-arrows-alt-h"></i> Width</button>
-      <button class="ts-zoom-btn"        data-mode="max-height" onclick="setZoomMode('max-height')" title="Fill screen height"><i class="fas fa-arrows-alt-v"></i> Height</button>
-      <button class="ts-zoom-btn"        data-mode="fill"       onclick="setZoomMode('fill')"       title="Fill entire screen"><i class="fas fa-expand-arrows-alt"></i> Fill</button>
-    </div>
+    <!-- Zoom controls -->
+    <button class="ts-btn" onclick="zoomBook(-0.1)" title="Zoom out">
+      <i class="fas fa-search-minus"></i>
+    </button>
+    <span class="ts-zoom-display" id="zoomDisplay">100%</span>
+    <button class="ts-btn" onclick="zoomBook(0.1)" title="Zoom in">
+      <i class="fas fa-search-plus"></i>
+    </button>
     <button class="ts-btn" onclick="toggleReadingMode()" id="readingModeBtn" title="Toggle single/dual page">
       <i class="fas fa-book-open"></i> Dual Page
     </button>
@@ -1156,7 +1134,8 @@
     let ctrlTimer;
     let stripTimer;
     let isNight   = false;
-    let zoomMode = 'fit'; // 'fit' | 'max-width' | 'max-height' | 'fill'
+    let bookZoom     = 1.0;  // render zoom multiplier
+    let maxBookZoom  = 4.0;  // dynamically updated per page based on screen size
 
     // Annotation system
     let bookmarks = [];
@@ -1363,23 +1342,26 @@
         const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
         
-        // Scale based on chosen zoom mode:
-        // fit        → both page dimensions fit within container, no scroll
-        // max-width  → both pages fill screen width (each page = innerWidth/2)
-        // max-height → page height fills screen height
-        // fill       → whichever of max-width/max-height results in larger scale
-        let scale;
-        if (zoomMode === 'fit') {
-          scale = Math.min((cW - 4) / vp.width, (cH - 4) / vp.height);
-        } else if (zoomMode === 'max-width') {
-          scale = (window.innerWidth / 2) / vp.width;
-        } else if (zoomMode === 'max-height') {
-          scale = window.innerHeight / vp.height;
-        } else { // 'fill'
-          scale = Math.max((window.innerWidth / 2) / vp.width, window.innerHeight / vp.height);
-        }
+        // Fill container width × bookZoom. At zoom=1 page fills width exactly.
+        // Height may exceed container → pg-canvas-wrap scrolls vertically.
+        const widthScale  = (cW - 4) / vp.width;
+        const heightScale = (cH - 4) / vp.height;
+        // Never go below height fit so text doesn't get too small at zoom < 1
+        const baseScale = Math.max(widthScale, heightScale) === heightScale && bookZoom < 1
+          ? heightScale * bookZoom
+          : widthScale * bookZoom;
 
-        const scaled = page.getViewport({scale});
+        // Dynamically compute max zoom: how much can we zoom before hitting screen bounds.
+        // At zoom=1: cssW = cW-4, cssH = vp.height * widthScale
+        // Max zoom where cssW fills screen width:  maxW = innerWidth  / (cW - 4)
+        // Max zoom where cssH fills screen height: maxH = innerHeight / (vp.height * widthScale)
+        // Take Math.max so user can reach either dimension fully (the other can scroll/clip)
+        const cssH_at_zoom1 = vp.height * widthScale;
+        const maxZoomW = window.innerWidth  / (cW - 4);
+        const maxZoomH = window.innerHeight / cssH_at_zoom1;
+        maxBookZoom = Math.round(Math.max(maxZoomW, maxZoomH) * 10) / 10;
+        
+        const scaled = page.getViewport({scale: baseScale});
         
         // MAXIMUM QUALITY: Use devicePixelRatio, minimum 2x for crisp text
         // Extra quality multiplier compensates for any compositing softness
@@ -1415,18 +1397,16 @@
           enableWebGL: false,
         }).promise;
 
-        // Create wrapper for canvas + textLayer + annotations.
-        // minWidth: 100% ensures it fills container when canvas is small,
-        // but grows wider when canvas exceeds container (outer div scrolls).
-        // No height constraint → auto-grows to canvas height (outer div scrolls vertically).
+        // Create wrapper for canvas + textLayer + annotations
         const wrap = document.createElement('div');
         wrap.className = 'pg-canvas-wrap';
-        wrap.style.position      = 'relative';
-        wrap.style.minWidth      = '100%';
-        wrap.style.display       = 'flex';
-        wrap.style.alignItems    = 'flex-start';
+        wrap.style.position = 'relative';
+        wrap.style.width = '100%';
+        wrap.style.height = '100%';
+        wrap.style.display = 'flex';
+        wrap.style.alignItems = 'center';
         wrap.style.justifyContent = 'center';
-        wrap.style.overflow      = 'visible'; // outer .pg-canvas-wrap handles scrolling
+        wrap.style.overflow = 'hidden';  // No scrolling - page fits container
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
@@ -1603,12 +1583,11 @@
     }
     
     // Reading mode toggle: single-page vs dual-page
-    // ── Zoom mode presets ────────────────────────────────
-    function setZoomMode(mode) {
-      zoomMode = mode;
-      document.querySelectorAll('.ts-zoom-btn').forEach(b =>
-        b.classList.toggle('active', b.dataset.mode === mode)
-      );
+    // ── Zoom ─────────────────────────────────────────────
+    function zoomBook(delta) {
+      // maxBookZoom is computed dynamically in renderBookPage from screen dimensions
+      bookZoom = Math.round(Math.min(Math.max(bookZoom + delta, 0.5), maxBookZoom) * 10) / 10;
+      document.getElementById('zoomDisplay').textContent = Math.round(bookZoom * 100) + '%';
       const rightNum = Math.min(currentL + 1, totalPg);
       Promise.all([
         renderBookPage(currentL, 'leftCanvas',  'leftRibbon'),
