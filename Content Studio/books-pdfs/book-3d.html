@@ -208,10 +208,10 @@
       max-width: 750px;
       height: 100%;
       background: #fefefe;
-      overflow: hidden;
-      /* NO transform-style, NO will-change, NO backface here during reading.
-         These cause permanent GPU compositing layers which blur canvas text.
-         They are applied only during flip animations via .flipping-* classes. */
+      /* NO overflow:hidden here — combined with border-radius it triggers Chrome
+         GPU compositing layer promotion, causing canvas to be resampled at screen
+         DPI instead of rendering at full canvas resolution. 
+         Content clipping is handled inside .pg-canvas-wrap. */
     }
 
     .book-p.left-p {
@@ -715,7 +715,8 @@
     @media (max-width: 768px) {
       .open-book {
         height: 88vh;
-        transform: perspective(2400px) rotateX(0deg);
+        /* NO perspective transform here — rotateX(0deg) is visually nothing
+           but perspective() forces entire subtree into 3D compositing → canvas blur */
       }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
@@ -1386,9 +1387,11 @@
         textDiv.style.width = cssW + 'px';
         textDiv.style.height = cssH + 'px';
         textDiv.style.position = 'absolute';
+        // Use margin:auto centering via flex parent — NO transform to avoid stacking context
         textDiv.style.top = '0';
-        textDiv.style.left = '50%';
-        textDiv.style.transform = 'translateX(-50%)';
+        textDiv.style.left = '0';
+        textDiv.style.right = '0';
+        textDiv.style.margin = 'auto';
         wrap.appendChild(textDiv);
 
         container.innerHTML = '';
