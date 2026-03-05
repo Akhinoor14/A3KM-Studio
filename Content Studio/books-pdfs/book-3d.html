@@ -149,23 +149,31 @@
       align-items: stretch;
       height: 85vh;
       max-height: 900px;
-      transform-style: preserve-3d;
-      /* Subtle tilt for depth */
-      transform: perspective(2400px) rotateX(2deg);
-      /* Clean professional shadow - smooth performance */
-      filter: 
-        drop-shadow(0 30px 60px rgba(0,0,0,0.5))
-        drop-shadow(0 0 30px rgba(204,0,0,0.08));
-      transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      /* Hardware acceleration */
-      will-change: transform;
-      backface-visibility: hidden;
+      /* NO filter, NO will-change, NO transform-style here.
+         CSS filter() forces entire subtree into ONE GPU texture → blurs canvas text.
+         Shadow is handled via ::before pseudo-element so it doesn't affect children. */
+      transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    /* Shadow on pseudo-element - completely isolated from page content compositing */
+    .open-book::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: 8px;
+      box-shadow:
+        0 30px 60px rgba(0,0,0,0.5),
+        0 0 30px rgba(204,0,0,0.08);
+      transition: box-shadow 0.4s ease;
+      pointer-events: none;
     }
     .open-book:hover {
-      transform: perspective(2400px) rotateX(1deg) translateY(-5px);
-      filter: 
-        drop-shadow(0 35px 70px rgba(0,0,0,0.55))
-        drop-shadow(0 0 40px rgba(204,0,0,0.12));
+      transform: translateY(-5px);
+    }
+    .open-book:hover::before {
+      box-shadow:
+        0 38px 70px rgba(0,0,0,0.55),
+        0 0 40px rgba(204,0,0,0.12);
     }
     
     /* Single-page mode */
@@ -187,20 +195,18 @@
       display: none;
     }
 
-    /* Book pages - realistic dimensions + performance */
+    /* Book pages - realistic dimensions + crisp rendering */
     .book-p {
       position: relative;
-      width: 45vw;  /* Increased from 40vw for wider pages */
+      width: 45vw;
       min-width: 280px;
-      max-width: 750px;  /* Increased from 550px for large screens */
+      max-width: 750px;
       height: 100%;
       background: #fefefe;
       overflow: hidden;
-      transform-style: preserve-3d;
-      /* Hardware acceleration for smooth animations */
-      will-change: transform;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      /* NO transform-style, NO will-change, NO backface here during reading.
+         These cause permanent GPU compositing layers which blur canvas text.
+         They are applied only during flip animations via .flipping-* classes. */
     }
 
     .book-p.left-p {
@@ -226,17 +232,14 @@
     /* Page canvas - MAXIMUM SHARPNESS */
     .book-p canvas {
       display: block;
-      max-width: 100%;
-      max-height: 100%;
-      width: auto !important;
-      height: auto !important;
+      /* JS controls exact CSS dimensions - no auto override */
+      max-width: none;
+      max-height: none;
       /* Optimized rendering for high-DPI PDF text */
       image-rendering: auto;
       image-rendering: -webkit-optimize-contrast;
       -ms-interpolation-mode: bicubic;
-      /* Hardware acceleration */
-      transform: translateZ(0);
-      backface-visibility: hidden;
+      /* NO 3D transform on canvas - prevents GPU composite blur */
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -247,18 +250,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Allow vertical scroll for extremely tall pages */
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
       background: #fefefe;
-      /* Prevent any blur or quality loss */
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      /* Smooth scrolling for overflow content */
-      scroll-behavior: smooth;
-      /* Hide scrollbar for clean look */
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,0,0,0.2) transparent;
+      /* NO translateZ, NO backface, NO will-change.
+         These create GPU composite sub-layers causing text blur.
+         Canvas renders directly to screen at full DPR quality. */
     }
     .book-p .pg-canvas-wrap::-webkit-scrollbar {
       width: 6px;
@@ -408,14 +404,23 @@
         filter: brightness(1);
       }
     }
+    /* During flip animations: enable 3D compositing ONLY for the duration of the animation */
     .flipping-left  { 
-      animation: flipLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
+      animation: flipLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      transform-style: preserve-3d;
+      will-change: transform;
+      backface-visibility: hidden;
     }
     .flipping-right { 
-      animation: flipRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
+      animation: flipRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      transform-style: preserve-3d;
+      will-change: transform;
+      backface-visibility: hidden;
     }
     .page-turning-single { 
-      animation: pageTurnSingle 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
+      animation: pageTurnSingle 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      transform-style: preserve-3d;
+      will-change: transform;
     }
 
     /* ──────────────────────────────────────────────────
@@ -1312,32 +1317,35 @@
         const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
         
-        // ULTRA-SHARP RENDERING: Higher base scale for crystal-clear text
+        // ULTRA-SHARP RENDERING: Fit page to container exactly, use DPR for pixel density
         const pageRatio = vp.height / vp.width;
-        const containerRatio = cH / cW;
         
-        // Calculate optimal scale to maximize width usage
-        const widthScale = (cW * 0.92) / vp.width;  // Slightly reduced for padding
-        const heightScale = (cH * 0.92) / vp.height;
+        // Calculate scale to fill container with small padding
+        const widthScale = (cW - 8) / vp.width;
+        const heightScale = (cH - 8) / vp.height;
         
-        // Use width scaling to maximize screen usage
-        let baseScale = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
-        
-        // CRITICAL: Boost scale by 1.4x for sharp text (reduced from 1.5x for better fit)
-        baseScale *= 1.4;
+        // Fit entire page in container (no overflow, no scrolling)
+        const baseScale = Math.min(widthScale, heightScale);
         
         const scaled = page.getViewport({scale: baseScale});
         
-        // MAXIMUM QUALITY: Higher DPR for ultra-sharp rendering
-        // Use actual device pixel ratio (up to 4x for retina displays)
-        const dpr = Math.min(window.devicePixelRatio || 2, 4);
+        // MAXIMUM QUALITY: Use devicePixelRatio, minimum 2x for crisp text
+        // Extra quality multiplier compensates for any compositing softness
+        const dpr = Math.max(Math.ceil(window.devicePixelRatio || 2), 2);
+        const qualityBoost = 1.5; // Render at 1.5x more pixels than DPR for extra sharpness
+        const renderDpr = Math.min(dpr * qualityBoost, 6);
+
+        // CSS display size = fits the container
+        const cssW = Math.floor(scaled.width);
+        const cssH = Math.floor(scaled.height);
 
         const canvas = document.createElement('canvas');
         const ctx    = canvas.getContext('2d', {alpha:false, willReadFrequently: false});
-        canvas.width  = Math.floor(scaled.width  * dpr);
-        canvas.height = Math.floor(scaled.height * dpr);
-        canvas.style.width  = Math.floor(scaled.width)  + 'px';
-        canvas.style.height = Math.floor(scaled.height) + 'px';
+        canvas.width  = Math.floor(cssW * renderDpr);
+        canvas.height = Math.floor(cssH * renderDpr);
+        // Set inline CSS size so the canvas displays exactly at container-fit dimensions
+        canvas.style.width  = cssW + 'px';
+        canvas.style.height = cssH + 'px';
         
         // CRITICAL: Enable smoothing for crisp high-DPI text rendering
         ctx.imageSmoothingEnabled = true;
@@ -1345,13 +1353,11 @@
         
         // Additional rendering optimizations
         canvas.style.imageRendering = 'auto';
-        canvas.style.fontSmooth = 'always';
-        canvas.style.webkitFontSmoothing = 'antialiased';
 
         await page.render({
           canvasContext: ctx,
           viewport:   scaled,
-          transform:  dpr !== 1 ? [dpr,0,0,dpr,0,0] : null,
+          transform:  renderDpr !== 1 ? [renderDpr,0,0,renderDpr,0,0] : null,
           intent:     'display',
           renderInteractiveForms: false,
           enableWebGL: false,
@@ -1364,16 +1370,16 @@
         wrap.style.width = '100%';
         wrap.style.height = '100%';
         wrap.style.display = 'flex';
-        wrap.style.alignItems = 'flex-start';  // Top align for scrolling
+        wrap.style.alignItems = 'center';
         wrap.style.justifyContent = 'center';
-        wrap.style.overflow = 'auto';  // Enable scrolling for larger canvas
+        wrap.style.overflow = 'hidden';  // No scrolling - page fits container
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
         const textDiv = document.createElement('div');
         textDiv.className = 'textLayer';
-        textDiv.style.width = Math.floor(scaled.width) + 'px';
-        textDiv.style.height = Math.floor(scaled.height) + 'px';
+        textDiv.style.width = cssW + 'px';
+        textDiv.style.height = cssH + 'px';
         textDiv.style.position = 'absolute';
         textDiv.style.top = '0';
         textDiv.style.left = '50%';

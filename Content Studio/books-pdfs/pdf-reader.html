@@ -177,11 +177,19 @@
     .reader-area::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.4); border-radius: 4px; }
     .reader-area::-webkit-scrollbar-thumb:hover { background: rgba(204,0,0,0.65); }
 
+    /* fit-height (default): exactly fills reader, page centered, no scroll */
     #pdfViewport {
-      min-height: 100%;
+      height: 100%;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
+      padding: 12px 16px;
+    }
+    /* full-width mode: natural height, top-aligned, allow scroll */
+    body.fit-width #pdfViewport {
+      height: auto;
+      min-height: 100%;
+      align-items: flex-start;
       padding: 24px 16px 80px;
     }
 
@@ -606,7 +614,7 @@
     .annot-item:hover { background: rgba(204,0,0,0.1); border-color: rgba(204,0,0,0.22); }
     .annot-item-pg { font-size: 10px; font-weight: 800; color: rgba(204,0,0,0.75); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
     .annot-item-pg i { font-size: 10px; }
-    .annot-item-txt { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .annot-item-txt { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
     .annot-item-del { position: absolute; top: 7px; right: 7px; width: 20px; height: 20px; border-radius: 50%; background: rgba(200,30,30,0.12); border: 1px solid rgba(200,30,30,0.2); color: rgba(255,100,100,0.5); font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: all 0.15s; }
     .annot-item:hover .annot-item-del { opacity: 1; }
     .annot-item-del:hover { background: rgba(200,30,30,0.5); color: #fff; opacity: 1 !important; }
@@ -628,8 +636,13 @@
       .reader-area {
         padding-top: 54px;
       }
+      /* fit-height: keep tight padding so page fills the area */
       #pdfViewport {
-        padding: 20px 15px;
+        padding: 10px 12px;
+      }
+      /* fit-width: more breathing room, user is scrolling */
+      body.fit-width #pdfViewport {
+        padding: 20px 12px 60px;
       }
     }
     
@@ -653,7 +666,10 @@
         font-size: 12px;
       }
       #pdfViewport {
-        padding: 15px 10px;
+        padding: 8px 8px;
+      }
+      body.fit-width #pdfViewport {
+        padding: 15px 8px 50px;
       }
       .nav-controls {
         gap: 6px;
@@ -685,7 +701,10 @@
         display: none; /* Hide text labels on very small screens */
       }
       #pdfViewport {
-        padding: 10px 5px;
+        padding: 6px 4px;
+      }
+      body.fit-width #pdfViewport {
+        padding: 10px 4px 40px;
       }
       .page-indicator {
         font-size: 11px;
@@ -718,7 +737,10 @@
     <button class="bar-btn" onclick="zoom(-0.2)" title="Zoom out"><i class="fas fa-search-minus"></i></button>
     <span class="zoom-display" id="zoomDisplay">100%</span>
     <button class="bar-btn" onclick="zoom(+0.2)" title="Zoom in"><i class="fas fa-search-plus"></i></button>
-    <button class="bar-btn" onclick="resetZoom()" title="Fit page"><i class="fas fa-compress-arrows-alt"></i></button>
+    <button class="bar-btn" onclick="resetZoom()" title="Reset zoom"><i class="fas fa-compress-arrows-alt"></i></button>
+    <button class="bar-btn" id="fitModeBtn" onclick="toggleFitMode()" title="Switch to full width mode">
+      <i class="fas fa-arrows-alt-h" id="fitModeIcon"></i><span id="fitModeLabel"> Full Width</span>
+    </button>
 
     <div class="bar-sep"></div>
 
@@ -852,6 +874,7 @@
     let curPage    = 1;
     let totalPg    = 0;
     let curZoom    = 1.0;
+    let fitMode    = 'fit-height'; // 'fit-height' | 'fit-width'
     let bookData   = null;
     let bookmarks  = [];
     let barHideTimer;
@@ -1067,21 +1090,24 @@
 
       try {
         const page = await pdfDoc.getPage(n);
-        const readerArea = document.getElementById('readerArea');
-        const areaW = readerArea.clientWidth - 48;
-        const areaH = readerArea.clientHeight - 100;
+        const readerArea   = document.getElementById('readerArea');
+        const viewport_el  = document.getElementById('pdfViewport');
+        // Dynamically read actual computed padding so responsive CSS changes are respected
+        const vpStyle = window.getComputedStyle(viewport_el);
+        const padH = parseFloat(vpStyle.paddingLeft)  + parseFloat(vpStyle.paddingRight);
+        const padV = parseFloat(vpStyle.paddingTop)   + parseFloat(vpStyle.paddingBottom);
+        const areaW = readerArea.clientWidth  - padH;
+        const areaH = readerArea.clientHeight - padV;
         
-        // ADAPTIVE SCALING: Width-priority for better readability
-        // Works perfectly for both A4 (1:1.41) and custom ratios (2:3)
         const vp = page.getViewport({scale:1});
-        const pageRatio = vp.height / vp.width;
-        
-        // Use full available width (no arbitrary 1100px limit)
-        const widthScale = areaW / vp.width;
+        const widthScale  = areaW / vp.width;
         const heightScale = areaH / vp.height;
         
-        // Prioritize width, but limit if page is extremely tall
-        const baseScale = pageRatio > 1.6 ? Math.min(widthScale, heightScale) : widthScale;
+        // fit-height: whole page visible at once (no scroll)
+        // fit-width: fill available width, scroll vertically for tall pages
+        const baseScale = (fitMode === 'fit-height')
+          ? Math.min(widthScale, heightScale)
+          : widthScale;
         const scale = baseScale * curZoom;
         const scaledVP = page.getViewport({scale});
         
@@ -1185,6 +1211,28 @@
       pageLabelTimer = setTimeout(() => el.classList.remove('show'), 2000);
     }
 
+    // ── Fit Mode toggle ───────────────────────────────────
+    function toggleFitMode() {
+      fitMode = (fitMode === 'fit-height') ? 'fit-width' : 'fit-height';
+      const btn   = document.getElementById('fitModeBtn');
+      const icon  = document.getElementById('fitModeIcon');
+      const label = document.getElementById('fitModeLabel');
+      if (fitMode === 'fit-width') {
+        document.body.classList.add('fit-width');
+        icon.className  = 'fas fa-compress-alt';
+        label.textContent = ' Fit Page';
+        btn.classList.add('tool-active');
+        btn.title = 'Switch to fit page mode';
+      } else {
+        document.body.classList.remove('fit-width');
+        icon.className  = 'fas fa-arrows-alt-h';
+        label.textContent = ' Full Width';
+        btn.classList.remove('tool-active');
+        btn.title = 'Switch to full width mode';
+      }
+      renderPage(curPage, true);
+    }
+
     // ── Zoom ─────────────────────────────────────────────
     function zoom(delta) {
       curZoom = Math.max(0.4, Math.min(4.0, curZoom + delta));
@@ -1210,8 +1258,6 @@
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-      } else {
-        document.exitFullscreen && document.exitFullscreen();
       }
     }
 
