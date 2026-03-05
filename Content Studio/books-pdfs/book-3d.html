@@ -71,6 +71,11 @@
     /* ──────────────────────────────────────────────────
        TOP STRIP (auto-hide)
     ────────────────────────────────────────────────── */
+    /* ── BAR VISIBILITY SYSTEM ──────────────────────────────
+       body.bars-visible  → both bars shown, book pushed down 102px
+       body (default)     → both bars hidden (slide up), book fills full screen
+       Same 0.35s transition on bars + book-stage so they move together — no black gap.
+    ────────────────────────────────────────────────── */
     .top-strip {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -83,10 +88,25 @@
       padding: 0 16px;
       gap: 14px;
       z-index: 500;
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
       transition: transform 0.35s ease, opacity 0.35s ease;
     }
-    .top-strip.hidden { transform: translateY(-100%); opacity: 0; }
+    body.bars-visible .top-strip {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
 
+    .ts-zoom-display {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      min-width: 38px;
+      text-align: center;
+      user-select: none;
+    }
     .ts-title {
       flex: 1;
       font-size: 13px;
@@ -139,9 +159,14 @@
       justify-content: center;
       width: 100%;
       height: 100vh;
-      /* NO perspective here permanently — it forces ALL children into 3D rendering
-         context, causing Chrome to composite canvas layers at lower quality.
-         Perspective is applied only during actual flip animations via :has() below. */
+      padding-top: 0;              /* bars hidden → book fills full screen */
+      box-sizing: border-box;
+      overflow-x: auto;
+      overflow-y: hidden;
+      transition: padding-top 0.35s ease;  /* same timing as bars */
+    }
+    body.bars-visible .book-stage {
+      padding-top: 102px;          /* top-strip 50px + ctrl-bar 52px */
     }
     /* Apply perspective ONLY while a flip animation is running */
     .book-stage:has(.flipping-left, .flipping-right, .page-turning-single) {
@@ -153,8 +178,9 @@
       position: relative;
       display: flex;
       align-items: stretch;
-      height: 85vh;
-      max-height: 900px;
+      flex-shrink: 0;      /* don't shrink below natural size when stage scrolls */
+      width: 100%;         /* fill full screen width — pages stretch to fill both sides */
+      height: 100%;        /* fills book-stage padding area — no black gaps */
       /* NO filter, NO will-change, NO transform-style here.
          CSS filter() forces entire subtree into ONE GPU texture → blurs canvas text.
          Shadow is handled via ::before pseudo-element so it doesn't affect children. */
@@ -193,8 +219,9 @@
       box-shadow: 
         inset 0 0 40px rgba(0,0,0,0.08),
         0 20px 50px rgba(0,0,0,0.4);
-      width: 50vw;  /* Increased from 42vw for wider display */
-      max-width: 900px;  /* Increased from 650px for large screens */
+      flex: 0 0 auto;      /* override flex: 1 — single page has explicit width */
+      width: 65vw;
+      max-width: 1000px;
     }
     body.single-page-mode .book-spine {
       display: none;
@@ -203,15 +230,13 @@
     /* Book pages - realistic dimensions + crisp rendering */
     .book-p {
       position: relative;
-      width: 45vw;
-      min-width: 280px;
-      max-width: 750px;
-      height: 100%;
+      flex: 1 1 0;         /* each page takes equal half of open-book (spine is absolute) */
+      min-width: 0;
+      height: 100%;        /* fills fixed open-book height */
       background: #fefefe;
-      overflow: hidden;
-      /* NO transform-style, NO will-change, NO backface here during reading.
-         These cause permanent GPU compositing layers which blur canvas text.
-         They are applied only during flip animations via .flipping-* classes. */
+      /* NO overflow:hidden here — combined with border-radius it triggers Chrome
+         GPU compositing layer promotion, causing canvas to be resampled at screen
+         DPI instead of rendering at full canvas resolution. */
     }
 
     .book-p.left-p {
@@ -251,29 +276,18 @@
 
     .book-p .pg-canvas-wrap {
       width: 100%;
-      height: 100%;
+      height: 100%;        /* fills .book-p height */
       display: flex;
-      align-items: center;
+      align-items: center;  /* center canvas vertically — no black gaps above/below */
       justify-content: center;
-      overflow: hidden;
+      overflow-y: auto;    /* scroll within page if zoomed canvas taller than container */
+      overflow-x: visible; /* no horizontal clip — .book-p width set by JS */
       background: #fefefe;
-      /* NO translateZ, NO backface, NO will-change.
-         These create GPU composite sub-layers causing text blur.
-         Canvas renders directly to screen at full DPR quality. */
     }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar {
-      width: 6px;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.2);
-      border-radius: 3px;
-    }
-    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb:hover {
-      background: rgba(0,0,0,0.35);
-    }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar { width: 4px; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-track { background: transparent; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.35); }
 
     /* Page corner curl - subtle professional */
     .book-p::after {
@@ -433,33 +447,31 @@
     ────────────────────────────────────────────────── */
     .ctrl-bar {
       position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(0);
-      background: rgba(8,2,2,0.98);
-      border: 1px solid rgba(139,0,0,0.6);
-      border-radius: 50px;
-      padding: 10px 20px;
+      top: 50px; left: 0; right: 0;
+      height: 52px;
+      background: var(--ctrl-bg);
+      border-bottom: 1px solid var(--ctrl-border);
+      backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-      z-index: 500;
-      backdrop-filter: blur(24px);
-      box-shadow: 
-        0 8px 32px rgba(0,0,0,0.8), 
-        0 0 60px rgba(204,0,0,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-    .ctrl-bar.hidden {
+      padding: 0 16px;
+      z-index: 499;
+      transform: translateY(-200%);  /* hidden: slide both bars off screen */
       opacity: 0;
-      transform: translateX(-50%) translateY(20px);
       pointer-events: none;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+    }
+    body.bars-visible .ctrl-bar {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .ctrl-btn {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -677,23 +689,18 @@
        RESPONSIVE OPTIMIZATION
     ────────────────────────────────────────────────── */
     
-    /* Large Desktop - Maximum width utilization for big screens */
+    /* Large Desktop - single-page gets a bit narrower for comfortable reading */
     @media (min-width: 1400px) {
-      .book-p {
-        width: 48vw;
-        max-width: 850px;
-      }
       body.single-page-mode .book-p.right-p {
-        width: 55vw;
-        max-width: 1000px;
+        width: 60vw;
+        max-width: 1200px;
       }
     }
     
     /* Tablet - Force single page for better readability */
     @media (max-width: 1024px) {
       .open-book {
-        height: 90vh;
-        max-height: none;
+        height: 100%; /* still fills book-stage padding box */
       }
       body:not(.single-page-mode) .book-p.left-p {
         display: none;
@@ -703,7 +710,8 @@
         box-shadow: 
           inset 0 0 40px rgba(0,0,0,0.08),
           0 20px 50px rgba(0,0,0,0.4);
-        width: 70vw;
+        flex: 0 0 auto;
+        width: 80vw;
         max-width: none;
       }
       body:not(.single-page-mode) .book-spine {
@@ -714,8 +722,7 @@
     /* Mobile - Optimized for vertical reading */
     @media (max-width: 768px) {
       .open-book {
-        height: 88vh;
-        transform: perspective(2400px) rotateX(0deg);
+        height: 100%;
       }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
@@ -737,7 +744,7 @@
     /* Small mobile - Maximum readability */
     @media (max-width: 480px) {
       .open-book {
-        height: 85vh;
+        height: 100%;
       }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
@@ -976,10 +983,18 @@
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
     </button>
+    <!-- Zoom controls -->
+    <button class="ts-btn" onclick="zoomBook(-0.1)" title="Zoom out">
+      <i class="fas fa-search-minus"></i>
+    </button>
+    <span class="ts-zoom-display" id="zoomDisplay">100%</span>
+    <button class="ts-btn" onclick="zoomBook(0.1)" title="Zoom in">
+      <i class="fas fa-search-plus"></i>
+    </button>
     <button class="ts-btn" onclick="toggleReadingMode()" id="readingModeBtn" title="Toggle single/dual page">
       <i class="fas fa-book-open"></i> Dual Page
     </button>
-    <button class="ts-btn red" onclick="toggleFullscreen()">
+    <button class="ts-btn red" onclick="toggleFullscreen()" title="Fullscreen (F)">
       <i class="fas fa-expand"></i>
     </button>
   </div>
@@ -1113,9 +1128,9 @@
     let currentL  = 1;   // left page number currently showing
     let bookData  = null;
     let flipping  = false;
-    let ctrlTimer;
-    let stripTimer;
     let isNight   = false;
+    let bookZoom     = 1.0;  // render zoom multiplier
+    let maxBookZoom  = 4.0;  // dynamically updated per page based on screen size
 
     // Annotation system
     let bookmarks = [];
@@ -1318,19 +1333,32 @@
         const page = await pdfDoc.getPage(pageNum);
         const container = document.getElementById(containerId);
 
-        const cW = container.offsetWidth  || 480;
-        const cH = container.offsetHeight || 680;
         const vp  = page.getViewport({scale:1});
-        
-        // ULTRA-SHARP RENDERING: Fit page to container exactly, use DPR for pixel density
-        const pageRatio = vp.height / vp.width;
-        
-        // Calculate scale to fill container with small padding
-        const widthScale = (cW - 8) / vp.width;
-        const heightScale = (cH - 8) / vp.height;
-        
-        // Fit entire page in container (no overflow, no scrolling)
-        const baseScale = Math.min(widthScale, heightScale);
+
+        // Available container size
+        const basePw = getBasePageW();
+        const basePh = document.getElementById('bookStage').clientHeight || (window.innerHeight - 50);
+
+        // Scale that fits width exactly, then check if height overflows
+        const widthScale  = (basePw - 4) / vp.width;
+        const heightScale = (basePh - 4) / vp.height;
+        // Use whichever is smaller so page fits fully within both dimensions (contain mode)
+        const fitScale  = Math.min(widthScale, heightScale);
+        const baseScale = fitScale * bookZoom;
+
+        // At zoom=1 the effective page width may be less than basePw (height-limited pages)
+        const effectivePw = Math.round(vp.width * fitScale * bookZoom);
+        const pageW = Math.max(280, effectivePw);
+
+        // Apply the zoomed width to .book-p and container
+        const bookP = container.parentElement;
+        if (bookP) { bookP.style.width = pageW + 'px'; bookP.style.maxWidth = 'none'; }
+        container.style.width = pageW + 'px';
+
+        // Dynamic max zoom from screen dims
+        const maxZoomW = window.innerWidth  / (vp.width  * fitScale);
+        const maxZoomH = window.innerHeight / (vp.height * fitScale);
+        maxBookZoom = Math.round(Math.max(maxZoomW, maxZoomH) * 10) / 10;
         
         const scaled = page.getViewport({scale: baseScale});
         
@@ -1372,12 +1400,13 @@
         const wrap = document.createElement('div');
         wrap.className = 'pg-canvas-wrap';
         wrap.style.position = 'relative';
-        wrap.style.width = '100%';
-        wrap.style.height = '100%';
-        wrap.style.display = 'flex';
+        wrap.style.width    = '100%';
+        wrap.style.height   = '100%';
+        wrap.style.display  = 'flex';
         wrap.style.alignItems = 'center';
         wrap.style.justifyContent = 'center';
-        wrap.style.overflow = 'hidden';  // No scrolling - page fits container
+        wrap.style.overflowY = 'auto';
+        wrap.style.overflowX = 'visible';
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
@@ -1386,9 +1415,11 @@
         textDiv.style.width = cssW + 'px';
         textDiv.style.height = cssH + 'px';
         textDiv.style.position = 'absolute';
+        // Use margin:auto centering via flex parent — NO transform to avoid stacking context
         textDiv.style.top = '0';
-        textDiv.style.left = '50%';
-        textDiv.style.transform = 'translateX(-50%)';
+        textDiv.style.left = '0';
+        textDiv.style.right = '0';
+        textDiv.style.margin = 'auto';
         wrap.appendChild(textDiv);
 
         container.innerHTML = '';
@@ -1507,43 +1538,58 @@
       }
     }
 
-    // ── Controls auto-hide with smart behavior ────────────
-    function showCtrl() {
-      const ctrlBar = document.getElementById('ctrlBar');
-      ctrlBar.classList.remove('hidden');
-      clearTimeout(ctrlTimer);
-      // Auto-hide after 4 seconds of inactivity
-      ctrlTimer = setTimeout(() => ctrlBar.classList.add('hidden'), 4000);
+    // ── Controls: show when cursor near top edge, hide after leaving ──────────
+    // bars-visible → book-stage padding-top: 102px (bars shown)
+    // !bars-visible → book-stage padding-top: 0     (bars hidden, book fills screen)
+    // Both bars + book-stage have transition: 0.35s → move together, zero black gap.
+    let barsTimer;
+    function showBars() {
+      document.body.classList.add('bars-visible');
+      clearTimeout(barsTimer);
     }
-    function showStrip() {
-      const strip = document.getElementById('topStrip');
-      strip.classList.remove('hidden');
-      clearTimeout(stripTimer);
-      // Auto-hide after 4 seconds of inactivity
-      stripTimer = setTimeout(() => strip.classList.add('hidden'), 4000);
+    function hideBarsAfter(ms = 2000) {
+      clearTimeout(barsTimer);
+      barsTimer = setTimeout(() => document.body.classList.remove('bars-visible'), ms);
+    }
+    function keepBars() {
+      clearTimeout(barsTimer);
+    }
+    function resumeBars() {
+      hideBarsAfter(2000);
     }
 
-    // Show controls on mouse move or click
-    document.addEventListener('mousemove', () => { showCtrl(); showStrip(); });
-    document.addEventListener('click', () => { showCtrl(); showStrip(); });
-    
-    // Keep controls visible when hovering over them
-    document.getElementById('ctrlBar').addEventListener('mouseenter', () => {
-      clearTimeout(ctrlTimer);
+    // Show bars when cursor is within top 10px of screen
+    document.addEventListener('mousemove', (e) => {
+      if (e.clientY < 10) {
+        showBars();
+      }
     });
-    document.getElementById('ctrlBar').addEventListener('mouseleave', () => {
-      showCtrl(); // Restart auto-hide timer
-    });
-    
-    document.getElementById('topStrip').addEventListener('mouseenter', () => {
-      clearTimeout(stripTimer);
-    });
-    document.getElementById('topStrip').addEventListener('mouseleave', () => {
-      showStrip(); // Restart auto-hide timer
-    });
-    
-    // Init: show controls then hide
-    showCtrl(); showStrip();
+
+    // Touch: tap top 20% of screen to toggle bars
+    document.addEventListener('touchstart', (e) => {
+      const y = e.touches[0].clientY;
+      if (y < window.innerHeight * 0.2) {
+        if (document.body.classList.contains('bars-visible')) {
+          hideBarsAfter(0);
+        } else {
+          showBars();
+        }
+      }
+    }, { passive: true });
+
+    // Keep bars visible while hovering over them
+    document.getElementById('ctrlBar').addEventListener('mouseenter', keepBars);
+    document.getElementById('ctrlBar').addEventListener('mouseleave', resumeBars);
+    document.getElementById('topStrip').addEventListener('mouseenter', keepBars);
+    document.getElementById('topStrip').addEventListener('mouseleave', resumeBars);
+
+    // Init: show bars briefly on load then hide
+    showBars();
+    hideBarsAfter(3000);
+
+    // Legacy aliases
+    function showCtrl()  { showBars(); }
+    function showStrip() { showBars(); }
 
     // ── Night / Fullscreen / Back ─────────────────────────
     function toggleNight() {
@@ -1551,7 +1597,36 @@
       document.body.classList.toggle('night', isNight);
     }
     
+    // Returns base page width (at bookZoom=1) matching CSS breakpoints.
+    function getBasePageW() {
+      const w = window.innerWidth;
+      if (isSinglePageMode) {
+        // Single page: matches body.single-page-mode .book-p.right-p widths
+        if (w > 1400) return Math.min(w * 0.60, 1200);
+        if (w >  768) return Math.min(w * 0.65, 1000);
+        return w * 0.80;
+      }
+      // Dual page: each page = half of screen (spine is position:absolute, not in flex flow)
+      // Matches .book-p { flex: 1 } with open-book { width: 100% }
+      if (w > 1024) return Math.max(280, w / 2);
+      if (w >  768) return w * 0.80;  /* tablet: forced single page at 80vw */
+      if (w >  480) return w * 0.92;
+      return w * 0.96;
+    }
+
     // Reading mode toggle: single-page vs dual-page
+    // ── Zoom ─────────────────────────────────────────────
+    function zoomBook(delta) {
+      // maxBookZoom is computed dynamically in renderBookPage from screen dimensions
+      bookZoom = Math.round(Math.min(Math.max(bookZoom + delta, 0.5), maxBookZoom) * 10) / 10;
+      document.getElementById('zoomDisplay').textContent = Math.round(bookZoom * 100) + '%';
+      const rightNum = Math.min(currentL + 1, totalPg);
+      Promise.all([
+        renderBookPage(currentL, 'leftCanvas',  'leftRibbon'),
+        renderBookPage(rightNum, 'rightCanvas', 'rightRibbon'),
+      ]);
+    }
+
     let isSinglePageMode = false;
     function toggleReadingMode() {
       isSinglePageMode = !isSinglePageMode;
