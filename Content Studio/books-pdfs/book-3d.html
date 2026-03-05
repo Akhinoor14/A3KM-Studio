@@ -143,13 +143,13 @@
       position: relative;
       z-index: 10;
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      align-items: center;
+      justify-content: flex-start; /* left-align so horizontal scroll shows full book */
       width: 100%;
+      min-width: 100%;
       height: 100vh;
-      overflow: auto;              /* scroll when book is larger than viewport at high zoom */
-      padding: clamp(20px, 4vh, 50px) 0;
-      box-sizing: border-box;
+      overflow-x: auto;   /* horizontal scroll when zoom makes book wider than screen */
+      overflow-y: hidden;
       /* NO perspective here permanently — it forces ALL children into 3D rendering
          context, causing Chrome to composite canvas layers at lower quality.
          Perspective is applied only during actual flip animations via :has() below. */
@@ -164,7 +164,10 @@
       position: relative;
       display: flex;
       align-items: stretch;
-      height: auto;        /* grows with canvas content — book-stage scrolls */
+      flex-shrink: 0;      /* don't shrink when stage overflows */
+      height: 85vh;
+      max-height: 900px;
+      margin: 0 auto;      /* center when not overflowing */
       /* NO filter, NO will-change, NO transform-style here.
          CSS filter() forces entire subtree into ONE GPU texture → blurs canvas text.
          Shadow is handled via ::before pseudo-element so it doesn't affect children. */
@@ -216,12 +219,11 @@
       width: 45vw;
       min-width: 280px;
       max-width: 750px;    /* JS overrides this at zoom > 1 via inline style */
-      min-height: 200px;   /* prevent collapse before first render */
+      height: 100%;        /* fills fixed open-book height */
       background: #fefefe;
       /* NO overflow:hidden here — combined with border-radius it triggers Chrome
          GPU compositing layer promotion, causing canvas to be resampled at screen
-         DPI instead of rendering at full canvas resolution.
-         Height is auto — page grows with canvas content, stage scrolls. */
+         DPI instead of rendering at full canvas resolution. */
     }
 
     .book-p.left-p {
@@ -261,13 +263,18 @@
 
     .book-p .pg-canvas-wrap {
       width: 100%;
-      height: auto;        /* sized to canvas — no clipping */
+      height: 100%;        /* fills .book-p height */
       display: flex;
-      align-items: flex-start;
+      align-items: flex-start;  /* top-align so vertical scroll starts from top */
       justify-content: center;
-      overflow: visible;   /* no clip — book-stage scrolls the whole view */
+      overflow-y: auto;    /* scroll within page if canvas taller than fixed height */
+      overflow-x: visible; /* no horizontal clip — .book-p width set by JS */
       background: #fefefe;
     }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar { width: 4px; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-track { background: transparent; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+    .book-p .pg-canvas-wrap::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.35); }
 
     /* Page corner curl - subtle professional */
     .book-p::after {
@@ -685,6 +692,10 @@
     
     /* Tablet - Force single page for better readability */
     @media (max-width: 1024px) {
+      .open-book {
+        height: 90vh;
+        max-height: none;
+      }
       body:not(.single-page-mode) .book-p.left-p {
         display: none;
       }
@@ -703,6 +714,9 @@
     
     /* Mobile - Optimized for vertical reading */
     @media (max-width: 768px) {
+      .open-book {
+        height: 88vh;
+      }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
       body:not(.single-page-mode) .book-p.right-p {
@@ -722,6 +736,9 @@
     
     /* Small mobile - Maximum readability */
     @media (max-width: 480px) {
+      .open-book {
+        height: 85vh;
+      }
       .book-p.right-p,
       body.single-page-mode .book-p.right-p,
       body:not(.single-page-mode) .book-p.right-p {
@@ -1372,10 +1389,13 @@
         const wrap = document.createElement('div');
         wrap.className = 'pg-canvas-wrap';
         wrap.style.position = 'relative';
-        wrap.style.width    = cssW + 'px';
-        wrap.style.height   = cssH + 'px';  /* exact canvas size — no fixed parent height to inherit */
-        wrap.style.display  = 'block';
-        wrap.style.overflow = 'visible';     /* no clipping */
+        wrap.style.width    = '100%';  /* fills .book-p width (JS-set) */
+        wrap.style.height   = '100%';  /* fills .book-p fixed height, overflow-y scrolls */
+        wrap.style.display  = 'flex';
+        wrap.style.alignItems = 'flex-start';
+        wrap.style.justifyContent = 'center';
+        wrap.style.overflowY = 'auto';
+        wrap.style.overflowX = 'visible';
         wrap.appendChild(canvas);
 
         // Add textLayer for text selection + highlighting
