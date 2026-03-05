@@ -144,9 +144,8 @@
       z-index: 10;
       display: flex;
       align-items: center;
-      justify-content: flex-start; /* left-align so horizontal scroll shows full book */
+      justify-content: center;
       width: 100%;
-      min-width: 100%;
       height: 100vh;
       overflow-x: auto;   /* horizontal scroll when zoom makes book wider than screen */
       overflow-y: hidden;
@@ -164,10 +163,10 @@
       position: relative;
       display: flex;
       align-items: stretch;
-      flex-shrink: 0;      /* don't shrink when stage overflows */
+      flex-shrink: 0;      /* don't shrink below natural size when stage scrolls */
+      width: 100%;         /* fill full screen width — pages stretch to fill both sides */
       height: 85vh;
       max-height: 900px;
-      margin: 0 auto;      /* center when not overflowing */
       /* NO filter, NO will-change, NO transform-style here.
          CSS filter() forces entire subtree into ONE GPU texture → blurs canvas text.
          Shadow is handled via ::before pseudo-element so it doesn't affect children. */
@@ -206,8 +205,9 @@
       box-shadow: 
         inset 0 0 40px rgba(0,0,0,0.08),
         0 20px 50px rgba(0,0,0,0.4);
-      width: 50vw;  /* Increased from 42vw for wider display */
-      max-width: 900px;  /* Increased from 650px for large screens */
+      flex: 0 0 auto;      /* override flex: 1 — single page has explicit width */
+      width: 65vw;
+      max-width: 1000px;
     }
     body.single-page-mode .book-spine {
       display: none;
@@ -216,9 +216,8 @@
     /* Book pages - realistic dimensions + crisp rendering */
     .book-p {
       position: relative;
-      width: 45vw;
-      min-width: 280px;
-      max-width: 750px;    /* JS overrides this at zoom > 1 via inline style */
+      flex: 1 1 0;         /* each page takes equal half of open-book (spine is absolute) */
+      min-width: 0;
       height: 100%;        /* fills fixed open-book height */
       background: #fefefe;
       /* NO overflow:hidden here — combined with border-radius it triggers Chrome
@@ -678,15 +677,11 @@
        RESPONSIVE OPTIMIZATION
     ────────────────────────────────────────────────── */
     
-    /* Large Desktop - Maximum width utilization for big screens */
+    /* Large Desktop - single-page gets a bit narrower for comfortable reading */
     @media (min-width: 1400px) {
-      .book-p {
-        width: 48vw;
-        max-width: 850px;
-      }
       body.single-page-mode .book-p.right-p {
-        width: 55vw;
-        max-width: 1000px;
+        width: 60vw;
+        max-width: 1200px;
       }
     }
     
@@ -704,7 +699,8 @@
         box-shadow: 
           inset 0 0 40px rgba(0,0,0,0.08),
           0 20px 50px rgba(0,0,0,0.4);
-        width: 70vw;
+        flex: 0 0 auto;
+        width: 80vw;
         max-width: none;
       }
       body:not(.single-page-mode) .book-spine {
@@ -1575,13 +1571,16 @@
     function getBasePageW() {
       const w = window.innerWidth;
       if (isSinglePageMode) {
-        if (w > 1200) return Math.min(w * 0.50, 900);
-        if (w > 1024) return w * 0.55;
-        return w * 0.70;
+        // Single page: matches body.single-page-mode .book-p.right-p widths
+        if (w > 1400) return Math.min(w * 0.60, 1200);
+        if (w >  768) return Math.min(w * 0.65, 1000);
+        return w * 0.80;
       }
-      if (w > 1024) return Math.min(w * 0.45, 750);
-      if (w > 768)  return w * 0.70;
-      if (w > 480)  return w * 0.92;
+      // Dual page: each page = half of screen (spine is position:absolute, not in flex flow)
+      // Matches .book-p { flex: 1 } with open-book { width: 100% }
+      if (w > 1024) return Math.max(280, w / 2);
+      if (w >  768) return w * 0.80;  /* tablet: forced single page at 80vw */
+      if (w >  480) return w * 0.92;
       return w * 0.96;
     }
 
