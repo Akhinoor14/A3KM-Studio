@@ -2275,56 +2275,7 @@ body {
 @media (max-width: 900px) { .side-nav { display: none; } }
 </style>
 
-<!-- ═══════════════════════════════════════════════════════
-     CURSOR SPOTLIGHT + MAGNETIC CURSOR
-     ═══════════════════════════════════════════════════════ -->
-<style>
-/* Spotlight glow that follows mouse */
-.cursor-spotlight {
-    position: fixed;
-    width: 360px;
-    height: 360px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(139,0,0,0.07) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    transform: translate(-50%,-50%);
-    transition: opacity 0.3s ease;
-    will-change: transform;
-}
-/* Custom cursor dot */
-.cursor-dot {
-    position: fixed;
-    width: 8px;
-    height: 8px;
-    background: #CC0000;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 99999;
-    transform: translate(-50%,-50%);
-    transition: width 0.15s ease, height 0.15s ease, opacity 0.15s ease;
-    box-shadow: 0 0 8px rgba(204,0,0,0.8);
-    will-change: transform;
-}
-.cursor-ring {
-    position: fixed;
-    width: 30px;
-    height: 30px;
-    border: 1.5px solid rgba(204,0,0,0.5);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 99998;
-    transform: translate(-50%,-50%);
-    transition: all 0.12s ease;
-    will-change: transform;
-}
-/* Hover states */
-body.cursor-hover .cursor-dot { width: 12px; height: 12px; background: #fff; box-shadow: 0 0 14px rgba(204,0,0,1); }
-body.cursor-hover .cursor-ring { width: 44px; height: 44px; border-color: rgba(204,0,0,0.8); }
-body.cursor-clicking .cursor-dot { width: 6px; height: 6px; }
-body.cursor-clicking .cursor-ring { width: 22px; height: 22px; border-color: #CC0000; }
-@media (hover: none) { .cursor-dot, .cursor-ring, .cursor-spotlight { display: none; } }
-</style>
+
 
 <!-- ═══════════════════════════════════════════════════════
      TYPEWRITER ANIMATION STYLE
@@ -2554,10 +2505,7 @@ body.cursor-clicking .cursor-ring { width: 22px; height: 22px; border-color: #CC
     <p class="splash-hint">Click anywhere to continue</p>
 </div>
 
-<!-- ═══ CURSOR ELEMENTS ═══ -->
-<div class="cursor-spotlight" id="cursorSpotlight"></div>
-<div class="cursor-dot" id="cursorDot"></div>
-<div class="cursor-ring" id="cursorRing"></div>
+
 
 <!-- ═══ FLOATING SECTION SIDE NAV ═══ -->
 <nav class="side-nav" id="sideNav" aria-label="Section navigation">
@@ -3619,53 +3567,9 @@ window.addEventListener('scroll', () => {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
-     CURSOR SPOTLIGHT + MAGNETIC CURSOR
+     NEURAL GRID CURSOR — shared from Optimization/
      ═══════════════════════════════════════════════════════════ -->
-<script>
-(function() {
-    if (window.matchMedia('(hover: none)').matches) return;
-
-    const spotlight = document.getElementById('cursorSpotlight');
-    const dot = document.getElementById('cursorDot');
-    const ring = document.getElementById('cursorRing');
-    if (!spotlight || !dot || !ring) return;
-
-    let mx = -200, my = -200, rx = -200, ry = -200;
-    let rafId;
-
-    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
-    document.addEventListener('mousedown', () => document.body.classList.add('cursor-clicking'));
-    document.addEventListener('mouseup', () => document.body.classList.remove('cursor-clicking'));
-
-    // Magnetic hover
-    const magnetTargets = document.querySelectorAll('.btn, .tech-badge, .stat-card, .social-link');
-    magnetTargets.forEach(el => {
-        el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-        el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-    });
-
-    function lerp(a, b, t) { return a + (b - a) * t; }
-
-    function animate() {
-        // Dot follows cursor directly
-        dot.style.left = mx + 'px';
-        dot.style.top = my + 'px';
-
-        // Ring lags slightly
-        rx = lerp(rx, mx, 0.14);
-        ry = lerp(ry, my, 0.14);
-        ring.style.left = rx + 'px';
-        ring.style.top = ry + 'px';
-
-        // Spotlight follows with bigger lag
-        spotlight.style.left = mx + 'px';
-        spotlight.style.top = my + 'px';
-
-        rafId = requestAnimationFrame(animate);
-    }
-    animate();
-})();
-</script>
+<script src="../Optimization/cursor-effects.js" defer></script>
 
 <!-- ═══════════════════════════════════════════════════════════
      FLOATING SECTION SIDE NAV
