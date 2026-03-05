@@ -43,8 +43,8 @@
     }
     body.a3km-hovering .a3km-cursor-dot {
       width: 14px; height: 14px;
-      background: #fff;
-      box-shadow: 0 0 16px rgba(204,0,0,1), 0 0 5px rgba(255,255,255,.6);
+      background: #FF3333;
+      box-shadow: 0 0 20px rgba(255,50,50,1), 0 0 8px rgba(204,0,0,.9);
     }
     body.a3km-hovering .a3km-cursor-ring {
       width: 50px; height: 50px;
