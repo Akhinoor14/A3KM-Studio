@@ -741,14 +741,14 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-strip">
-              <a class="btn-read" href="pdf-reader.html?id=${book.id}" id="readPdfBtn">
+              <button class="btn-read" id="readPdfBtn" onclick="openInFullscreen('pdf-reader.html?id=${book.id}')">
                 <i class="fas fa-book-reader"></i>
                 Read as PDF
-              </a>
-              <a class="btn-3d" href="book-3d.html?id=${book.id}" id="read3dBtn">
+              </button>
+              <button class="btn-3d" id="read3dBtn" onclick="openInFullscreen('book-3d.html?id=${book.id}')">
                 <i class="fas fa-book-open"></i>
                 3D Book Mode
-              </a>
+              </button>
             </div>
 
             <div class="section-divider"></div>
@@ -810,6 +810,20 @@
       });
 
       document.title = `${book.title} – A3KM Studio`;
+    }
+
+    // Open reader in fullscreen — request fullscreen first (requires user gesture),
+    // then navigate. The reader page itself also calls requestFullscreen on load as fallback.
+    function openInFullscreen(url) {
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      // Mark fullscreen as approved so the reader page auto-enters on load
+      sessionStorage.setItem('a3km_fullscreen', '1');
+      if (req) {
+        req.call(el).catch(() => {}).finally(() => { window.location.href = url; });
+      } else {
+        window.location.href = url;
+      }
     }
 
     function toggleSummary() {
