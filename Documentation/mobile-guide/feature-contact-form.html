@@ -1,0 +1,492 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep guide to A3KM Studio contact form — EmailJS primary, Web3Forms fallback, mailto final fallback, auto-reply, floating labels.">
+  <meta name="author" content="Md Akhinoor Islam">
+  <meta name="theme-color" content="#000000">
+
+  <title>Contact Form System – A3KM Studio Guide</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{--red:#CC0000;--red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);--bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);--txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;--shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);--radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);}
+.pg-topbar{position:sticky;top:70px;z-index:190;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge{font-size:0.7rem;font-weight:600;color:rgba(255,100,100,0.85);background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-blue{color:rgba(100,160,255,0.9);background:rgba(0,80,200,0.07);border-color:rgba(0,80,200,0.25);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+/* Fallback chain diagram */
+.fallback-chain{display:flex;flex-direction:column;gap:0;margin-bottom:32px;}
+.fb-step{display:flex;gap:18px;position:relative;}
+.fb-step::before{content:'';position:absolute;left:21px;top:44px;bottom:-2px;width:1px;background:var(--red-border);}
+.fb-step:last-child::before{display:none;}
+.fb-num{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;flex-shrink:0;margin-top:2px;}
+.fb-num.primary{background:rgba(204,0,0,0.18);border:2px solid var(--red);color:var(--red);}
+.fb-num.fallback{background:rgba(255,160,0,0.12);border:2px solid rgba(255,160,0,0.4);color:rgba(255,180,50,0.9);}
+.fb-num.final{background:rgba(100,100,100,0.12);border:2px solid rgba(120,120,120,0.3);color:var(--txt-dim);}
+.fb-body{flex:1;padding-bottom:24px;}
+.fb-name{font-size:0.9rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.fb-tag{font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:8px;}
+.fb-tag.primary{background:rgba(204,0,0,0.15);color:var(--red);border:1px solid rgba(204,0,0,0.3);}
+.fb-tag.fallback{background:rgba(255,160,0,0.1);color:rgba(255,180,50,0.85);border:1px solid rgba(255,160,0,0.25);}
+.fb-tag.final{background:rgba(120,120,120,0.1);color:var(--txt-dim);border:1px solid rgba(120,120,120,0.2);}
+.fb-desc{font-size:0.78rem;color:var(--txt-dim);line-height:1.55;}
+.fb-code{font-family:'Fira Code',monospace;font-size:0.68rem;color:rgba(255,160,160,0.85);background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;}
+/* Form mockup (CSS-drawn) */
+.form-mockup{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;}
+.fm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+.fm-label{font-size:0.62rem;color:var(--red);font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+.fm-input{background:rgba(255,255,255,0.04);border:1px solid var(--red-border);border-radius:6px;padding:9px 12px;font-size:0.75rem;color:var(--txt-dim);display:flex;align-items:center;gap:8px;}
+.fm-input i{color:var(--txt-ghost);font-size:0.7rem;}
+.fm-input.focused{border-color:var(--red-border-md);background:rgba(204,0,0,0.04);}
+.fm-input.focused .fi-label{color:var(--red);transform:translateY(-18px) scale(0.85);}
+.fm-textarea{height:48px;align-items:flex-start;}
+.fm-counter{font-size:0.6rem;color:var(--txt-ghost);text-align:right;margin-top:2px;}
+.fm-submit{background:var(--red);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.77rem;font-weight:700;color:#fff;}
+/* floating label explanation box */
+.floating-label-demo{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;margin-bottom:16px;}
+.fld-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.fld-states{display:flex;gap:14px;}
+.fld-state{flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;position:relative;}
+.fld-state-label{font-size:0.62rem;color:var(--txt-ghost);margin-bottom:8px;}
+.fld-inp{border:1px solid var(--red-border);border-radius:5px;padding:10px 10px 4px;position:relative;}
+.fld-floating{font-size:0.7rem;position:absolute;top:10px;left:10px;color:var(--txt-ghost);transition:all .2s;}
+.fld-floating.up{font-size:0.58rem;top:3px;color:var(--red);}
+/* mobile quick action cards */
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.qa-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:14px;text-align:center;}
+.qa-icon{font-size:1.1rem;margin-bottom:6px;}
+.qa-label{font-size:0.68rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.qa-proto{font-size:0.6rem;font-family:'Fira Code',monospace;color:var(--txt-ghost);}
+/* compare grid */
+.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.compare-col{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;}
+.compare-col h4{font-size:0.8rem;font-weight:700;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.compare-col ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.compare-col ul li{font-size:0.75rem;color:var(--txt-dim);display:flex;align-items:flex-start;gap:7px;line-height:1.4;}
+.compare-col ul li i{color:var(--red);flex-shrink:0;margin-top:2px;font-size:0.6rem;}
+/* callout */
+.callout{border-left:3px solid var(--red);background:rgba(204,0,0,0.06);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin-bottom:24px;}
+.callout-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:0.78rem;color:var(--txt-dim);line-height:1.6;}
+/* tech box */
+.tech-box{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;}
+.tech-box-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.tech-kv{display:flex;flex-direction:column;gap:6px;}
+.tech-row{display:flex;gap:12px;font-size:0.77rem;}
+.tech-key{color:var(--txt-dim);min-width:200px;flex-shrink:0;}
+.tech-val{color:var(--txt-bright);font-family:'Fira Code',monospace;font-size:0.71rem;}
+/* feat cards */
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;transition:all .25s var(--ease);}.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--red);margin-bottom:12px;}
+.feat-name{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+.features-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+.features-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;}
+@media(max-width:900px){.compare-wrap,.features-grid-2,.features-grid-3,.quick-actions{grid-template-columns:1fr 1fr}.fld-states{flex-direction:column}}
+@media(max-width:600px){.quick-actions{grid-template-columns:1fr 1fr}}
+
+/* ── RELATED GUIDES ── */
+.rg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.rg-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:0;transition:all .25s var(--ease);}
+.rg-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.rg-icon{width:36px;height:36px;border-radius:9px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--red);margin-bottom:10px;}
+.rg-name{font-size:0.84rem;font-weight:700;color:var(--txt-bright);margin-bottom:6px;}
+.rg-desc{font-size:0.72rem;color:var(--txt-dim);line-height:1.45;flex:1;}
+.rg-badges{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0 10px;}
+.rg-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid;letter-spacing:.05em;text-transform:uppercase;}
+.rgb-desktop{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.rgb-mobile{color:rgba(80,220,120,0.9);background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.25);}
+.rgb-admin{color:rgba(255,210,40,0.9);background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.28);}
+.rgb-pwa{color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.08);border-color:rgba(139,0,255,0.25);}
+.rgb-content{color:rgba(255,155,55,0.9);background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.25);}
+.rgb-shared{color:rgba(180,180,180,0.7);background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);}
+.rg-explore{font-size:0.7rem;color:var(--red);display:flex;align-items:center;gap:5px;transition:gap .2s;}
+.rg-card:hover .rg-explore{gap:8px;}
+.dir-cta{text-align:center;padding:8px 0 0;}
+.dir-cta a{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--red);text-decoration:none;border:1px solid var(--red-border);padding:10px 24px;border-radius:20px;background:rgba(204,0,0,0.06);transition:all .22s;}
+.dir-cta a:hover{background:rgba(204,0,0,0.14);border-color:rgba(204,0,0,0.45);}
+/* ── BACK TO TOP ── */
+.btt{position:fixed;bottom:28px;right:28px;z-index:999;width:44px;height:44px;background:#CC0000;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 20px rgba(204,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(12px);transition:all .28s;}
+.btt.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.btt:hover{background:#8B0000;transform:translateY(-2px);}
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .pg-topbar{top:52px !important;}
+  .pg-main{padding:0 16px 80px !important;}
+  .features-grid-2,.features-grid-3{grid-template-columns:1fr !important;}
+  .compare-wrap,.anatomy-wrap{grid-template-columns:1fr !important;}
+  .pg-hero{padding:32px 16px 28px !important;}
+  .shortcut-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .shortcut-table{min-width:460px;}
+  .tech-row{flex-direction:column;gap:3px;}
+  .tech-key{min-width:unset !important;}
+  .rg-grid{grid-template-columns:1fr !important;}
+  body{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px));}
+}</style>
+</head>
+<body>
+<!-- MOBILE NAV (shown ≤768px, replaces hidden g-nav) -->
+<nav class="m-nav" id="mobileNav">
+  <a href="../features.html" class="m-nav-back" title="Feature Directory"><i class="fas fa-arrow-left"></i></a>
+  <a href="../../Home/index.html" class="m-nav-logo">
+    <img src="../../images/logo.svg" class="m-nav-logo-img" width="30" height="30" alt="A3KM">
+    <div class="m-nav-brand">
+      <span class="m-nav-brand-name">Contact Form</span>
+      <span class="m-nav-brand-sub">Feature Guide</span>
+    </div>
+  </a>
+  <div class="m-nav-menu">
+    <button class="m-nav-btn" id="mNavMenuBtn" title="Navigation" aria-label="Open navigation menu" aria-expanded="false">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+<div class="m-drawer-overlay" id="mDrawerOverlay"></div>
+<div class="m-drawer" id="mDrawer">
+  <div class="m-drawer-links">
+    <a href="../index.html" class="m-drawer-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a>
+    <a href="../desktop/index.html" class="m-drawer-link"><i class="fas fa-desktop"></i><span>Desktop Guide</span></a>
+    <a href="index.html" class="m-drawer-link"><i class="fas fa-mobile-alt"></i><span>Mobile Guide</span></a>
+    <a href="../features.html" class="m-drawer-link active"><i class="fas fa-search"></i><span>Feature Directory</span></a>
+    <a href="../../Home/index.html" class="m-drawer-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a>
+    <a href="../../Contact/contact.html" class="m-drawer-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </div>
+</div>
+<nav class="g-nav" id="guideNav" data-mode="autohide">
+  <div class="g-nav-inner">
+    <a href="../../Home/index.html" class="g-nav-logo">
+      <img src="../../images/logo.svg" class="g-nav-logo-img" width="48" height="48" alt="A3KM Studio">
+      <div class="g-nav-brand">
+        <span class="g-nav-brand-name">A3KM Studio</span>
+        <span class="g-nav-brand-sub">Website Guide</span>
+      </div>
+    </a>
+    <ul class="g-nav-links">
+      <li><a href="../index.html" class="g-nav-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a></li>
+      <li><a href="../desktop/index.html" class="g-nav-link"><i class="fas fa-desktop"></i><span>Desktop</span></a></li>
+      <li><a href="index.html" class="g-nav-link"><i class="fas fa-mobile-alt"></i><span>Mobile</span></a></li>
+      <li><a href="../features.html" class="g-nav-link active"><i class="fas fa-search"></i><span>Features</span></a></li>
+      <li><a href="../../Home/index.html" class="g-nav-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a></li>
+    </ul>
+  </div>
+</nav><div id="bg-canvas-container"></div>
+<nav class="pg-topbar">
+  <a href="../features.html" class="pg-back"><i class="fas fa-arrow-left"></i> Features</a>
+  <div class="pg-bc"><span>Guide</span><span class="sep">/</span><span>Features</span><span class="sep">/</span><span class="cur">Contact Form</span></div>
+  <div class="pg-badge"><i class="fas fa-envelope"></i> Triple Fallback System</div>
+</nav>
+<header class="pg-hero">
+  <div class="hero-label"><i class="fas fa-paper-plane"></i> Feature Deep Dive</div>
+  <h1 class="hero-title"><span>Contact Form System</span> — Triple Fallback + Auto-Reply</h1>
+  <p class="hero-desc">The contact form never silently fails. It tries EmailJS first (sends to Gmail + auto-reply to sender), falls back to Web3Forms API, and if both fail — opens the user's native mail client via <code style="font-family:Fira Code,monospace;font-size:0.85em;">mailto:</code> with the message pre-filled. On mobile, 4 quick-action tap cards give instant access to phone, email, WhatsApp, and Telegram.</p>
+  <p class="hero-desc-bn">Contact form কখনো silently fail করে না। EmailJS → Web3Forms → mailto — 3 স্তরে fallback আছে। Mobile-এ floating label input, 500-char counter, haptic submit feedback এবং 4টি quick-action card (tel/mailto/wa.me/t.me) আছে।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-layer-group"></i> 3-layer fallback</span>
+    <span class="badge badge-green"><i class="fas fa-reply"></i> Auto-reply to sender</span>
+    <span class="badge badge-blue"><i class="fas fa-mobile-alt"></i> Mobile deep links</span>
+  </div>
+</header>
+<main class="pg-main">
+  <div class="divider"></div>
+
+  <!-- FALLBACK CHAIN -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-layer-group"></i> Submission Flow</div>
+    <h2 class="sec-title">Triple Fallback <span>Chain</span></h2>
+    <p class="sec-sub">When a user hits Submit, the form tries each layer in sequence. The user only ever sees success or the final fallback link — never a dead end.</p>
+    <div class="fallback-chain">
+      <div class="fb-step">
+        <div class="fb-num primary">1</div>
+        <div class="fb-body">
+          <div class="fb-name">EmailJS <span class="fb-tag primary">Primary</span></div>
+          <div class="fb-desc">
+            <strong style="color:var(--txt-mid);">Two sends happen on success:</strong><br>
+            ① Main email to <code class="fb-code">mdakhinoorislam.official.2005@gmail.com</code> using template <code class="fb-code">template_5lv0are</code><br>
+            ② Auto-reply email back to the <em>sender's</em> address using template <code class="fb-code">template_ruuu6ra</code><br>
+            Service ID: <code class="fb-code">service_l3om32p</code> (Gmail service)<br>
+            Auto-reply failure is caught separately and silently ignored — the main send already succeeded.
+          </div>
+        </div>
+      </div>
+      <div class="fb-step">
+        <div class="fb-num fallback">2</div>
+        <div class="fb-body">
+          <div class="fb-name">Web3Forms API <span class="fb-tag fallback">Fallback 1</span></div>
+          <div class="fb-desc">
+            If EmailJS throws any error → immediately tries Web3Forms.<br>
+            <code class="fb-code">fetch('https://api.web3forms.com/submit', { method:'POST', ... })</code><br>
+            Sends same form data (name, email, subject, message) via JSON to Web3Forms endpoint. No account setup needed for basic delivery. If <code class="fb-code">web3Response.ok</code> → user sees success.
+          </div>
+        </div>
+      </div>
+      <div class="fb-step">
+        <div class="fb-num final">3</div>
+        <div class="fb-body">
+          <div class="fb-name">Native mailto: <span class="fb-tag final">Final Fallback</span></div>
+          <div class="fb-desc">
+            If Web3Forms also fails → generates a <code class="fb-code">mailto:</code> link with subject and body <strong>pre-filled</strong> from the form data using <code class="fb-code">encodeURIComponent()</code>.<br>
+            Shows a warning message with a clickable link: "Click here to open your email client". Opens the user's native mail app with everything ready — they just hit Send.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-shield-alt"></i> Why 3 layers?</div>
+      <p>EmailJS has a monthly free-tier limit. Web3Forms also has limits. <strong>mailto: has no limits</strong> — it always works because it uses the device's own email app. The 3-layer system means the contact form works even if both API quotas are exhausted.</p>
+    </div>
+  </section>
+
+  <!-- FORM UI FEATURES -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-keyboard"></i> Form UI</div>
+    <h2 class="sec-title">Input <span>Features</span></h2>
+    <div class="features-grid-2">
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-tag"></i></div>
+        <div class="feat-name">Floating Label Inputs</div>
+        <div class="feat-desc">Labels start inside the input field (like placeholder text). On focus OR when the field has a value, the label smoothly floats up and shrinks. CSS selector: <code style="font-family:Fira Code,monospace;font-size:0.88em;">input[placeholder=" "] + label.floating-label</code>. Works via the CSS <code style="font-family:Fira Code,monospace;font-size:0.88em;">:not(:placeholder-shown)</code> trick — the <code style="font-family:Fira Code,monospace;font-size:0.88em;">placeholder=" "</code> (single space) enables this without visible placeholder text.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-calculator"></i></div>
+        <div class="feat-name">500-Character Counter</div>
+        <div class="feat-desc">The message textarea has <code style="font-family:Fira Code,monospace;font-size:0.88em;">maxlength="500"</code>. A live counter below shows <code style="font-family:Fira Code,monospace;font-size:0.88em;">[n]/500</code> — updates on every keypress. Stops input at 500. Applied on mobile only (desktop uses different styling but same JS logic).</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-spinner"></i></div>
+        <div class="feat-name">3-State Submit Button</div>
+        <div class="feat-desc">The submit button has 3 states: ① <strong>Default</strong> — "Send Message" with plane icon. ② <strong>Sending</strong> — spinner icon + "Sending..." text, button disabled. ③ <strong>Done</strong> — returns to default state (finally block). The <code style="font-family:Fira Code,monospace;font-size:0.88em;">.btn-text</code> and <code style="font-family:Fira Code,monospace;font-size:0.88em;">.btn-spinner</code> spans toggle <code style="font-family:Fira Code,monospace;font-size:0.88em;">display</code> accordingly.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="feat-name">Success / Warning Status Bar</div>
+        <div class="feat-desc">A <code style="font-family:Fira Code,monospace;font-size:0.88em;">#form-status</code> div below the button shows the result. CSS classes: <code style="font-family:Fira Code,monospace;font-size:0.88em;">.success</code> (green tint) and <code style="font-family:Fira Code,monospace;font-size:0.88em;">.warning</code> (orange tint). On success, the form is also reset with <code style="font-family:Fira Code,monospace;font-size:0.88em;">form.reset()</code>.</div>
+      </div>
+    </div>
+    <!-- Floating label demo -->
+    <div class="floating-label-demo">
+      <div class="fld-title"><i class="fas fa-eye"></i> Floating Label — How it looks</div>
+      <div class="fld-states">
+        <div class="fld-state">
+          <div class="fld-state-label">Empty (default)</div>
+          <div class="fld-inp"><div class="fld-floating">Your Name</div>&nbsp;</div>
+        </div>
+        <div class="fld-state">
+          <div class="fld-state-label">Focused / filled</div>
+          <div class="fld-inp" style="border-color:var(--red-border-md);"><div class="fld-floating up">Your Name</div><span style="font-size:0.75rem;color:var(--txt-mid);">Akhinoor Islam</span></div>
+        </div>
+        <div class="fld-state">
+          <div class="fld-state-label">CSS trick</div>
+          <div style="font-size:0.68rem;color:var(--txt-dim);line-height:1.6;">
+            <code style="font-family:Fira Code,monospace;color:rgba(255,160,160,0.85);">placeholder=" "</code> (single space) makes label float using <code style="font-family:Fira Code,monospace;color:rgba(255,160,160,0.85);">:not(:placeholder-shown)</code> selector — no JS needed.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOBILE EXCLUSIVE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-mobile-alt"></i> Mobile Only</div>
+    <h2 class="sec-title">Quick Actions + <span>Deep Links</span></h2>
+    <p class="sec-sub">Mobile contact page has 4 one-tap action cards above the form — for direct communication without filling in a form.</p>
+    <div class="quick-actions">
+      <div class="qa-card">
+        <div class="qa-icon" style="color:rgba(100,220,120,0.9);">📞</div>
+        <div class="qa-label">Phone</div>
+        <div class="qa-proto">tel:</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-icon" style="color:rgba(255,160,100,0.9);">📧</div>
+        <div class="qa-label">Email</div>
+        <div class="qa-proto">mailto:</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-icon" style="color:rgba(100,220,120,0.9);">💬</div>
+        <div class="qa-label">WhatsApp</div>
+        <div class="qa-proto">wa.me</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-icon" style="color:rgba(100,160,255,0.9);">✈️</div>
+        <div class="qa-label">Telegram</div>
+        <div class="qa-proto">t.me</div>
+      </div>
+    </div>
+    <div class="features-grid-2">
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-phone"></i></div>
+        <div class="feat-name">tel: / mailto: / wa.me</div>
+        <div class="feat-desc">Tapping any quick card opens the respective native app directly. <code style="font-family:Fira Code,monospace;font-size:0.88em;">tel:</code> dials immediately on phone. <code style="font-family:Fira Code,monospace;font-size:0.88em;">wa.me/{number}</code> opens WhatsApp chat. <code style="font-family:Fira Code,monospace;font-size:0.88em;">t.me/{username}</code> opens Telegram. These are OS-level deep links — no app switching needed on mobile.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-vibrate"></i></div>
+        <div class="feat-name">Haptic Submit Feedback</div>
+        <div class="feat-desc">On form submit success, <code style="font-family:Fira Code,monospace;font-size:0.88em;">navigator.vibrate([100, 50, 100])</code> fires a double-buzz pattern. Confirms submission physically. Only fires on Android (iOS doesn't support <code style="font-family:Fira Code,monospace;font-size:0.88em;">navigator.vibrate</code>). Checked with feature detection.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESKTOP VS MOBILE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-columns"></i> Platform Differences</div>
+    <h2 class="sec-title">Desktop vs <span>Mobile</span></h2>
+    <div class="compare-wrap">
+      <div class="compare-col">
+        <h4><i class="fas fa-desktop"></i> Desktop (Contact/contact.html)</h4>
+        <ul>
+          <li><i class="fas fa-circle"></i> Two-column layout: info panel left, form right</li>
+          <li><i class="fas fa-circle"></i> Pulsing green "Available" status dot (CSS keyframe statusPulse)</li>
+          <li><i class="fas fa-circle"></i> Direct: Email, WhatsApp, Location in left panel</li>
+          <li><i class="fas fa-circle"></i> Social grid: 5 icons with brand color hover</li>
+          <li><i class="fas fa-circle"></i> Same 3-layer EmailJS → Web3Forms → mailto fallback</li>
+          <li><i class="fas fa-circle"></i> particle background canvas + geometric shapes</li>
+          <li><i class="fas fa-circle"></i> No char counter on textarea (desktop)</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h4><i class="fas fa-mobile-alt"></i> Mobile (mobile/contact/contact.html)</h4>
+        <ul>
+          <li><i class="fas fa-circle"></i> Single column, vertical scroll</li>
+          <li><i class="fas fa-circle"></i> 4 quick-action tap cards at top (tel/mailto/wa.me/t.me)</li>
+          <li><i class="fas fa-circle"></i> Floating label inputs with .input-border animated underline</li>
+          <li><i class="fas fa-circle"></i> 500-char counter on textarea</li>
+          <li><i class="fas fa-circle"></i> Haptic vibrate on submit success</li>
+          <li><i class="fas fa-circle"></i> 16px input font-size (prevents iOS auto-zoom)</li>
+          <li><i class="fas fa-circle"></i> Same 3-layer fallback system</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-code"></i> Technical Reference</div>
+    <h2 class="sec-title">Code <span>Details</span></h2>
+    <div class="tech-box">
+      <div class="tech-box-title"><i class="fas fa-file-code"></i> EmailJS Config</div>
+      <div class="tech-kv">
+        <div class="tech-row"><div class="tech-key">SDK</div><div class="tech-val">@emailjs/browser@4 (CDN)</div></div>
+        <div class="tech-row"><div class="tech-key">Public Key</div><div class="tech-val">Yj4RUOwG4oxZyKFoh</div></div>
+        <div class="tech-row"><div class="tech-key">Service ID</div><div class="tech-val">service_l3om32p (Gmail)</div></div>
+        <div class="tech-row"><div class="tech-key">Main template</div><div class="tech-val">template_5lv0are (Portfolio Contact Form)</div></div>
+        <div class="tech-row"><div class="tech-key">Auto-reply template</div><div class="tech-val">template_ruuu6ra (Portfolio Auto Reply)</div></div>
+        <div class="tech-row"><div class="tech-key">Web3Forms endpoint</div><div class="tech-val">https://api.web3forms.com/submit</div></div>
+        <div class="tech-row"><div class="tech-key">Final fallback</div><div class="tech-val">mailto: with encodeURIComponent() subject+body</div></div>
+        <div class="tech-row"><div class="tech-key">Form reset</div><div class="tech-val">form.reset() called on EmailJS or Web3Forms success</div></div>
+        <div class="tech-row"><div class="tech-key">Auto-reply failure</div><div class="tech-val">caught + console.warn only — not shown to user</div></div>
+        <div class="tech-row"><div class="tech-key">Desktop file</div><div class="tech-val">Contact/contact.html</div></div>
+        <div class="tech-row"><div class="tech-key">Mobile file</div><div class="tech-val">mobile/contact/contact.html</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- RELATED FEATURE GUIDES -->
+  <section style="margin-bottom:56px;">
+    <div class="sec-label"><i class="fas fa-compass"></i> Explore More</div>
+    <h2 class="sec-title">Other <span>Feature Guides</span></h2>
+    <p class="sec-sub">More deep-dives into A3KM Studio features — shortcuts, hidden tricks, mobile vs desktop comparisons and code references.</p>
+    <div class="rg-grid" id="relatedGuides"></div>
+    <div class="dir-cta">
+      <a href="../features.html"><i class="fas fa-search"></i> Browse All 88 Features in the Directory <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+</main>
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-chevron-up"></i></button>
+<script src="../assets/guide.js" defer></script>
+<script src="../../Optimization/Background/background-system.js" defer></script>
+<script>
+const CURRENT_GUIDE = 'contact-form';
+const FEATURE_GUIDES = [
+  {id:'video-player',     name:'Video Player',        icon:'play-circle',  desc:'YouTube IFrame, PiP, like/share, related videos, API enrichment',  cats:['Mobile','Desktop'],  url:'feature-video-player.html'},
+  {id:'pdf-reader',       name:'PDF Reader',           icon:'file-pdf',     desc:'Zoom, page nav, book mode, swipe, keyboard shortcuts, password',   cats:['Desktop','Mobile','Content'], url:'feature-pdf-reader.html'},
+  {id:'markdown-reader',  name:'Markdown Reader',      icon:'file-alt',     desc:'Custom renderer, TOC, GitHub sync, code highlighting, share',       cats:['Mobile','Content'],  url:'feature-markdown-reader.html'},
+  {id:'pwa-offline',      name:'PWA & Offline',        icon:'wifi',         desc:'5-cache system, LRU eviction, install prompt, update notifier',     cats:['PWA','Mobile'],      url:'feature-pwa-offline.html'},
+  {id:'search-system',    name:'Search System',        icon:'search',       desc:'AdvancedSearchManager, 12 filters, tags, instant client-side',      cats:['Desktop','Mobile'],  url:'feature-search-system.html'},
+  {id:'only-boss',        name:'Only-Boss Admin',      icon:'lock',         desc:'SHA-256 auth, session timer, managers, command center',             cats:['Admin','Desktop'],   url:'feature-only-boss.html'},
+  {id:'calculators',      name:'Calculators',          icon:'calculator',   desc:'Resistor color code, LED current, capacitor decoder, quick ref',    cats:['Desktop','Mobile'],  url:'feature-calculators.html'},
+  {id:'sync-bookmark',    name:'Sync & Bookmarks',     icon:'sync',         desc:'GitHub API sync, localStorage keys, navbar auto-hide',              cats:['PWA','Shared'],      url:'feature-sync-bookmark.html'},
+  {id:'contact-form',     name:'Contact Form',         icon:'paper-plane',  desc:'EmailJS primary, Web3Forms fallback, mailto final fallback',        cats:['Desktop','Mobile'],  url:'feature-contact-form.html'},
+  {id:'fullscreen',       name:'Fullscreen System',    icon:'expand',       desc:'First-click fullscreen, session persist, nav-click exclusion',      cats:['Desktop','PWA'],     url:'feature-fullscreen.html'}
+];
+const RG_CAT_CLASS = {Desktop:'rgb-desktop',Mobile:'rgb-mobile',Admin:'rgb-admin',PWA:'rgb-pwa',Content:'rgb-content',Shared:'rgb-shared'};
+function renderRelatedGuides(){
+  const el = document.getElementById('relatedGuides');
+  if(!el) return;
+  const others = FEATURE_GUIDES.filter(g => g.id !== CURRENT_GUIDE);
+  el.innerHTML = others.map(g => {
+    const badges = g.cats.map(c => '<span class="rg-badge '+(RG_CAT_CLASS[c]||'')+'">'+c+'</span>').join('');
+    return '<a class="rg-card" href="'+g.url+'">'
+      +'<div class="rg-icon"><i class="fas fa-'+g.icon+'"></i></div>'
+      +'<div class="rg-name">'+g.name+'</div>'
+      +'<div class="rg-badges">'+badges+'</div>'
+      +'<div class="rg-desc">'+g.desc+'</div>'
+      +'<div class="rg-explore">Explore Guide <i class="fas fa-arrow-right"></i></div>'
+      +'</a>';
+  }).join('');
+}
+window.addEventListener('scroll',()=>{
+  const b=document.getElementById('bttBtn');
+  if(b) b.classList.toggle('visible',window.scrollY>500);
+},{passive:true});
+document.addEventListener('DOMContentLoaded',renderRelatedGuides);
+</script>
+<script>
+// MOBILE DRAWER
+(function(){
+  var btn=document.getElementById('mNavMenuBtn');
+  var drawer=document.getElementById('mDrawer');
+  var overlay=document.getElementById('mDrawerOverlay');
+  if(!btn)return;
+  function open(){drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');btn.innerHTML='<i class="fas fa-times"></i>';}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.innerHTML='<i class="fas fa-bars"></i>';}
+  btn.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script><!-- MOBILE BOTTOM NAV (<=768px) — main site navigation -->
+<nav class="doc-bottom-nav" aria-label="Main navigation">
+  <div class="doc-nav-container">
+    <a href="../../mobile/home/index.html" class="doc-nav-item" aria-label="Home">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
+    <a href="../../mobile/about/about.html" class="doc-nav-item" aria-label="About">
+      <i class="fas fa-user-circle"></i><span>About</span>
+    </a>
+    <a href="../../mobile/projects/projects.html" class="doc-nav-item" aria-label="Projects">
+      <i class="fas fa-folder-open"></i><span>Projects</span>
+    </a>
+    <a href="../../mobile/content-studio/hub.html" class="doc-nav-item" aria-label="Content Studio">
+      <i class="fas fa-layer-group"></i><span>Studio</span>
+    </a>
+    <a href="../../mobile/contact/contact.html" class="doc-nav-item" aria-label="Contact">
+      <i class="fas fa-envelope"></i><span>Contact</span>
+    </a>
+    <a href="../index.html" class="doc-nav-item active" aria-label="Website Guide">
+      <i class="fas fa-book-open"></i><span>Guide</span>
+    </a>
+  </div>
+</nav></body>
+</html>

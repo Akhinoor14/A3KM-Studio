@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // PAPER LISTING - Research Papers Section (Mobile)
 // Loads papers dynamically from desktop papers.json file
 // ============================================================================
@@ -19,7 +19,7 @@
     // ========== LOAD PAPERS FROM JSON ==========
     async function loadPapers() {
         try {
-            const response = await fetch('../../../Content Studio/research-papers/papers.json');
+            const response = await fetch('../../../Content%20Studio/research-papers/papers.json');
             const data = await response.json();
             allPapers = data.papers || [];
             filteredPapers = [...allPapers];
@@ -68,21 +68,30 @@
         const status = paper.status || 'Published';
         const statusClass = status.toLowerCase().replace(/\s+/g, '-');
 
+        // Determine type class for thumbnail color coding
+        const typeRaw = (paper.type || paper.venue || '').toLowerCase();
+        let typeClass = 'type-default';
+        if (typeRaw.includes('journal'))    typeClass = 'type-journal';
+        else if (typeRaw.includes('conference') || typeRaw.includes('conf')) typeClass = 'type-conference';
+        else if (typeRaw.includes('thesis') || typeRaw.includes('dissertation')) typeClass = 'type-thesis';
+        else if (typeRaw.includes('preprint') || typeRaw.includes('arxiv')) typeClass = 'type-preprint';
+
         return `
             <div class="content-item" onclick="openPaper('${paper.id}')">
-                <div class="paper-thumbnail">
-                    <i class="fas fa-file-pdf"></i>
+                <div class="paper-thumbnail ${typeClass}">
+                    <div class="paper-thumbnail-margin"></div>
+                    <i class="fas fa-file-alt"></i>
                 </div>
-                <div class="content-item-body">
+                <div class="content-info-wrap">
                     <span class="paper-status ${statusClass}">${status}</span>
                     <h3 class="content-item-title">${paper.title}</h3>
-                    <p class="content-item-meta">
-                        <i class="fas fa-user-graduate"></i> ${authors}
-                    </p>
-                    <p class="content-item-meta">
-                        <i class="fas fa-university"></i> ${paper.institution || 'N/A'}
-                    </p>
-                    <div class="paper-venue">${paper.venue || paper.category}</div>
+                    <div class="content-item-meta">
+                        <span><i class="fas fa-user-graduate"></i> ${authors}</span>
+                    </div>
+                    <div class="content-item-meta">
+                        <span><i class="fas fa-university"></i> ${paper.institution || 'N/A'}</span>
+                    </div>
+                    <div class="paper-venue">${paper.venue || paper.category || ''}</div>
                     <div class="content-item-footer">
                         <span class="content-item-date">
                             <i class="fas fa-calendar"></i> ${formattedDate}

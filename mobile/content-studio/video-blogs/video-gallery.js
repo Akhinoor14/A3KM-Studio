@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // VIDEO GALLERY - Video Blogs Listing (Mobile)
 // Displays YouTube video content with search, filter, sort, and view toggle
 // Fetches data from central content.json
@@ -65,7 +65,7 @@
             showLoadingState();
             
             // ✅ Load directly from desktop JSON file
-            const response = await fetch('../../../Content Studio/video-content/videos.json');
+            const response = await fetch('../../../Content%20Studio/video-content/videos.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }

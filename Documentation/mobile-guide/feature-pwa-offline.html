@@ -1,0 +1,417 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep guide to A3KM Studio PWA offline system — 5-cache strategy, LRU eviction, install prompt, update notifier, service worker.">
+  <meta name="author" content="Md Akhinoor Islam">
+  <meta name="theme-color" content="#000000">
+
+  <title>PWA &amp; Offline Feature – A3KM Studio Guide</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{--red:#CC0000;--red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);--bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);--txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;--shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);--radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);}
+.pg-topbar{position:sticky;top:70px;z-index:190;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}
+.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}
+.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}
+.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge{font-size:0.7rem;font-weight:600;color:rgba(255,100,100,0.85);background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,220,50,0.9);background:rgba(200,160,0,0.08);border-color:rgba(200,160,0,0.25);}
+.badge-blue{color:rgba(80,160,255,0.9);background:rgba(0,80,200,0.07);border-color:rgba(0,80,200,0.22);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}
+.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;transition:all .25s var(--ease);}
+.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--red);margin-bottom:12px;}
+.feat-name{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+.features-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+.features-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;}
+/* cache diagram */
+.cache-diagram{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px;}
+.cache-box{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:16px 12px;text-align:center;}
+.cache-box:hover{background:var(--bg-card-h);border-color:var(--red-border-md);}
+.cache-icon{font-size:1.4rem;color:var(--red);margin-bottom:8px;}
+.cache-name{font-size:0.68rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.cache-limit{font-size:0.6rem;color:var(--txt-dim);}
+.cache-limit strong{color:var(--red);}
+.cache-desc{font-size:0.62rem;color:var(--txt-ghost);margin-top:4px;line-height:1.4;}
+/* flow */
+.flow-steps{display:flex;flex-direction:column;gap:0;margin-bottom:32px;}
+.flow-step{display:flex;gap:16px;align-items:flex-start;position:relative;padding-bottom:24px;}
+.flow-step:last-child{padding-bottom:0;}
+.flow-step::before{content:'';position:absolute;left:18px;top:38px;bottom:0;width:2px;background:linear-gradient(180deg,rgba(204,0,0,0.4),transparent);}
+.flow-step:last-child::before{display:none;}
+.flow-num{width:36px;height:36px;border-radius:50%;background:rgba(204,0,0,0.1);border:2px solid rgba(204,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:var(--red);flex-shrink:0;}
+.flow-body h4{font-size:0.85rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.flow-body p{font-size:0.78rem;color:var(--txt-dim);line-height:1.5;}
+/* tech box */
+.tech-box{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;}
+.tech-box-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.tech-kv{display:flex;flex-direction:column;gap:6px;}
+.tech-row{display:flex;gap:12px;font-size:0.77rem;}
+.tech-key{color:var(--txt-dim);min-width:160px;flex-shrink:0;}
+.tech-val{color:var(--txt-bright);font-family:'Fira Code',monospace;font-size:0.72rem;}
+/* callout */
+.callout{border-left:3px solid var(--red);background:rgba(204,0,0,0.06);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin-bottom:24px;}
+.callout-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:0.78rem;color:var(--txt-dim);line-height:1.6;}
+/* route table */
+.shortcut-table{width:100%;border-collapse:collapse;margin-bottom:32px;}
+.shortcut-table th{font-size:0.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-dim);padding:10px 16px;border-bottom:1px solid var(--red-border);text-align:left;}
+.shortcut-table td{font-size:0.8rem;padding:11px 16px;border-bottom:1px solid rgba(204,0,0,0.08);color:var(--txt-mid);vertical-align:middle;}
+.shortcut-table tr:hover td{background:rgba(204,0,0,0.04);}
+.kbd{display:inline-flex;align-items:center;justify-content:center;font-family:'Fira Code',monospace;font-size:0.68rem;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);border-radius:5px;padding:2px 8px;color:rgba(255,150,150,0.9);white-space:nowrap;}
+@media(max-width:900px){.features-grid-2,.features-grid-3,.cache-diagram{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.cache-diagram{grid-template-columns:1fr}}
+
+/* ── RELATED GUIDES ── */
+.rg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.rg-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:0;transition:all .25s var(--ease);}
+.rg-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.rg-icon{width:36px;height:36px;border-radius:9px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--red);margin-bottom:10px;}
+.rg-name{font-size:0.84rem;font-weight:700;color:var(--txt-bright);margin-bottom:6px;}
+.rg-desc{font-size:0.72rem;color:var(--txt-dim);line-height:1.45;flex:1;}
+.rg-badges{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0 10px;}
+.rg-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid;letter-spacing:.05em;text-transform:uppercase;}
+.rgb-desktop{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.rgb-mobile{color:rgba(80,220,120,0.9);background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.25);}
+.rgb-admin{color:rgba(255,210,40,0.9);background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.28);}
+.rgb-pwa{color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.08);border-color:rgba(139,0,255,0.25);}
+.rgb-content{color:rgba(255,155,55,0.9);background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.25);}
+.rgb-shared{color:rgba(180,180,180,0.7);background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);}
+.rg-explore{font-size:0.7rem;color:var(--red);display:flex;align-items:center;gap:5px;transition:gap .2s;}
+.rg-card:hover .rg-explore{gap:8px;}
+.dir-cta{text-align:center;padding:8px 0 0;}
+.dir-cta a{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--red);text-decoration:none;border:1px solid var(--red-border);padding:10px 24px;border-radius:20px;background:rgba(204,0,0,0.06);transition:all .22s;}
+.dir-cta a:hover{background:rgba(204,0,0,0.14);border-color:rgba(204,0,0,0.45);}
+/* ── BACK TO TOP ── */
+.btt{position:fixed;bottom:28px;right:28px;z-index:999;width:44px;height:44px;background:#CC0000;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 20px rgba(204,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(12px);transition:all .28s;}
+.btt.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.btt:hover{background:#8B0000;transform:translateY(-2px);}
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .pg-topbar{top:52px !important;}
+  .pg-main{padding:0 16px 80px !important;}
+  .features-grid-2,.features-grid-3{grid-template-columns:1fr !important;}
+  .compare-wrap,.anatomy-wrap{grid-template-columns:1fr !important;}
+  .pg-hero{padding:32px 16px 28px !important;}
+  .shortcut-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .shortcut-table{min-width:460px;}
+  .tech-row{flex-direction:column;gap:3px;}
+  .tech-key{min-width:unset !important;}
+  .rg-grid{grid-template-columns:1fr !important;}
+  body{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px));}
+}</style>
+</head>
+<body>
+<!-- MOBILE NAV (shown ≤768px, replaces hidden g-nav) -->
+<nav class="m-nav" id="mobileNav">
+  <a href="../features.html" class="m-nav-back" title="Feature Directory"><i class="fas fa-arrow-left"></i></a>
+  <a href="../../Home/index.html" class="m-nav-logo">
+    <img src="../../images/logo.svg" class="m-nav-logo-img" width="30" height="30" alt="A3KM">
+    <div class="m-nav-brand">
+      <span class="m-nav-brand-name">PWA &amp; Offline</span>
+      <span class="m-nav-brand-sub">Feature Guide</span>
+    </div>
+  </a>
+  <div class="m-nav-menu">
+    <button class="m-nav-btn" id="mNavMenuBtn" title="Navigation" aria-label="Open navigation menu" aria-expanded="false">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+<div class="m-drawer-overlay" id="mDrawerOverlay"></div>
+<div class="m-drawer" id="mDrawer">
+  <div class="m-drawer-links">
+    <a href="../index.html" class="m-drawer-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a>
+    <a href="../desktop/index.html" class="m-drawer-link"><i class="fas fa-desktop"></i><span>Desktop Guide</span></a>
+    <a href="index.html" class="m-drawer-link"><i class="fas fa-mobile-alt"></i><span>Mobile Guide</span></a>
+    <a href="../features.html" class="m-drawer-link active"><i class="fas fa-search"></i><span>Feature Directory</span></a>
+    <a href="../../Home/index.html" class="m-drawer-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a>
+    <a href="../../Contact/contact.html" class="m-drawer-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </div>
+</div>
+<nav class="g-nav" id="guideNav" data-mode="autohide">
+  <div class="g-nav-inner">
+    <a href="../../Home/index.html" class="g-nav-logo">
+      <img src="../../images/logo.svg" class="g-nav-logo-img" width="48" height="48" alt="A3KM Studio">
+      <div class="g-nav-brand">
+        <span class="g-nav-brand-name">A3KM Studio</span>
+        <span class="g-nav-brand-sub">Website Guide</span>
+      </div>
+    </a>
+    <ul class="g-nav-links">
+      <li><a href="../index.html" class="g-nav-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a></li>
+      <li><a href="../desktop/index.html" class="g-nav-link"><i class="fas fa-desktop"></i><span>Desktop</span></a></li>
+      <li><a href="index.html" class="g-nav-link"><i class="fas fa-mobile-alt"></i><span>Mobile</span></a></li>
+      <li><a href="../features.html" class="g-nav-link active"><i class="fas fa-search"></i><span>Features</span></a></li>
+      <li><a href="../../Home/index.html" class="g-nav-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a></li>
+    </ul>
+  </div>
+</nav><div id="bg-canvas-container"></div>
+
+<nav class="pg-topbar">
+  <a href="../features.html" class="pg-back"><i class="fas fa-arrow-left"></i> Features</a>
+  <div class="pg-bc">
+    <span>Guide</span><span class="sep">/</span>
+    <span>Features</span><span class="sep">/</span>
+    <span class="cur">PWA &amp; Offline</span>
+  </div>
+  <div class="pg-badge"><i class="fas fa-wifi"></i> Service Worker v3.1.0</div>
+</nav>
+
+<header class="pg-hero">
+  <div class="hero-label"><i class="fas fa-wifi"></i> Feature Deep Dive</div>
+  <h1 class="hero-title"><span>PWA</span> — Offline, Caching & Install System</h1>
+  <p class="hero-desc">A3KM Studio is a full <strong>Progressive Web App</strong>. It can be installed to your home screen, works offline, auto-updates silently, and uses a sophisticated 5-cache Service Worker with LRU eviction for smart storage management.</p>
+  <p class="hero-desc-bn">A3KM Studio একটি পূর্ণ PWA — home screen-এ install করা যায়, offline কাজ করে, auto-update হয়। Service Worker v3.1.0-enhanced ব্যবহার করে 5 ধরনের cache এবং LRU eviction সহ smart storage management।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-server"></i> SW v3.1.0-enhanced</span>
+    <span class="badge badge-green"><i class="fas fa-wifi"></i> Offline Ready</span>
+    <span class="badge badge-yellow"><i class="fas fa-download"></i> Installable</span>
+    <span class="badge badge-blue"><i class="fas fa-sync"></i> Auto-Update</span>
+  </div>
+</header>
+
+<main class="pg-main">
+  <div class="divider"></div>
+
+  <!-- 5 CACHES -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-layer-group"></i> Cache Architecture</div>
+    <h2 class="sec-title">5-Cache <span>System</span></h2>
+    <p class="sec-sub">Each asset type gets its own cache with independent size limits and eviction strategy. Version: <strong>v3.1.0-enhanced-2026-02-15</strong></p>
+    <div class="cache-diagram">
+      <div class="cache-box">
+        <div class="cache-icon"><i class="fas fa-cube"></i></div>
+        <div class="cache-name">STATIC</div>
+        <div class="cache-limit">Core Assets</div>
+        <div class="cache-desc">CSS, JS, fonts, favicon, manifest — never evicted</div>
+      </div>
+      <div class="cache-box">
+        <div class="cache-icon"><i class="fas fa-file-code"></i></div>
+        <div class="cache-name">HTML</div>
+        <div class="cache-limit">Max <strong>100</strong> pages</div>
+        <div class="cache-desc">All .html pages. LRU evicts oldest when limit hit.</div>
+      </div>
+      <div class="cache-box">
+        <div class="cache-icon"><i class="fas fa-running"></i></div>
+        <div class="cache-name">RUNTIME</div>
+        <div class="cache-limit">Max <strong>200</strong> entries</div>
+        <div class="cache-desc">API responses, JSON, dynamic script/style</div>
+      </div>
+      <div class="cache-box">
+        <div class="cache-icon"><i class="fas fa-cloud-download-alt"></i></div>
+        <div class="cache-name">OFFLINE</div>
+        <div class="cache-limit">Precached</div>
+        <div class="cache-desc">Offline fallback page — shown when network fails</div>
+      </div>
+      <div class="cache-box">
+        <div class="cache-icon"><i class="fas fa-image"></i></div>
+        <div class="cache-name">IMAGES</div>
+        <div class="cache-limit">Max <strong>150</strong> images</div>
+        <div class="cache-desc">All site images. LRU evicts when limit exceeded.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROUTING TABLE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-route"></i> Cache Routing</div>
+    <h2 class="sec-title">Fetch <span>Strategy by Asset Type</span></h2>
+    <p class="sec-sub">The Service Worker intercepts every fetch and routes it to the correct handler based on file type.</p>
+    <table class="shortcut-table">
+      <thead><tr><th>Asset Type</th><th>Handler</th><th>Strategy</th></tr></thead>
+      <tbody>
+        <tr><td>.html pages</td><td><span class="kbd">handleHTML()</span></td><td>Network-first → HTML cache fallback</td></tr>
+        <tr><td>Images (.jpg .png .svg .webp)</td><td><span class="kbd">handleImage()</span></td><td>Cache-first → network fetch → IMAGE cache</td></tr>
+        <tr><td>Fonts, CSS, JS</td><td><span class="kbd">handleAsset()</span></td><td>Cache-first → network fallback → STATIC cache</td></tr>
+        <tr><td>.md .pdf .json documents</td><td><span class="kbd">handleDocument()</span></td><td>Network-first → RUNTIME cache</td></tr>
+        <tr><td>Everything else</td><td><span class="kbd">handleRuntime()</span></td><td>Stale-while-revalidate → RUNTIME cache</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PWA INSTALL FLOW -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-mobile-alt"></i> Install Prompt</div>
+    <h2 class="sec-title">PWA Install <span>Flow</span></h2>
+    <p class="sec-sub">Smart install prompt with dismiss limit, remind-later, and permanent dismiss after 3 attempts.</p>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><h4>Page loads + 3 seconds delay</h4><p>The install prompt waits <code>SHOW_DELAY_MS = 3000</code> before showing. This avoids an intrusive popup on first render.</p></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><h4>Browser fires <code>beforeinstallprompt</code></h4><p>The event is intercepted and prevented. The deferred prompt is stored as <code>this.deferredPrompt</code> for later use.</p></div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><h4>Custom install banner shown</h4><p>A styled A3KM-themed banner appears. Shows app name, icon preview, and "Install" / "Later" buttons. Uses <code>dismissCount</code> to track history.</p></div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><h4>Dismiss limit: 3 times</h4><p><code>DISMISS_LIMIT = 3</code>. After 3 dismissed, the prompt is permanently hidden. Remind cooldown: <code>REMIND_AFTER_DAYS = 7</code>.</p></div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><h4>Installed → prompt disappears</h4><p>On <code>appinstalled</code> event, <code>isInstalled = true</code>. The prompt will never show again for this browser.</p></div></div>
+    </div>
+  </section>
+
+  <!-- UPDATE NOTIFIER -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-sync-alt"></i> Update System</div>
+    <h2 class="sec-title">Auto-Update <span>Notifier</span></h2>
+    <div class="features-grid-2">
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-clock"></i></div><div class="feat-name">6-Hour Check Interval</div><div class="feat-desc">Checks <code>/version.json</code> every 6 hours. Timestamp stored in <code>a3km_last_update_check</code> localStorage key.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-file-alt"></i></div><div class="feat-name">version.json Comparison</div><div class="feat-desc">Fetches <code>version.json</code> from server. Compares against current version string: <code>v3.1.0-2026-02-15-enhanced</code>. Shows banner if different.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-bell"></i></div><div class="feat-name">Non-intrusive Banner</div><div class="feat-desc">Update notification slides in at bottom of screen. "Update Now" triggers page reload. Works for both PWA and browser tab.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-tablet-alt"></i></div><div class="feat-name">PWA + Browser</div><div class="feat-desc">Same update system works whether the site is installed as a PWA on your home screen or opened in a browser tab.</div></div>
+    </div>
+  </section>
+
+  <!-- PRECACHE MANIFEST -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-eye-slash"></i> Hidden Details</div>
+    <h2 class="sec-title">Lesser-Known <span>Facts</span></h2>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> CORE_ASSETS precached on install</div>
+      <p>On Service Worker install, these are always pre-cached: <code>Home/index.html</code>, <code>Optimization/styles.css</code>, <code>favicon</code>, <code>manifest.json</code>, <code>offline-content-manager.js</code>, <code>pwa-install-prompt.js</code>, <code>update-notifier.js</code>, and <code>version.json</code>.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> LRU eviction in detail</div>
+      <p>LRU = Least Recently Used. When HTML cache hits 100 entries, the entry with the oldest access timestamp is deleted to make room. This means popular pages always stay cached, rarely-visited pages are evicted first.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> Real-time GitHub sync on tab focus</div>
+      <p>When you switch back to an A3KM tab, <code>realtime-github-sync.js</code> immediately fires a sync on the <code>window focus</code> event. You always see fresh content when returning to the site.</p>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-code"></i> Technical Details</div>
+    <h2 class="sec-title">Code <span>Reference</span></h2>
+    <div class="tech-box">
+      <div class="tech-box-title"><i class="fas fa-file-code"></i> Key Files</div>
+      <div class="tech-kv">
+        <div class="tech-row"><div class="tech-key">Service Worker</div><div class="tech-val">Optimization/service-worker.js</div></div>
+        <div class="tech-row"><div class="tech-key">SW Version</div><div class="tech-val">v3.1.0-enhanced-2026-02-15</div></div>
+        <div class="tech-row"><div class="tech-key">HTML cache limit</div><div class="tech-val">MAX_HTML_CACHE = 100</div></div>
+        <div class="tech-row"><div class="tech-key">Runtime cache limit</div><div class="tech-val">MAX_RUNTIME_CACHE = 200</div></div>
+        <div class="tech-row"><div class="tech-key">Image cache limit</div><div class="tech-val">MAX_IMAGE_CACHE = 150</div></div>
+        <div class="tech-row"><div class="tech-key">Install prompt JS</div><div class="tech-val">Optimization/pwa-install-prompt.js</div></div>
+        <div class="tech-row"><div class="tech-key">Install dismiss limit</div><div class="tech-val">DISMISS_LIMIT = 3</div></div>
+        <div class="tech-row"><div class="tech-key">Remind after days</div><div class="tech-val">REMIND_AFTER_DAYS = 7</div></div>
+        <div class="tech-row"><div class="tech-key">Update notifier JS</div><div class="tech-val">Optimization/update-notifier.js</div></div>
+        <div class="tech-row"><div class="tech-key">Update check interval</div><div class="tech-val">6 hours</div></div>
+        <div class="tech-row"><div class="tech-key">Last check key</div><div class="tech-val">localStorage: a3km_last_update_check</div></div>
+        <div class="tech-row"><div class="tech-key">Current version string</div><div class="tech-val">v3.1.0-2026-02-15-enhanced</div></div>
+        <div class="tech-row"><div class="tech-key">Version file</div><div class="tech-val">version.json (root)</div></div>
+        <div class="tech-row"><div class="tech-key">Manifest</div><div class="tech-val">mobile/manifest.json</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- RELATED FEATURE GUIDES -->
+  <section style="margin-bottom:56px;">
+    <div class="sec-label"><i class="fas fa-compass"></i> Explore More</div>
+    <h2 class="sec-title">Other <span>Feature Guides</span></h2>
+    <p class="sec-sub">More deep-dives into A3KM Studio features — shortcuts, hidden tricks, mobile vs desktop comparisons and code references.</p>
+    <div class="rg-grid" id="relatedGuides"></div>
+    <div class="dir-cta">
+      <a href="../features.html"><i class="fas fa-search"></i> Browse All 88 Features in the Directory <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+</main>
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-chevron-up"></i></button>
+<script src="../assets/guide.js" defer></script>
+<script src="../../Optimization/Background/background-system.js" defer></script>
+<script>
+const CURRENT_GUIDE = 'pwa-offline';
+const FEATURE_GUIDES = [
+  {id:'video-player',     name:'Video Player',        icon:'play-circle',  desc:'YouTube IFrame, PiP, like/share, related videos, API enrichment',  cats:['Mobile','Desktop'],  url:'feature-video-player.html'},
+  {id:'pdf-reader',       name:'PDF Reader',           icon:'file-pdf',     desc:'Zoom, page nav, book mode, swipe, keyboard shortcuts, password',   cats:['Desktop','Mobile','Content'], url:'feature-pdf-reader.html'},
+  {id:'markdown-reader',  name:'Markdown Reader',      icon:'file-alt',     desc:'Custom renderer, TOC, GitHub sync, code highlighting, share',       cats:['Mobile','Content'],  url:'feature-markdown-reader.html'},
+  {id:'pwa-offline',      name:'PWA & Offline',        icon:'wifi',         desc:'5-cache system, LRU eviction, install prompt, update notifier',     cats:['PWA','Mobile'],      url:'feature-pwa-offline.html'},
+  {id:'search-system',    name:'Search System',        icon:'search',       desc:'AdvancedSearchManager, 12 filters, tags, instant client-side',      cats:['Desktop','Mobile'],  url:'feature-search-system.html'},
+  {id:'only-boss',        name:'Only-Boss Admin',      icon:'lock',         desc:'SHA-256 auth, session timer, managers, command center',             cats:['Admin','Desktop'],   url:'feature-only-boss.html'},
+  {id:'calculators',      name:'Calculators',          icon:'calculator',   desc:'Resistor color code, LED current, capacitor decoder, quick ref',    cats:['Desktop','Mobile'],  url:'feature-calculators.html'},
+  {id:'sync-bookmark',    name:'Sync & Bookmarks',     icon:'sync',         desc:'GitHub API sync, localStorage keys, navbar auto-hide',              cats:['PWA','Shared'],      url:'feature-sync-bookmark.html'},
+  {id:'contact-form',     name:'Contact Form',         icon:'paper-plane',  desc:'EmailJS primary, Web3Forms fallback, mailto final fallback',        cats:['Desktop','Mobile'],  url:'feature-contact-form.html'},
+  {id:'fullscreen',       name:'Fullscreen System',    icon:'expand',       desc:'First-click fullscreen, session persist, nav-click exclusion',      cats:['Desktop','PWA'],     url:'feature-fullscreen.html'}
+];
+const RG_CAT_CLASS = {Desktop:'rgb-desktop',Mobile:'rgb-mobile',Admin:'rgb-admin',PWA:'rgb-pwa',Content:'rgb-content',Shared:'rgb-shared'};
+function renderRelatedGuides(){
+  const el = document.getElementById('relatedGuides');
+  if(!el) return;
+  const others = FEATURE_GUIDES.filter(g => g.id !== CURRENT_GUIDE);
+  el.innerHTML = others.map(g => {
+    const badges = g.cats.map(c => '<span class="rg-badge '+(RG_CAT_CLASS[c]||'')+'">'+c+'</span>').join('');
+    return '<a class="rg-card" href="'+g.url+'">'
+      +'<div class="rg-icon"><i class="fas fa-'+g.icon+'"></i></div>'
+      +'<div class="rg-name">'+g.name+'</div>'
+      +'<div class="rg-badges">'+badges+'</div>'
+      +'<div class="rg-desc">'+g.desc+'</div>'
+      +'<div class="rg-explore">Explore Guide <i class="fas fa-arrow-right"></i></div>'
+      +'</a>';
+  }).join('');
+}
+window.addEventListener('scroll',()=>{
+  const b=document.getElementById('bttBtn');
+  if(b) b.classList.toggle('visible',window.scrollY>500);
+},{passive:true});
+document.addEventListener('DOMContentLoaded',renderRelatedGuides);
+</script>
+<script>
+// MOBILE DRAWER
+(function(){
+  var btn=document.getElementById('mNavMenuBtn');
+  var drawer=document.getElementById('mDrawer');
+  var overlay=document.getElementById('mDrawerOverlay');
+  if(!btn)return;
+  function open(){drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');btn.innerHTML='<i class="fas fa-times"></i>';}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.innerHTML='<i class="fas fa-bars"></i>';}
+  btn.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script><!-- MOBILE BOTTOM NAV (<=768px) — main site navigation -->
+<nav class="doc-bottom-nav" aria-label="Main navigation">
+  <div class="doc-nav-container">
+    <a href="../../mobile/home/index.html" class="doc-nav-item" aria-label="Home">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
+    <a href="../../mobile/about/about.html" class="doc-nav-item" aria-label="About">
+      <i class="fas fa-user-circle"></i><span>About</span>
+    </a>
+    <a href="../../mobile/projects/projects.html" class="doc-nav-item" aria-label="Projects">
+      <i class="fas fa-folder-open"></i><span>Projects</span>
+    </a>
+    <a href="../../mobile/content-studio/hub.html" class="doc-nav-item" aria-label="Content Studio">
+      <i class="fas fa-layer-group"></i><span>Studio</span>
+    </a>
+    <a href="../../mobile/contact/contact.html" class="doc-nav-item" aria-label="Contact">
+      <i class="fas fa-envelope"></i><span>Contact</span>
+    </a>
+    <a href="../index.html" class="doc-nav-item active" aria-label="Website Guide">
+      <i class="fas fa-book-open"></i><span>Guide</span>
+    </a>
+  </div>
+</nav></body>
+</html>

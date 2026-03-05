@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // COURSE VIEWER - Educational Course Player (Mobile)
 // Loads course from content.json and displays playlist with video player
 // ============================================================================
@@ -113,7 +113,7 @@
      */
     async function loadCoursesFromJSON() {
         try {
-            const response = await fetch('../../../Content Code/content.json');
+            const response = await fetch('../../../Content%20Code/content.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();

@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // POST READER - Article/Post Viewer with Markdown Rendering (Mobile)
 // Loads posts from content.json and renders markdown files
 // ============================================================================
@@ -27,7 +27,7 @@
             await syncFromGitHubCloud();
             
             // STEP 2: Load posts from GitHub posts.json (Professional Manager)
-            const response = await fetch('../../../Content Studio/written-posts/posts.json');
+            const response = await fetch('../../../Content%20Studio/written-posts/posts.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
@@ -74,7 +74,7 @@
             
             const owner = 'Akhinoor14';
             const repo = 'A3KM-Studio';
-            const path = 'Content Studio/written-posts/posts.json';
+            const path = 'Content%20Studio/written-posts/posts.json';
             const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
             
             const response = await fetch(url, {

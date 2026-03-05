@@ -95,15 +95,16 @@
 
         contentGrid.innerHTML = booksToRender.map(book => {
             const languageDisplay = getLanguageDisplay(book.language);
+            const initial = (book.title || '?').charAt(0).toUpperCase();
             
             return `
             <div class="content-item book-item" data-book-id="${book.id}">
                 <div class="content-thumbnail book-thumbnail">
+                    <div class="book-initial">${initial}</div>
                     ${book.cover ? 
-                        `<img src="${book.cover}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` :
+                        `<img src="${book.cover}" alt="${book.title}" onerror="this.style.opacity='0'">` :
                         ''
                     }
-                    <i class="fas fa-book" ${book.cover ? 'style="display:none;"' : ''}></i>
                     <span class="book-badge">${languageDisplay}</span>
                     <div class="book-mode-icon" data-book-id="${book.id}" data-action="book-mode" title="Open in Book Mode">
                         <i class="fas fa-book-open"></i>

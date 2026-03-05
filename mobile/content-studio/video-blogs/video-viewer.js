@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // VIDEO VIEWER - Individual Video Player (Mobile)
 // Displays YouTube video with details and related content
 // Fetches data from central content.json
@@ -30,7 +30,7 @@
     // ========== LOAD VIDEOS FROM JSON ==========
     async function loadVideosFromJSON() {
         try {
-            const response = await fetch('../../../Content Studio/video-content/videos.json');
+            const response = await fetch('../../../Content%20Studio/video-content/videos.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
@@ -265,14 +265,23 @@
 
     // ========== EVENT HANDLERS ==========
     function handleLike() {
-        // Open YouTube video page so user can like on YouTube
-        if (currentVideo.youtubeUrl) {
-            window.open(currentVideo.youtubeUrl, '_blank');
-        } else if (currentVideo.videoId) {
-            window.open(`https://www.youtube.com/watch?v=${currentVideo.videoId}`, '_blank');
-        } else {
-            showToast('YouTube link not available');
-        }
+        isLiked = !isLiked;
+        likeBtn.classList.toggle('liked', isLiked);
+        likeBtn.querySelector('span').textContent = isLiked ? 'Liked' : 'Like';
+
+        // Pulse animation on the icon
+        const icon = likeBtn.querySelector('i');
+        icon.style.transition = 'transform 0.15s ease';
+        icon.style.transform = 'scale(1.45)';
+        setTimeout(() => { icon.style.transform = 'scale(1)'; }, 180);
+
+        // Haptic feedback
+        if (navigator.vibrate) navigator.vibrate(isLiked ? [15, 10, 15] : 10);
+
+        // Persist to localStorage
+        localStorage.setItem(`video_${currentVideo.id}_liked`, isLiked);
+
+        if (isLiked) showToast('Appreciated! ❤️');
     }
 
     function handleShare() {
@@ -300,13 +309,11 @@
     }
 
     function handleDownload() {
-        // Open YouTube video page in new tab for download options
-        if (currentVideo.youtubeUrl) {
-            window.open(currentVideo.youtubeUrl, '_blank');
-            showToast('Opening YouTube to download');
-        } else if (currentVideo.videoId) {
-            window.open(`https://www.youtube.com/watch?v=${currentVideo.videoId}`, '_blank');
-            showToast('Opening YouTube to download');
+        // Open video on YouTube
+        const url = currentVideo.youtubeUrl ||
+            (currentVideo.videoId ? `https://www.youtube.com/watch?v=${currentVideo.videoId}` : null);
+        if (url) {
+            window.open(url, '_blank');
         } else {
             showToast('YouTube link not available');
         }
@@ -381,10 +388,16 @@
     }
 
     function checkSavedState() {
-        // Only check saved state (like is now a direct YouTube action)
+        // Restore like/appreciate state
+        isLiked = localStorage.getItem(`video_${currentVideo.id}_liked`) === 'true';
+        if (isLiked && likeBtn) {
+            likeBtn.classList.add('liked');
+            likeBtn.querySelector('span').textContent = 'Liked';
+        }
+
+        // Restore saved state
         isSaved = localStorage.getItem(`video_${currentVideo.id}_saved`) === 'true';
-        
-        if (isSaved) {
+        if (isSaved && saveBtn) {
             saveBtn.classList.add('liked');
             saveBtn.querySelector('span').textContent = 'Saved';
         }

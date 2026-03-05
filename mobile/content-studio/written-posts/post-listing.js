@@ -1,6 +1,6 @@
-// ============================================================================
+﻿// ============================================================================
 // POST LISTING - Blog Posts Section (Mobile)
-// Displays blog posts and articles from Content Code/content.json
+// Displays blog posts and articles from Content%20Code/content.json
 // Fetches data from central content.json
 // ============================================================================
 
@@ -35,7 +35,7 @@
             await syncFromGitHubCloud();
             
             // STEP 2: Load posts from central content.json
-            const response = await fetch('../../../Content Code/content.json');
+            const response = await fetch('../../../Content%20Code/content.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -87,7 +87,7 @@
             
             const owner = 'Akhinoor14';
             const repo = 'A3KM-Studio';
-            const path = 'Content Studio/written-posts/posts.json';
+            const path = 'Content%20Studio/written-posts/posts.json';
             const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
             
             const response = await fetch(url, {

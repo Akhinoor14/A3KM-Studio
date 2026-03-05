@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,31 +23,117 @@
     <link rel="stylesheet" href="../shared-content-styles.css">
     
     <style>
-        /* Papers specific styles */
+        /* ── Papers specific styles ── */
+
+        /* A4-like document thumbnail */
         .paper-thumbnail {
-            background: linear-gradient(135deg, 
-                rgba(205, 92, 92, 0.2), 
-                rgba(139, 0, 0, 0.1),
-                rgba(0, 0, 0, 0.6)
+            /* .paper-thumbnail is NOT .content-thumbnail — no !important needed */
+            width: 72px;
+            height: 96px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px 5px 5px 2px;
+            background: linear-gradient(160deg,
+                rgba(18, 2, 2, 0.97),
+                rgba(6, 0, 0, 1)
             );
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(200,190,175,0.1);
+            box-shadow:
+                2px 0   0 0 rgba(255,255,255,0.04),
+                4px 2px 10px rgba(0,0,0,0.6);
+            overflow: hidden;
+            position: relative;
         }
-        
+
+        /* Ruled lines across the paper */
+        .paper-thumbnail::before {
+            content: '';
+            position: absolute;
+            inset: 20px 8px 8px 8px;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent 0px,
+                transparent 7px,
+                rgba(204, 0, 0, 0.1) 7px,
+                rgba(204, 0, 0, 0.1) 8px
+            );
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Type-color header strip at top */
+        .paper-thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 16px;
+            background: linear-gradient(135deg,
+                rgba(204,0,0,0.7),
+                rgba(139,0,0,0.5)
+            );
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Type-specific header strip colors */
+        .paper-thumbnail.type-journal::after    { background: linear-gradient(135deg, rgba(22,110,55,0.85), rgba(10,70,30,0.7)); }
+        .paper-thumbnail.type-conference::after { background: linear-gradient(135deg, rgba(10,80,180,0.85), rgba(5,50,130,0.7)); }
+        .paper-thumbnail.type-thesis::after     { background: linear-gradient(135deg, rgba(80,10,160,0.85), rgba(50,5,110,0.7)); }
+        .paper-thumbnail.type-preprint::after   { background: linear-gradient(135deg, rgba(160,80,10,0.85), rgba(110,50,5,0.7)); }
+
+        /* Left margin line (red) */
+        .paper-thumbnail-margin {
+            position: absolute;
+            left: 14px;
+            top: 20px;
+            bottom: 6px;
+            width: 1px;
+            background: rgba(204, 0, 0, 0.25);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* PDF icon centred */
         .paper-thumbnail i {
-            font-size: 38px;
+            font-size: 20px;
+            color: rgba(204, 0, 0, 0.55);
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+            margin-top: 4px;
+        }
+
+        /* Footer info strip (date + citations) */
+        .content-item-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(204, 0, 0, 0.15);
+        }
+
+        .content-item-date,
+        .content-item-stats {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: rgba(160, 160, 160, 0.75);
+        }
+
+        .content-item-date i,
+        .content-item-stats i {
             color: #CC0000;
-            opacity: 0.5;
-            filter: drop-shadow(0 2px 4px rgba(204, 0, 0, 0.3));
+            font-size: 10px;
         }
-        
-        .content-item:nth-child(2n) .paper-thumbnail i {
-            color: #DC143C;
-        }
-        
-        .content-item:nth-child(3n) .paper-thumbnail i {
-            color: #B22222;
+
+        /* Keep thumbnail at top of card, don't stretch */
+        .content-item {
+            align-items: flex-start;
         }
         
         .paper-status {
@@ -92,7 +178,11 @@
             color: #B22222;
             box-shadow: 0 2px 6px rgba(178, 34, 34, 0.3),
                         inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        } 
+        }
+
+        .paper-status.draft {
+            background: linear-gradient(135deg,
+                rgba(188, 143, 143, 0.15),
                 rgba(0, 0, 0, 0.6)
             );
             border-color: rgba(188, 143, 143, 0.4);
@@ -246,6 +336,10 @@
             <a href="../../contact/contact.html" class="mobile-nav-item" aria-label="Contact">
                 <i class="fas fa-envelope" aria-hidden="true"></i>
                 <span class="mobile-nav-label">Contact</span>
+            </a>
+            <a href="../../../Documentation/index.html" class="mobile-nav-item" aria-label="Website Guide">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                <span class="mobile-nav-label">Guide</span>
             </a>
         </div>
     </nav>

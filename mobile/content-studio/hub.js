@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    MOBILE CONTENT STUDIO HUB - JAVASCRIPT
    Interactive features and animations
    ============================================================================ */
@@ -35,11 +35,11 @@
         try {
             // Load all JSON files in parallel
             const [videosData, contentData, booksData, coursesData, papersData] = await Promise.all([
-                fetch('../../Content Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
-                fetch('../../Content Code/content.json').then(r => r.json()).catch(() => ({'written-posts': []})),
-                fetch('../../Content Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
-                fetch('../../Content Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []})),
-                fetch('../../Content Studio/research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
+                fetch('../../Content%20Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
+                fetch('../../Content%20Code/content.json').then(r => r.json()).catch(() => ({'written-posts': []})),
+                fetch('../../Content%20Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
+                fetch('../../Content%20Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []})),
+                fetch('../../Content%20Studio/research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
             ]);
             
             // Count videos from all categories

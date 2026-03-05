@@ -94,22 +94,36 @@
      * Set active navigation item based on current page URL
      */
     function setActiveNavItem() {
-        const currentPath = window.location.pathname;
+        const currentPath = normalizePath(window.location.pathname);
         const navItems = document.querySelectorAll('.mobile-nav-item');
+        
+        // Documentation / Guide section — mark Guide icon active
+        const isDocumentation = currentPath.includes('/documentation');
         
         navItems.forEach(item => {
             const href = item.getAttribute('href');
-            
-            // Remove any existing active class
             item.classList.remove('active');
             
+            if (!href) return;
+            
+            const hrefNorm = normalizePath(href);
+            
+            // Guide icon active on any Documentation page
+            if (hrefNorm.includes('documentation') && isDocumentation) {
+                item.classList.add('active');
+                return;
+            }
+            
+            // Skip Guide icon active detection for non-documentation pages
+            if (hrefNorm.includes('documentation')) return;
+            
             // Check if current path matches this nav item
-            if (href && currentPath.includes(href.split('/').pop().split('.')[0])) {
+            if (currentPath.includes(hrefNorm.split('/').pop().split('.')[0])) {
                 item.classList.add('active');
             }
             // Special case for home page
             else if ((currentPath.endsWith('/') || currentPath.includes('index') || currentPath.includes('home')) 
-                     && href && href.includes('index')) {
+                     && hrefNorm.includes('index')) {
                 item.classList.add('active');
             }
         });

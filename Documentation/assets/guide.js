@@ -168,11 +168,91 @@ function initTooltips() {
 /* ─── Active nav highlight ──────────────────────── */
 function highlightNav() {
   const current = location.pathname.toLowerCase();
-  document.querySelectorAll('.guide-nav a, .guide-desktop-nav a').forEach(a => {
+  document.querySelectorAll('.guide-nav a, .guide-desktop-nav a, .g-nav-links a').forEach(a => {
     if (a.href && new URL(a.href).pathname.toLowerCase() === current) {
       a.classList.add('active');
     }
   });
+}
+
+/* ─── Guide Navbar (auto-hide / fixed) ─────────── */
+function initGuideNav() {
+  const nav = document.getElementById('guideNav');
+  if (!nav) return;
+
+  const mode = nav.dataset.mode; // 'fixed' | 'autohide'
+
+  // Always add body padding class
+  document.body.classList.add('has-g-nav');
+
+  // Scrolled state (darker bg)
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  if (mode === 'fixed') return;
+
+  /* ── Auto-hide logic ── */
+  let hideTimer = null;
+  let lastScroll = window.scrollY;
+  let isHidden = false;
+  const HIDE_DELAY = 3000; // 3 s idle before hiding
+
+  function showNav() {
+    if (isHidden) {
+      nav.classList.remove('g-nav-hidden');
+      isHidden = false;
+    }
+  }
+
+  function hideNav() {
+    if (!isHidden) {
+      nav.classList.add('g-nav-hidden');
+      isHidden = true;
+    }
+  }
+
+  function resetHideTimer() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideNav, HIDE_DELAY);
+  }
+
+  // Mouse enters top 100 px → show, cancel timer
+  document.addEventListener('mousemove', e => {
+    if (e.clientY < 100) {
+      showNav();
+      clearTimeout(hideTimer);
+    } else if (!isHidden) {
+      resetHideTimer();
+    }
+  }, { passive: true });
+
+  // Touch: swipe top area → show
+  document.addEventListener('touchstart', e => {
+    if (e.touches[0].clientY < 60) showNav();
+  }, { passive: true });
+
+  // Scroll direction
+  window.addEventListener('scroll', () => {
+    const s = window.scrollY;
+    if (s < 80) {
+      // Near top — always show
+      showNav();
+      clearTimeout(hideTimer);
+    } else if (s < lastScroll - 4) {
+      // Scrolling UP → show, then schedule hide
+      showNav();
+      resetHideTimer();
+    } else if (s > lastScroll + 8) {
+      // Scrolling DOWN → hide immediately
+      clearTimeout(hideTimer);
+      hideNav();
+    }
+    lastScroll = s;
+  }, { passive: true });
+
+  // Start the idle timer after 4 s on page load
+  hideTimer = setTimeout(hideNav, 4000);
 }
 
 /* ─── Init all ──────────────────────────────────── */
@@ -182,4 +262,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   initTooltips();
   highlightNav();
+  initGuideNav();
 });

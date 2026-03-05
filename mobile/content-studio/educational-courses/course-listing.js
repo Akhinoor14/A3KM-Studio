@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // COURSE LISTING - Educational Courses Section (Mobile)
 // Loads courses from content.json and displays with filters
 // ============================================================================
@@ -29,7 +29,7 @@
             showLoadingState();
             
             // ✅ Load directly from desktop JSON file
-            const response = await fetch('../../../Content Studio/educational-videos/courses.json');
+            const response = await fetch('../../../Content%20Studio/educational-videos/courses.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();

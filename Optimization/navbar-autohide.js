@@ -1,9 +1,16 @@
 /* ============================================================================
-   NAVBAR AUTO-HIDE SCRIPT - FINAL CONFLICT-FREE VERSION
+   NAVBAR AUTO-HIDE SCRIPT - SMART TIER SYSTEM
    For sub-pages only (NOT for main 5 pages)
    Priority: Mouse > Scroll > Timer
-   All edge cases handled
-   Updated: March 2, 2026
+   
+   Behavior:
+     - Page loads: navbar visible → auto-hides after 3s
+     - Mouse moves to top (< 80px): navbar shows instantly
+     - Mouse moves away from top: hides after 1.5s
+     - Scroll up: shows navbar
+     - Scroll down (past 100px): hides navbar
+
+   Updated: March 5, 2026
    ============================================================================ */
 
 (function() {
@@ -18,12 +25,7 @@
     let hideTimer;
     let mouseNearTop = false; // Track mouse position state
     let mouseMoveTimer; // Throttle mouse events
-    let idleTimer; // Timer for non-scrollable pages
-    
-    // Check if page has scrollable content
-    function isPageScrollable() {
-        return document.body.scrollHeight > window.innerHeight + 50;
-    }
+    let idleTimer; // Timer for initial page-load auto-hide
     
     // Show navbar
     function showNavbar() {
@@ -90,45 +92,34 @@
         if (mouseNearTop) {
             // PRIORITY 1: Mouse near top - Always show
             showNavbar();
-        } else if (window.pageYOffset > 100) {
-            // Mouse away from top AND page is scrolled - Hide after delay
+        } else {
+            // Mouse away from top - hide after 1.5s regardless of scroll position
             hideTimer = setTimeout(() => {
-                // Double-check mouse still not near top
                 if (!mouseNearTop) {
                     hideNavbar();
                 }
-            }, 800);
+            }, 1500);
         }
     }
     
     // Mouse leave window handler - Reset state
     function handleMouseLeave() {
-        // Clear mouse-near-top state when mouse leaves window
         mouseNearTop = false;
-        
-        // If page is scrolled, hide navbar after delay
-        if (window.pageYOffset > 100) {
-            clearTimeout(hideTimer);
-            hideTimer = setTimeout(() => {
-                hideNavbar();
-            }, 1200); // Slightly longer delay for mouse leaving
-        }
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+            hideNavbar();
+        }, 1200);
     }
     
-    // Timer-based hide for non-scrollable pages
+    // Timer-based hide for initial page load — ALL pages hide after 3s
     function initTimerBasedHide() {
-        // Clear any existing idle timer first
         clearTimeout(idleTimer);
-        
-        if (!isPageScrollable()) {
-            // PRIORITY 3: Page has no scroll - hide after 3 seconds
-            idleTimer = setTimeout(() => {
-                // Only hide if mouse not near top and at page top
-                if (window.pageYOffset <= 100 && !mouseNearTop) {
-                    hideNavbar();
-                }
-            }, 3000);
-        }
+        // Always schedule auto-hide 3s after page is ready
+        idleTimer = setTimeout(() => {
+            if (!mouseNearTop) {
+                hideNavbar();
+            }
+        }, 3000);
     }
     
     // Debounced scroll listener
@@ -140,7 +131,7 @@
     // Throttled mouse move listener
     document.addEventListener('mousemove', handleMouseMove, { passive: true });
     
-    // Mouse leave listener - FIX: Reset stale state
+    // Mouse leave listener - Reset stale state
     document.addEventListener('mouseleave', handleMouseLeave, { passive: true });
     
     // Initial state
@@ -150,26 +141,6 @@
     window.addEventListener('load', function() {
         showNavbar();
         initTimerBasedHide();
-    });
-    
-    // Re-check on window resize or content change
-    window.addEventListener('resize', function() {
-        clearTimeout(hideTimer);
-        clearTimeout(idleTimer); // Clear old timer
-        initTimerBasedHide(); // Re-evaluate scrollability
-    }, { passive: true });
-    
-    // Optional: Re-check scrollability on DOM changes (for dynamic content)
-    const contentObserver = new MutationObserver(function() {
-        // Debounce: Only check after DOM settles
-        clearTimeout(idleTimer);
-        setTimeout(initTimerBasedHide, 500);
-    });
-    
-    // Observe body for content changes
-    contentObserver.observe(document.body, {
-        childList: true,
-        subtree: true
     });
     
 })();
