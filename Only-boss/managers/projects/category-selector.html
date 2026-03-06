@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -38,7 +38,8 @@
         body {
             background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, sans-serif;
+            cursor: none;
+        font-family: 'Inter', -apple-system, sans-serif;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -450,9 +451,30 @@
         .category-card:nth-child(2) { animation-delay: 0.2s; }
         .category-card:nth-child(3) { animation-delay: 0.3s; }
         .category-card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Neural Cursor */
+        .neural-cursor {
+            position: fixed; width: 28px; height: 28px;
+            border: 2px solid #CC0000; border-radius: 50%;
+            pointer-events: none; z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.08s ease, border-color 0.2s, width 0.2s, height 0.2s;
+            box-shadow: 0 0 12px rgba(204,0,0,0.5);
+        }
+        .neural-cursor-dot {
+            position: fixed; width: 6px; height: 6px;
+            background: #FF1744; border-radius: 50%;
+            pointer-events: none; z-index: 100000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.04s ease;
+            box-shadow: 0 0 8px rgba(255,23,68,0.8);
+        }
     </style>
 </head>
 <body>
+  <!-- Neural Cursor -->
+  <div class="neural-cursor" id="neuralCursor"></div>
+  <div class="neural-cursor-dot" id="neuralCursorDot"></div>
     <!-- Header -->
     <div class="header">
         <div class="header-container">
@@ -601,7 +623,7 @@
                     const arduinoData = await arduinoResponse.json();
                     const arduinoCount = arduinoData.projects?.length || 0;
                     document.querySelectorAll('.arduino-card .stat-item span')[0].textContent = `${arduinoCount} Project${arduinoCount !== 1 ? 's' : ''}`;
-                    console.log('✅ Arduino:', arduinoCount, 'projects');
+                    console.log('? Arduino:', arduinoCount, 'projects');
                 }
 
                 // Load MATLAB data
@@ -610,7 +632,7 @@
                     const matlabData = await matlabResponse.json();
                     const matlabCount = matlabData.projects?.length || 0;
                     document.querySelectorAll('.matlab-card .stat-item span')[0].textContent = `${matlabCount} Project${matlabCount !== 1 ? 's' : ''}`;
-                    console.log('✅ MATLAB:', matlabCount, 'projects');
+                    console.log('? MATLAB:', matlabCount, 'projects');
                 }
 
                 // Load SolidWorks data
@@ -619,7 +641,7 @@
                     const solidworksData = await solidworksResponse.json();
                     const solidworksCount = solidworksData.projects?.length || 0;
                     document.querySelectorAll('.solidworks-card .stat-item span')[0].textContent = `${solidworksCount} Model${solidworksCount !== 1 ? 's' : ''}`;
-                    console.log('✅ SolidWorks:', solidworksCount, 'models');
+                    console.log('? SolidWorks:', solidworksCount, 'models');
                 }
 
                 // Load Programming data
@@ -628,12 +650,12 @@
                     const programmingData = await programmingResponse.json();
                     const programmingCount = programmingData.programs?.length || 0;
                     document.querySelectorAll('.programming-card .stat-item span')[0].textContent = `${programmingCount} Program${programmingCount !== 1 ? 's' : ''}`;
-                    console.log('✅ Programming:', programmingCount, 'programs');
+                    console.log('? Programming:', programmingCount, 'programs');
                 }
 
-                console.log('📊 Real-time project counts loaded successfully!');
+                console.log('?? Real-time project counts loaded successfully!');
             } catch (error) {
-                console.warn('⚠️ Could not load some project counts:', error);
+                console.warn('?? Could not load some project counts:', error);
             }
         }
 
@@ -641,13 +663,27 @@
         loadProjectCounts();
 
         // Log navigation
-        console.log('📂 Projects Manager Category Selector loaded');
-        console.log('✅ Arduino Manager: Available (23 projects)');
-        console.log('✅ MATLAB Manager: Available (1 project)');
-        console.log('✅ SolidWorks Manager: Available (35 models)');
-        console.log('✅ Programming Manager: Available (DSA & Solutions)');
+        console.log('?? Projects Manager Category Selector loaded');
+        console.log('? Arduino Manager: Available (23 projects)');
+        console.log('? MATLAB Manager: Available (1 project)');
+        console.log('? SolidWorks Manager: Available (35 models)');
+        console.log('? Programming Manager: Available (DSA & Solutions)');
     </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../Optimization/cursor-effects.js" defer></script>
-</body>
+    <script>
+      (function() {
+        const cursor = document.getElementById("neuralCursor");
+        const dot = document.getElementById("neuralCursorDot");
+        if (cursor && dot) {
+          document.addEventListener("mousemove", e => {
+            cursor.style.left = e.clientX + "px"; cursor.style.top = e.clientY + "px";
+            dot.style.left = e.clientX + "px"; dot.style.top = e.clientY + "px";
+          });
+          document.addEventListener("mousedown", () => { cursor.style.transform = "translate(-50%,-50%) scale(0.7)"; });
+          document.addEventListener("mouseup", () => { cursor.style.transform = "translate(-50%,-50%) scale(1)"; });
+        }
+      })();
+    </script>
+  </body>
 </html>

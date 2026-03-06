@@ -220,6 +220,101 @@
     window.location.href = url;
   };
 
+  /* ─── Statistics Dashboard ─── */
+  function getUserProgress() {
+    const saved = localStorage.getItem('programmingProgress');
+    return saved ? JSON.parse(saved) : {};
+  }
+
+  function calculateStreak(progress) {
+    const dates = Object.values(progress)
+      .filter((p) => p.solved && p.solvedDate)
+      .map((p) => new Date(p.solvedDate).toDateString())
+      .filter((v, i, arr) => arr.indexOf(v) === i)
+      .sort((a, b) => new Date(b) - new Date(a));
+
+    if (dates.length === 0) return 0;
+
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    for (const dateStr of dates) {
+      const date = new Date(dateStr);
+      const diffDays = Math.floor((currentDate - date) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === streak) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  function updateMobileStats() {
+    const progress = getUserProgress();
+    const solved = Object.values(progress).filter((p) => p.solved);
+
+    // Count total solved
+    const totalSolved = solved.length;
+    document.getElementById('mobileSolved').textContent = totalSolved;
+
+    // Calculate streak
+    const streak = calculateStreak(progress);
+    document.getElementById('mobileStreak').textContent = streak;
+
+    // Calculate overall progress percentage
+    const totalProblems = allPrograms.length || 1;
+    const percent = Math.round((totalSolved / totalProblems) * 100);
+    document.getElementById('mobileProgressPercent').textContent = `${percent}%`;
+    document.getElementById('mobileProgressFill').style.width = `${percent}%`;
+  }
+
+  window.toggleStatsExpand = function () {
+    // For now, just show a simple alert or could navigate to a detailed stats page
+    const progress = getUserProgress();
+    const solved = Object.values(progress).filter((p) => p.solved);
+    
+    const stats = { easy: 0, medium: 0, hard: 0 };
+    solved.forEach((p) => {
+      if (p.difficulty) {
+        const diff = p.difficulty.toLowerCase();
+        if (stats[diff] !== undefined) stats[diff]++;
+      }
+    });
+
+    alert(
+      `📊 Your Progress\\n\\n` +
+      `Total Solved: ${solved.length}\\n` +
+      `Easy: ${stats.easy}\\n` +
+      `Medium: ${stats.medium}\\n` +
+      `Hard: ${stats.hard}\\n` +
+      `Streak: ${calculateStreak(progress)} days`
+    );
+  };
+
+  /* Call updateMobileStats after programs load */
+  const originalLoadPrograms = loadPrograms;
+  loadPrograms = function () {
+    fetch('../../../Projects%20Code/programming/programs.json')
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then((data) => {
+        allPrograms = Array.isArray(data.programs) ? data.programs : [];
+        applyFilters();
+        updateMobileStats();
+      })
+      .catch(() => {
+        document.getElementById('programsList').innerHTML =
+          '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i>' +
+          '<p>Failed to load programs.<br>Please refresh.</p></div>';
+      });
+  };
+
   /* ─── Helpers ─── */
   function esc(str) {
     return String(str)

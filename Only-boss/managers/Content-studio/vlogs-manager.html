@@ -16,1008 +16,340 @@
   <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- 🎨 A3KM Unified Theme System (March 2026) -->
+  <!-- ?? A3KM Unified Theme System (March 2026) -->
   <link rel="stylesheet" href="../../shared/unified-theme.css">
   
   <script src="../../../Optimization/mobile-universal.js" defer></script>
   
   <style>
     :root {
-      --primary-color: #6A1B9A;
-      --primary-dark: #4A148C;
-      --primary-light: #8E24AA;
-      --bg-dark: rgba(10, 10, 10, 0.98);
-      --text-primary: rgba(255, 255, 255, 0.95);
-      --text-secondary: rgba(255, 255, 255, 0.7);
+      --primary-red: #CC0000;
+      --dark-red: #8B0000;
+      --accent-red: #FF1744;
+      --light-red: rgba(204,0,0,0.12);
+      --bg-black: #0a0000;
+      --bg-deep: #030000;
+      --bg-card: rgba(18,4,4,0.97);
+      --bg-sidebar: rgba(10,0,0,0.98);
+      --border-red: rgba(139,0,0,0.35);
+      --border-mid: rgba(204,0,0,0.4);
+      --text-white: #FFFFFF;
+      --text-muted: rgba(255,255,255,0.5);
+      --grid-line: rgba(204,0,0,0.06);
+      /* Legacy aliases */
+      --primary-color: #CC0000;
+      --primary-dark: #8B0000;
+      --primary-light: #FF4444;
+      --text-primary: rgba(255,255,255,0.95);
+      --text-secondary: rgba(255,255,255,0.6);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+      background: linear-gradient(160deg, var(--bg-black) 0%, var(--bg-deep) 100%);
       color: var(--text-primary);
       font-family: 'Noto Sans Bengali', 'Inter', -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
+      cursor: none;
     }
 
-    /* Engineering Grid Background */
     body::before {
       content: '';
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-image: 
-        repeating-linear-gradient(0deg, rgba(106, 27, 154, 0.03) 0 1px, transparent 1px 30px),
-        repeating-linear-gradient(90deg, rgba(106, 27, 154, 0.03) 0 1px, transparent 1px 30px),
-        repeating-linear-gradient(45deg, rgba(106, 27, 154, 0.05) 0 2px, transparent 2px 40px);
-      background-size: 30px 30px, 30px 30px, 80px 80px;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, var(--grid-line) 39px, var(--grid-line) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, var(--grid-line) 39px, var(--grid-line) 40px),
+        repeating-linear-gradient(45deg, transparent, transparent 79px, rgba(204,0,0,0.025) 79px, rgba(204,0,0,0.025) 80px);
       pointer-events: none;
       z-index: 0;
-      opacity: 0.6;
     }
 
-    /* Header */
+    .neural-cursor {
+      position: fixed;
+      width: 28px; height: 28px;
+      border: 2px solid var(--primary-red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.08s ease, border-color 0.2s, width 0.2s, height 0.2s;
+      box-shadow: 0 0 12px rgba(204,0,0,0.5);
+    }
+    .neural-cursor-dot {
+      position: fixed;
+      width: 6px; height: 6px;
+      background: var(--accent-red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 100000;
+      transform: translate(-50%, -50%);
+      transition: transform 0.04s ease;
+      box-shadow: 0 0 8px rgba(255,23,68,0.8);
+    }
+
     .header {
       position: relative;
       z-index: 100;
-      background: linear-gradient(135deg, rgba(74, 20, 140, 0.98), rgba(106, 27, 154, 0.99));
-      border-bottom: 3px solid var(--primary-color);
-      box-shadow: 0 6px 25px rgba(106, 27, 154, 0.4);
+      background: linear-gradient(160deg, rgba(30,0,0,0.98) 0%, rgba(10,0,0,0.97) 100%);
+      border-bottom: 2px solid var(--border-mid);
+      box-shadow: 0 4px 24px rgba(139,0,0,0.3);
       padding: 20px 40px;
     }
 
-    .header-container {
-      max-width: 1600px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
+    .header-left { display: flex; align-items: center; gap: 20px; }
 
     .header-icon {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      width: 70px; height: 70px;
+      background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 2.2rem;
-      box-shadow: 0 0 40px rgba(106, 27, 154, 0.7);
+      box-shadow: 0 0 40px rgba(139,0,0,0.7);
       animation: iconGlow 2s ease-in-out infinite;
     }
-
     @keyframes iconGlow {
-      0%, 100% { box-shadow: 0 0 40px rgba(106, 27, 154, 0.7); }
-      50% { box-shadow: 0 0 60px rgba(142, 36, 170, 0.9); }
+      0%, 100% { box-shadow: 0 0 40px rgba(139,0,0,0.7); }
+      50% { box-shadow: 0 0 60px rgba(204,0,0,0.9); }
     }
 
-    .header-title h1 {
-      font-size: 2rem;
-      color: white;
-      margin-bottom: 5px;
-      font-weight: 800;
-      text-shadow: 0 0 20px rgba(106, 27, 154, 0.5);
-    }
-
-    .header-title p {
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 15px;
-    }
+    .header-title h1 { font-size: 2rem; color: white; margin-bottom: 5px; font-weight: 800; text-shadow: 0 0 20px rgba(204,0,0,0.5); }
+    .header-title p { font-size: 0.95rem; color: var(--text-secondary); }
+    .header-actions { display: flex; gap: 15px; }
 
     .btn, .back-btn, .btn-save {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 24px;
-      border: 2px solid transparent;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      font-size: 14px;
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 24px; border: 2px solid transparent; border-radius: 10px;
+      font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+      text-decoration: none; font-size: 14px;
     }
+    .back-btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.15); }
+    .back-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    .btn-save { background: linear-gradient(135deg, var(--dark-red), var(--primary-red)); color: white; border-color: var(--border-mid); box-shadow: 0 4px 15px rgba(139,0,0,0.4); }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.5); }
 
-    .back-btn {
-      background: rgba(255, 255, 255, 0.08);
-      color: white;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
-
-    .btn-save {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-      color: white;
-      border-color: var(--primary-color);
-      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
-    }
-
-    .btn-save:hover {
-      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 27, 154, 0.5);
-    }
-
-    /* Main Container */
     .container {
-      position: relative;
-      z-index: 1;
-      max-width: 1600px;
-      margin: 40px auto;
-      padding: 0 40px;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 30px;
+      position: relative; z-index: 1;
+      max-width: 1600px; margin: 40px auto; padding: 0 40px;
+      display: grid; grid-template-columns: 280px 1fr; gap: 30px;
     }
 
-    /* Sidebar */
     .sidebar {
-      background: linear-gradient(135deg, rgba(74, 20, 140, 0.7), rgba(26, 0, 0, 0.9));
-      border: 2px solid rgba(106, 27, 154, 0.3);
-      border-radius: 18px;
-      padding: 25px;
-      height: fit-content;
-      position: sticky;
-      top: 20px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border-red);
+      border-radius: 18px; padding: 0;
+      height: fit-content; position: sticky; top: 20px; overflow: hidden;
     }
 
-    .sidebar h2 {
-      color: var(--primary-color);
-      font-size: 1.3rem;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
+    .sidebar-header {
+      background: linear-gradient(160deg, rgba(30,0,0,0.98) 0%, rgba(20,0,0,0.97) 100%);
+      padding: 25px 20px; border-bottom: 1px solid var(--border-red);
     }
+    .sidebar-header h1 { color: var(--primary-red); font-size: 1.4rem; margin-bottom: 5px; font-weight: 800; }
+    .sidebar-header p { color: var(--text-muted); font-size: 0.85rem; }
 
-    .tab-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .sidebar-nav { padding: 20px 0; }
+    .tab-list { display: flex; flex-direction: column; gap: 10px; padding: 0 15px; }
 
     .tab-item {
       padding: 12px 15px;
-      background: rgba(106, 27, 154, 0.05);
-      border: 2px solid transparent;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      font-weight: 600;
+      background: transparent; border: none; border-left: 3px solid transparent;
+      border-radius: 0 8px 8px 0; cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.95rem; color: var(--text-secondary); font-weight: 600;
     }
+    .tab-item:hover { background: rgba(204,0,0,0.08); border-left-color: rgba(204,0,0,0.5); color: var(--text-primary); }
+    .tab-item.active { background: linear-gradient(90deg, rgba(204,0,0,0.18) 0%, transparent 100%); border-left-color: var(--primary-red); color: #ff6060; font-weight: 700; }
 
-    .tab-item:hover {
-      background: rgba(106, 27, 154, 0.15);
-      border-color: rgba(106, 27, 154, 0.3);
-      color: var(--text-primary);
-      transform: translateX(5px);
-    }
+    .header h1 { color: var(--primary-red); font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-weight: 800; padding: 0 20px; }
 
-    .tab-item.active {
-      background: rgba(106, 27, 154, 0.25);
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-      font-weight: 700;
-      box-shadow: 0 0 20px rgba(106, 27, 154, 0.3);
-    }
+    .quick-stats { padding: 20px; margin: 20px; background: rgba(139,0,0,0.08); border-radius: 12px; border: 1px solid var(--border-red); }
+    .quick-stats h3 { color: var(--primary-red); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; font-weight: 700; }
 
-    .tab-item i {
-      font-size: 1.1rem;
-    }
+    .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: var(--text-secondary); font-size: 0.9rem; }
+    .stat-value { color: var(--primary-red); font-weight: 700; font-size: 1.3rem; }
 
-    /* Stats Panel */
-    .stats-panel {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 2px solid rgba(106, 27, 154, 0.3);
-    }
-
-    .stats-panel h3 {
-      color: var(--primary-color);
-      font-size: 1.1rem;
-      margin-bottom: 15px;
-      font-weight: 700;
-    }
-
-    .stat-item-sidebar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border-left: 3px solid var(--primary-color);
-    }
-
-    .stat-item-sidebar span:first-child {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-
-    .stat-item-sidebar span:last-child {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-
-    /* Content Area */
     .content-area {
-      background: linear-gradient(135deg, rgba(26, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
-      border: 2px solid rgba(106, 27, 154, 0.25);
-      border-radius: 18px;
-      padding: 35px;
-      min-height: 600px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(160deg, rgba(14,2,2,0.97) 0%, rgba(6,0,0,0.95) 100%);
+      border: 1px solid var(--border-red); border-radius: 18px; padding: 35px;
+      min-height: 600px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
 
-    .tab-content {
-      display: none;
-      animation: fadeIn 0.4s ease;
-    }
+    .tab-content { display: none; animation: fadeIn 0.4s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .tab-content.active {
-      display: block;
-    }
+    .content-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-red); }
+    .content-header h2 { color: var(--primary-red); font-size: 1.8rem; margin-bottom: 8px; font-weight: 800; }
+    .content-header p { color: var(--text-secondary); font-size: 1rem; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Content Header */
-    .content-header {
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid rgba(106, 27, 154, 0.3);
-    }
-
-    .content-header h2 {
-      color: var(--primary-color);
-      font-size: 1.8rem;
-      margin-bottom: 8px;
-      font-weight: 800;
-    }
-
-    .content-header p {
-      color: var(--text-secondary);
-      font-size: 1rem;
-    }
-
-    /* Dashboard Cards */
-    .dashboard-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
+    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
     .dashboard-card {
       padding: 30px;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-      color: white;
-      border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      border: 2px solid var(--primary-light);
+      background: linear-gradient(160deg, rgba(22,4,4,0.97) 0%, rgba(10,0,0,0.97) 100%);
+      color: white; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+      border: 1px solid var(--border-red);
     }
+    .dashboard-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--dark-red), var(--primary-red), transparent); }
+    .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 12px 36px rgba(139,0,0,0.4), 0 0 48px rgba(204,0,0,0.2); border-color: var(--border-mid); }
+    .dashboard-card h3 { font-size: 3rem; margin-bottom: 8px; font-weight: 800; color: var(--primary-red); position: relative; z-index: 1; }
+    .dashboard-card p { font-size: 1rem; color: var(--text-secondary); position: relative; z-index: 1; font-weight: 600; }
 
-    .dashboard-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-      animation: pulse 3s ease-in-out infinite;
-    }
+    .upload-form, .edit-form { display: grid; gap: 25px; }
+    .form-row, .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { color: var(--text-primary); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
 
-    .dashboard-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 30px rgba(106, 27, 154, 0.6);
-    }
-
-    .dashboard-card h3 {
-      font-size: 3rem;
-      margin-bottom: 8px;
-      font-weight: 800;
-      position: relative;
-      z-index: 1;
-    }
-
-    .dashboard-card p {
-      font-size: 1rem;
-      opacity: 0.95;
-      position: relative;
-      z-index: 1;
-      font-weight: 600;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-10%, -10%) scale(1.1); }
-    }
-
-    /* Forms */
-    .upload-form, .edit-form {
-      display: grid;
-      gap: 25px;
-    }
-
-    .form-row, .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-
-    .form-group label {
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
+    .form-group input, .form-group textarea, .form-group select {
       padding: 12px 15px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 2px solid rgba(106, 27, 154, 0.3);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 1rem;
-      font-family: inherit;
-      transition: all 0.3s ease;
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border-red);
+      border-radius: 10px; color: var(--text-primary); font-size: 1rem;
+      font-family: inherit; transition: all 0.3s ease;
     }
-
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 15px rgba(106, 27, 154, 0.3);
-      background: rgba(0, 0, 0, 0.7);
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: var(--primary-red);
+      box-shadow: 0 0 15px rgba(204,0,0,0.2); background: rgba(0,0,0,0.7);
     }
+    .form-group textarea { min-height: 200px; resize: vertical; font-family: inherit; }
+    .form-group small { color: var(--text-muted); font-size: 0.85rem; }
 
-    .form-group textarea {
-      min-height: 200px;
-      resize: vertical;
-      font-family: inherit;
-    }
-
-    .form-group small {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-
-    /* File Upload */
     .file-upload-label {
-      padding: 40px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 2px dashed var(--primary-color);
-      border-radius: 15px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: var(--text-secondary);
+      padding: 40px; background: rgba(0,0,0,0.4); border: 2px dashed var(--border-mid);
+      border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; color: var(--text-muted);
     }
+    .file-upload-label:hover { border-color: var(--primary-red); background: rgba(204,0,0,0.06); box-shadow: 0 0 20px rgba(204,0,0,0.2); }
 
-    .file-upload-label:hover {
-      border-color: var(--primary-light);
-      background: rgba(106, 27, 154, 0.1);
-      box-shadow: 0 0 20px rgba(106, 27, 154, 0.3);
-    }
-
-    /* Buttons */
     .btn-primary, .preview-btn {
       padding: 15px 30px;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-      color: white;
-      border: 2px solid var(--primary-color);
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 20px;
-      transition: all 0.3s ease;
-      font-size: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+      color: white; border: 1px solid var(--border-mid); border-radius: 10px;
+      font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px;
+      transition: all 0.3s ease; font-size: 16px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     }
+    .btn-primary:hover, .preview-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.4); }
+    .preview-btn { background: rgba(0,0,0,0.5); color: var(--primary-red); }
+    .preview-btn:hover { background: var(--primary-red); color: white; }
 
-    .btn-primary:hover, .preview-btn:hover {
-      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 27, 154, 0.5);
-    }
-
-    .preview-btn {
-      background: rgba(0, 0, 0, 0.5);
-      color: var(--primary-color);
-    }
-
-    .preview-btn:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    /* Search & Filters */
     .search-bar, .filters-bar, .filters-container {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 12px;
-      border: 2px solid rgba(106, 27, 154, 0.3);
+      display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;
+      padding: 20px; background: rgba(0,0,0,0.5); border-radius: 12px;
+      border: 1px solid var(--border-red);
+    }
+    .search-bar input, .filters-bar input, .filters-bar select {
+      flex: 1; min-width: 150px; padding: 12px 15px;
+      background: rgba(0,0,0,0.6); border: 1px solid var(--border-red);
+      border-radius: 8px; color: var(--text-primary); font-size: 14px;
+    }
+    .search-bar input:focus, .filters-bar input:focus, .filters-bar select:focus {
+      outline: none; border-color: var(--primary-red); box-shadow: 0 0 10px rgba(204,0,0,0.2);
     }
 
-    .search-bar input,
-    .filters-bar input,
-    .filters-bar select {
-      flex: 1;
-      min-width: 150px;
-      padding: 12px 15px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid rgba(106, 27, 154, 0.3);
-      border-radius: 8px;
-      color: var(--text-primary);
-      font-size: 14px;
-    }
-
-    .search-bar input:focus,
-    .filters-bar input:focus,
-    .filters-bar select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 10px rgba(106, 27, 154, 0.3);
-    }
-
-    /* Content Grid */
-    .content-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
     .content-card {
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid rgba(106, 27, 154, 0.3);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      position: relative;
+      background: linear-gradient(160deg, rgba(22,4,4,0.97) 0%, rgba(10,0,0,0.97) 100%);
+      border: 1px solid var(--border-red); border-radius: 12px; overflow: hidden;
+      transition: all 0.3s ease; position: relative;
     }
+    .content-card::before { content: ''; position: absolute; top: 0; left: 0; width: 16px; height: 16px; border-top: 2px solid rgba(204,0,0,0.4); border-left: 2px solid rgba(204,0,0,0.4); }
+    .content-card:hover { border-color: var(--border-mid); box-shadow: 0 12px 36px rgba(139,0,0,0.4), 0 0 48px rgba(204,0,0,0.2); transform: translateY(-4px) scale(1.01); }
 
-    .content-card:hover {
-      border-color: var(--primary-color);
-      box-shadow: 0 8px 25px rgba(106, 27, 154, 0.5);
-      transform: translateY(-5px);
-    }
+    .card-thumbnail { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, var(--dark-red), var(--primary-red)); }
+    .card-body { padding: 15px; }
+    .card-title { font-weight: 700; color: var(--text-primary); margin-bottom: 8px; font-size: 16px; }
+    .card-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .card-actions button { flex: 1; padding: 10px; border: 1px solid var(--border-mid); background: rgba(0,0,0,0.5); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; color: var(--primary-red); }
+    .card-actions button:hover { background: var(--primary-red); color: white; transform: translateY(-2px); }
+    .btn-delete, .btn-danger { border-color: rgba(244,67,54,0.5) !important; color: #f44336 !important; }
+    .btn-delete:hover, .btn-danger:hover { background: #f44336 !important; color: white !important; }
 
-    .card-thumbnail {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    }
+    .bulk-toolbar { display: none; background: rgba(0,0,0,0.6); border: 1px solid var(--border-mid); padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .bulk-toolbar.active { display: flex; animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .bulk-toolbar strong { color: var(--primary-red); font-size: 1.1rem; }
+    .bulk-toolbar .btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+    .bulk-toolbar .btn-select-all { background: rgba(204,0,0,0.1); border: 1px solid var(--border-mid); color: var(--primary-red); }
+    .bulk-toolbar .btn-select-all:hover { background: var(--primary-red); color: white; }
+    .bulk-toolbar .btn-bulk-delete { background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.4); color: #f44336; }
+    .bulk-toolbar .btn-bulk-delete:hover { background: #f44336; color: white; }
 
-    .card-body {
-      padding: 15px;
-    }
-
-    .card-title {
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-
-    .card-meta {
-      font-size: 12px;
-      color: #444;
-      margin-bottom: 12px;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .card-actions button {
-      flex: 1;
-      padding: 10px;
-      border: 2px solid var(--primary-color);
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      color: var(--primary-color);
-    }
-
-    .card-actions button:hover {
-      background: var(--primary-color);
-      color: white;
-      transform: translateY(-2px);
-    }
-
-    .btn-delete, .btn-danger {
-      border-color: #f44336 !important;
-      color: #f44336 !important;
-    }
-
-    .btn-delete:hover, .btn-danger:hover {
-      background: #f44336 !important;
-      color: white !important;
-    }
-
-    /* Bulk Toolbar */
-    .bulk-toolbar {
-      display: none;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid var(--primary-color);
-      padding: 15px 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .bulk-toolbar.active {
-      display: flex;
-      animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .bulk-toolbar strong {
-      color: var(--primary-color);
-      font-size: 1.1rem;
-    }
-
-    .bulk-toolbar .btn {
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .bulk-toolbar .btn-select-all {
-      background: rgba(33, 150, 243, 0.2);
-      border: 2px solid #2196F3;
-      color: #2196F3;
-    }
-
-    .bulk-toolbar .btn-select-all:hover {
-      background: #2196F3;
-      color: white;
-    }
-
-    .bulk-toolbar .btn-bulk-delete {
-      background: rgba(244, 67, 54, 0.2);
-      border: 2px solid #f44336;
-      color: #f44336;
-    }
-
-    .bulk-toolbar .btn-bulk-delete:hover {
-      background: #f44336;
-      color: white;
-    }
-
-    /* Pagination */
     .pagination-controls {
-      display: none;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      margin-top: 30px;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border: 2px solid rgba(106, 27, 154, 0.3);
-      border-radius: 12px;
+      display: none; justify-content: center; align-items: center; gap: 20px;
+      margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border-red); border-radius: 12px;
     }
+    .pagination-controls.active { display: flex; }
+    .pagination-controls button { padding: 10px 20px; background: rgba(0,0,0,0.6); border: 1px solid var(--border-mid); color: var(--primary-red); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+    .pagination-controls button:hover:not(:disabled) { background: var(--primary-red); color: white; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(204,0,0,0.3); }
+    .pagination-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .pagination-controls span { color: var(--primary-red); font-weight: 700; }
 
-    .pagination-controls.active {
-      display: flex;
-    }
+    .progress { margin-top: 20px; display: none; }
+    .progress.active { display: block; }
+    .progress-bar { width: 100%; height: 10px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-red); }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--dark-red), var(--primary-red)); width: 0%; transition: width 0.3s ease; }
+    .progress-text { text-align: center; color: var(--primary-red); font-size: 14px; font-weight: 700; margin-top: 10px; }
 
-    .pagination-controls button {
-      padding: 10px 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid var(--primary-color);
-      color: var(--primary-color);
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .success-message { background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(204,0,0,0.2)); border: 1px solid var(--border-mid); color: white; padding: 15px 20px; border-radius: 12px; margin-top: 20px; display: none; text-align: center; font-weight: 600; }
+    .success-message.active { display: block; }
 
-    .pagination-controls button:hover:not(:disabled) {
-      background: var(--primary-color);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
-    }
-
-    .pagination-controls button:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .pagination-controls span {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-
-    /* Progress & Messages */
-    .progress {
-      margin-top: 20px;
-      display: none;
-    }
-
-    .progress.active {
-      display: block;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 10px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 5px;
-      overflow: hidden;
-      border: 1px solid var(--primary-color);
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    .progress-text {
-      text-align: center;
-      color: var(--primary-color);
-      font-size: 14px;
-      font-weight: 700;
-      margin-top: 10px;
-    }
-
-    .success-message {
-      background: linear-gradient(135deg, #4caf50, #66bb6a);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 12px;
-      margin-top: 20px;
-      display: none;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    .success-message.active {
-      display: block;
-    }
-
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      z-index: 9999;
-      overflow-y: auto;
-    }
-
-    .modal.active {
-      display: block;
-    }
-
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; overflow-y: auto; }
+    .modal.active { display: block; }
     .modal-content {
-      max-width: 900px;
-      margin: 40px auto;
-      background: linear-gradient(135deg, rgba(26, 0, 0, 0.98), rgba(0, 0, 0, 0.99));
-      border: 2px solid var(--primary-color);
-      border-radius: 20px;
-      padding: 40px;
-      position: relative;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      max-width: 900px; margin: 40px auto;
+      background: linear-gradient(160deg, rgba(18,4,4,0.99) 0%, rgba(6,0,0,0.99) 100%);
+      border: 1px solid var(--border-mid); border-radius: 20px; padding: 40px;
+      position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 80px rgba(139,0,0,0.3);
     }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: var(--dark-red); color: white; border: 1px solid var(--border-mid); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--accent-red); transform: rotate(90deg); }
 
-    .modal-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #f44336;
-      color: white;
-      border: 2px solid #f44336;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 20px;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .json-editor-area { background: #0d0000; border: 1px solid var(--border-mid); border-radius: 12px; padding: 20px; min-height: 500px; }
+    .json-editor-area textarea { width: 100%; min-height: 500px; background: #0d0000; color: #d4d4d4; border: none; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; resize: vertical; }
+    .json-editor-area textarea:focus { outline: none; }
+    .json-toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .json-toolbar button { padding: 12px 20px; border: 1px solid; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+    .json-toolbar .btn-validate { background: rgba(204,0,0,0.1); border-color: var(--border-mid); color: var(--primary-red); }
+    .json-toolbar .btn-validate:hover { background: var(--primary-red); color: white; }
+    .json-toolbar .btn-format { background: rgba(204,0,0,0.08); border-color: rgba(139,0,0,0.4); color: rgba(255,100,100,0.9); }
+    .json-toolbar .btn-format:hover { background: var(--dark-red); color: white; }
+    .json-toolbar .btn-download { background: rgba(204,0,0,0.08); border-color: rgba(139,0,0,0.4); color: rgba(255,150,150,0.9); }
+    .json-toolbar .btn-download:hover { background: var(--dark-red); color: white; }
+    .json-toolbar .btn-import { background: rgba(204,0,0,0.1); border-color: var(--border-mid); color: var(--primary-red); }
+    .json-toolbar .btn-import:hover { background: var(--primary-red); color: white; }
 
-    .modal-close:hover {
-      background: #d32f2f;
-      transform: rotate(90deg);
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: linear-gradient(160deg, rgba(22,4,4,0.97) 0%, rgba(12,0,0,0.95) 100%); border: 1px solid var(--border-red); color: white; padding: 25px; border-radius: 12px; text-align: center; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--dark-red), var(--primary-red), transparent); }
+    .stat-card h3 { font-size: 2.5rem; margin-bottom: 5px; font-weight: 800; color: var(--primary-red); }
+    .stat-card p { font-size: 0.95rem; color: var(--text-secondary); }
 
-    /* JSON Editor */
-    .json-editor-area {
-      background: #1e1e1e;
-      border: 2px solid var(--primary-color);
-      border-radius: 12px;
-      padding: 20px;
-      min-height: 500px;
-    }
+    .breakdown-section { margin-top: 30px; padding: 25px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--border-red); }
 
-    .json-editor-area textarea {
-      width: 100%;
-      min-height: 500px;
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border: none;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 14px;
-      line-height: 1.6;
-      resize: vertical;
-    }
-
-    .json-editor-area textarea:focus {
-      outline: none;
-    }
-
-    .json-toolbar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .json-toolbar button {
-      padding: 12px 20px;
-      border: 2px solid;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .json-toolbar .btn-validate {
-      background: rgba(76, 175, 80, 0.2);
-      border-color: #4CAF50;
-      color: #4CAF50;
-    }
-
-    .json-toolbar .btn-validate:hover {
-      background: #4CAF50;
-      color: white;
-    }
-
-    .json-toolbar .btn-format {
-      background: rgba(33, 150, 243, 0.2);
-      border-color: #2196F3;
-      color: #2196F3;
-    }
-
-    .json-toolbar .btn-format:hover {
-      background: #2196F3;
-      color: white;
-    }
-
-    .json-toolbar .btn-download {
-      background: rgba(255, 193, 7, 0.2);
-      border-color: #FFC107;
-      color: #FFC107;
-    }
-
-    .json-toolbar .btn-download:hover {
-      background: #FFC107;
-      color: #333;
-    }
-
-    .json-toolbar .btn-import {
-      background: rgba(106, 27, 154, 0.2);
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-    }
-
-    .json-toolbar .btn-import:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    /* Statistics */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-      color: white;
-      padding: 25px;
-      border-radius: 12px;
-      text-align: center;
-    }
-
-    .stat-card h3 {
-      font-size: 2.5rem;
-      margin-bottom: 5px;
-      font-weight: 800;
-    }
-
-    .stat-card p {
-      font-size: 0.95rem;
-      opacity: 0.95;
-    }
-
-    .breakdown-section {
-      margin-top: 30px;
-      padding: 25px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 12px;
-      border: 2px solid rgba(106, 27, 154, 0.3);
-    }
-
-    /* Mobile Responsive Design */
     @media (max-width: 1024px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: relative;
-        top: 0;
-      }
-
-      .form-row, .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .content-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      }
+      .container { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; }
+      .form-row, .form-grid { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 768px) {
-      .header {
-        padding: 15px 20px;
-      }
-
-      .header h1 {
-        font-size: 1.5rem;
-      }
-
-      .container {
-        padding: 0 15px;
-        margin: 15px auto;
-      }
-
-      .content-area {
-        padding: 15px;
-      }
-
-      .content-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-
-      .content-card {
-        margin-bottom: 15px;
-      }
-
-      .filter-section, .stats-section {
-        padding: 15px;
-      }
-
-      .bulk-toolbar {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px;
-      }
-
-      .modal-content {
-        width: 95%;
-        max-height: 90vh;
-        margin: 5vh auto;
-      }
+      .header { padding: 15px 20px; }
+      .container { padding: 0 15px; margin: 15px auto; }
+      .content-area { padding: 15px; }
+      .content-grid { grid-template-columns: 1fr; gap: 15px; }
+      .bulk-toolbar { flex-direction: column; gap: 10px; padding: 15px; }
+      .modal-content { width: 95%; max-height: 90vh; margin: 5vh auto; }
     }
-
     @media (max-width: 480px) {
-      .header h1 {
-        font-size: 1.2rem;
-      }
-
-      .card-actions {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .card-actions button {
-        width: 100%;
-      }
-
-      .tabs {
-        flex-direction: column;
-      }
-
-      .tab-item {
-        width: 100%;
-        text-align: center;
-      }
+      .card-actions { flex-direction: column; gap: 8px; }
+      .card-actions button { width: 100%; }
     }
   </style>
 
@@ -1026,17 +358,20 @@
   <link rel="stylesheet" href="../../mobile/manager-mobile.css">
 </head>
 <body>
+  <!-- Neural Cursor -->
+  <div class="neural-cursor" id="neuralCursor"></div>
+  <div class="neural-cursor-dot" id="neuralCursorDot"></div>
   <div class="header">
     <div class="header-container">
       <div class="header-left">
-        <div class="header-icon">🎬</div>
+        <div class="header-icon">??</div>
         <div class="header-title">
           <h1>Video Blogs Manager</h1>
           <p>Professional vlog content management system with YouTube integration</p>
         </div>
       </div>
       <div class="header-actions">
-        <a href="../shared/command-center.html" class="back-btn">← Back to Command Center</a>
+        <a href="../shared/command-center.html" class="back-btn">? Back to Command Center</a>
       </div>
     </div>
   </div>
@@ -1044,13 +379,13 @@
   <div class="container">
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
-      <h2>🎬 Navigation</h2>
+      <h2>?? Navigation</h2>
       <div class="tab-list">
-        <div class="tab-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-        <div class="tab-item" onclick="switchTab('upload')">📤 Upload Vlog</div>
-        <div class="tab-item" onclick="switchTab('manage')">📋 Manage Vlogs</div>
-        <div class="tab-item" onclick="switchTab('statistics')">📈 Statistics</div>
-        <div class="tab-item" onclick="switchTab('json')">⚙️ JSON Editor</div>
+        <div class="tab-item active" onclick="switchTab('dashboard')">?? Dashboard</div>
+        <div class="tab-item" onclick="switchTab('upload')">?? Upload Vlog</div>
+        <div class="tab-item" onclick="switchTab('manage')">?? Manage Vlogs</div>
+        <div class="tab-item" onclick="switchTab('statistics')">?? Statistics</div>
+        <div class="tab-item" onclick="switchTab('json')">?? JSON Editor</div>
       </div>
       
       <div class="stats-panel">
@@ -1061,9 +396,9 @@
         <div class="stat-item-sidebar"><span>This Month</span><span id="sidebarThisMonth">0</span></div>
       </div>
       
-      <!-- 🔄 Mobile Sync Button -->
+      <!-- ?? Mobile Sync Button -->
       <div style="margin-top: 20px; padding: 15px; background: rgba(0, 204, 102, 0.1); border: 2px solid rgba(0, 204, 102, 0.3); border-radius: 10px;">
-        <h3 style="font-size: 0.95rem; margin-bottom: 10px; color: #00CC66;">📱 Mobile Sync</h3>
+        <h3 style="font-size: 0.95rem; margin-bottom: 10px; color: #00CC66;">?? Mobile Sync</h3>
         <button onclick="syncToMobileContentJSON()" 
                 style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00CC66, #00FF7F); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">
           <i class="fas fa-sync-alt"></i> Sync to Mobile
@@ -1078,119 +413,119 @@
     <main class="content-area">
       <!-- Dashboard Tab -->
       <div id="dashboardTab" class="tab-content active">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">📊 Video Blogs Dashboard</h2>
+        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? Video Blogs Dashboard</h2>
         <div class="stats-grid">
           <div class="stat-card"><h3 id="dashTotalVlogs">0</h3><p>Total Video Blogs</p></div>
           <div class="stat-card"><h3 id="dashCategories">0</h3><p>Categories Used</p></div>
           <div class="stat-card"><h3 id="dashSeries">0</h3><p>Video Series</p></div>
           <div class="stat-card"><h3 id="dashThisMonth">0</h3><p>Uploaded This Month</p></div>
         </div>
-        <p style="color: #444; margin-top: 20px; text-align: center;">Use the sidebar to navigate between different sections. Upload new vlogs, manage existing content, or export data using the JSON Editor.</p>
+        <p style="color: rgba(255,255,255,0.6); margin-top: 20px; text-align: center;">Use the sidebar to navigate between different sections. Upload new vlogs, manage existing content, or export data using the JSON Editor.</p>
       </div>
 
       <!-- Upload Tab -->
       <div id="uploadTab" class="tab-content">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">📤 Upload New Vlog</h2>
+        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? Upload New Vlog</h2>
         <form id="uploadForm">
           <div class="form-group">
-            <label>📁 Category *</label>
-            <input type="text" id="categorySearch" placeholder="🔍 Type to search categories..." 
-                   style="margin-bottom: 8px; border: 2px solid #6A1B9A; background: rgba(106, 27, 154, 0.05);" 
+            <label>?? Category *</label>
+            <input type="text" id="categorySearch" placeholder="?? Type to search categories..." 
+                   style="margin-bottom: 8px; border: 1px solid rgba(204,0,0,0.4); background: rgba(139,0,0, 0.05);" 
                    oninput="filterCategorySelect()">
             <select id="category" required size="5" style="height: 120px;">
               <option value="">Loading categories...</option>
             </select>
-            <small style="color: #444; display: block; margin-top: 5px;">💡 Use search box above to filter categories</small>
+            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">?? Use search box above to filter categories</small>
           </div>
           
           <div class="form-group">
-            <label>📝 Vlog Title *</label>
+            <label>?? Vlog Title *</label>
             <input type="text" id="title" placeholder="Enter an engaging title for your vlog..." required>
           </div>
           
           <div class="youtube-toggle">
             <input type="checkbox" id="isYoutube" checked>
-            <label for="isYoutube" style="margin: 0; font-weight: 600;">🎥 YouTube Video (Recommended)</label>
+            <label for="isYoutube" style="margin: 0; font-weight: 600;">?? YouTube Video (Recommended)</label>
           </div>
           
           <div class="form-group" id="youtubeUrlGroup">
-            <label>🔗 YouTube URL *</label>
+            <label>?? YouTube URL *</label>
             <input type="url" id="youtubeUrl" placeholder="https://youtu.be/VIDEO_ID or https://youtube.com/watch?v=VIDEO_ID" required>
-            <small style="color: #444; display: block; margin-top: 5px;">Thumbnail will be automatically fetched from YouTube</small>
+            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">Thumbnail will be automatically fetched from YouTube</small>
           </div>
           
           <div class="form-group">
-            <label>📺 Series Name (Optional)</label>
+            <label>?? Series Name (Optional)</label>
             <input type="text" id="series" placeholder="e.g., Daily Vlog, Tech Talk Series, Travel Diaries">
           </div>
           
           <div class="form-group">
-            <label>🔢 Episode Number (Optional)</label>
+            <label>?? Episode Number (Optional)</label>
             <input type="number" id="episode" placeholder="1" min="1">
           </div>
           
           <div class="form-group">
-            <label>📄 Description</label>
+            <label>?? Description</label>
             <textarea id="description" placeholder="Write a detailed description of your vlog content..." rows="4"></textarea>
           </div>
           
           <div class="form-group">
-            <label>👤 Creator</label>
+            <label>?? Creator</label>
             <input type="text" id="author" placeholder="Your name..." value="Md Akhinoor Islam">
           </div>
           
           <div class="form-group">
-            <label>⏱️ Duration *</label>
+            <label>?? Duration *</label>
             <input type="text" id="duration" placeholder="e.g., 18:45 or 1h 30m" required>
           </div>
           
           <div class="form-group">
-            <label>🌐 Language</label>
+            <label>?? Language</label>
             <select id="language">
-              <option value="bn">Bengali (বাংলা)</option>
+              <option value="bn">Bengali (?????)</option>
               <option value="en">English</option>
-              <option value="bn-en">Mixed (বাংলা-English)</option>
-              <option value="hi">Hindi (हिन्दी)</option>
+              <option value="bn-en">Mixed (?????-English)</option>
+              <option value="hi">Hindi (??????)</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>🏷️ Tags (comma-separated)</label>
+            <label>??? Tags (comma-separated)</label>
             <input type="text" id="tags" placeholder="vlog, lifestyle, travel, tutorial, tech">
           </div>
           
           <div class="form-group">
-            <label>🖼️ Custom Thumbnail (Optional)</label>
+            <label>??? Custom Thumbnail (Optional)</label>
             <input type="file" id="thumbnail" accept="image/*" style="display: none;">
-            <label for="thumbnail" class="file-upload-label">📁 Click to upload custom thumbnail</label>
-            <div id="thumbnailInfo" style="margin-top: 10px; color: #444; font-size: 14px;"></div>
+            <label for="thumbnail" class="file-upload-label">?? Click to upload custom thumbnail</label>
+            <div id="thumbnailInfo" style="margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 14px;"></div>
           </div>
           
-          <button type="submit" class="btn-primary">📤 Upload Video Blog</button>
+          <button type="submit" class="btn-primary">?? Upload Video Blog</button>
           
           <div class="progress" id="progress">
             <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
             <div class="progress-text" id="progressText">Processing...</div>
           </div>
-          <div class="success-message" id="successMessage">✅ Vlog uploaded successfully!</div>
+          <div class="success-message" id="successMessage">? Vlog uploaded successfully!</div>
         </form>
       </div>
 
       <!-- Manage Tab -->
       <div id="manageTab" class="tab-content">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">📋 Manage Video Blogs</h2>
+        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? Manage Video Blogs</h2>
         
         <!-- Bulk Operations Toolbar -->
         <div class="bulk-toolbar" id="bulkToolbar">
-          <strong>🎯 <span id="selectedCount">0</span> selected</strong>
-          <button class="btn btn-select-all" onclick="selectAllVlogs()">☑️ Select All</button>
-          <button class="btn btn-deselect-all" onclick="deselectAllVlogs()">◻️ Deselect All</button>
-          <button class="btn btn-bulk-delete" onclick="bulkDeleteVlogs()">🗑️ Delete Selected</button>
+          <strong>?? <span id="selectedCount">0</span> selected</strong>
+          <button class="btn btn-select-all" onclick="selectAllVlogs()">?? Select All</button>
+          <button class="btn btn-deselect-all" onclick="deselectAllVlogs()">?? Deselect All</button>
+          <button class="btn btn-bulk-delete" onclick="bulkDeleteVlogs()">??? Delete Selected</button>
         </div>
         
         <!-- Filters -->
         <div class="filters-container" style="grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1fr 1fr;">
-          <input type="text" id="searchInput" placeholder="🔍 Search vlogs by title, tags, series..." onkeyup="filterVlogs()">
+          <input type="text" id="searchInput" placeholder="?? Search vlogs by title, tags, series..." onkeyup="filterVlogs()">
           <select id="filterCategory" onchange="updateSubcategoriesVlogs(); filterVlogs();">
             <option value="">All Categories</option>
           </select>
@@ -1220,20 +555,20 @@
         
         <!-- Content Grid -->
         <div class="content-grid" id="contentGrid">
-          <p style="text-align: center; padding: 60px; color: #444; grid-column: 1 / -1;">Loading video blogs...</p>
+          <p style="text-align: center; padding: 60px; color: rgba(255,255,255,0.6); grid-column: 1 / -1;">Loading video blogs...</p>
         </div>
         
         <!-- Pagination -->
         <div class="pagination-controls" id="paginationControls">
-          <button id="prevPage" onclick="changePage(-1)">⬅️ Previous</button>
+          <button id="prevPage" onclick="changePage(-1)">?? Previous</button>
           <span class="pagination-info">Page <strong id="currentPageDisplay">1</strong> of <strong id="totalPagesDisplay">1</strong></span>
-          <button id="nextPage" onclick="changePage(1)">Next ➡️</button>
+          <button id="nextPage" onclick="changePage(1)">Next ??</button>
         </div>
       </div>
 
       <!-- Statistics Tab -->
       <div id="statisticsTab" class="tab-content">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">📈 Detailed Statistics</h2>
+        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? Detailed Statistics</h2>
         
         <div class="stats-grid">
           <div class="stat-card"><h3 id="statsTotalVlogs">0</h3><p>Total Video Blogs</p></div>
@@ -1245,31 +580,31 @@
         </div>
         
         <div class="breakdown-section">
-          <h3>📊 Category Breakdown</h3>
+          <h3>?? Category Breakdown</h3>
           <div class="breakdown-grid" id="categoryBreakdown"></div>
         </div>
         
         <div class="breakdown-section">
-          <h3>📺 Series Breakdown</h3>
+          <h3>?? Series Breakdown</h3>
           <div class="breakdown-grid" id="seriesBreakdown"></div>
         </div>
         
         <div class="breakdown-section">
-          <h3>📅 Monthly Upload Trend</h3>
+          <h3>?? Monthly Upload Trend</h3>
           <div class="breakdown-grid" id="monthlyBreakdown"></div>
         </div>
       </div>
 
       <!-- JSON Editor Tab -->
       <div id="jsonTab" class="tab-content">
-        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">⚙️ JSON Editor</h2>
-        <p style="color: #444; margin-bottom: 20px;">⚠️ <strong>Advanced Users Only:</strong> Direct JSON manipulation. Invalid JSON will break the system!</p>
+        <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? JSON Editor</h2>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px;">?? <strong>Advanced Users Only:</strong> Direct JSON manipulation. Invalid JSON will break the system!</p>
         
         <div class="json-editor-container">
           <div class="json-actions">
-            <button class="btn-validate" onclick="validateJSON()">✓ Validate JSON</button>
-            <button class="btn-format" onclick="formatJSON()">✨ Format JSON</button>
-            <button class="btn-save-json" onclick="saveJSON()">💾 Save Changes</button>
+            <button class="btn-validate" onclick="validateJSON()">? Validate JSON</button>
+            <button class="btn-format" onclick="formatJSON()">? Format JSON</button>
+            <button class="btn-save-json" onclick="saveJSON()">?? Save Changes</button>
           </div>
           <textarea id="jsonEditor" placeholder="Loading JSON data..."></textarea>
         </div>
@@ -1280,81 +615,81 @@
   <!-- Edit Modal -->
   <div id="editModal" class="modal">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeEditModal()">×</button>
-      <h2>✏️ Edit Video Blog</h2>
+      <button class="modal-close" onclick="closeEditModal()">�</button>
+      <h2>?? Edit Video Blog</h2>
       <form id="editForm">
         <input type="hidden" id="editVlogId">
         
         <div class="form-group">
-          <label>📁 Category</label>
+          <label>?? Category</label>
           <select id="editCategory" required></select>
         </div>
         
         <div class="form-group">
-          <label>📝 Title</label>
+          <label>?? Title</label>
           <input type="text" id="editTitle" required>
         </div>
         
         <div class="form-group">
-          <label>🔗 YouTube URL</label>
+          <label>?? YouTube URL</label>
           <input type="url" id="editYoutubeUrl">
         </div>
         
         <div class="form-group">
-          <label>📺 Series</label>
+          <label>?? Series</label>
           <input type="text" id="editSeries" placeholder="Optional">
         </div>
         
         <div class="form-group">
-          <label>🔢 Episode</label>
+          <label>?? Episode</label>
           <input type="number" id="editEpisode" placeholder="Optional">
         </div>
         
         <div class="form-group">
-          <label>📄 Description</label>
+          <label>?? Description</label>
           <textarea id="editDescription" rows="4"></textarea>
         </div>
         
         <div class="form-group">
-          <label>⏱️ Duration</label>
+          <label>?? Duration</label>
           <input type="text" id="editDuration">
         </div>
         
         <div class="form-group">
-          <label>🌐 Language</label>
+          <label>?? Language</label>
           <select id="editLanguage">
-            <option value="bn">Bengali (বাংলা)</option>
+            <option value="bn">Bengali (?????)</option>
             <option value="en">English</option>
-            <option value="bn-en">Mixed (বাংলা-English)</option>
-            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="bn-en">Mixed (?????-English)</option>
+            <option value="hi">Hindi (??????)</option>
           </select>
         </div>
         
         <div class="form-group">
-          <label>🏷️ Tags</label>
+          <label>??? Tags</label>
           <input type="text" id="editTags">
         </div>
         
         <!-- Thumbnail Replacement/Deletion -->
-        <div class="form-group" style="background: rgba(106, 27, 154, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(106, 27, 154, 0.3);">
+        <div class="form-group" style="background: rgba(139,0,0, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(106, 27, 154, 0.3);">
           <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <span><i class="fas fa-image"></i> 🖼️ Replace Thumbnail (Optional)</span>
+            <span><i class="fas fa-image"></i> ??? Replace Thumbnail (Optional)</span>
             <button type="button" onclick="deleteVlogThumbnail()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
               <i class="fas fa-trash"></i> Delete Current Thumbnail
             </button>
           </label>
           <input type="file" id="edit-vlogThumbnailFile" accept="image/*" onchange="handleEditVlogThumbnailSelect(event)">
-          <small style="color: #666; display: block; margin-top: 8px;">
-            ✅ Upload new image to replace existing thumbnail | ❌ Delete button removes image from storage<br>
-            📋 Current: <span id="edit-currentVlogThumbnailPath" style="color: #6A1B9A; font-weight: 600;">Loading...</span>
+          <small style="color: rgba(255,255,255,0.5); display: block; margin-top: 8px;">
+            ? Upload new image to replace existing thumbnail | ? Delete button removes image from storage<br>
+            ?? Current: <span id="edit-currentVlogThumbnailPath" style="color: #CC0000; font-weight: 600;">Loading...</span>
           </small>
           <div id="edit-vlogThumbnailPreview" style="display: none; margin-top: 10px;">
-            <img id="edit-vlogThumbnailPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #6A1B9A;">
-            <button type="button" onclick="removeEditVlogThumbnailSelection()" style="margin-top: 8px; background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: block;">❌ Remove</button>
+            <img id="edit-vlogThumbnailPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid rgba(204,0,0,0.4);">
+            <button type="button" onclick="removeEditVlogThumbnailSelection()" style="margin-top: 8px; background: #f44336; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; display: block;">? Remove</button>
           </div>
         </div>
         
-        <button type="submit" class="btn-primary">💾 Update Vlog</button>
+        <button type="submit" class="btn-primary">?? Update Vlog</button>
       </form>
     </div>
   </div>
@@ -1381,18 +716,25 @@
     // Initialize Central API Gateway
     const gateway = CentralAPIGateway.getInstance();
     
+
+    function showTokenModal(redirectUrl) {
+      return new Promise(resolve => {
+        const modal = document.getElementById('tokenMissingModal');
+        modal.style.display = 'flex';
+        document.getElementById('tokenModalOk').onclick = () => {
+          modal.style.display = 'none';
+          window.location.href = redirectUrl;
+        };
+        document.getElementById('tokenModalCancel').onclick = () => {
+          modal.style.display = 'none';
+          resolve();
+        };
+      });
+    }
     // Token validation
-    gateway.getStatus().then(status => {
-      if (status.token === 'missing') {
-        const userChoice = confirm(
-          '⚠️ GitHub Token Not Found!\n\n' +
-          'This manager requires a GitHub token to function.\n\n' +
-          'Click OK to go to Command Center and set your token.\n' +
-          'Click Cancel to continue anyway (features will not work).'
-        );
-        if (userChoice) {
-          window.location.href = '../../shared/command-center.html?tab=api';
-        }
+    gateway.getStatus().then(async status => {
+      if (status.token === "missing") {
+        await showTokenModal('../shared/command-center.html');
       }
     });
     
@@ -1512,7 +854,7 @@
     // Upload Form Handler
     document.getElementById('thumbnail').addEventListener('change', function() {
       if (this.files[0]) {
-        document.getElementById('thumbnailInfo').textContent = `🖼️ ${this.files[0].name}`;
+        document.getElementById('thumbnailInfo').textContent = `??? ${this.files[0].name}`;
       }
     });
 
@@ -1521,7 +863,7 @@
       
       // Token validation (now permanently set with fallback)
       if (!GITHUB_TOKEN || GITHUB_TOKEN.length < 20) {
-        alert('❌ GitHub token invalid. Please check api-config-manager.');
+        alert('? GitHub token invalid. Please check api-config-manager.');
         return;
       }
       
@@ -1543,7 +885,7 @@
         
         const duplicateCheck = await contentManager.checkDuplicates(CONTENT_TYPE, title, category);
         if (duplicateCheck.isDuplicate) {
-          const confirm = window.confirm(`⚠️ A vlog titled "${title}" already exists in ${category}. Upload anyway?`);
+          const confirm = window.confirm(`?? A vlog titled "${title}" already exists in ${category}. Upload anyway?`);
           if (!confirm) {
             progress.classList.remove('active');
             return;
@@ -1589,7 +931,7 @@
         });
         
         progressFill.style.width = '100%';
-        progressText.textContent = 'Upload complete! ✅';
+        progressText.textContent = 'Upload complete! ?';
         setTimeout(() => progress.classList.remove('active'), 1500);
         successMessage.classList.add('active');
         
@@ -1610,7 +952,7 @@
         
       } catch (error) {
         progress.classList.remove('active');
-        alert(`❌ Upload failed: ${error.message}`);
+        alert(`? Upload failed: ${error.message}`);
         console.error('Upload error:', error);
       }
     });
@@ -1658,7 +1000,7 @@
     // Load Manage Content
     async function loadManageContent() {
       const grid = document.getElementById('contentGrid');
-      grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #999; grid-column: 1 / -1;">Loading video blogs...</p>';
+      grid.innerHTML = '<p style="text-align: center; padding: 60px; color: rgba(255,255,255,0.4); grid-column: 1 / -1;">Loading video blogs...</p>';
       
       try {
         const data = await contentManager.loadContent(CONTENT_TYPE);
@@ -1677,7 +1019,7 @@
         
         filterVlogs();
       } catch (error) {
-        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #f44336; grid-column: 1 / -1;">❌ Failed to load vlogs</p>';
+        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #f44336; grid-column: 1 / -1;">? Failed to load vlogs</p>';
         console.error('Load error:', error);
       }
     }
@@ -1768,7 +1110,7 @@
       totalPages = Math.ceil(filteredVlogs.length / ITEMS_PER_PAGE);
       
       if (filteredVlogs.length === 0) {
-        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #999; grid-column: 1 / -1;">No vlogs found matching your filters.</p>';
+        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: rgba(255,255,255,0.4); grid-column: 1 / -1;">No vlogs found matching your filters.</p>';
         document.getElementById('paginationControls').classList.remove('active');
         return;
       }
@@ -1792,24 +1134,24 @@
           thumbnailUrl = `https://img.youtube.com/vi/${vlog.youtubeId}/maxresdefault.jpg`;
         }
         if (!thumbnailUrl) {
-          thumbnailUrl = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E🎥%3C/text%3E%3C/svg%3E';
+          thumbnailUrl = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E';
         }
-        const seriesInfo = vlog.series ? `<br>📺 ${vlog.series}${vlog.episode ? ` - Ep ${vlog.episode}` : ''}` : '';
+        const seriesInfo = vlog.series ? `<br>?? ${vlog.series}${vlog.episode ? ` - Ep ${vlog.episode}` : ''}` : '';
         
         card.innerHTML = `
           <input type="checkbox" class="card-checkbox" ${selectedVlogs.has(vlog.id) ? 'checked' : ''} onchange="toggleVlogSelection('${vlog.id}')">
-          <img src="${thumbnailUrl}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E🎥%3C/text%3E%3C/svg%3E'">
+          <img src="${thumbnailUrl}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%236A1B9A%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E'">
           <div class="card-body">
             <div class="card-title">${vlog.title}</div>
             <div class="card-meta">
-              📁 ${vlog.category}<br>
-              👤 ${vlog.author || 'Unknown'}<br>
-              ⏱️ ${vlog.duration || 'N/A'}<br>
-              🗓️ ${contentManager.formatDate(vlog.date)}${seriesInfo}
+              ?? ${vlog.category}<br>
+              ?? ${vlog.author || 'Unknown'}<br>
+              ?? ${vlog.duration || 'N/A'}<br>
+              ??? ${contentManager.formatDate(vlog.date)}${seriesInfo}
             </div>
             <div class="card-actions">
-              <button class="btn-icon" onclick="editVlog('${vlog.id}')">✏️ Edit</button>
-              <button class="btn-icon" onclick="deleteVlog('${vlog.id}')">🗑️ Delete</button>
+              <button class="btn-icon" onclick="editVlog('${vlog.id}')">?? Edit</button>
+              <button class="btn-icon" onclick="deleteVlog('${vlog.id}')">??? Delete</button>
             </div>
           </div>
         `;
@@ -1896,7 +1238,7 @@
         }
         
         progressFill.style.width = '100%';
-        progressText.textContent = `✅ Successfully deleted ${completed} vlog(s)!`;
+        progressText.textContent = `? Successfully deleted ${completed} vlog(s)!`;
         
         setTimeout(() => {
           progress.classList.remove('active');
@@ -1906,7 +1248,7 @@
         
       } catch (error) {
         progress.classList.remove('active');
-        alert(`❌ Bulk delete failed: ${error.message}`);
+        alert(`? Bulk delete failed: ${error.message}`);
       }
     }
 
@@ -1916,11 +1258,11 @@
       
       try {
         await contentManager.deleteContent(CONTENT_TYPE, id);
-        alert('✅ Vlog deleted successfully!');
+        alert('? Vlog deleted successfully!');
         selectedVlogs.delete(id);
         loadManageContent();
       } catch (error) {
-        alert(`❌ Delete failed: ${error.message}`);
+        alert(`? Delete failed: ${error.message}`);
       }
     }
 
@@ -1933,7 +1275,7 @@
       
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('❌ Please select an image file only!');
+        alert('? Please select an image file only!');
         event.target.value = '';
         return;
       }
@@ -1941,7 +1283,7 @@
       // Validate file size (max 5MB for images)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert(`❌ Image too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 5MB`);
+        alert(`? Image too large: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaximum size: 5MB`);
         event.target.value = '';
         return;
       }
@@ -1970,7 +1312,7 @@
       
       if (!vlog) return;
       
-      if (!confirm(`🗑️ Delete thumbnail for "${vlog.title}"?\n\nThis will remove the image from GitHub storage.\nThe vlog will remain without a custom thumbnail (YouTube thumbnail will be used).`)) {
+      if (!confirm(`??? Delete thumbnail for "${vlog.title}"?\n\nThis will remove the image from GitHub storage.\nThe vlog will remain without a custom thumbnail (YouTube thumbnail will be used).`)) {
         return;
       }
       
@@ -1980,11 +1322,11 @@
         delete vlog.thumbnailUrl;
         delete vlog.coverImage;
         await contentManager.updateContent(CONTENT_TYPE, vlogId, vlog);
-        alert('✅ Thumbnail marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
+        alert('? Thumbnail marked for deletion!\n\n?? Remember to delete the actual file from GitHub repository.');
         document.getElementById('edit-currentVlogThumbnailPath').textContent = 'No custom thumbnail (using YouTube thumbnail)';
         loadManageContent();
       } catch (error) {
-        alert('❌ Failed to delete thumbnail: ' + error.message);
+        alert('? Failed to delete thumbnail: ' + error.message);
       }
     }
     // ============================================================================
@@ -2050,7 +1392,7 @@
       try {
         // Check if new thumbnail was selected
         if (editVlogThumbnailFileToUpload) {
-          if (!confirm('📤 Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
+          if (!confirm('?? Upload new thumbnail image?\n\nThis will replace the existing thumbnail in GitHub storage.\n\nContinue?')) {
             return;
           }
           
@@ -2067,20 +1409,20 @@
             updatedVlog.thumbnailPath = thumbnailPath;
             updatedVlog.thumbnail = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
             
-            alert('✅ Thumbnail uploaded successfully!');
+            alert('? Thumbnail uploaded successfully!');
             editVlogThumbnailFileToUpload = null;
           } catch (uploadError) {
-            alert('❌ Failed to upload thumbnail: ' + uploadError.message);
+            alert('? Failed to upload thumbnail: ' + uploadError.message);
             return;
           }
         }
         
         await contentManager.updateContent(CONTENT_TYPE, updatedVlog.id, updatedVlog);
-        alert('✅ Vlog updated successfully!');
+        alert('? Vlog updated successfully!');
         closeEditModal();
         loadManageContent();
       } catch (error) {
-        alert(`❌ Update failed: ${error.message}`);
+        alert(`? Update failed: ${error.message}`);
       }
     });
 
@@ -2146,7 +1488,7 @@
         const seriesBreakdown = document.getElementById('seriesBreakdown');
         seriesBreakdown.innerHTML = '';
         if (Object.keys(series).length === 0) {
-          seriesBreakdown.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #999;">No series created yet</p>';
+          seriesBreakdown.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: rgba(255,255,255,0.4);">No series created yet</p>';
         } else {
           Object.entries(series).sort((a, b) => b[1] - a[1]).forEach(([ser, count]) => {
             const item = document.createElement('div');
@@ -2179,7 +1521,7 @@
         const data = await contentManager.loadContent(CONTENT_TYPE);
         document.getElementById('jsonEditor').value = JSON.stringify(data, null, 2);
       } catch (error) {
-        alert(`❌ Failed to load JSON: ${error.message}`);
+        alert(`? Failed to load JSON: ${error.message}`);
       }
     }
 
@@ -2187,9 +1529,9 @@
       try {
         const jsonText = document.getElementById('jsonEditor').value;
         JSON.parse(jsonText);
-        alert('✅ JSON is valid!');
+        alert('? JSON is valid!');
       } catch (error) {
-        alert(`❌ Invalid JSON: ${error.message}`);
+        alert(`? Invalid JSON: ${error.message}`);
       }
     }
 
@@ -2198,9 +1540,9 @@
         const jsonText = document.getElementById('jsonEditor').value;
         const parsed = JSON.parse(jsonText);
         document.getElementById('jsonEditor').value = JSON.stringify(parsed, null, 2);
-        alert('✨ JSON formatted successfully!');
+        alert('? JSON formatted successfully!');
       } catch (error) {
-        alert(`❌ Cannot format invalid JSON: ${error.message}`);
+        alert(`? Cannot format invalid JSON: ${error.message}`);
       }
     }
 
@@ -2209,15 +1551,15 @@
         const jsonText = document.getElementById('jsonEditor').value;
         const parsed = JSON.parse(jsonText);
         
-        if (!confirm('⚠️ This will overwrite the entire videos.json file. Are you absolutely sure?')) {
+        if (!confirm('?? This will overwrite the entire videos.json file. Are you absolutely sure?')) {
           return;
         }
         
         await contentManager.saveContent(CONTENT_TYPE, parsed);
-        alert('✅ JSON saved successfully!');
+        alert('? JSON saved successfully!');
         loadManageContent();
       } catch (error) {
-        alert(`❌ Save failed: ${error.message}`);
+        alert(`? Save failed: ${error.message}`);
       }
     }
 
@@ -2226,7 +1568,7 @@
     function updateVlogCategoryCounter(message, color) {
       const counter = document.querySelector('#categorySearch + select + small');
       if (counter) {
-        counter.textContent = `💡 ${message}`;
+        counter.textContent = `?? ${message}`;
         counter.style.color = color;
       }
     }
@@ -2247,7 +1589,7 @@
       
       // Rebuild select with only matching categories, preserving groups
       contentManager.loadContent(CONTENT_TYPE).then(data => {
-        select.innerHTML = '<option value="" style="font-weight: 600; color: #6A1B9A;">━━━ SELECT CATEGORY ━━━</option>';
+        select.innerHTML = '<option value="" style="font-weight: 600; color: #CC0000;">??? SELECT CATEGORY ???</option>';
         
         const videoBlogGroups = data.categoryGroups['video-blog'] || [];
         const educationalGroups = data.categoryGroups['educational'] || [];
@@ -2267,7 +1609,7 @@
             // Group header
             const groupHeader = document.createElement('option');
             groupHeader.disabled = true;
-            groupHeader.style.cssText = 'font-weight: 700; color: #6A1B9A; background: rgba(106, 27, 154, 0.1); padding: 8px 5px;';
+            groupHeader.style.cssText = 'font-weight: 700; color: #CC0000; background: rgba(139,0,0, 0.1); padding: 8px 5px;';
             groupHeader.textContent = `${group.icon} ${group.name} (${matchingCategories.length})`;
             select.appendChild(groupHeader);
             
@@ -2291,7 +1633,7 @@
       });
     }
 
-    // 🔄 MANUAL SYNC TO MOBILE CONTENT.JSON
+    // ?? MANUAL SYNC TO MOBILE CONTENT.JSON
     async function syncToMobileContentJSON() {
       const syncBtn = event?.target;
       if (syncBtn) {
@@ -2300,18 +1642,18 @@
       }
       
       try {
-        console.log('🔄 Starting manual sync to mobile content.json...');
+        console.log('?? Starting manual sync to mobile content.json...');
         
         const result = await contentManager.syncVideoToMobileContentJSON();
         
         if (result.success) {
-          alert(`✅ Mobile Sync Successful!\n\n📊 Synced Data:\n• ${result.videosCount} videos\n• Total content: ${result.totalContent}\n\n🎉 Mobile app will now show updated videos!`);
-          console.log('✅ Mobile content.json synced:', result);
+          alert(`? Mobile Sync Successful!\n\n?? Synced Data:\n� ${result.videosCount} videos\n� Total content: ${result.totalContent}\n\n?? Mobile app will now show updated videos!`);
+          console.log('? Mobile content.json synced:', result);
         }
         
       } catch (error) {
-        console.error('❌ Mobile sync failed:', error);
-        alert(`❌ Sync Failed!\n\n${error.message}\n\nCheck console for details.`);
+        console.error('? Mobile sync failed:', error);
+        alert(`? Sync Failed!\n\n${error.message}\n\nCheck console for details.`);
       } finally {
         if (syncBtn) {
           syncBtn.disabled = false;
@@ -2356,11 +1698,23 @@
                 }
             });
             
-            console.log('✅ Mobile CSS enforced for Vlogs Manager');
+            console.log('? Mobile CSS enforced for Vlogs Manager');
         }
     })();
 </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../Optimization/cursor-effects.js" defer></script>
+<!-- Token Missing Modal -->
+<div id="tokenMissingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.90);z-index:99998;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:#0a0000;border:1px solid rgba(204,0,0,0.55);border-radius:10px;padding:38px 32px 32px;max-width:430px;width:92%;box-shadow:0 0 60px rgba(204,0,0,0.35),0 0 0 1px rgba(204,0,0,0.12);text-align:center;position:relative;">
+    <div style="width:64px;height:64px;background:rgba(204,0,0,0.12);border:2px solid rgba(204,0,0,0.45);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.8rem;">&#128274;</div>
+    <h3 style="color:#FF3333;font-size:1.1rem;margin:0 0 12px;font-family:inherit;letter-spacing:0.5px;font-weight:700;">GitHub Token Not Found</h3>
+    <p style="color:rgba(255,255,255,0.62);font-size:0.88rem;line-height:1.72;margin:0 0 28px;">This manager requires a GitHub Personal Access Token to function.<br>Go to <strong style="color:rgba(255,100,100,0.85);">Command Center</strong> to configure your token, then return here.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button id="tokenModalOk" onmouseover="this.style.background='#FF1744'" onmouseout="this.style.background='#CC0000'" style="background:#CC0000;color:#fff;border:none;padding:11px 24px;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.88rem;letter-spacing:0.3px;transition:background 0.2s;">&#8594; Go to Command Center</button>
+      <button id="tokenModalCancel" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'" style="background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.58);border:1px solid rgba(139,0,0,0.45);padding:11px 20px;border-radius:6px;cursor:pointer;font-size:0.88rem;">Continue Anyway</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
