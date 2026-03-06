@@ -985,6 +985,18 @@
                     SolidWorks Manager
                 </h1>
                 <p>Manage SolidWorks 3D models, assemblies, and drawings</p>
+                <div class="token-controls">
+                    <span id="tokenStatus" class="token-status checking">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Checking token...
+                    </span>
+                    <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
+                        <i class="fas fa-bug"></i> Debug
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -2959,7 +2971,49 @@ This part is designed for [specific application] in [industry/system].`
             readmeGenerator = new READMEGenerator();
 
             githubHandler.loadToken();
+            updateTokenStatus();
             console.log('✅ All advanced features loaded for SolidWorks Manager');
+        });
+
+        // ===== TOKEN MANAGEMENT (Books Manager Style) =====
+        async function updateTokenStatus() {
+            const tokenBadge = document.getElementById('tokenStatus');
+            tokenBadge.className = 'token-status checking';
+            tokenBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking token...';
+
+            try {
+                const isValid = await githubHandler.verifyToken();
+                
+                if (isValid) {
+                    tokenBadge.className = 'token-status active';
+                    tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
+                } else {
+                    tokenBadge.className = 'token-status missing';
+                    tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
+                    
+                    if (confirm('GitHub token is missing or invalid. Configure token now?')) {
+                        window.location.href = '../../../shared/command-center.html?tab=api';
+                    }
+                }
+            } catch (error) {
+                tokenBadge.className = 'token-status missing';
+                tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Error';
+            }
+        }
+
+        document.getElementById('tokenRefreshBtn').addEventListener('click', () => {
+            updateTokenStatus();
+        });
+
+        document.getElementById('tokenDebugBtn').addEventListener('click', () => {
+            const token = localStorage.getItem('githubToken');
+            const tokenData = {
+                exists: !!token,
+                length: token ? token.length : 0,
+                prefix: token ? token.substring(0, 7) + '...' : 'N/A',
+                stored: localStorage.getItem('github_token') || 'Not found',
+            };
+            alert('🐛 GitHub Token Debug:\n\n' + JSON.stringify(tokenData, null, 2));
         });
 
         window.pushToGitHub = async function() {
@@ -3263,6 +3317,16 @@ This part is designed for [specific application] in [industry/system].`
         }
     })();
 </script>
+
+    <!-- Progress Bar Overlay (Books Manager Style) -->
+    <div id="progressOverlay" class="progress-overlay"></div>
+    <div id="progressContainer" class="progress-container">
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div id="progressText" class="progress-text">Processing...</div>
+    </div>
+
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
 </body>

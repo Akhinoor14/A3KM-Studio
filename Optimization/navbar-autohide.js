@@ -54,21 +54,10 @@
             return;
         }
         
-        // PRIORITY 2: Scroll-based behavior
-        // Don't hide if at top of page
-        if (currentScroll <= 100) {
-            showNavbar();
-            lastScroll = currentScroll;
-            return;
-        }
-        
-        // Scrolling DOWN - Hide navbar
+        // Scrolling DOWN past top - Hide navbar
+        // Scrolling UP - do nothing (only mouse controls showing)
         if (currentScroll > lastScroll && currentScroll > 100) {
             hideNavbar();
-        } 
-        // Scrolling UP - Show navbar
-        else if (currentScroll < lastScroll) {
-            showNavbar();
         }
         
         lastScroll = currentScroll;

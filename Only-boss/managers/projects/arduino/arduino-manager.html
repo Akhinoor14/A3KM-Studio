@@ -148,6 +148,168 @@
             transform: translateY(-2px);
         }
 
+        /* Token Status Badge (Books Manager Style) */
+        .token-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-left: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .token-status.active {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(139, 195, 74, 0.15));
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+        }
+
+        .token-status.missing {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(229, 57, 53, 0.15));
+            color: #f44336;
+            border: 2px solid #f44336;
+        }
+
+        .token-status.checking {
+            background: linear-gradient(135deg, rgba(0, 137, 123, 0.2), rgba(0, 105, 92, 0.2));
+            color: var(--arduino-teal);
+            border: 2px solid var(--arduino-teal);
+        }
+
+        .token-status i {
+            font-size: 14px;
+        }
+
+        .token-refresh-btn {
+            background: rgba(0, 137, 123, 0.15);
+            border: 2px solid var(--arduino-teal);
+            color: var(--arduino-teal);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .token-refresh-btn:hover {
+            background: linear-gradient(135deg, #00897B, #00695C);
+            color: #fff;
+            transform: rotate(180deg);
+            box-shadow: 0 0 20px rgba(0, 137, 123, 0.5);
+        }
+
+        .token-debug-btn {
+            background: linear-gradient(135deg, rgba(0, 137, 123, 0.15), rgba(0, 105, 92, 0.15));
+            border: 2px solid var(--arduino-teal);
+            color: var(--arduino-teal);
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            margin-left: 10px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .token-debug-btn:hover {
+            background: linear-gradient(135deg, #00897B, #00695C);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 137, 123, 0.5);
+        }
+
+        /* Progress Bar (Books Manager Style) */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9998;
+            display: none;
+        }
+
+        .progress-overlay.active {
+            display: block;
+        }
+
+        .progress-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: none;
+            min-width: 500px;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00897B, #00bfa5);
+            width: 0%;
+            transition: width 0.5s;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #333;
+            font-size: 17px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
         .btn-save {
             background: linear-gradient(135deg, var(--arduino-teal), var(--arduino-teal-dark));
             color: white;
@@ -797,6 +959,16 @@
                 </div>
             </div>
             <div class="header-actions">
+                <span id="tokenStatus" class="token-status checking">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Checking token...
+                </span>
+                <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
+                    <i class="fas fa-bug"></i> Debug
+                </button>
                 <a href="../category-selector.html" class="btn btn-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back</span>
@@ -2826,7 +2998,49 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
             readmeGenerator = new READMEGenerator();
 
             githubHandler.loadToken();
+            updateTokenStatus();
             console.log('✅ All advanced features loaded for Arduino Manager');
+        });
+
+        // ===== TOKEN MANAGEMENT (Books Manager Style) =====
+        async function updateTokenStatus() {
+            const tokenBadge = document.getElementById('tokenStatus');
+            tokenBadge.className = 'token-status checking';
+            tokenBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking token...';
+
+            try {
+                const isValid = await githubHandler.verifyToken();
+                
+                if (isValid) {
+                    tokenBadge.className = 'token-status active';
+                    tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
+                } else {
+                    tokenBadge.className = 'token-status missing';
+                    tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
+                    
+                    if (confirm('GitHub token is missing or invalid. Configure token now?')) {
+                        window.location.href = '../../../shared/command-center.html?tab=api';
+                    }
+                }
+            } catch (error) {
+                tokenBadge.className = 'token-status missing';
+                tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Error';
+            }
+        }
+
+        document.getElementById('tokenRefreshBtn').addEventListener('click', () => {
+            updateTokenStatus();
+        });
+
+        document.getElementById('tokenDebugBtn').addEventListener('click', () => {
+            const token = localStorage.getItem('githubToken');
+            const tokenData = {
+                exists: !!token,
+                length: token ? token.length : 0,
+                prefix: token ? token.substring(0, 7) + '...' : 'N/A',
+                stored: localStorage.getItem('github_token') || 'Not found',
+            };
+            alert('🐛 GitHub Token Debug:\n\n' + JSON.stringify(tokenData, null, 2));
         });
 
         window.pushToGitHub = async function() {
@@ -3083,6 +3297,16 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
         }
     })();
 </script>
+
+    <!-- Progress Bar Overlay (Books Manager Style) -->
+    <div id="progressOverlay" class="progress-overlay"></div>
+    <div id="progressContainer" class="progress-container">
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div id="progressText" class="progress-text">Processing...</div>
+    </div>
+
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
 </body>
