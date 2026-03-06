@@ -2974,6 +2974,11 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
     </script>
 
     <!-- Advanced Feature Modules -->
+    <!-- Central API System (March 2026 Integration) -->
+    <script src="../../shared/unified-token-manager.js"></script>
+    <script src="../../shared/central-api-gateway.js"></script>
+    
+    <!-- Project-Specific Modules -->
     <script src="../shared-utilities.js"></script>
     <script src="../github-api-handler.js"></script>
     <script src="../version-history.js"></script>
@@ -2988,8 +2993,14 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
     <script>
         // Initialize Advanced Features
         let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
+        let tokenManager, centralAPI; // Central API integration
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Initialize central API system first
+            tokenManager = new UnifiedTokenManager();
+            centralAPI = CentralAPIGateway.getInstance();
+            
+            // Initialize project modules
             githubHandler = new GitHubAPIHandler();
             versionHistory = new VersionHistoryManager('arduino_projects');
             tagsManager = new TagsManager();
@@ -2997,29 +3008,40 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
             analyticsInstance = new AnalyticsDashboard([]);
             readmeGenerator = new READMEGenerator();
 
+            // Load token through unified manager
+            const token = tokenManager.loadToken();
+            if (token) {
+                localStorage.setItem('githubToken', token); // Sync to project handler
+            }
             githubHandler.loadToken();
+            
             updateTokenStatus();
-            console.log('✅ All advanced features loaded for Arduino Manager');
+            console.log('✅ Arduino Manager initialized with Central API');
         });
 
-        // ===== TOKEN MANAGEMENT (Books Manager Style) =====
+        // ===== TOKEN MANAGEMENT (Central API Integration) =====
         async function updateTokenStatus() {
             const tokenBadge = document.getElementById('tokenStatus');
             tokenBadge.className = 'token-status checking';
             tokenBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking token...';
 
             try {
-                const isValid = await githubHandler.verifyToken();
+                // Use unified token manager for validation
+                const token = tokenManager.loadToken();
+                if (!token) throw new Error('No token');
                 
-                if (isValid) {
+                const validation = await tokenManager.validateToken(token);
+                
+                if (validation.valid) {
                     tokenBadge.className = 'token-status active';
                     tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
+                    localStorage.setItem('githubToken', token); // Sync to project handler
                 } else {
                     tokenBadge.className = 'token-status missing';
                     tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
                     
                     if (confirm('GitHub token is missing or invalid. Configure token now?')) {
-                        window.location.href = '../../../shared/command-center.html?tab=api';
+                        window.location.href = '../../shared/command-center.html?tab=api';
                     }
                 }
             } catch (error) {
@@ -3033,12 +3055,13 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
         });
 
         document.getElementById('tokenDebugBtn').addEventListener('click', () => {
-            const token = localStorage.getItem('githubToken');
+            const token = tokenManager.loadToken();
             const tokenData = {
                 exists: !!token,
                 length: token ? token.length : 0,
                 prefix: token ? token.substring(0, 7) + '...' : 'N/A',
-                stored: localStorage.getItem('github_token') || 'Not found',
+                source: 'UnifiedTokenManager',
+                key: 'github_token'
             };
             alert('🐛 GitHub Token Debug:\n\n' + JSON.stringify(tokenData, null, 2));
         });

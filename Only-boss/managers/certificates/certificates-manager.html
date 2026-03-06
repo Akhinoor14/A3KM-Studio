@@ -537,21 +537,33 @@
     </div>
   </div>
 
+  <!-- Central API System (March 2026 Integration) -->
+  <script src="../shared/unified-token-manager.js"></script>
+  <script src="../shared/central-api-gateway.js"></script>
+  
+  <!-- Manager-Specific Scripts -->
   <script src="../Content-studio/github-content-uploader.js"></script>
   <script src="certificates-manager.js"></script>
   <script>
+    // Initialize Central API System
+    let tokenManager, centralAPI;
+    
     // Load GitHub token from localStorage on page load
     document.addEventListener('DOMContentLoaded', () => {
-      const githubToken = localStorage.getItem('github_token') || '';
+      // Initialize central API system
+      tokenManager = new UnifiedTokenManager();
+      centralAPI = CentralAPIGateway.getInstance();
+      
+      const githubToken = tokenManager.loadToken();
       const tokenInput = document.getElementById('githubToken');
       const tokenStatus = document.getElementById('tokenStatus');
       
       if (githubToken) {
         tokenInput.value = githubToken;
         tokenStatus.innerHTML = '✅ <span style="color: #28a745;">Token loaded successfully (' + githubToken.length + ' chars)</span>';
-        console.log('✅ Certificate Manager: GitHub token loaded from localStorage');
+        console.log('✅ Certificate Manager: GitHub token loaded from UnifiedTokenManager');
       } else {
-        tokenStatus.innerHTML = '⚠️ <span style="color: #dc3545;">No token found - <a href="../shared/api-config-manager.html" style="color: #8B0000;">Set token here</a></span>';
+        tokenStatus.innerHTML = '⚠️ <span style="color: #dc3545;">No token found - <a href="../shared/command-center.html?tab=api" style="color: #8B0000;">Set token here</a></span>';
         console.warn('⚠️ Certificate Manager: No GitHub token in localStorage');
         
         // Show prompt to user
@@ -559,11 +571,11 @@
           const userChoice = confirm(
             '⚠️ GitHub Token Not Found!\n\n' +
             'Certificate Manager requires a GitHub token to upload files.\n\n' +
-            'Click OK to go to API Config Manager and set your token.\n' +
+            'Click OK to go to Command Center and set your token.\n' +
             'Click Cancel to enter token manually.'
           );
           if (userChoice) {
-            window.location.href = '../shared/api-config-manager.html';
+            window.location.href = '../shared/command-center.html?tab=api';
           }
         }, 1000);
       }
