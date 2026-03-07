@@ -3,6 +3,7 @@
  * ─────────────────────────────────────────────────────────────
  * Self-contained. Injects canvas, cursor elements, and styles.
  * Works on every desktop page. Skips touch/mobile devices.
+ * Auto-disables neural canvas on low-end / no-GPU devices.
  * ─────────────────────────────────────────────────────────────
  */
 (function () {
@@ -11,6 +12,31 @@
   /* ── Touch/mobile bail-out ─────────────────────────────────── */
   if (window.matchMedia('(hover: none)').matches) return;
   if (typeof window === 'undefined' || !window.requestAnimationFrame) return;
+
+  /* ── GPU / performance detection ───────────────────────────── */
+  function detectLowEnd() {
+    // 1. Hardware concurrency: ≤2 logical cores = likely low-end
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) return true;
+    // 2. Device memory API: < 2 GB
+    if (navigator.deviceMemory && navigator.deviceMemory < 2) return true;
+    // 3. Canvas WebGL renderer string — software renderer (no GPU)
+    try {
+      const testCanvas = document.createElement('canvas');
+      const gl = testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
+      if (!gl) return true; // no WebGL = no GPU
+      const dbgInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbgInfo) {
+        const renderer = gl.getParameter(dbgInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+        // Software renderers: SwiftShader, llvmpipe, softpipe, Microsoft Basic
+        if (/swiftshader|llvmpipe|softpipe|microsoft basic|software/i.test(renderer)) return true;
+      }
+    } catch (e) { /* ignore */ }
+    // 4. User opted out via reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+    return false;
+  }
+
+  const LOW_END = detectLowEnd();
 
   /* ── Inject CSS ────────────────────────────────────────────── */
   const style = document.createElement('style');
@@ -78,9 +104,7 @@
   document.head.appendChild(style);
 
   /* ── Inject DOM ─────────────────────────────────────────────── */
-  const canvas = document.createElement('canvas');
-  canvas.className = 'a3km-neural-canvas';
-  canvas.setAttribute('aria-hidden', 'true');
+  let canvas, ctx;
 
   const cursorDot = document.createElement('div');
   cursorDot.className = 'a3km-cursor-dot';
@@ -90,10 +114,17 @@
   cursorRing.className = 'a3km-cursor-ring';
   cursorRing.setAttribute('aria-hidden', 'true');
 
+  if (!LOW_END) {
+    canvas = document.createElement('canvas');
+    canvas.className = 'a3km-neural-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+  }
+
   function injectDOM() {
-    document.body.prepend(canvas);
+    if (canvas) document.body.prepend(canvas);
     document.body.appendChild(cursorDot);
     document.body.appendChild(cursorRing);
+    if (canvas) ctx = canvas.getContext('2d', { alpha: true });
   }
 
   if (document.readyState === 'loading') {
@@ -102,14 +133,14 @@
     injectDOM();
   }
 
-  const ctx = canvas.getContext('2d', { alpha: true });
-
   /* ── Config ─────────────────────────────────────────────────── */
+  // Increase grid spacing on mid-range devices to reduce particle count
+  const midEnd = !LOW_END && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
   const CFG = {
-    GRID_SPACING: 95,        // px between grid nodes
+    GRID_SPACING: midEnd ? 130 : 95, // larger spacing = fewer particles on mid-range
     JITTER: 0.45,            // random offset (fraction of spacing)
     CONNECTION_R: 175,       // mouse → particle line radius
-    LINK_R: 115,             // particle → particle line radius
+    LINK_R: midEnd ? 90 : 115, // particle → particle line radius (reduced on mid-range)
     ATTRACT_R: 130,          // mouse attract force radius
     ATTRACT_F: 0.055,        // attract force magnitude
     RETURN_F: 0.0018,        // spring return-to-base force
@@ -151,12 +182,15 @@
   function resize() {
     W = window.innerWidth;
     H = window.innerHeight;
-    canvas.width  = W;
-    canvas.height = H;
+    if (canvas) {
+      canvas.width  = W;
+      canvas.height = H;
+    }
     initParticles();
   }
 
   function initParticles() {
+    if (!canvas) return;
     particles = [];
     const s = CFG.GRID_SPACING;
     const cols = Math.floor(W / s) + 2;
@@ -191,6 +225,12 @@
     rafId = requestAnimationFrame(draw);
 
     if (!tabVisible) return;
+
+    // Low-end mode: only animate cursor, skip canvas entirely
+    if (!canvas || !ctx) {
+      updateCursor();
+      return;
+    }
 
     ctx.clearRect(0, 0, W, H);
 
@@ -367,7 +407,14 @@
 
   /* ── Init ───────────────────────────────────────────────────── */
   function init() {
-    resize();
+    W = window.innerWidth;
+    H = window.innerHeight;
+    if (canvas) {
+      canvas.width  = W;
+      canvas.height = H;
+      ctx = canvas.getContext('2d', { alpha: true });
+      initParticles();
+    }
     attachMagnetic();
     setTimeout(attachMagnetic, 1200); // re-attach for late-rendered elements
     requestAnimationFrame(draw);
