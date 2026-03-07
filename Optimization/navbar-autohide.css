@@ -16,14 +16,11 @@
     transform: translateY(0);
 }
 
-/* Always show on page load initially */
+/* Always show on page load initially — transition persists so show is also animated */
 .desktop-navbar {
     transform: translateY(0);
-}
-
-/* Smooth transitions */
-.desktop-navbar {
     will-change: transform;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Mobile - Disable autohide (always show) */
@@ -50,12 +47,40 @@ body:has(.desktop-navbar.autohide:not(.show)) {
 /* Sticky filter bars / toolbars that sit at top: 85px should shift too */
 .filter-bar,
 .sticky-bar,
-.toolbar-sticky {
+.toolbar-sticky,
+.lib-header,
+.page-header,
+.manager-header {
     transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body:has(.desktop-navbar.autohide:not(.show)) .filter-bar,
 body:has(.desktop-navbar.autohide:not(.show)) .sticky-bar,
-body:has(.desktop-navbar.autohide:not(.show)) .toolbar-sticky {
+body:has(.desktop-navbar.autohide:not(.show)) .toolbar-sticky,
+body:has(.desktop-navbar.autohide:not(.show)) .lib-header,
+body:has(.desktop-navbar.autohide:not(.show)) .page-header,
+body:has(.desktop-navbar.autohide:not(.show)) .manager-header {
     top: 0 !important;
+}
+
+/* Code viewer wrapper - the whole viewer shifts up when navbar hides */
+.viewer-wrapper {
+    transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body:has(.desktop-navbar.autohide:not(.show)) .viewer-wrapper {
+    top: 0 !important;
+    height: 100vh !important;
+}
+
+/* Main content wrapper (L-shaped layout) - shifts from 153px to 68px when navbar hides */
+.main-content-wrapper {
+    transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body:has(.desktop-navbar.autohide:not(.show)) .main-content-wrapper {
+    top: 68px !important;
+    height: calc(100vh - 68px) !important;
 }

@@ -340,6 +340,20 @@ async function verifyLogin() {
         }
         
         await createSession(password);
+
+        // Log the login event for analytics
+        try {
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('login', 'Admin login', 'Admin', 'success', new Date().toLocaleString());
+            } else {
+                const _KEY = 'a3km_activity_logs';
+                const _logs = JSON.parse(localStorage.getItem(_KEY) || '[]');
+                _logs.unshift({ id: Date.now() + Math.random(), timestamp: new Date().toISOString(), type: 'login', activity: 'Admin login', user: 'Admin', status: 'success', details: new Date().toLocaleString() });
+                if (_logs.length > 1000) _logs.splice(1000);
+                localStorage.setItem(_KEY, JSON.stringify(_logs));
+            }
+        } catch (e) {}
+
         showSuccess();
     } else {
         showError('❌ Incorrect password');

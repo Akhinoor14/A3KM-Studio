@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0000">
+  <title>Code Viewer - A3KM Studio</title>
+
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+  <link rel="stylesheet" href="../../shared/mobile-common.css">
+  <link rel="stylesheet" href="../../shared/mobile-navbar.css">
+  <script src="../../shared/page-loading.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #CC0000;
+      --accent-dim: rgba(204,0,0,0.25);
+      --accent-bg: rgba(204,0,0,0.08);
+      --bg: #030000;
+      --card-bg: rgba(18,0,0,0.97);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    .viewer-topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px env(safe-area-inset-bottom, 0px);
+      background: #050000;
+      border-bottom: 1px solid rgba(204,0,0,0.2);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 52px;
+    }
+
+    .viewer-back-btn {
+      color: var(--accent);
+      font-size: 16px;
+      text-decoration: none;
+      padding: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .viewer-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .viewer-lang-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+
+    .status-dot.ready   { background: var(--accent); box-shadow: 0 0 6px rgba(204,0,0,0.6); }
+    .status-dot.loading { background: #ffc107; animation: pulse 1s infinite; }
+    .status-dot.running { background: #17a2b8; animation: pulse 0.7s infinite; }
+    .status-dot.error   { background: #ff4444; }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ── Tab strip ── */
+    .viewer-tabs {
+      display: flex;
+      background: #090000;
+      border-bottom: 1px solid rgba(204,0,0,0.12);
+      position: fixed;
+      top: 52px;
+      left: 0;
+      right: 0;
+      z-index: 99;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .viewer-tabs::-webkit-scrollbar { display: none; }
+
+    .viewer-tab {
+      flex: 1;
+      padding: 11px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.18s;
+      user-select: none;
+    }
+
+    .viewer-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Content area ── */
+    .viewer-content {
+      position: fixed;
+      top: 92px;   /* topbar 52 + tabs 40 */
+      bottom: 60px; /* bottom nav */
+      left: 0;
+      right: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-panel { display: none; padding: 14px; }
+    .tab-panel.active { display: block; }
+
+    /* ── Problem tab ── */
+    .problem-section { margin-bottom: 16px; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(204,0,0,0.7);
+      margin-bottom: 8px;
+    }
+
+    .meta-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .meta-chip {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .meta-chip.easy   { background: rgba(0,180,50,0.15); border: 1px solid rgba(0,180,50,0.3); color: #44ff88; }
+    .meta-chip.medium { background: rgba(255,160,0,0.15); border: 1px solid rgba(255,160,0,0.3); color: #ffcc44; }
+    .meta-chip.hard   { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.3); color: #ff7777; }
+    .meta-chip.source { background: rgba(204,0,0,0.08); border: 1px solid rgba(204,0,0,0.2); color: rgba(255,120,120,0.85); font-family: monospace; }
+    .meta-chip.cat    { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); }
+
+    .problem-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      margin-bottom: 14px;
+    }
+
+    /* Examples section */
+    .example-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .example-box:last-child { margin-bottom: 0; }
+
+    .example-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .example-row {
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .example-row strong {
+      color: rgba(255,255,255,0.8);
+      font-weight: 700;
+      display: inline-block;
+      min-width: 50px;
+    }
+
+    .example-row code {
+      background: rgba(204,0,0,0.10);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: rgba(255,200,200,0.9);
+      font-size: 11px;
+    }
+
+    .example-explain {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      font-style: italic;
+      margin-top: 6px;
+      padding-left: 10px;
+      border-left: 2px solid rgba(204,0,0,0.25);
+    }
+
+    /* Constraints section */
+    .constraints-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .constraints-list li {
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.15);
+      border-left: 3px solid rgba(204,0,0,0.35);
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: monospace;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.5;
+    }
+
+    .constraints-list li:last-child { margin-bottom: 0; }
+
+    .approach-box {
+      background: rgba(204,0,0,0.05);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .approach-box .approach-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .approach-box p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.6;
+    }
+
+    .complexity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .complexity-card {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(204,0,0,0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .complexity-card .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .complexity-card .value { font-size: 15px; font-weight: 700; color: var(--accent); font-family: monospace; }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag-item {
+      padding: 3px 9px;
+      background: rgba(204,0,0,0.07);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-radius: 20px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── Code tab ── */
+    .code-wrapper {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(204,0,0,0.18);
+    }
+
+    .code-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .code-topbar .lang-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      padding: 4px 10px;
+      background: rgba(0,204,68,0.1);
+      border: 1px solid rgba(0,204,68,0.3);
+      border-radius: 6px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .copy-btn.copied { background: rgba(0,204,68,0.25); }
+
+    pre[class*="language-"] {
+      margin: 0;
+      border-radius: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .notes-box {
+      margin-top: 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      white-space: pre-wrap;
+      font-style: italic;
+    }
+
+    /* ── Run tab ── */
+    .run-notice {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(0,204,68,0.18);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .run-notice.error-notice {
+      border-color: rgba(255,100,100,0.3);
+      color: rgba(255,150,150,0.7);
+    }
+
+    .run-btn-wrap { margin-bottom: 14px; }
+
+    .btn-run-big {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #008822);
+      color: #000;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-run-big:disabled { opacity: 0.4; }
+    .btn-run-big:active   { filter: brightness(0.9); }
+
+    .stdin-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stdin-area {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(0,204,68,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      resize: vertical;
+      min-height: 60px;
+      margin-bottom: 14px;
+      color-scheme: dark;
+    }
+
+    .output-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .output-area {
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(0,204,68,0.18);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 80px;
+      font-size: 12px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      color: #c5f77c;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .output-area.error-text  { color: #ff8888; }
+    .output-area.idle-text   { color: rgba(255,255,255,0.2); font-style: italic; }
+
+    /* ── Test cases section ── */
+    .test-section { margin-top: 20px; }
+
+    .test-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .btn-run-all {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(0,204,68,0.12);
+      border: 1px solid rgba(0,204,68,0.3);
+      color: var(--accent);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-run-all:active { background: rgba(0,204,68,0.22); }
+    .btn-run-all:disabled { opacity: 0.4; }
+
+    .test-case-item {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .test-case-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      cursor: pointer;
+      gap: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .test-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      font-family: monospace;
+    }
+
+    .test-desc {
+      flex: 1;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .test-badge {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .test-badge.pass { background: rgba(0,200,50,0.15); border: 1px solid rgba(0,200,50,0.3); color: #44ff88; }
+    .test-badge.fail { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.3); color: #ff7777; }
+    .test-badge.pending { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+
+    .test-chevron { font-size: 10px; color: rgba(255,255,255,0.3); transition: transform 0.2s; }
+    .test-chevron.open { transform: rotate(180deg); }
+
+    .test-case-body {
+      display: none;
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .test-case-body.open { display: block; }
+
+    .test-row-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+    .test-data {
+      background: rgba(0,0,0,0.5);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-family: monospace;
+      color: rgba(255,255,255,0.6);
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+    }
+
+    .test-data.actual-pass  { color: #44ff88; }
+    .test-data.actual-fail  { color: #ff8888; }
+
+    /* ── Bottom nav ── */
+    .mobile-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      z-index: 200;
+    }
+
+    /* ── Pyodide loading overlay ── */
+    .pyodide-loading {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(0,204,68,0.3);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: rgba(0,204,68,0.8);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 300;
+      display: none;
+    }
+
+    .pyodide-loading.show { display: flex; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="viewer-topbar">
+    <a href="programming-listing.html" class="viewer-back-btn" id="backBtn">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+    <span class="viewer-title" id="viewerTitle">Loading…</span>
+    <span class="viewer-lang-badge" id="viewerLangBadge">–</span>
+    <div class="status-dot" id="statusDot" title="Status"></div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="viewer-tabs" id="viewerTabs">
+    <div class="viewer-tab active" data-tab="problem" onclick="switchTab('problem')">
+      <i class="fas fa-question-circle"></i>&nbsp; Problem
+    </div>
+    <div class="viewer-tab" data-tab="code" onclick="switchTab('code')">
+      <i class="fas fa-code"></i>&nbsp; Code
+    </div>
+    <div class="viewer-tab" data-tab="run" onclick="switchTab('run')">
+      <i class="fas fa-play"></i>&nbsp; Run &amp; Test
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="viewer-content" id="viewerContent">
+
+    <!-- Problem panel -->
+    <div class="tab-panel active" id="panel-problem">
+      <div id="problemArea">
+        <div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);">
+          <i class="fas fa-spinner fa-spin" style="font-size:28px;margin-bottom:12px;display:block;"></i>
+          Loading program…
+        </div>
+      </div>
+    </div>
+
+    <!-- Code panel -->
+    <div class="tab-panel" id="panel-code">
+      <div id="codeArea">
+        <div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);">
+          <i class="fas fa-spinner fa-spin" style="font-size:28px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Run & Test panel -->
+    <div class="tab-panel" id="panel-run">
+
+      <div class="run-notice" id="runNotice">
+        <i class="fas fa-info-circle"></i>
+        Initializing runtime…
+      </div>
+
+      <div class="run-btn-wrap">
+        <button class="btn-run-big" id="runBtn" onclick="runCode()" disabled>
+          <i class="fas fa-play"></i> Run Code
+        </button>
+      </div>
+
+      <div class="stdin-label">Custom Input (stdin)</div>
+      <textarea class="stdin-area" id="stdinArea" placeholder="Provide input line by line..."></textarea>
+
+      <div class="output-label">Output</div>
+      <div class="output-area idle-text" id="outputArea">Click Run to execute…</div>
+
+      <!-- Test Cases -->
+      <div class="test-section" id="testSection" style="display:none;">
+        <div class="test-header">
+          <span class="section-label" style="font-size:12px;">Test Cases</span>
+          <button class="btn-run-all" id="runAllBtn" onclick="runAllTests()" disabled>
+            <i class="fas fa-vials"></i> Run All
+          </button>
+        </div>
+        <div id="testCasesList"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom nav -->
+  <nav class="mobile-bottom-nav" role="navigation" aria-label="Main mobile navigation">
+    <div class="mobile-nav-container">
+      <a href="../../home/index.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span class="mobile-nav-label">Home</span>
+      </a>
+      <a href="../../about/about.html" class="mobile-nav-item">
+        <i class="fas fa-user-circle"></i><span class="mobile-nav-label">About</span>
+      </a>
+      <a href="../../projects/projects.html" class="mobile-nav-item mobile-nav-active">
+        <i class="fas fa-folder-open"></i><span class="mobile-nav-label">Projects</span>
+      </a>
+      <a href="../../content-studio/hub.html" class="mobile-nav-item">
+        <i class="fas fa-layer-group"></i><span class="mobile-nav-label">Studio</span>
+      </a>
+      <a href="../../contact/contact.html" class="mobile-nav-item">
+        <i class="fas fa-envelope"></i><span class="mobile-nav-label">Contact</span>
+      </a>
+      <a href="../../../Documentation/index.html" class="mobile-nav-item">
+        <i class="fas fa-book-open"></i><span class="mobile-nav-label">Guide</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="pyodide-loading" id="pyodideLoading">
+    <i class="fas fa-circle-notch fa-spin"></i>
+    Loading Python runtime…
+  </div>
+
+  <!-- Prism -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+
+  <script src="../../shared/mobile-navbar.js"></script>
+  <script src="../../pwa-init.js"></script>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* ─── Parse query params ─── */
+    const params   = new URLSearchParams(window.location.search);
+    const progId   = params.get('id')  || '';
+    const autoRun  = params.get('run') === '1';
+
+    /* ─── State ─── */
+    let programData  = null;
+    let pyodide      = null;
+    let pyodideReady = false;
+    let pyodideLoading = false;
+    let testResults  = {};   // idx -> {pass, actual}
+
+    /* ─── DOM handles ─── */
+    const statusDot     = () => document.getElementById('statusDot');
+    const runBtn        = () => document.getElementById('runBtn');
+    const runAllBtn     = () => document.getElementById('runAllBtn');
+    const outputArea    = () => document.getElementById('outputArea');
+    const stdinArea     = () => document.getElementById('stdinArea');
+    const runNotice     = () => document.getElementById('runNotice');
+    const pyLoading     = () => document.getElementById('pyodideLoading');
+
+    /* ─── Status helpers ─── */
+    function setStatus(state) {
+      const dot = statusDot();
+      dot.className = 'status-dot ' + state;
+    }
+
+    /* ─── Tab switching ─── */
+    window.switchTab = function (name) {
+      document.querySelectorAll('.viewer-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === name);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'panel-' + name);
+      });
+    };
+
+    /* ─── Init ─── */
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!progId) {
+        showLoadError('No program ID in URL. Please go back and select a program.');
+        return;
+      }
+      fetchProgram();
+    });
+
+    /* ─── Fetch program ─── */
+    function fetchProgram() {
+      fetch('../../../Projects%20Code/programming/programs.json')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(data => {
+          const prog = (data.programs || []).find(p => p.id === progId);
+          if (!prog) throw new Error('Program not found: ' + progId);
+          // Load code from storage file if available, fallback to inline
+          if (prog.codeFile) {
+            // codeFile is relative to Projects Code/programming/ → convert to path from mobile viewer
+            const fetchPath = ('../../../' + prog.codeFile.replace('../../', '')).replace(/ /g, '%20');
+            fetch(fetchPath)
+              .then(r => { if (r.ok) return r.text(); throw new Error('no file'); })
+              .then(code => { prog.code = code; })
+              .catch(() => {})
+              .finally(() => {
+                programData = prog;
+                renderProgram(prog);
+                if (autoRun) { switchTab('run'); setTimeout(runCode, 300); }
+              });
+          } else {
+            programData = prog;
+            renderProgram(prog);
+            if (autoRun) { switchTab('run'); setTimeout(runCode, 300); }
+          }
+        })
+        .catch(err => showLoadError('Failed to load: ' + err.message));
+    }
+
+    /* ─── Render program info ─── */
+    function renderProgram(p) {
+      /* Topbar */
+      document.getElementById('viewerTitle').textContent   = p.title || 'Program';
+      document.getElementById('viewerLangBadge').textContent = (p.language || '').toUpperCase();
+
+      /* ── Problem panel ── */
+      const diffCls = (p.difficulty || 'Easy').toLowerCase();
+      let srcChip = '';
+      if (p.source === 'leetcode' && p.problemNumber) {
+        srcChip = `<span class="meta-chip source">LC #${p.problemNumber}</span>`;
+      } else if (p.source) {
+        srcChip = `<span class="meta-chip source">${esc(p.source)}</span>`;
+      }
+
+      const tagsHtml = Array.isArray(p.tags) && p.tags.length
+        ? `<div class="problem-section"><div class="section-label">Tags</div>
+           <div class="tags-wrap">${p.tags.map(t => `<span class="tag-item">${esc(t)}</span>`).join('')}</div></div>`
+        : '';
+
+      const approachHtml = p.approach
+        ? `<div class="problem-section">
+             <div class="approach-box">
+               <div class="approach-title"><i class="fas fa-lightbulb"></i> Approach</div>
+               <p>${esc(p.approach)}</p>
+             </div>
+           </div>`
+        : '';
+
+      const complexityHtml = (p.timeComplexity || p.spaceComplexity)
+        ? `<div class="problem-section">
+             <div class="section-label">Complexity</div>
+             <div class="complexity-grid">
+               <div class="complexity-card">
+                 <div class="label">Time</div>
+                 <div class="value">${esc(p.timeComplexity || '–')}</div>
+               </div>
+               <div class="complexity-card">
+                 <div class="label">Space</div>
+                 <div class="value">${esc(p.spaceComplexity || '–')}</div>
+               </div>
+             </div>
+           </div>`
+        : '';
+
+      document.getElementById('problemArea').innerHTML = `
+        <div class="problem-section">
+          <div class="meta-chips">
+            <span class="meta-chip ${diffCls}">${esc(p.difficulty || 'Easy')}</span>
+            ${srcChip}
+            <span class="meta-chip cat">${esc(p.category || '')}</span>
+          </div>
+          <div class="problem-desc">${esc(p.description || '')}</div>
+        </div>
+        ${p.examples && p.examples.length ? `
+          <div class="problem-section">
+            <div class="section-label"><i class="fas fa-lightbulb"></i> Examples</div>
+            ${p.examples.map((ex, i) => `
+              <div class="example-box">
+                <div class="example-title">Example ${i + 1}:</div>
+                <div class="example-row"><strong>Input:</strong> <code>${esc(ex.input)}</code></div>
+                <div class="example-row"><strong>Output:</strong> <code>${esc(ex.output)}</code></div>
+                ${ex.explanation ? `<div class="example-explain">${esc(ex.explanation)}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        ${p.constraints && p.constraints.length ? `
+          <div class="problem-section">
+            <div class="section-label"><i class="fas fa-shield-alt"></i> Constraints</div>
+            <ul class="constraints-list">
+              ${p.constraints.map(c => `<li>${esc(c)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        ${approachHtml}
+        ${complexityHtml}
+        ${tagsHtml}
+        ${p.notes ? `<div class="problem-section"><div class="section-label">Notes</div><div class="notes-box">${esc(p.notes)}</div></div>` : ''}
+      `;
+
+      /* ── Code panel ── */
+      const langPrism = langToPrism(p.language);
+      const codeHtml  = `
+        <div class="code-wrapper">
+          <div class="code-topbar">
+            <span class="lang-label">${(p.language || '').toUpperCase()}</span>
+            <button class="copy-btn" onclick="copyCode()" id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+          </div>
+          <pre class="line-numbers"><code id="codeBlock" class="language-${langPrism}">${esc(p.code || '')}</code></pre>
+        </div>`;
+      document.getElementById('codeArea').innerHTML = codeHtml;
+
+      /* Highlight */
+      if (window.Prism) {
+        const block = document.getElementById('codeBlock');
+        if (block) Prism.highlightElement(block);
+      }
+
+      /* ── Run panel ── */
+      initRunPanel(p);
+    }
+
+    /* ─── Run panel init ─── */
+    function initRunPanel(p) {
+      const lang = (p.language || '').toLowerCase();
+      const canRun = lang === 'python' || lang === 'javascript';
+
+      if (!canRun) {
+        setNotice('<i class="fas fa-exclamation-circle"></i> ' + lang.toUpperCase() + ' cannot run in the browser. Use a local compiler.', true);
+        setStatus('error');
+        return;
+      }
+
+      if (lang === 'python') {
+        setNotice('<i class="fas fa-circle-notch fa-spin"></i> Loading Python (Pyodide)…', false);
+        setStatus('loading');
+        loadPyodide();
+      } else if (lang === 'javascript') {
+        setNotice('<i class="fas fa-check-circle"></i> JavaScript is ready.', false);
+        setStatus('ready');
+        runBtn().disabled = false;
+        if (runAllBtn()) runAllBtn().disabled = false;
+      }
+
+      /* Test cases */
+      if (Array.isArray(p.testCases) && p.testCases.length > 0) {
+        document.getElementById('testSection').style.display = '';
+        renderTestCases(p.testCases);
+      }
+    }
+
+    /* ─── Pyodide init ─── */
+    async function loadPyodide() {
+      if (pyodideLoading || pyodideReady) return;
+      pyodideLoading = true;
+      pyLoading().classList.add('show');
+
+      try {
+        const { loadPyodide: loadPy } = await import('https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.mjs');
+        pyodide = await loadPy();
+        pyodideReady = true;
+        setNotice('<i class="fas fa-check-circle"></i> Python is ready.', false);
+        setStatus('ready');
+        runBtn().disabled = false;
+        if (runAllBtn()) runAllBtn().disabled = false;
+      } catch (err) {
+        setNotice('<i class="fas fa-times-circle"></i> Failed to load Python runtime: ' + err.message, true);
+        setStatus('error');
+      } finally {
+        pyodideLoading = false;
+        pyLoading().classList.remove('show');
+      }
+    }
+
+    /* ─── Run ─── */
+    window.runCode = async function () {
+      if (!programData) return;
+      const lang = (programData.language || '').toLowerCase();
+
+      setStatus('running');
+      runBtn().disabled = true;
+      const out = outputArea();
+      out.className = 'output-area';
+      out.textContent = 'Running…';
+
+      const stdin = stdinArea().value;
+
+      if (lang === 'python') {
+        if (!pyodideReady) { out.textContent = 'Python not ready yet.'; return; }
+        try {
+          const result = await runPython(programData.code || '', stdin);
+          out.className = result.error ? 'output-area error-text' : 'output-area';
+          out.textContent = result.output || '(no output)';
+          setStatus(result.error ? 'error' : 'ready');
+        } catch (e) {
+          out.className = 'output-area error-text';
+          out.textContent = String(e);
+          setStatus('error');
+        }
+      } else if (lang === 'javascript') {
+        const result = await runJavaScript(programData.code || '', stdin);
+        out.className = result.error ? 'output-area error-text' : 'output-area';
+        out.textContent = result.output || '(no output)';
+        setStatus(result.error ? 'error' : 'ready');
+      }
+
+      runBtn().disabled = false;
+    };
+
+    /* ─── Run All Tests ─── */
+    window.runAllTests = async function () {
+      if (!programData || !Array.isArray(programData.testCases)) return;
+      runAllBtn().disabled = true;
+      testResults = {};
+
+      for (let i = 0; i < programData.testCases.length; i++) {
+        await runSingleTest(i);
+      }
+
+      runAllBtn().disabled = false;
+    };
+
+    async function runSingleTest(idx) {
+      const tc   = programData.testCases[idx];
+      const lang = (programData.language || '').toLowerCase();
+      let actual = '';
+      let isErr  = false;
+
+      if (lang === 'python' && pyodideReady) {
+        const r = await runPython(programData.code || '', tc.input || '');
+        actual = r.output;
+        isErr  = r.error;
+      } else if (lang === 'javascript') {
+        const r = await runJavaScript(programData.code || '', tc.input || '');
+        actual = r.output;
+        isErr  = r.error;
+      } else {
+        actual = '[Not runnable]';
+      }
+
+      const expected = (tc.expectedOutput || '').trim();
+      const got      = actual.trim();
+      const passed   = !isErr && got === expected;
+
+      testResults[idx] = { passed, actual: actual, error: isErr };
+      updateTestRow(idx, passed, actual);
+    }
+
+    /* ─── Python runner (Pyodide) ─── */
+    async function runPython(code, stdin) {
+      const lines = stdin ? stdin.split('\n') : [];
+      const lineIdx = [0];
+
+      pyodide.globals.set('__input_lines__', pyodide.toPy(lines));
+      pyodide.globals.set('__input_idx__',   pyodide.toPy(lineIdx));
+
+      const setup = `
+import sys, io, builtins
+__out = io.StringIO()
+sys.stdout = __out
+
+__input_lines__ = list(__input_lines__)
+__input_idx__ = list(__input_idx__)
+
+def _mock_input(prompt=''):
+    idx = __input_idx__[0]
+    if idx < len(__input_lines__):
+        val = __input_lines__[idx]
+        __input_idx__[0] += 1
+        return val
+    return ''
+
+builtins.input = _mock_input
+`;
+      try {
+        await pyodide.runPythonAsync(setup + '\n' + code);
+        const out = pyodide.globals.get('__out').getvalue();
+        return { output: out, error: false };
+      } catch (err) {
+        return { output: String(err), error: true };
+      }
+    }
+
+    /* ─── JS runner (iframe sandbox) ─── */
+    function runJavaScript(code, stdin) {
+      return new Promise((resolve) => {
+        const msgId = 'run_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        const lines = stdin ? JSON.stringify(stdin.split('\n')) : '[]';
+        const iframe = document.createElement('iframe');
+        iframe.sandbox = 'allow-scripts';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const timeoutId = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          iframe.remove();
+          resolve({ output: 'Execution timed out (5s).', error: true });
+        }, 5000);
+
+        function handler(e) {
+          if (!e.data || e.data.msgId !== msgId) return;
+          clearTimeout(timeoutId);
+          window.removeEventListener('message', handler);
+          iframe.remove();
+          resolve({ output: e.data.output, error: e.data.error });
+        }
+
+        window.addEventListener('message', handler);
+
+        const src = `<script>
+(function(){
+  const __lines = ${lines};
+  let __li = 0;
+  const __out = [];
+  const __orig = console.log;
+  console.log = (...a) => __out.push(a.map(String).join(' '));
+  function input(){ return __li < __lines.length ? __lines[__li++] : ''; }
+  let __err = false;
+  try {
+    (function(){ ${code} })();
+  } catch(e){ __out.push(String(e)); __err = true; }
+  parent.postMessage({ msgId: '${msgId}', output: __out.join('\\n'), error: __err }, '*');
+})();
+<\/script>`;
+        iframe.srcdoc = src;
+      });
+    }
+
+    /* ─── Test case rendering ─── */
+    function renderTestCases(testCases) {
+      const list = document.getElementById('testCasesList');
+      list.innerHTML = testCases.map((tc, i) => `
+        <div class="test-case-item">
+          <div class="test-case-header" onclick="toggleTest(${i})">
+            <span class="test-num">TC ${i + 1}</span>
+            <span class="test-desc">${esc(tc.description || tc.input || 'Test ' + (i+1))}</span>
+            <span class="test-badge pending" id="badge-${i}">–</span>
+            <i class="fas fa-chevron-down test-chevron" id="chev-${i}"></i>
+          </div>
+          <div class="test-case-body" id="body-${i}">
+            <div class="test-row-label">Input</div>
+            <div class="test-data">${esc(tc.input || '(none)')}</div>
+            <div class="test-row-label">Expected</div>
+            <div class="test-data">${esc(tc.expectedOutput || '')}</div>
+            <div class="test-row-label">Actual</div>
+            <div class="test-data" id="actual-${i}">Not run</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.toggleTest = function (idx) {
+      const body = document.getElementById('body-' + idx);
+      const chev = document.getElementById('chev-' + idx);
+      if (body) body.classList.toggle('open');
+      if (chev) chev.classList.toggle('open');
+    };
+
+    function updateTestRow(idx, passed, actual) {
+      const badge  = document.getElementById('badge-'  + idx);
+      const actEl  = document.getElementById('actual-' + idx);
+      if (badge) {
+        badge.className = 'test-badge ' + (passed ? 'pass' : 'fail');
+        badge.textContent = passed ? 'PASS' : 'FAIL';
+      }
+      if (actEl) {
+        actEl.className = 'test-data ' + (passed ? 'actual-pass' : 'actual-fail');
+        actEl.textContent = actual || '(no output)';
+        document.getElementById('body-' + idx)?.classList.add('open');
+        document.getElementById('chev-' + idx)?.classList.add('open');
+      }
+    }
+
+    /* ─── Copy code ─── */
+    window.copyCode = function () {
+      const code = programData?.code || '';
+      const btn  = document.getElementById('copyBtn');
+      navigator.clipboard.writeText(code).then(() => {
+        if (btn) { btn.classList.add('copied'); btn.textContent = ' Copied!'; }
+        setTimeout(() => { if (btn) { btn.classList.remove('copied'); btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; } }, 2000);
+      }).catch(() => {});
+    };
+
+    /* ─── Helpers ─── */
+    function setNotice(html, isError) {
+      const el = runNotice();
+      if (el) {
+        el.innerHTML = html;
+        el.className = 'run-notice' + (isError ? ' error-notice' : '');
+      }
+    }
+
+    function showLoadError(msg) {
+      document.getElementById('viewerTitle').textContent = 'Error';
+      document.getElementById('problemArea').innerHTML =
+        `<div style="padding:30px;text-align:center;color:#ff8888;">${esc(msg)}</div>`;
+    }
+
+    function langToPrism(lang) {
+      const map = { python: 'python', javascript: 'javascript', cpp: 'cpp', java: 'java', c: 'c', matlab: 'matlab' };
+      return map[(lang || '').toLowerCase()] || 'clike';
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  })();
+  </script>
+</body>
+</html>

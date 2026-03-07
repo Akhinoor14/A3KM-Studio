@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -19,10 +19,26 @@
     <!-- Core Scripts -->
     <script src="unified-token-manager.js"></script>
     <script src="central-api-gateway.js"></script>
+    <script src="../../shared/activity-logger.js"></script>
     <script src="../Content-studio/github-content-uploader.js"></script>
     <script src="../Content-studio/content-manager.js"></script>
     
-    <style>
+        <style>
+        :root {
+            --primary-red: var(--primary-red);
+            --dark-red: #8B0000;
+            --accent-red: #FF1744;
+            --light-red: rgba(204,0,0,0.12);
+            --bg-black: #0a0000;
+            --bg-deep: #030000;
+            --bg-card: rgba(18,4,4,0.97);
+            --border-red: rgba(139,0,0,0.35);
+            --border-mid: rgba(204,0,0,0.4);
+            --text-primary: rgba(255,255,255,0.95);
+            --text-secondary: rgba(255,255,255,0.6);
+            --text-muted: rgba(255,255,255,0.5);
+            --grid-line: rgba(204,0,0,0.06);
+        }
         * {
             margin: 0;
             padding: 0;
@@ -30,10 +46,11 @@
         }
 
         body {
+            cursor: none;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #000 0%, #1a0000 50%, #0a0000 100%);
+            background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-black) 50%, var(--bg-deep) 100%);
             min-height: 100vh;
-            color: #fff;
+            color: var(--text-primary);
             overflow-x: hidden;
         }
         
@@ -45,7 +62,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.2) 0%, transparent 50%),
+            background: radial-gradient(circle at 20% 50%, rgba(139,0,0, 0.2) 0%, transparent 50%),
                         radial-gradient(circle at 80% 50%, rgba(200, 0, 0, 0.15) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
@@ -61,8 +78,8 @@
 
         /* Header */
         .command-header {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(26, 26, 26, 0.95));
-            border: 2px solid rgba(139, 0, 0, 0.4);
+            background: linear-gradient(135deg, rgba(139,0,0, 0.3), rgba(18,4,4, 0.95));
+            border: 2px solid rgba(139,0,0, 0.4);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
@@ -77,7 +94,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(139, 0, 0, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(139,0,0, 0.1) 0%, transparent 70%);
             animation: pulse 4s ease-in-out infinite;
         }
         
@@ -122,11 +139,11 @@
         }
 
         .back-btn {
-            background: rgba(139, 0, 0, 0.2);
-            border: 2px solid rgba(139, 0, 0, 0.5);
+            background: rgba(139,0,0, 0.2);
+            border: 2px solid rgba(139,0,0, 0.5);
             padding: 12px 24px;
             border-radius: 12px;
-            color: #fff;
+            color: var(--text-primary);
             text-decoration: none;
             font-weight: 600;
             display: inline-flex;
@@ -136,14 +153,14 @@
         }
 
         .back-btn:hover {
-            background: linear-gradient(135deg, #8B0000, #C80000);
+            background: linear-gradient(135deg, #8B0000, var(--primary-red));
             transform: translateX(-5px);
         }
 
         /* API Status Bar */
         .status-bar {
-            background: rgba(26, 26, 26, 0.9);
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            background: rgba(18,4,4, 0.9);
+            border: 2px solid rgba(139,0,0, 0.3);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
@@ -166,7 +183,7 @@
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(0, 0, 0, 0.5));
+            background: linear-gradient(135deg, rgba(139,0,0, 0.2), rgba(0, 0, 0, 0.5));
         }
 
         .status-icon.active {
@@ -193,7 +210,7 @@
         .status-info p {
             font-size: 16px;
             font-weight: 600;
-            color: #fff;
+            color: var(--text-primary);
         }
 
         /* Tab Navigation */
@@ -206,8 +223,8 @@
         }
 
         .tab-btn {
-            background: rgba(26, 26, 26, 0.7);
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            background: rgba(18,4,4, 0.7);
+            border: 2px solid rgba(139,0,0, 0.3);
             padding: 12px 24px;
             border-radius: 10px;
             color: rgba(255, 255, 255, 0.7);
@@ -221,14 +238,14 @@
         }
 
         .tab-btn:hover {
-            border-color: rgba(139, 0, 0, 0.6);
-            background: rgba(139, 0, 0, 0.2);
+            border-color: rgba(139,0,0, 0.6);
+            background: rgba(139,0,0, 0.2);
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.4), rgba(200, 0, 0, 0.3));
-            border-color: #8B0000;
-            color: #fff;
+            background: linear-gradient(135deg, rgba(139,0,0, 0.4), rgba(200, 0, 0, 0.3));
+            border-color: var(--dark-red);
+            color: var(--text-primary);
         }
 
         /* Tab Content */
@@ -254,8 +271,8 @@
         }
 
         .action-card {
-            background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(0, 0, 0, 0.95));
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(18,4,4, 0.9), rgba(0, 0, 0, 0.95));
+            border: 2px solid rgba(139,0,0, 0.3);
             border-radius: 15px;
             padding: 25px;
             cursor: pointer;
@@ -271,7 +288,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #8B0000, #C80000, #FF0000);
+            background: linear-gradient(90deg, #8B0000, var(--primary-red), #FF0000);
             transform: scaleX(0);
             transition: transform 0.3s;
         }
@@ -281,8 +298,8 @@
         }
 
         .action-card:hover {
-            border-color: #8B0000;
-            box-shadow: 0 10px 30px rgba(139, 0, 0, 0.4);
+            border-color: var(--dark-red);
+            box-shadow: 0 10px 30px rgba(139,0,0, 0.4);
             transform: translateY(-5px);
         }
 
@@ -302,7 +319,7 @@
         .action-card h3 {
             font-size: 20px;
             margin-bottom: 10px;
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .action-card p {
@@ -315,8 +332,8 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            background: rgba(139, 0, 0, 0.3);
-            border: 1px solid rgba(139, 0, 0, 0.5);
+            background: rgba(139,0,0, 0.3);
+            border: 1px solid rgba(139,0,0, 0.5);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 11px;
@@ -326,8 +343,8 @@
 
         /* API Config Section */
         .config-section {
-            background: rgba(26, 26, 26, 0.9);
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            background: rgba(18,4,4, 0.9);
+            border: 2px solid rgba(139,0,0, 0.3);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 20px;
@@ -339,12 +356,12 @@
             align-items: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
+            border-bottom: 2px solid rgba(139,0,0, 0.3);
         }
 
         .config-header h2 {
             font-size: 24px;
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .config-form {
@@ -366,26 +383,26 @@
 
         .form-group input {
             background: rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            border: 2px solid rgba(139,0,0, 0.3);
             border-radius: 10px;
             padding: 12px 15px;
-            color: #fff;
+            color: var(--text-primary);
             font-size: 14px;
             transition: all 0.3s;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #8B0000;
-            box-shadow: 0 0 15px rgba(139, 0, 0, 0.3);
+            border-color: var(--dark-red);
+            box-shadow: 0 0 15px rgba(139,0,0, 0.3);
         }
 
         .btn {
-            background: linear-gradient(135deg, #8B0000, #C80000);
+            background: linear-gradient(135deg, #8B0000, var(--primary-red));
             border: none;
             padding: 12px 30px;
             border-radius: 10px;
-            color: #fff;
+            color: var(--text-primary);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -396,18 +413,18 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.5);
+            box-shadow: 0 5px 20px rgba(139,0,0, 0.5);
         }
 
         .btn-secondary {
-            background: rgba(139, 0, 0, 0.2);
-            border: 2px solid rgba(139, 0, 0, 0.5);
+            background: rgba(139,0,0, 0.2);
+            border: 2px solid rgba(139,0,0, 0.5);
         }
 
         /* Activity Log */
         .activity-log {
-            background: rgba(26, 26, 26, 0.9);
-            border: 2px solid rgba(139, 0, 0, 0.3);
+            background: rgba(18,4,4, 0.9);
+            border: 2px solid rgba(139,0,0, 0.3);
             border-radius: 15px;
             padding: 20px;
             max-height: 400px;
@@ -431,7 +448,7 @@
 
         .activity-item h4 {
             font-size: 14px;
-            color: #fff;
+            color: var(--text-primary);
             margin-bottom: 4px;
         }
 
@@ -497,9 +514,39 @@
                 -webkit-overflow-scrolling: touch;
             }
         }
+    
+    /* Neural Cursor */
+    .neural-cursor {
+        position: fixed;
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--primary-red);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 99999;
+        transform: translate(-50%, -50%);
+        transition: transform 0.08s ease, border-color 0.2s, width 0.2s, height 0.2s;
+        box-shadow: 0 0 12px rgba(204,0,0,0.5);
+    }
+    .neural-cursor-dot {
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        background: var(--accent-red);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 100000;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 8px rgba(255,23,68,0.8);
+    }
     </style>
+    <!-- Shared Admin Navbar -->
+    <link rel="stylesheet" href="../../shared/only-boss-navbar.css">
+    <script src="../../shared/only-boss-navbar.js" defer></script>
 </head>
 <body>
+<div class="neural-cursor" id="neuralCursor"></div>
+<div class="neural-cursor-dot" id="neuralCursorDot"></div>
     <div class="container">
         <!-- Header -->
         <div class="command-header">
@@ -572,9 +619,6 @@
         <div class="tab-nav">
             <button class="tab-btn active" onclick="switchTab('api')">
                 <i class="fas fa-plug"></i> API Configuration
-            </button>
-            <button class="tab-btn" onclick="switchTab('tools')">
-                <i class="fas fa-tools"></i> System Tools
             </button>
             <button class="tab-btn" onclick="switchTab('activity')">
                 <i class="fas fa-history"></i> Activity Log
@@ -784,16 +828,16 @@
                 </div>
             </div>
 
-            <div class="config-section"
+            <div class="config-section">
                 <div class="config-header">
-                    <h2><i class="fab fa-youtube"></i> YouTube API Key (Optional)</h2>
+                    <h2><i class="fab fa-youtube"></i> YouTube API Key &amp; Duration Updater</h2>
                 </div>
                 <div class="config-form">
                     <div class="form-group">
                         <label>YouTube Data API v3 Key</label>
                         <input type="password" id="youtubeKey" placeholder="AIzaSyxxxxxxxxxxxxxxxxxxxxxxxx">
                         <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px;">
-                            ℹ️ Used for auto-fetching video durations and metadata
+                            ℹ️ Used for auto-fetching video durations from YouTube
                         </p>
                     </div>
                     <div>
@@ -803,6 +847,39 @@
                         <button class="btn btn-secondary" onclick="clearYouTubeKey()" style="margin-left: 10px;">
                             <i class="fas fa-trash"></i> Clear Key
                         </button>
+                    </div>
+
+                    <!-- Duration Updater -->
+                    <div style="margin-top: 25px; border-top: 1px solid rgba(139,0,0,0.3); padding-top: 20px;">
+                        <h3 style="color: #FFD700; margin-bottom: 12px; font-size: 15px;">
+                            <i class="fas fa-clock"></i> Duration Updater
+                        </h3>
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 15px;">
+                            Fetches correct video durations from YouTube API and auto-saves to videos.json on GitHub.
+                        </p>
+                        <button class="btn" id="durationFetchBtn" onclick="runDurationUpdater()" style="width: 100%;">
+                            <i class="fas fa-rocket"></i> Fetch Durations from YouTube
+                        </button>
+
+                        <div id="durationStats" style="display:none; margin-top:15px; display: none;">
+                            <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:12px;">
+                                <div style="background:rgba(139,0,0,0.15); border:1px solid rgba(139,0,0,0.3); border-radius:8px; padding:12px; text-align:center;">
+                                    <span id="durStatTotal" style="font-size:1.8rem; color:#C80000; font-weight:700; display:block;">0</span>
+                                    <span style="font-size:11px; color:rgba(255,255,255,0.5);">Total Videos</span>
+                                </div>
+                                <div style="background:rgba(139,0,0,0.15); border:1px solid rgba(139,0,0,0.3); border-radius:8px; padding:12px; text-align:center;">
+                                    <span id="durStatFetched" style="font-size:1.8rem; color:#C80000; font-weight:700; display:block;">0</span>
+                                    <span style="font-size:11px; color:rgba(255,255,255,0.5);">Fetched</span>
+                                </div>
+                                <div style="background:rgba(139,0,0,0.15); border:1px solid rgba(139,0,0,0.3); border-radius:8px; padding:12px; text-align:center;">
+                                    <span id="durStatUpdated" style="font-size:1.8rem; color:#C80000; font-weight:700; display:block;">0</span>
+                                    <span style="font-size:11px; color:rgba(255,255,255,0.5);">Updated</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="durationLog" style="display:none; background:rgba(0,0,0,0.5); border:1px solid rgba(139,0,0,0.2); border-radius:8px; padding:12px; margin-top:10px; max-height:250px; overflow-y:auto; font-family:'Courier New',monospace; font-size:12px;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -823,54 +900,18 @@
             </div>
         </div>
 
-        <!-- Tab: System Tools -->
-        <div id="toolsTab" class="tab-content">
-            <div class="cards-grid">
-                <div class="action-card" onclick="window.location.href='../../../Content Studio/video-content/update-durations.html'">
-                    <i class="fas fa-clock card-icon gold"></i>
-                    <h3>YouTube Duration Updater</h3>
-                    <p>Auto-fetch and update video durations from YouTube</p>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../../../Content Studio/video-content/unified-sync-manager.html'">
-                    <i class="fas fa-sync-alt card-icon green"></i>
-                    <h3>Unified Video Sync</h3>
-                    <p>Sync videos between desktop and mobile platforms</p>
-                </div>
-
-                <div class="action-card" onclick="refreshAllData()">
-                    <i class="fas fa-refresh card-icon blue"></i>
-                    <h3>Refresh All Data</h3>
-                    <p>Reload content counts from GitHub repository</p>
-                </div>
-
-                <div class="action-card" onclick="clearCache()">
-                    <i class="fas fa-broom card-icon orange"></i>
-                    <h3>Clear Cache</h3>
-                    <p>Clear local storage cache and temporary data</p>
-                </div>
-
-                <div class="action-card" onclick="exportLogs()">
-                    <i class="fas fa-download card-icon purple"></i>
-                    <h3>Export Logs</h3>
-                    <p>Download activity logs and audit trail</p>
-                </div>
-
-                <div class="action-card" onclick="window.location.href='../../Home/index.html'">
-                    <i class="fas fa-home card-icon red"></i>
-                    <h3>View Website</h3>
-                    <p>Open main website in new tab</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Tab: Activity Log -->
         <div id="activityTab" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: #fff;">Recent Activity</h2>
-                <button class="btn btn-secondary" onclick="loadActivityLog()">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
+                <h2 style="color: var(--text-primary);">Recent Activity</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="clearActivityLogs()">
+                        <i class="fas fa-trash"></i> Clear Logs
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadActivityLog()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
             </div>
             <div class="activity-log" id="activityLog">
                 <p style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">
@@ -1108,7 +1149,9 @@
         // Load activity log with better formatting
         function loadActivityLog() {
             try {
-                const logs = gateway.getLogs(50); // Get last 50 logs
+                const logs = (typeof ActivityLogger !== 'undefined')
+                    ? ActivityLogger.getLogs(50)
+                    : [];
                 const container = document.getElementById('activityLog');
                 
                 if (!logs || logs.length === 0) {
@@ -1129,12 +1172,13 @@
                     div.className = 'activity-item';
                     
                     const typeIcons = {
-                        'upload': '📤 Upload',
-                        'delete': '🗑️ Delete',
-                        'update': '✏️ Update',
-                        'error': '❌ Error',
-                        'token_changed': '🔑 Token Changed',
-                        'ratelimit_warning': '⚠️ Rate Limit'
+                        'upload':   '📤 Upload',
+                        'delete':   '🗑️ Delete',
+                        'edit':     '✏️ Edit',
+                        'update':   '✏️ Update',
+                        'system':   '⚙️ System',
+                        'error':    '❌ Error',
+                        'login':    '🔑 Login'
                     };
                     
                     const typeLabel = typeIcons[log.type] || ('📋 ' + (log.type || 'Activity'));
@@ -1152,8 +1196,8 @@
                         timeStr = timeObj.toLocaleDateString();
                     }
                     
-                    const description = log.data?.title || log.data?.error || log.data?.message || 'Activity recorded';
-                    const details = log.data?.contentType ? ` • ${log.data.contentType}` : '';
+                    const description = log.activity || log.data?.title || log.data?.error || 'Activity recorded';
+                    const details = log.details ? ` • ${log.details}` : '';
                     
                     div.innerHTML = `
                         <div class="activity-item-info">
@@ -1228,6 +1272,169 @@
                 localStorage.removeItem('youtube_api_key');
                 updateAPIStatusIndicators(); // Update indicators
                 showSuccess('YouTube key cleared');
+            }
+        }
+
+        // ==================== DURATION UPDATER ====================
+
+        function _durLog(msg, type = 'info') {
+            const logEl = document.getElementById('durationLog');
+            logEl.style.display = 'block';
+            const icon = { success: '✅', error: '❌', warning: '⚠️', info: '📡' }[type] || '•';
+            const color = { success: '#4CAF50', error: '#f44336', warning: '#FF9800', info: '#2196F3' }[type] || '#fff';
+            const div = document.createElement('div');
+            div.style.cssText = `color:${color}; margin:4px 0; padding:3px 0; border-bottom: 1px solid rgba(255,255,255,0.05);`;
+            div.textContent = `${icon} ${msg}`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function _durUpdateStats(total, fetched, updated) {
+            const statsEl = document.getElementById('durationStats');
+            statsEl.style.display = 'block';
+            document.getElementById('durStatTotal').textContent = total;
+            document.getElementById('durStatFetched').textContent = fetched;
+            document.getElementById('durStatUpdated').textContent = updated;
+        }
+
+        function _parseYouTubeDuration(duration) {
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return '0:00';
+            const h = parseInt(match[1] || 0);
+            const m = parseInt(match[2] || 0);
+            const s = parseInt(match[3] || 0);
+            return h > 0
+                ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                : `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        async function _fetchYouTubeDurations(videoIds, apiKey, statsRef) {
+            const results = {};
+            const batchSize = 50;
+            const batches = [];
+            for (let i = 0; i < videoIds.length; i += batchSize) {
+                batches.push(videoIds.slice(i, i + batchSize));
+            }
+            _durLog(`Fetching durations for ${videoIds.length} video(s) in ${batches.length} batch(es)...`, 'info');
+
+            for (let i = 0; i < batches.length; i++) {
+                const ids = batches[i].join(',');
+                const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(ids)}&key=${encodeURIComponent(apiKey)}`;
+                try {
+                    _durLog(`Batch ${i + 1}/${batches.length}: requesting ${batches[i].length} video(s)...`, 'info');
+                    const resp = await fetch(url);
+                    const data = await resp.json();
+                    if (data.error) {
+                        _durLog(`YouTube API error: ${data.error.message}`, 'error');
+                        if (data.error.code === 403) _durLog('Check your API key quota / restrictions.', 'error');
+                        continue;
+                    }
+                    (data.items || []).forEach(item => {
+                        results[item.id] = _parseYouTubeDuration(item.contentDetails.duration);
+                        statsRef.fetched++;
+                        _durUpdateStats(statsRef.total, statsRef.fetched, statsRef.updated);
+                        _durLog(`${item.id}: ${results[item.id]}`, 'success');
+                    });
+                    if (i < batches.length - 1) await new Promise(r => setTimeout(r, 500));
+                } catch (err) {
+                    _durLog(`Batch ${i + 1} failed: ${err.message}`, 'error');
+                }
+            }
+            return results;
+        }
+
+        async function runDurationUpdater() {
+            const apiKey = localStorage.getItem('youtube_api_key');
+            if (!apiKey) {
+                showError('YouTube API key not configured. Please save it above first.');
+                return;
+            }
+
+            const btn = document.getElementById('durationFetchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+
+            // Reset log & stats
+            const logEl = document.getElementById('durationLog');
+            logEl.innerHTML = '';
+            logEl.style.display = 'block';
+            _durUpdateStats(0, 0, 0);
+
+            const statsRef = { total: 0, fetched: 0, updated: 0 };
+
+            try {
+                const VIDEOS_PATH = 'A3KM Studio/Content Studio/video-content/videos.json';
+                _durLog('Loading videos.json from GitHub...', 'info');
+
+                const uploader = gateway.getUploader();
+                const fileData = await uploader.getFile(VIDEOS_PATH);
+                if (!fileData) throw new Error('videos.json not found on GitHub');
+
+                const cleanBase64 = fileData.content.replace(/\s/g, '');
+                const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+                const videosData = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+
+                // Collect all video IDs
+                const videoIds = [];
+                const videoMap = new Map();
+                const categories = videosData.categories || {};
+                ['video-blog', 'educational'].forEach(cat => {
+                    if (categories[cat]) {
+                        Object.values(categories[cat]).forEach(group => {
+                            (group.videos || []).forEach(v => {
+                                if (v.videoId) {
+                                    videoIds.push(v.videoId);
+                                    videoMap.set(v.videoId, v);
+                                    statsRef.total++;
+                                }
+                            });
+                        });
+                    }
+                });
+                _durUpdateStats(statsRef.total, 0, 0);
+                _durLog(`Found ${videoIds.length} video(s) in videos.json`, 'info');
+
+                if (videoIds.length === 0) {
+                    _durLog('No videos found — nothing to update.', 'warning');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rocket"></i> Fetch Durations from YouTube';
+                    return;
+                }
+
+                // Fetch durations from YouTube
+                const durations = await _fetchYouTubeDurations(videoIds, apiKey, statsRef);
+
+                // Apply updates
+                Object.entries(durations).forEach(([videoId, duration]) => {
+                    const video = videoMap.get(videoId);
+                    if (video) {
+                        const old = video.duration;
+                        video.duration = duration;
+                        if (old !== duration) {
+                            _durLog(`Updated ${videoId}: ${old} → ${duration}`, 'warning');
+                            statsRef.updated++;
+                            _durUpdateStats(statsRef.total, statsRef.fetched, statsRef.updated);
+                        }
+                    }
+                });
+
+                _durLog(`Saving updated videos.json to GitHub...`, 'info');
+                const updatedContent = JSON.stringify(videosData, null, 2);
+                await uploader.uploadFile(VIDEOS_PATH, updatedContent, `⏱️ Updated video durations (${statsRef.updated} changed)`);
+
+                _durLog(`✅ Done! Fetched: ${statsRef.fetched}, Updated: ${statsRef.updated}`, 'success');
+                showSuccess(`✅ Duration update complete — ${statsRef.updated} video(s) updated and saved to GitHub!`);
+                btn.innerHTML = '<i class="fas fa-check"></i> Done!';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rocket"></i> Fetch Durations from YouTube';
+                }, 3000);
+
+            } catch (err) {
+                _durLog(`Error: ${err.message}`, 'error');
+                showError('Duration update failed: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Fetch Durations from YouTube';
             }
         }
 
@@ -1808,130 +2015,16 @@
                 stopQRScanner();
             }
         });
-        // Refresh all data with visual feedback
-        async function refreshAllData() {
-            const button = event.target.closest('.action-card');
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-            button.style.opacity = '0.6';
-            button.style.pointerEvents = 'none';
-            
-            try {
-                showSuccess('🔄 Refreshing all data...');
-                await loadStatus();
-                await loadContentCounts();
+        // Clear activity logs only
+        function clearActivityLogs() {
+            if (confirm('Clear all activity logs?')) {
+                if (typeof ActivityLogger !== 'undefined') ActivityLogger.clearLogs();
                 loadActivityLog();
-                updateAPIStatusIndicators();
-                showSuccess('✅ All data refreshed successfully!');
-            } catch (error) {
-                showError('❌ Refresh failed: ' + error.message);
-            } finally {
-                button.innerHTML = originalHTML;
-                button.style.opacity = '1';
-                button.style.pointerEvents = 'auto';
-            }
-        }
-
-        // Clear cache with comprehensive cleanup
-        function clearCache() {
-            if (confirm('This will clear all cached data but keep API tokens. Continue?')) {
-                const button = event.target.closest('.action-card');
-                const originalHTML = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
-                button.style.opacity = '0.6';
-                button.style.pointerEvents = 'none';
-                
-                try {
-                    // Clear gateway logs
-                    gateway.clearLogs();
-                    
-                    // Clear browser cache (careful with this)
-                    if ('caches' in window) {
-                        caches.keys().then(names => {
-                            names.forEach(name => caches.delete(name));
-                        });
-                    }
-                    
-                    showSuccess('✅ Cache cleared successfully!');
-                    loadActivityLog();
-                    
-                    setTimeout(() => {
-                        button.innerHTML = originalHTML;
-                        button.style.opacity = '1';
-                        button.style.pointerEvents = 'auto';
-                    }, 1000);
-                    
-                } catch (error) {
-                    showError('Error clearing cache: ' + error.message);
-                    button.innerHTML = originalHTML;
-                    button.style.opacity = '1';
-                    button.style.pointerEvents = 'auto';
-                }
+                showSuccess('✅ Activity logs cleared');
             }
         }
 
         // Export logs with proper formatting
-        function exportLogs() {
-            try {
-                const button = event.target.closest('.action-card');
-                const originalHTML = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-                button.style.opacity = '0.6';
-                button.style.pointerEvents = 'none';
-                
-                const logs = gateway.getLogs(1000);
-                
-                if (!logs || logs.length === 0) {
-                    showError('❌ No logs to export');
-                    button.innerHTML = originalHTML;
-                    button.style.opacity = '1';
-                    button.style.pointerEvents = 'auto';
-                    return;
-                }
-                
-                // Format logs with metadata
-                const exportData = {
-                    exportDate: new Date().toISOString(),
-                    totalLogs: logs.length,
-                    status: {
-                        totalContentUploads: logs.filter(l => l.type === 'upload').length,
-                        totalDeletes: logs.filter(l => l.type === 'delete').length,
-                        totalUpdates: logs.filter(l => l.type === 'update').length,
-                        totalErrors: logs.filter(l => l.type === 'error').length
-                    },
-                    logs: logs
-                };
-                
-                const blob = new Blob(
-                    [JSON.stringify(exportData, null, 2)],
-                    { type: 'application/json' }
-                );
-                
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `A3KM-Studio-Activity-Logs-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                showSuccess(`✅ Exported ${logs.length} logs successfully!`);
-                
-                setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                    button.style.opacity = '1';
-                    button.style.pointerEvents = 'auto';
-                }, 1000);
-                
-            } catch (error) {
-                showError('❌ Export failed: ' + error.message);
-                const button = event.target.closest('.action-card');
-                button.style.opacity = '1';
-                button.style.pointerEvents = 'auto';
-            }
-        }
-
         // Show success message
         function showSuccess(message) {
             const msg = document.getElementById('successMessage');
@@ -1948,5 +2041,28 @@
             setTimeout(() => msg.classList.remove('show'), 5000);
         }
     </script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../../Optimization/cursor-effects.js" defer></script>
+
+<script>
+(function() {
+    const cursor = document.getElementById("neuralCursor");
+    const dot = document.getElementById("neuralCursorDot");
+    if (cursor && dot) {
+        document.addEventListener("mousemove", e => {
+            cursor.style.left = e.clientX + "px";
+            cursor.style.top = e.clientY + "px";
+            dot.style.left = e.clientX + "px";
+            dot.style.top = e.clientY + "px";
+        });
+        document.addEventListener("mousedown", () => {
+            cursor.style.transform = "translate(-50%,-50%) scale(0.7)";
+        });
+        document.addEventListener("mouseup", () => {
+            cursor.style.transform = "translate(-50%,-50%) scale(1)";
+        });
+    }
+})();
+</script>
 </body>
 </html>

@@ -348,12 +348,26 @@
     body.cinema-mode .main-container { grid-template-columns: 1fr !important; }
     body.cinema-mode .playlist-section { display: none !important; }
 
+    /* Custom Controls Bar — overlay at bottom of player */
     .desktop-controls {
-      display:flex; flex-direction:column; gap:8px;
-      background:linear-gradient(135deg,rgba(10,0,0,0.97),rgba(6,0,0,0.99));
-      border:2px solid rgba(204,0,0,0.3); border-radius:12px;
-      padding:10px 16px; user-select:none;
-      box-shadow:0 6px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+      position:absolute;
+      bottom:0; left:0; right:0;
+      z-index:20;
+      display:flex; flex-direction:column; gap:6px;
+      padding:52px 14px 10px;
+      background:linear-gradient(to top,rgba(0,0,0,0.90) 0%,rgba(0,0,0,0.5) 55%,transparent 100%);
+      border-radius:0 0 13px 13px;
+      user-select:none;
+      opacity:0;
+      transform:translateY(4px);
+      transition:opacity 0.22s ease,transform 0.22s ease;
+      pointer-events:none;
+    }
+    .player-wrapper:hover .desktop-controls,
+    .desktop-controls:focus-within {
+      opacity:1;
+      transform:translateY(0);
+      pointer-events:auto;
     }
     .dc-progress-row { display:flex; align-items:center; gap:12px; }
     .dc-progress { flex:1; height:5px; background:rgba(255,255,255,0.12); border-radius:3px; cursor:pointer; position:relative; transition:height 0.15s; }
@@ -443,30 +457,30 @@
         <!-- Cloudflare Stream player (shown for paid CF-hosted episodes) -->
         <div id="cfPlayerDiv" style="display:none;position:absolute;inset:0;border-radius:12px;overflow:hidden;"></div>
         <div id="ytPlayerDiv"></div>
-      </div>
 
-      <!-- Desktop Custom Controls Bar -->
-      <div class="desktop-controls" id="desktopControls">
-        <div class="dc-progress-row">
-          <div class="dc-progress" id="dcProgress" title="Click to seek">
-            <div class="dc-progress-fill" id="dcProgressFill" style="width:0%"></div>
+        <!-- Desktop Custom Controls Bar (overlay) -->
+        <div class="desktop-controls" id="desktopControls">
+          <div class="dc-progress-row">
+            <div class="dc-progress" id="dcProgress" title="Click to seek">
+              <div class="dc-progress-fill" id="dcProgressFill" style="width:0%"></div>
+            </div>
+            <div class="dc-time" id="dcTime">0:00 / 0:00</div>
           </div>
-          <div class="dc-time" id="dcTime">0:00 / 0:00</div>
-        </div>
-        <div class="dc-btn-row">
-          <button class="dc-btn" id="dcPrev" title="Previous episode (Shift+N)" onclick="goEp(currentEpIdx-1)"><i class="fas fa-step-backward"></i></button>
-          <button class="dc-btn" id="dcPlay" title="Play / Pause (Space / K)" onclick="dcTogglePlay()"><i class="fas fa-play"></i></button>
-          <button class="dc-btn" id="dcNext" title="Next episode (N)" onclick="goEp(currentEpIdx+1)"><i class="fas fa-step-forward"></i></button>
-          <div class="dc-volume-wrap">
-            <button class="dc-btn" id="dcMute" title="Mute (M)" onclick="dcToggleMute()"><i class="fas fa-volume-up"></i></button>
-            <input type="range" class="dc-volume" id="dcVolume" min="0" max="100" value="100" title="Volume">
+          <div class="dc-btn-row">
+            <button class="dc-btn" id="dcPrev" title="Previous episode (Shift+N)" onclick="goEp(currentEpIdx-1)"><i class="fas fa-step-backward"></i></button>
+            <button class="dc-btn" id="dcPlay" title="Play / Pause (Space / K)" onclick="dcTogglePlay()"><i class="fas fa-play"></i></button>
+            <button class="dc-btn" id="dcNext" title="Next episode (N)" onclick="goEp(currentEpIdx+1)"><i class="fas fa-step-forward"></i></button>
+            <div class="dc-volume-wrap">
+              <button class="dc-btn" id="dcMute" title="Mute (M)" onclick="dcToggleMute()"><i class="fas fa-volume-up"></i></button>
+              <input type="range" class="dc-volume" id="dcVolume" min="0" max="100" value="100" title="Volume">
+            </div>
+            <div class="dc-spacer"></div>
+            <button class="dc-speed-btn" id="dcSpeedBtn">1x<div class="dc-speed-menu" id="dcSpeedMenu"></div></button>
+            <button class="dc-btn" id="dcTheater" title="Cinema Mode (T)"><i class="fas fa-expand-alt"></i></button>
+            <button class="dc-btn" id="dcPip" title="Picture in Picture (P)"><i class="fas fa-clone"></i></button>
+            <button class="dc-btn" id="dcKbd" title="Keyboard Shortcuts (?)" onclick="toggleKbdOverlay()"><i class="fas fa-keyboard"></i></button>
+            <button class="dc-btn" id="dcFs" title="Fullscreen (F)" onclick="dcFullscreen()"><i class="fas fa-expand"></i></button>
           </div>
-          <div class="dc-spacer"></div>
-          <button class="dc-speed-btn" id="dcSpeedBtn">1x<div class="dc-speed-menu" id="dcSpeedMenu"></div></button>
-          <button class="dc-btn" id="dcTheater" title="Cinema Mode (T)"><i class="fas fa-expand-alt"></i></button>
-          <button class="dc-btn" id="dcPip" title="Picture in Picture (P)"><i class="fas fa-clone"></i></button>
-          <button class="dc-btn" id="dcKbd" title="Keyboard Shortcuts (?)" onclick="toggleKbdOverlay()"><i class="fas fa-keyboard"></i></button>
-          <button class="dc-btn" id="dcFs" title="Fullscreen (F)" onclick="dcFullscreen()"><i class="fas fa-expand"></i></button>
         </div>
       </div>
 
@@ -673,7 +687,7 @@
       } else {
         ytPlayer = new YT.Player('ytPlayerDiv', {
           videoId,
-          playerVars: { autoplay:1, rel:0, modestbranding:1, showinfo:0, enablejsapi:1, fs:1 },
+          playerVars: { autoplay:1, rel:0, modestbranding:1, showinfo:0, enablejsapi:1, fs:1, controls:0, disablekb:1 },
           events: {
             onReady: (e) => {
               document.getElementById('videoPlaceholder').style.display = 'none';
@@ -1280,5 +1294,7 @@
   <script src="../../Optimization/auth-module.js"></script>
   <script src="../../Optimization/access-gate.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
 </body>
 </html>

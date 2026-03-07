@@ -250,6 +250,13 @@ class GitHubAPIHandler {
                 }
             }
 
+            // Log activity
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('upload', `Project uploaded: ${project.title || project.folder || 'Project'}`, 'Admin',
+                    results.failed.length > 0 ? 'warning' : 'success',
+                    `${results.success.length}/${results.total} files`);
+            }
+
             return results;
         } catch (error) {
             throw new Error(`Project upload failed: ${error.message}`);
@@ -278,6 +285,9 @@ class GitHubAPIHandler {
             } catch (e) {
                 console.warn('Gateway activity log failed:', e);
             }
+        }
+        if (typeof ActivityLogger !== 'undefined') {
+            ActivityLogger.log('edit', `Saved: ${path.split('/').pop()}`, 'Admin', 'success', path);
         }
         
         return result;
@@ -317,6 +327,43 @@ class GitHubAPIHandler {
         }
 
         return await response.json();
+    }
+
+    /**
+     * List directory contents from repository
+     * @param {string} path - Directory path
+     * @returns {Promise<Array>} - Array of {name, path, type, sha} items
+     */
+    async listDirectory(path) {
+        const encodedPath = path.split('/').map(s => encodeURIComponent(s)).join('/');
+        const response = await fetch(
+            `${this.apiBase}/repos/${this.owner}/${this.repo}/contents/${encodedPath}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    }
+
+    /**
+     * Recursively delete a folder and all its contents
+     * @param {string} folderPath - Folder path in repo
+     * @param {string} message - Commit message
+     */
+    async deleteFolder(folderPath, message = 'Delete folder') {
+        const items = await this.listDirectory(folderPath);
+        for (const item of items) {
+            if (item.type === 'file') {
+                try { await this.deleteFile(item.path, message); } catch (e) { console.warn('Skip delete:', item.path, e.message); }
+            } else if (item.type === 'dir') {
+                await this.deleteFolder(item.path, message);
+            }
+        }
     }
 
     /**
@@ -432,50 +479,39 @@ function showGitHubAuthModal() {
 }
 
 /**
- * Show upload progress modal
- * @param {number} total - Total files to upload
- * @returns {object} - Modal controller
+ * Show upload progress modal — book-manager style
+ * @param {Function} asyncCallback - async (updateProgress) => void
+ *   updateProgress(percent 0-100, statusText)
  */
-function showUploadProgressModal(total) {
+async function showUploadProgressModal(asyncCallback) {
     const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    `;
-
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:99999;';
     modal.innerHTML = `
-        <div style="background: #1e1e1e; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;">
-            <h3 style="color: #fff; margin-bottom: 20px;">
-                <i class="fas fa-upload"></i> Uploading to GitHub...
-            </h3>
-            <div style="background: #2d2d2d; height: 30px; border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
-                <div id="uploadProgress" style="height: 100%; background: linear-gradient(90deg, #238636, #2ea043); 
-                     width: 0%; transition: width 0.3s;"></div>
+        <div style="background:#120000;border:2px solid #8B0000;border-radius:16px;padding:36px;max-width:460px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.9);">
+            <div style="font-size:2.5rem;margin-bottom:16px;"><i class="fab fa-github" style="color:#CC0000;"></i></div>
+            <h3 style="color:#fff;font-size:1.15rem;margin-bottom:20px;font-weight:600;letter-spacing:0.3px;">Uploading to GitHub</h3>
+            <div style="background:#2a0000;height:8px;border-radius:4px;overflow:hidden;margin-bottom:16px;">
+                <div id="_uploadFill" style="height:100%;background:linear-gradient(90deg,#8B0000,#CC0000);width:0%;transition:width 0.4s ease;"></div>
             </div>
-            <p id="uploadStatus" style="color: #aaa; text-align: center;">
-                0 / ${total} files uploaded
-            </p>
+            <p id="_uploadStatus" style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin:0;">Preparing...</p>
         </div>
     `;
-
     document.body.appendChild(modal);
-
-    return {
-        update: (current) => {
-            const percent = (current / total) * 100;
-            modal.querySelector('#uploadProgress').style.width = percent + '%';
-            modal.querySelector('#uploadStatus').textContent = `${current} / ${total} files uploaded`;
-        },
-        close: () => modal.remove()
+    const fill   = modal.querySelector('#_uploadFill');
+    const status = modal.querySelector('#_uploadStatus');
+    const updateProgress = (percent, text) => {
+        fill.style.width = Math.min(100, Math.max(0, percent)) + '%';
+        if (text !== undefined) status.textContent = text;
     };
+    try {
+        await asyncCallback(updateProgress);
+        updateProgress(100, '✅ Upload complete!');
+        await new Promise(r => setTimeout(r, 700));
+        modal.remove();
+    } catch(e) {
+        modal.remove();
+        throw e;
+    }
 }
 
 // Export

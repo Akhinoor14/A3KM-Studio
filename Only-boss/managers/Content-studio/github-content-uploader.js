@@ -831,8 +831,10 @@ class GitHubContentUploader {
             return await response.json();
 
         } catch (error) {
+            // Don't retry on 404 (file not found is expected for new files)
+            const is404 = error.message && (error.message.includes('404') || error.message.includes('Not Found'));
             // Retry logic
-            if (retries < this.maxRetries) {
+            if (!is404 && retries < this.maxRetries) {
                 await this.delay(1000 * (retries + 1)); // Exponential backoff
                 return this.makeRequest(url, method, body, retries + 1);
             }

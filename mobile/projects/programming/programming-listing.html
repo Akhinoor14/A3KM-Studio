@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0000">
+  <meta name="description" content="Programming - DSA & Solutions by Md Akhinoor Islam">
+  <title>Programming - A3KM Studio</title>
+
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../shared/mobile-common.css">
+  <link rel="stylesheet" href="../../shared/mobile-navbar.css">
+  <script src="../../shared/page-loading.js"></script>
+  <link rel="stylesheet" href="../shared-content-styles.css">
+
+  <style>
+    /* ── Programming accent color: dark red ── */
+    :root {
+      --accent: #CC0000;
+      --accent-dim: rgba(204, 0, 0, 0.3);
+      --accent-bg: rgba(204, 0, 0, 0.08);
+    }
+
+    /* Override content-header accent */
+    .content-header {
+      border-bottom: 2px solid rgba(204, 0, 0, 0.3) !important;
+    }
+
+    .content-page-title i { color: var(--accent); }
+
+    .back-btn:hover, .back-btn:active { color: var(--accent); }
+
+    /* Filter chips scroll row */
+    .filter-chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 4px 6px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .filter-chips-row::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .chip.active {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .chip:active { transform: scale(0.96); }
+
+    .filter-section {
+      padding: 0 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-row-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Results count row */
+    .results-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 16px 10px;
+    }
+
+    .results-count-text {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 600;
+    }
+
+    .results-count-text span { color: var(--accent); font-weight: 800; }
+
+    /* Program card */
+    .program-card {
+      background: linear-gradient(160deg, rgba(18,0,0,0.98) 0%, rgba(8,0,0,0.98) 100%);
+      border: 1px solid rgba(100,0,0,0.35);
+      border-radius: 12px;
+      padding: 0;
+      margin-bottom: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+
+    .program-card:active { transform: scale(0.98); border-color: rgba(204,0,0,0.6); }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 13px 10px;
+    }
+
+    /* Language icon box */
+    .lang-icon-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .lang-icon-box.python { background: rgba(55,118,171,0.2); border: 1px solid rgba(55,118,171,0.4); color: #79b8ff; }
+    .lang-icon-box.javascript { background: rgba(247,223,30,0.15); border: 1px solid rgba(247,223,30,0.4); color: #ffe066; }
+    .lang-icon-box.cpp { background: rgba(0,89,156,0.2); border: 1px solid rgba(0,89,156,0.4); color: #5bceff; }
+    .lang-icon-box.java { background: rgba(237,139,0,0.2); border: 1px solid rgba(237,139,0,0.4); color: #ffb347; }
+    .lang-icon-box.c { background: rgba(168,185,204,0.15); border: 1px solid rgba(168,185,204,0.3); color: #c0d4e8; }
+    .lang-icon-box.matlab { background: rgba(228,75,25,0.2); border: 1px solid rgba(228,75,25,0.4); color: #ff8866; }
+
+    .card-info { flex: 1; min-width: 0; }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .card-badge.source { background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.2); color: rgba(255,120,120,0.85); font-family: monospace; }
+    .card-badge.easy { background: rgba(0,180,50,0.15); border: 1px solid rgba(0,180,50,0.35); color: #44ff88; }
+    .card-badge.medium { background: rgba(255,160,0,0.15); border: 1px solid rgba(255,160,0,0.35); color: #ffcc44; }
+    .card-badge.hard { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.35); color: #ff7777; }
+    .card-badge.featured { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); color: #ffd700; }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Tags strip */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 0 13px 10px;
+    }
+
+    .mini-tag {
+      padding: 2px 7px;
+      background: rgba(204,0,0,0.07);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* Complexity row */
+    .card-complexity {
+      display: flex;
+      gap: 10px;
+      padding: 0 13px 8px;
+    }
+
+    .complexity-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.35);
+      font-family: monospace;
+    }
+
+    .complexity-item i { color: var(--accent); font-size: 9px; }
+
+    /* Action buttons */
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      padding: 8px 13px 12px;
+      border-top: 1px solid rgba(0,204,68,0.1);
+    }
+
+    .btn-run, .btn-view {
+      flex: 1;
+      padding: 9px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+
+    .btn-run { background: linear-gradient(135deg, var(--accent), #008822); color: #000; }
+    .btn-run:active { filter: brightness(0.9); }
+    .btn-run:disabled { opacity: 0.35; }
+
+    .btn-view { background: rgba(255,255,255,0.06); border: 1px solid rgba(0,204,68,0.22) !important; color: rgba(255,255,255,0.75); }
+    .btn-view:active { background: rgba(0,204,68,0.1); }
+
+    /* Sort dropdown */
+    .sort-select {
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(0,204,68,0.25);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      font-weight: 600;
+      -webkit-appearance: none;
+      appearance: none;
+      color-scheme: dark;
+    }
+
+    /* Empty/loading state */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .empty-state i { font-size: 40px; color: var(--accent-dim); margin-bottom: 12px; display: block; }
+    .empty-state p { font-size: 14px; }
+
+    /* ===== MINI STATS BAR ===== */
+    .mini-stats-bar {
+      background: linear-gradient(135deg, rgba(30,0,0,0.98), rgba(15,0,0,0.95));
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 0 16px 14px;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mini-stats-bar:active { transform: scale(0.99); border-color: rgba(204,0,0,0.5); }
+
+    .mini-stats-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .mini-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .mini-stat-item i { font-size: 12px; color: var(--accent); }
+    .mini-stat-item .value { color: #fff; font-size: 13px; }
+
+    .mini-progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .mini-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ff6644);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .mini-stats-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      font-weight: 600;
+      text-align: center;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="content-header container">
+    <a href="../projects.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i>
+      <span>Projects</span>
+    </a>
+    <h1 class="content-page-title">
+      <i class="fas fa-code"></i>
+      Programming
+    </h1>
+    <p class="content-page-subtitle">DSA solutions, algorithms &amp; Python scripts</p>
+  </header>
+
+  <!-- Search -->
+  <section class="search-section container">
+    <div class="search-bar">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search programs..." autocomplete="off">
+    </div>
+  </section>
+
+  <!-- Mini Stats Bar -->
+  <div class="mini-stats-bar" id="miniStatsBar" onclick="toggleStatsExpand()">
+    <div class="mini-stats-row">
+      <div class="mini-stat-item">
+        <i class="fas fa-check-circle"></i>
+        <span>
+          <span class="value" id="mobileSolved">0</span> Solved
+        </span>
+      </div>
+      <div class="mini-stat-item">
+        <i class="fas fa-fire" style="color: #ff9500;"></i>
+        <span>
+          <span class="value" id="mobileStreak">0</span>-day Streak
+        </span>
+      </div>
+      <div class="mini-stat-item">
+        <i class="fas fa-chart-line"></i>
+        <span id="mobileProgressPercent">0%</span>
+      </div>
+    </div>
+    <div class="mini-progress-bar">
+      <div class="mini-progress-fill" id="mobileProgressFill" style="width: 0%;"></div>
+    </div>
+    <div class="mini-stats-label">Tap for detailed stats</div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section container">
+    <!-- Language chips -->
+    <div class="filter-row-label">Language</div>
+    <div class="filter-chips-row" id="langChips">
+      <div class="chip active" data-lang="all">All</div>
+      <div class="chip" data-lang="python"><i class="fab fa-python"></i> Python</div>
+      <div class="chip" data-lang="javascript">JS</div>
+      <div class="chip" data-lang="cpp">C++</div>
+      <div class="chip" data-lang="java">Java</div>
+      <div class="chip" data-lang="c">C</div>
+    </div>
+
+    <!-- Difficulty chips -->
+    <div class="filter-row-label">Difficulty</div>
+    <div class="filter-chips-row" id="diffChips">
+      <div class="chip active" data-diff="all">All</div>
+      <div class="chip" data-diff="easy" style="color:#44ff88;">Easy</div>
+      <div class="chip" data-diff="medium" style="color:#ffcc44;">Medium</div>
+      <div class="chip" data-diff="hard" style="color:#ff7777;">Hard</div>
+    </div>
+  </div>
+
+  <!-- Results row -->
+  <div class="results-row container">
+    <div class="results-count-text"><span id="resultCount">0</span> programs</div>
+    <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+      <option value="newest">Newest</option>
+      <option value="title-asc">A-Z</option>
+      <option value="difficulty-asc">Easiest First</option>
+      <option value="featured">Featured</option>
+    </select>
+  </div>
+
+  <!-- Programs list -->
+  <section class="container" style="padding-bottom: 100px;" id="programsSection">
+    <div id="programsList">
+      <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="mobile-footer">
+    <p class="footer-text">Python • JavaScript • C++ • DSA</p>
+    <p class="footer-credit">Learning diary of <strong>Md Akhinoor Islam</strong></p>
+  </footer>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" role="navigation" aria-label="Main mobile navigation">
+    <div class="mobile-nav-container">
+      <a href="../../home/index.html" class="mobile-nav-item" aria-label="Home">
+        <i class="fas fa-home" aria-hidden="true"></i>
+        <span class="mobile-nav-label">Home</span>
+      </a>
+      <a href="../../about/about.html" class="mobile-nav-item" aria-label="About">
+        <i class="fas fa-user-circle" aria-hidden="true"></i>
+        <span class="mobile-nav-label">About</span>
+      </a>
+      <a href="../../projects/projects.html" class="mobile-nav-item mobile-nav-active" aria-label="Projects">
+        <i class="fas fa-folder-open" aria-hidden="true"></i>
+        <span class="mobile-nav-label">Projects</span>
+      </a>
+      <a href="../../content-studio/hub.html" class="mobile-nav-item" aria-label="Content Studio">
+        <i class="fas fa-layer-group" aria-hidden="true"></i>
+        <span class="mobile-nav-label">Studio</span>
+      </a>
+      <a href="../../contact/contact.html" class="mobile-nav-item" aria-label="Contact">
+        <i class="fas fa-envelope" aria-hidden="true"></i>
+        <span class="mobile-nav-label">Contact</span>
+      </a>
+      <a href="../../../Documentation/index.html" class="mobile-nav-item" aria-label="Website Guide">
+        <i class="fas fa-book-open" aria-hidden="true"></i>
+        <span class="mobile-nav-label">Guide</span>
+      </a>
+    </div>
+  </nav>
+
+  <div id="mobileNavbar"></div>
+
+  <script src="../../shared/mobile-navbar.js"></script>
+  <script src="programming-listing.js"></script>
+  <script src="../../pwa-init.js"></script>
+  <script src="../../../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

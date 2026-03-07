@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Immediate Mobile Detection -->
+  <script>
+    (function() {
+      function isMobile() {
+        const ua = navigator.userAgent || '';
+        return /android|iphone|ipad|ipod|iemobile|mobile/i.test(ua) ||
+               (navigator.userAgentData && navigator.userAgentData.mobile);
+      }
+      if (isMobile()) {
+        const params = window.location.search;
+        window.location.replace('../../mobile/projects/programming/code-viewer.html' + params);
+      }
+    })();
+  </script>
+
+  <title>Code Viewer | A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../../Optimization/styles.css" />
+  <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary:      #CC0000;
+      --dark-primary: #8B0000;
+      --light-primary:#FF1744;
+      --bg-dark:      #030000;
+      --grid-line:    rgba(204,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: #fff;
+      background: linear-gradient(180deg, #0a0000 0%, #030000 100%);
+      padding-top: 85px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Engineering grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg,  transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+        repeating-linear-gradient(90deg, transparent, transparent 19px, var(--grid-line) 19px, var(--grid-line) 20px),
+        repeating-linear-gradient(45deg, transparent, transparent 39px, rgba(204,0,0,0.04) 39px, rgba(204,0,0,0.04) 40px);
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 0;
+    }
+
+    /* ===== VIEWER WRAPPER: sticky container holding header + main ===== */
+    .viewer-wrapper {
+      position: sticky;
+      top: 85px;
+      height: calc(100vh - 85px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===== VIEWER HEADER ===== */
+    .viewer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(160deg, rgba(50,0,0,0.45) 0%, rgba(20,0,0,0.9) 100%);
+      border-bottom: 2px solid rgba(204,0,0,0.45);
+      flex-shrink: 0;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover { background: rgba(204,0,0,0.12); border-color: var(--primary); color: #fff; }
+    .back-btn i { color: var(--primary); }
+
+    .prog-title-block { min-width: 0; }
+    .prog-title-block h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+    }
+    .prog-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      flex-wrap: wrap;
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .meta-badge.python { background: rgba(55,118,171,0.2); border: 1px solid rgba(55,118,171,0.5); color: #79b8ff; }
+    .meta-badge.javascript { background: rgba(247,223,30,0.15); border: 1px solid rgba(247,223,30,0.4); color: #ffe066; }
+    .meta-badge.cpp { background: rgba(0,89,156,0.2); border: 1px solid rgba(0,89,156,0.5); color: #5bceff; }
+    .meta-badge.java { background: rgba(237,139,0,0.2); border: 1px solid rgba(237,139,0,0.4); color: #ffb347; }
+    .meta-badge.c { background: rgba(168,185,204,0.15); border: 1px solid rgba(168,185,204,0.3); color: #c0d4e8; }
+    .meta-badge.easy { background: rgba(0,180,50,0.15); border: 1px solid rgba(0,180,50,0.4); color: #66ff99; }
+    .meta-badge.medium { background: rgba(255,160,0,0.15); border: 1px solid rgba(255,160,0,0.4); color: #ffcc44; }
+    .meta-badge.hard { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.4); color: #ff7777; }
+    .meta-badge.source { background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); color: rgba(255,120,120,0.85); }
+
+    .viewer-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.8);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .header-btn:hover { background: rgba(204,0,0,0.1); border-color: var(--primary); color: #fff; }
+    .header-btn i { color: var(--primary); }
+
+    .lang-selector {
+      min-width: 140px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CC0000' d='M6 9L1 4h10z'/%3E%3C/svg%3E\");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px;
+      padding-right: 30px;
+      color-scheme: dark;
+    }
+
+    .lang-selector option {
+      background: #1a0000;
+      color: #ffffff;
+    }
+
+    .run-header-btn {
+      background: linear-gradient(135deg, var(--primary), var(--dark-primary));
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .run-header-btn:hover { filter: brightness(1.2); box-shadow: 0 4px 14px rgba(204,0,0,0.4); }
+    .run-header-btn i { color: #fff; }
+
+    /* ===== MAIN VIEWER LAYOUT: 2 Panels ===== */
+    .viewer-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* === LEFT PANEL === */
+    .left-panel {
+      width: 55%;
+      border-right: 2px solid rgba(204,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tabs inside left panel */
+    .panel-tabs {
+      display: flex;
+      background: rgba(5,0,0,0.85);
+      border-bottom: 1px solid rgba(204,0,0,0.22);
+      flex-shrink: 0;
+    }
+
+    .panel-tab {
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+    }
+
+    .panel-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(204,0,0,0.07);
+    }
+
+    .panel-tab:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+    .panel-content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+    .panel-content::-webkit-scrollbar { width: 5px; }
+    .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    .panel-content::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.35); border-radius: 3px; }
+
+    /* Tab panels */
+    .tab-panel { display: none; padding: 24px; }
+    .tab-panel.active { display: block; }
+
+    /* Problem info */
+    .problem-section { margin-bottom: 28px; }
+    .problem-section h3 {
+      font-size: 0.67rem;
+      font-weight: 800;
+      color: rgba(255,170,170,0.9);
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      margin-bottom: 14px;
+      margin-left: -24px;
+      margin-right: -24px;
+      padding: 9px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(90deg, rgba(204,0,0,0.14) 0%, rgba(204,0,0,0.03) 70%, transparent 100%);
+      border-left: 3px solid rgba(204,0,0,0.7);
+      border-top: 1px solid rgba(204,0,0,0.12);
+      border-bottom: 1px solid rgba(204,0,0,0.12);
+    }
+    .problem-section h3 i {
+      color: var(--primary);
+      font-size: 0.75rem;
+    }
+
+    .problem-desc {
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.92);
+      line-height: 1.9;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,180,50,0.025) 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-left: 3px solid rgba(255,200,80,0.55);
+      border-radius: 10px;
+    }
+
+    .approach-box {
+      background: rgba(204,0,0,0.05);
+      border: 1px solid rgba(204,0,0,0.22);
+      border-left: 3px solid rgba(204,0,0,0.5);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+    }
+
+    /* Examples section */
+    .example-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .example-box:last-child { margin-bottom: 0; }
+
+    .example-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .example-io {
+      font-size: 0.82rem;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    .example-io strong {
+      color: rgba(255,255,255,0.85);
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      display: inline-block;
+      min-width: 60px;
+    }
+
+    .example-io code {
+      background: rgba(204,0,0,0.10);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      color: rgba(255,200,200,0.9);
+      font-size: 0.78rem;
+    }
+
+    .example-explanation {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.6);
+      font-style: italic;
+      margin-top: 8px;
+      padding-left: 12px;
+      border-left: 2px solid rgba(204,0,0,0.25);
+    }
+
+    /* Constraints section */
+    .constraints-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .constraints-list li {
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.15);
+      border-left: 3px solid rgba(204,0,0,0.4);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-family: 'Fira Code', monospace;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.5;
+    }
+
+    .constraints-list li:last-child { margin-bottom: 0; }
+
+    .complexity-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .complexity-card {
+      flex: 1;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(204,0,0,0.22);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .complexity-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
+    }
+
+    .complexity-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag-chip {
+      padding: 4px 11px;
+      background: rgba(204,0,0,0.08);
+      border: 1px solid rgba(204,0,0,0.28);
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(255,120,120,0.85);
+    }
+
+    .related-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .related-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.15);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .related-item:hover { border-color: rgba(204,0,0,0.4); }
+
+    .related-source {
+      font-size: 0.68rem;
+      color: rgba(204,0,0,0.65);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Code panel */
+    .code-wrapper {
+      position: relative;
+    }
+
+    .code-wrapper pre {
+      margin: 0 !important;
+      padding: 20px 20px 20px 60px !important;
+      background: #0d0d0d !important;
+      font-size: 0.83rem !important;
+      font-family: 'Fira Code', monospace !important;
+      line-height: 1.6 !important;
+      tab-size: 4;
+    }
+
+    /* Copy button */
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 7px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .copy-btn:hover { background: rgba(204,0,0,0.15); color: #fff; border-color: var(--primary); }
+    .copy-btn.copied { border-color: var(--primary); color: var(--primary); }
+    .copy-btn i { font-size: 11px; }
+
+    /* === RIGHT PANEL === */
+    .right-panel {
+      width: 45%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #060000;
+    }
+
+    /* Runtime status bar */
+    .runtime-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(5,0,0,0.85);
+      border-bottom: 1px solid rgba(204,0,0,0.22);
+      flex-shrink: 0;
+    }
+
+    .runtime-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: background 0.3s;
+    }
+
+    .status-dot.ready   { background: #44ff88; box-shadow: 0 0 6px rgba(68,255,136,0.5); }
+    .status-dot.loading  { background: #ffcc44; animation: blink 0.8s infinite; }
+    .status-dot.running  { background: var(--primary); animation: blink 0.5s infinite; box-shadow: 0 0 6px rgba(204,0,0,0.6); }
+    .status-dot.success  { background: #44ff88; }
+    .status-dot.error    { background: #ff4444; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .runtime-controls { display: flex; gap: 6px; }
+
+    .ctrl-btn {
+      padding: 5px 12px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(204,0,0,0.28);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ctrl-btn:hover { border-color: var(--primary); color: rgba(255,130,130,0.9); }
+    .ctrl-btn.primary { background: linear-gradient(135deg, var(--primary), var(--dark-primary)); border-color: var(--primary); color: #fff; }
+    .ctrl-btn.primary:hover { filter: brightness(1.2); box-shadow: 0 3px 10px rgba(204,0,0,0.4); }
+    .ctrl-btn i { font-size: 10px; }
+
+    /* Right panel tabs */
+    .right-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .right-tabs {
+      display: flex;
+      background: rgba(4,0,0,0.85);
+      border-bottom: 1px solid rgba(204,0,0,0.18);
+      flex-shrink: 0;
+    }
+
+    .right-tab {
+      padding: 9px 16px;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.45);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .right-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(204,0,0,0.05); }
+
+    .right-panel-body { flex: 1; overflow-y: auto; }
+    .right-panel-body::-webkit-scrollbar { width: 5px; }
+    .right-panel-body::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.3); border-radius: 3px; }
+
+    .right-tab-panel { display: none; padding: 16px; }
+    .right-tab-panel.active { display: block; }
+
+    /* Input area */
+    .input-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .input-label i { color: var(--primary); font-size: 0.65rem; }
+
+    .code-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.6);
+      border: 1.5px solid rgba(204,0,0,0.22);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.85);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      resize: vertical;
+      transition: border-color 0.3s;
+    }
+
+    .code-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 12px rgba(204,0,0,0.25); }
+    .code-textarea::placeholder { color: rgba(255,255,255,0.25); }
+
+    /* Output area */
+    .output-area {
+      background: #060000;
+      border: 1.5px solid rgba(204,0,0,0.2);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      min-height: 120px;
+      max-height: 340px;
+      overflow-y: auto;
+      color: rgba(255,255,255,0.82);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .output-area.has-output { border-color: rgba(204,0,0,0.45); }
+    .output-area.has-error   { border-color: rgba(255,80,80,0.55); color: #ffaaaa; }
+
+    .output-placeholder {
+      color: rgba(255,255,255,0.25);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .output-placeholder i { font-size: 24px; color: rgba(204,0,0,0.35); margin-bottom: 8px; display: block; }
+
+    /* Test Cases */
+    .test-case-item {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .test-case-item:hover { border-color: rgba(204,0,0,0.35); }
+
+    .test-case-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: rgba(5,0,0,0.6);
+      cursor: pointer;
+    }
+
+    .test-case-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .test-result-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .test-result-badge.pass { background: rgba(0,200,60,0.15); border: 1px solid rgba(0,200,60,0.4); color: #44ff88; }
+    .test-result-badge.fail { background: rgba(255,60,60,0.15); border: 1px solid rgba(255,60,60,0.4); color: #ff6666; }
+    .test-result-badge.pending { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+    .test-result-badge.running { background: rgba(204,0,0,0.12); border: 1px solid rgba(204,0,0,0.35); color: var(--primary); }
+
+    .test-case-body { padding: 10px 12px; display: none; }
+    .test-case-body.open { display: block; }
+
+    .test-io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+
+    .test-io-box { }
+    .test-io-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .test-io-content {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(204,0,0,0.14);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.7);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .test-actual-output {
+      margin-top: 8px;
+    }
+
+    .test-timing {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Fira Code', monospace;
+      margin-top: 6px;
+    }
+
+    .test-timing i { color: rgba(204,0,0,0.6); font-size: 0.65rem; }
+
+    .test-diff-view {
+      margin-top: 10px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(204,0,0,0.2);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .test-diff-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .test-diff-header i { color: var(--primary); }
+
+    .test-diff-line {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      padding: 3px 6px;
+      margin-bottom: 2px;
+      border-radius: 4px;
+    }
+
+    .test-diff-line.added {
+      background: rgba(0,200,60,0.1);
+      border-left: 3px solid rgba(0,200,60,0.5);
+      color: #66ff99;
+    }
+
+    .test-diff-line.removed {
+      background: rgba(255,60,60,0.1);
+      border-left: 3px solid rgba(255,60,60,0.5);
+      color: #ff8888;
+    }
+
+    .test-diff-line.same {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .hidden-test-item {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(204,0,0,0.22);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .hidden-test-icon {
+      font-size: 24px;
+      color: rgba(204,0,0,0.4);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .hidden-test-text {
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 4px;
+    }
+
+    .hidden-test-hint {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      font-style: italic;
+    }
+
+    /* ===== CODE EXPLANATION STYLES ===== */
+    .explanation-section {
+      margin-bottom: 18px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(204,0,0,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .explanation-header {
+      padding: 12px 14px;
+      background: rgba(204,0,0,0.08);
+      border-bottom: 1px solid rgba(204,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .explanation-header:hover {
+      background: rgba(204,0,0,0.12);
+    }
+
+    .explanation-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explanation-title i {
+      color: var(--primary);
+      font-size: 0.75rem;
+    }
+
+    .explanation-lines {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Fira Code', monospace;
+      background: rgba(0,0,0,0.4);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .explanation-body {
+      padding: 14px;
+      display: none;
+    }
+
+    .explanation-body.open {
+      display: block;
+    }
+
+    .explanation-text {
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 12px;
+    }
+
+    .explanation-insight {
+      background: rgba(204,0,0,0.1);
+      border-left: 3px solid var(--primary);
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    .explanation-insight-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .explanation-insight-text {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .no-explanation {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .no-explanation i {
+      font-size: 32px;
+      color: rgba(204,0,0,0.3);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .run-all-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--dark-primary));
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+
+    .run-all-btn:hover { filter: brightness(1.2); box-shadow: 0 4px 14px rgba(204,0,0,0.4); }
+
+    /* Pyodide loading overlay */
+    .pyodide-loading {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5,0,0,0.85);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 100;
+      border-radius: 8px;
+    }
+
+    .pyodide-loading.active { display: flex; }
+    .pyodide-loading i { font-size: 32px; color: var(--primary); animation: spin 1s linear infinite; }
+    .pyodide-loading p { color: rgba(255,255,255,0.7); font-size: 13px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Pyodide notice */
+    .runner-notice {
+      padding: 8px 12px;
+      background: rgba(204,0,0,0.06);
+      border: 1px solid rgba(204,0,0,0.22);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .runner-notice i { color: var(--primary); }
+
+    /* Not available notice */
+    .not-available {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255,255,255,0.4);
+    }
+    .not-available i { font-size: 32px; color: rgba(204,0,0,0.35); margin-bottom: 12px; display: block; }
+
+    /* Fix: overflow-x:hidden on bg-system-container breaks position:sticky.
+       clip does the same visual job but doesn't create a scroll container. */
+    .bg-system-container { overflow-x: clip !important; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .viewer-wrapper { position: relative; top: auto; height: auto; overflow: visible; }
+      .viewer-main { flex-direction: column; height: auto; flex: unset; }
+      .left-panel { width: 100%; height: auto; overflow: visible; }
+      .right-panel { width: 100%; height: 600px; }
+      .tab-panel { height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-system-container">
+    <div class="bg-hero-bg-elements">
+      <div class="bg-geometric-shapes">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        <div class="bg-shape bg-shape-3"></div>
+        <div class="bg-shape bg-shape-4"></div>
+        <div class="bg-shape bg-shape-5"></div>
+      </div>
+      <div class="bg-gradient-orbs">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+      </div>
+      <canvas id="particles-canvas" class="bg-particles-canvas"></canvas>
+    </div>
+    <div class="bg-system-overlay"></div>
+    <div class="bg-system-content">
+
+  <nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+      <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home">
+        <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+        <div class="desktop-nav-brand">
+          <span class="desktop-nav-brand-name">A3KM Studio</span>
+          <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+        </div>
+      </a>
+      <ul class="desktop-nav-menu">
+        <li class="desktop-nav-item">
+          <a href="../../About me/about.html" class="desktop-nav-link"><i class="fas fa-user-circle"></i><span>About</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../projects.html" class="desktop-nav-link active"><i class="fas fa-folder-open"></i><span>Projects</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Content Studio/hub.html" class="desktop-nav-link"><i class="fas fa-layer-group"></i><span>Content Studio</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../Contact/contact.html" class="desktop-nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        </li>
+        <li class="desktop-nav-item">
+          <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf">
+            <i class="fas fa-download"></i><span>CV</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- VIEWER WRAPPER: sticky container — header + 2-panel main sit inside here -->
+  <div class="viewer-wrapper">
+
+  <!-- VIEWER HEADER -->
+  <div class="viewer-header">
+    <div class="viewer-header-left">
+      <a href="programming-listing.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      <div class="prog-title-block">
+        <h1 id="progTitle">Loading...</h1>
+        <div class="prog-meta-line" id="progMeta"></div>
+      </div>
+    </div>
+    <div class="viewer-header-actions">
+      <select class="header-btn lang-selector" id="langSelector" onchange="switchLanguage(this.value)" style="display:none;">
+        <option value="">Select Language</option>
+      </select>
+      <button class="header-btn" onclick="copyCode()"><i class="fas fa-copy"></i> Copy</button>
+      <button class="header-btn run-header-btn" id="runBtn" onclick="runCode()">
+        <i class="fas fa-play"></i> Run
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN 2-PANEL LAYOUT -->
+  <div class="viewer-main" id="viewerMain">
+
+    <!-- LEFT PANEL: Problem + Code -->
+    <div class="left-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" onclick="switchLeftTab('problem', this)">Problem</button>
+        <button class="panel-tab" onclick="switchLeftTab('explanation', this)">Explanation</button>
+        <button class="panel-tab" onclick="switchLeftTab('code', this)">Code</button>
+        <button class="panel-tab" onclick="switchLeftTab('notes', this)">Notes</button>
+      </div>
+      <div class="panel-content">
+        <!-- Problem Tab -->
+        <div class="tab-panel active" id="tab-problem">
+          <div class="problem-section">
+            <h3><i class="fas fa-question-circle"></i> Description</h3>
+            <p class="problem-desc" id="problemDesc">Loading...</p>
+          </div>
+          
+          <!-- NEW: Examples Section -->
+          <div class="problem-section" id="examplesSection" style="display:none;">
+            <h3><i class="fas fa-lightbulb"></i> Examples</h3>
+            <div id="examplesContainer"></div>
+          </div>
+          
+          <!-- NEW: Constraints Section -->
+          <div class="problem-section" id="constraintsSection" style="display:none;">
+            <h3><i class="fas fa-shield-alt"></i> Constraints</h3>
+            <ul class="constraints-list" id="constraintsList"></ul>
+          </div>
+          
+          <div class="problem-section" id="approachSection" style="display:none;">
+            <h3><i class="fas fa-lightbulb"></i> Approach</h3>
+            <div class="approach-box" id="problemApproach"></div>
+          </div>
+          <div class="problem-section" id="complexitySection" style="display:none;">
+            <h3><i class="fas fa-chart-bar"></i> Complexity</h3>
+            <div class="complexity-grid">
+              <div class="complexity-card">
+                <div class="complexity-label">Time</div>
+                <div class="complexity-value" id="timeComplexity">—</div>
+              </div>
+              <div class="complexity-card">
+                <div class="complexity-label">Space</div>
+                <div class="complexity-value" id="spaceComplexity">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="problem-section" id="tagsSection" style="display:none;">
+            <h3><i class="fas fa-tags"></i> Tags</h3>
+            <div class="tags-list" id="progTags"></div>
+          </div>
+          <div class="problem-section" id="relatedSection" style="display:none;">
+            <h3><i class="fas fa-link"></i> Related Problems</h3>
+            <div class="related-list" id="relatedProblems"></div>
+          </div>
+        </div>
+
+        <!-- Explanation Tab -->
+        <div class="tab-panel" id="tab-explanation">
+          <div id="explanationContainer">
+            <div class="no-explanation">
+              <i class="fas fa-book-open"></i>
+              <p>No code explanation available for this problem.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Tab -->
+        <div class="tab-panel" id="tab-code">
+          <div class="code-wrapper">
+            <pre class="line-numbers"><code id="codeBlock" class="language-python"></code></pre>
+            <button class="copy-btn" onclick="copyCode()" id="copyBtnInner">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div class="tab-panel" id="tab-notes">
+          <div class="problem-section">
+            <h3><i class="fas fa-sticky-note"></i> Notes</h3>
+            <div class="approach-box" id="progNotes" style="min-height:80px;">No notes available.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Runner + Test Cases -->
+    <div class="right-panel">
+      <div class="runtime-bar">
+        <div class="runtime-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Ready</span>
+        </div>
+        <div class="runtime-controls">
+          <button class="ctrl-btn" onclick="clearOutput()"><i class="fas fa-trash"></i> Clear</button>
+          <button class="ctrl-btn primary" id="runBtnRight" onclick="runCode()">
+            <i class="fas fa-play"></i> Run
+          </button>
+        </div>
+      </div>
+
+      <div class="right-content">
+        <div class="right-tabs">
+          <button class="right-tab active" onclick="switchRightTab('run', this)">Run</button>
+          <button class="right-tab" onclick="switchRightTab('tests', this)">Test Cases</button>
+        </div>
+
+        <div class="right-panel-body">
+          <!-- Run Tab -->
+          <div class="right-tab-panel active" id="rtab-run">
+            <div class="runner-notice" id="runnerNotice" style="display:none;">
+              <i class="fas fa-info-circle"></i>
+              <span id="runnerNoticeText"></span>
+            </div>
+            <div class="not-available" id="notAvailableMsg" style="display:none;">
+              <i class="fas fa-ban"></i>
+              <p>In-browser execution not available for this language.</p>
+              <p style="font-size:12px;margin-top:6px;color:rgba(255,255,255,0.3)">Copy the code and run it locally.</p>
+            </div>
+            <div id="runSection">
+              <div class="input-label"><i class="fas fa-terminal"></i> Custom Input (stdin)</div>
+              <textarea class="code-textarea" id="customInput" rows="4" placeholder="Enter input here..."></textarea>
+              <div style="height:12px"></div>
+              <div class="input-label"><i class="fas fa-terminal"></i> Output</div>
+              <div id="outputContainer">
+                <div class="output-area" id="outputArea">
+                  <div class="output-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                    <p>Click Run to execute</p>
+                  </div>
+                </div>
+              </div>
+              <div style="height:8px"></div>
+              <div style="font-size:0.7rem; color:rgba(255,255,255,0.25); text-align:right;" id="execTime"></div>
+            </div>
+          </div>
+
+          <!-- Test Cases Tab -->
+          <div class="right-tab-panel" id="rtab-tests">
+            <button class="run-all-btn" onclick="runAllTests()">
+              <i class="fas fa-play"></i> Run All Tests
+            </button>
+            <div id="testCasesContainer">
+              <div style="text-align:center; color:rgba(255,255,255,0.3); padding:20px; font-size:0.85rem;">
+                No test cases available.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /viewer-main -->
+
+  </div><!-- /viewer-wrapper -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="../../Optimization/navbar-autohide.js"></script>
+
+  <script>
+    // ─── STATE ────────────────────────────────────────────────────────────────
+    let currentProgram = null;
+    let pyodide = null;
+    let pyodideReady = false;
+    let pyodideLoading = false;
+
+    const LANG_PRISM = {
+      python: 'python', javascript: 'javascript',
+      cpp: 'cpp', java: 'java', c: 'c', matlab: 'markup'
+    };
+
+    const LANG_META_CLASS = {
+      python: 'python', javascript: 'javascript',
+      cpp: 'cpp', java: 'java', c: 'c', matlab: 'source'
+    };
+
+    const RUNNABLE_IN_BROWSER = ['python', 'javascript'];
+
+    // ─── INIT ────────────────────────────────────────────────────────────────
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const progId = params.get('id');
+      const autoRun = params.get('run') === '1';
+
+      if (!progId) {
+        document.getElementById('progTitle').textContent = 'Program not found';
+        return;
+      }
+
+      try {
+        const res = await fetch('programs.json');
+        const data = await res.json();
+        currentProgram = (data.programs || []).find(p => p.id === progId);
+
+        if (!currentProgram) {
+          document.getElementById('progTitle').textContent = 'Program not found';
+          return;
+        }
+
+        // Load code from storage file if available, fallback to inline code
+        if (currentProgram.codeFile) {
+          try {
+            const codeRes = await fetch(currentProgram.codeFile);
+            if (codeRes.ok) {
+              currentProgram.code = await codeRes.text();
+            }
+          } catch (e) { /* use inline code as fallback */ }
+        }
+
+        renderProgram(currentProgram);
+        document.title = `${currentProgram.title} | A3KM Studio`;
+
+        if (autoRun && RUNNABLE_IN_BROWSER.includes(currentProgram.language)) {
+          setTimeout(() => runCode(), 500);
+        }
+
+        if (currentProgram.language === 'python') {
+          initPyodide(); // background load
+        }
+
+      } catch (err) {
+        console.error('Error loading program:', err);
+        document.getElementById('progTitle').textContent = 'Error loading program';
+      }
+    }
+
+    function renderProgram(prog) {
+      // Check if multiple code versions exist
+      const hasMultipleVersions = prog.codeVersions && Object.keys(prog.codeVersions).length > 1;
+      
+      if (hasMultipleVersions) {
+        // Show language selector
+        const langSelector = document.getElementById('langSelector');
+        langSelector.style.display = 'block';
+        langSelector.innerHTML = '<option value=\"\">Language</option>' +
+          Object.keys(prog.codeVersions).map(lang => {
+            const langName = lang.charAt(0).toUpperCase() + lang.slice(1);
+            return `<option value=\"${lang}\"${lang === prog.language ? ' selected' : ''}>${langName}</option>`;
+          }).join('');
+      }
+
+      // Header
+      document.getElementById('progTitle').textContent = prog.title;
+
+      const langClass = LANG_META_CLASS[prog.language] || prog.language;
+      const diff = (prog.difficulty || 'Easy').toLowerCase();
+      const sourceTag = prog.source
+        ? `<span class="meta-badge source">${prog.source}${prog.sourceNumber ? ' #' + prog.sourceNumber : ''}</span>`
+        : '';
+
+      document.getElementById('progMeta').innerHTML = `
+        <span class="meta-badge ${langClass}"><i class="${getLangIcon(prog.language)}"></i> ${prog.language}</span>
+        <span class="meta-badge ${diff}">${prog.difficulty || 'Easy'}</span>
+        ${sourceTag}
+      `;
+
+      // Problem tab
+      document.getElementById('problemDesc').textContent = prog.description || 'No description available.';
+
+      // Render Examples
+      if (prog.examples && prog.examples.length) {
+        const examplesHtml = prog.examples.map((ex, i) => `
+          <div class="example-box">
+            <div class="example-label"><i class="fas fa-chevron-right"></i> Example ${i + 1}:</div>
+            <div class="example-io"><strong>Input:</strong> <code>${escapeHtml(ex.input)}</code></div>
+            <div class="example-io"><strong>Output:</strong> <code>${escapeHtml(ex.output)}</code></div>
+            ${ex.explanation ? `<div class="example-explanation">${escapeHtml(ex.explanation)}</div>` : ''}
+          </div>
+        `).join('');
+        document.getElementById('examplesContainer').innerHTML = examplesHtml;
+        document.getElementById('examplesSection').style.display = 'block';
+      }
+
+      // Render Constraints
+      if (prog.constraints && prog.constraints.length) {
+        const constraintsHtml = prog.constraints.map(c => `<li>${escapeHtml(c)}</li>`).join('');
+        document.getElementById('constraintsList').innerHTML = constraintsHtml;
+        document.getElementById('constraintsSection').style.display = 'block';
+      }
+
+      if (prog.approach) {
+        document.getElementById('problemApproach').textContent = prog.approach;
+        document.getElementById('approachSection').style.display = 'block';
+      }
+
+      if (prog.timeComplexity || prog.spaceComplexity) {
+        document.getElementById('timeComplexity').textContent = prog.timeComplexity || '—';
+        document.getElementById('spaceComplexity').textContent = prog.spaceComplexity || '—';
+        document.getElementById('complexitySection').style.display = 'block';
+      }
+
+      if (prog.tags && prog.tags.length) {
+        document.getElementById('progTags').innerHTML =
+          prog.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
+        document.getElementById('tagsSection').style.display = 'block';
+      }
+
+      if (prog.relatedProblems && prog.relatedProblems.length) {
+        document.getElementById('relatedProblems').innerHTML =
+          prog.relatedProblems.map(r => `
+            <div class="related-item">
+              <span>${r.title}</span>
+              <span class="related-source">${r.source} #${r.number || ''}</span>
+            </div>`).join('');
+        document.getElementById('relatedSection').style.display = 'block';
+      }
+
+      // Notes
+      if (prog.notes) {
+        document.getElementById('progNotes').textContent = prog.notes;
+      }
+
+      // Code tab
+      const prismLang = LANG_PRISM[prog.language] || 'markup';
+      const codeEl = document.getElementById('codeBlock');
+      codeEl.className = `language-${prismLang}`;
+      codeEl.textContent = prog.code || '';
+      if (window.Prism) Prism.highlightElement(codeEl);
+
+      // Pre-fill custom input
+      if (prog.sampleInput) {
+        document.getElementById('customInput').value = prog.sampleInput;
+      }
+
+      // Set up runner notices
+      if (!RUNNABLE_IN_BROWSER.includes(prog.language)) {
+        document.getElementById('notAvailableMsg').style.display = 'block';
+        document.getElementById('runSection').style.display = 'none';
+        document.getElementById('runBtn').disabled = true;
+        document.getElementById('runBtnRight').disabled = true;
+      } else {
+        const notice = document.getElementById('runnerNotice');
+        const noticeText = document.getElementById('runnerNoticeText');
+        notice.style.display = 'flex';
+        if (prog.language === 'python') {
+          noticeText.textContent = 'Powered by Pyodide (Python in browser). First run loads ~8MB WASM.';
+        } else if (prog.language === 'javascript') {
+          noticeText.textContent = 'Running in sandboxed iframe. Output via console.log().';
+        }
+      }
+
+      // Test cases
+      renderTestCases(prog.testCases || []);
+
+      // Render Explanation
+      renderExplanation(prog.explanation || []);
+    }
+
+    function renderExplanation(explanations) {
+      const container = document.getElementById('explanationContainer');
+      
+      if (!explanations || explanations.length === 0) {
+        container.innerHTML = `
+          <div class="no-explanation">
+            <i class="fas fa-book-open"></i>
+            <p>No code explanation available for this problem.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = explanations.map((section, i) => `
+        <div class="explanation-section">
+          <div class="explanation-header" onclick="toggleExplanation(${i})">
+            <div class="explanation-title">
+              <i class="fas fa-code"></i>
+              ${escapeHtml(section.title || `Section ${i + 1}`)}
+            </div>
+            ${section.lines ? `<span class="explanation-lines">Lines ${escapeHtml(section.lines)}</span>` : ''}
+          </div>
+          <div class="explanation-body" id="exp-body-${i}">
+            <div class="explanation-text">${escapeHtml(section.text || '')}</div>
+            ${section.keyInsight ? `
+              <div class="explanation-insight">
+                <div class="explanation-insight-header">
+                  <i class="fas fa-lightbulb"></i>
+                  Key Insight
+                </div>
+                <div class="explanation-insight-text">${escapeHtml(section.insight || '')}</div>
+              </div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleExplanation(i) {
+      const body = document.getElementById('exp-body-' + i);
+      body.classList.toggle('open');
+    }
+
+    // ─── MULTI-LANGUAGE SUPPORT ──────────────────────────────────────────────
+    function switchLanguage(newLang) {
+      if (!currentProgram || !newLang) return;
+      
+      if (currentProgram.codeVersions && currentProgram.codeVersions[newLang]) {
+        const version = currentProgram.codeVersions[newLang];
+        
+        // Update current language
+        currentProgram.language = newLang;
+        currentProgram.code = version.code || version.file || '';
+        
+        // Update explanation if language-specific
+        if (version.explanation) {
+          renderExplanation(version.explanation);
+        }
+        
+        // Re-render code block
+        const prismLang = LANG_PRISM[newLang] || 'markup';
+        const codeEl = document.getElementById('codeBlock');
+        codeEl.className = `language-${prismLang}`;
+        codeEl.textContent = currentProgram.code;
+        if (window.Prism) Prism.highlightElement(codeEl);
+        
+        // Update language badge
+        const langClass = LANG_META_CLASS[newLang] || newLang;
+        const firstMetaBadge = document.querySelector('.meta-badge');
+        if (firstMetaBadge) {
+          firstMetaBadge.className = `meta-badge ${langClass}`;
+          firstMetaBadge.innerHTML = `<i class=\"${getLangIcon(newLang)}\"></i> ${newLang}`;
+        }
+        
+        // Update runner availability
+        if (!RUNNABLE_IN_BROWSER.includes(newLang)) {
+          document.getElementById('notAvailableMsg').style.display = 'block';
+          document.getElementById('runSection').style.display = 'none';
+          document.getElementById('runBtn').disabled = true;
+          document.getElementById('runBtnRight').disabled = true;
+        } else {
+          document.getElementById('notAvailableMsg').style.display = 'none';
+          document.getElementById('runSection').style.display = 'block';
+          document.getElementById('runBtn').disabled = false;
+          document.getElementById('runBtnRight').disabled = false;
+          
+          const notice = document.getElementById('runnerNotice');
+          const noticeText = document.getElementById('runnerNoticeText');
+          notice.style.display = 'flex';
+          if (newLang === 'python') {
+            noticeText.textContent = 'Powered by Pyodide (Python in browser). First run loads ~8MB WASM.';
+          } else if (newLang === 'javascript') {
+            noticeText.textContent = 'Running in sandboxed iframe. Output via console.log().';
+          }
+        }
+      }
+    }
+
+    function getLangIcon(lang) {
+      const icons = {
+        python: 'fab fa-python', javascript: 'fab fa-js-square',
+        cpp: 'fas fa-code', java: 'fab fa-java', c: 'fas fa-code', matlab: 'fas fa-chart-line'
+      };
+      return icons[lang] || 'fas fa-code';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ─── TABS ────────────────────────────────────────────────────────────────
+    function switchLeftTab(name, btn) {
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    function switchRightTab(name, btn) {
+      document.querySelectorAll('.right-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.right-tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('rtab-' + name).classList.add('active');
+    }
+
+    // ─── COPY ────────────────────────────────────────────────────────────────
+    function copyCode() {
+      const code = currentProgram?.code || '';
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtnInner');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // ─── PYODIDE ─────────────────────────────────────────────────────────────
+    async function initPyodide() {
+      if (pyodideReady || pyodideLoading) return;
+      pyodideLoading = true;
+      setStatus('loading', 'Loading Python runtime...');
+
+      try {
+        const { loadPyodide } = await import('https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.mjs');
+        pyodide = await loadPyodide({
+          indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/',
+          stdout: text => appendOutput(text),
+          stderr: text => appendOutput(text, true)
+        });
+        pyodideReady = true;
+        setStatus('ready', 'Python ready');
+      } catch (err) {
+        console.error('Pyodide load error:', err);
+        setStatus('error', 'Failed to load Python runtime');
+      }
+      pyodideLoading = false;
+    }
+
+    // ─── RUN CODE ────────────────────────────────────────────────────────────
+    async function runCode() {
+      if (!currentProgram) return;
+      const lang = currentProgram.language;
+
+      if (!RUNNABLE_IN_BROWSER.includes(lang)) return;
+
+      clearOutput();
+      setStatus('running', 'Running...');
+      const startTime = Date.now();
+
+      const customInput = document.getElementById('customInput').value;
+
+      try {
+        if (lang === 'python') {
+          await runPython(customInput);
+        } else if (lang === 'javascript') {
+          await runJavaScript(customInput);
+        }
+        const elapsed = Date.now() - startTime;
+        document.getElementById('execTime').textContent = `Executed in ${elapsed}ms`;
+        setStatus('success', 'Completed');
+      } catch (err) {
+        appendOutput('Runtime Error: ' + err.message, true);
+        setStatus('error', 'Error');
+      }
+    }
+
+    async function runPython(customInput) {
+      if (!pyodideReady) {
+        await initPyodide();
+      }
+      if (!pyodideReady) {
+        appendOutput('Python runtime not available. Please try again.', true);
+        return;
+      }
+
+      const code = currentProgram.code;
+
+      // Redirect stdin with custom input
+      const inputLines = customInput.split('\n');
+      let inputIndex = 0;
+
+      pyodide.globals.set('_input_lines', pyodide.toPy(inputLines));
+
+      const setupCode = `
+import sys
+from io import StringIO
+
+_input_iter = iter(_input_lines)
+
+def _custom_input(prompt=''):
+    try:
+        return next(_input_iter)
+    except StopIteration:
+        return ''
+
+import builtins
+builtins.input = _custom_input
+
+_stdout_capture = StringIO()
+sys.stdout = _stdout_capture
+`;
+
+      const teardownCode = `
+sys.stdout = sys.__stdout__
+_output = _stdout_capture.getvalue()
+_output
+`;
+
+      try {
+        await pyodide.runPythonAsync(setupCode);
+        await pyodide.runPythonAsync(code);
+        const output = await pyodide.runPythonAsync(teardownCode);
+        showOutput(String(output || ''), false);
+      } catch (err) {
+        await pyodide.runPythonAsync('import sys; sys.stdout = sys.__stdout__').catch(() => {});
+        showOutput(err.message || String(err), true);
+      }
+    }
+
+    async function runJavaScript(customInput) {
+      const code = currentProgram.code;
+
+      return new Promise((resolve, reject) => {
+        const iframe = document.createElement('iframe');
+        iframe.sandbox = 'allow-scripts';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const outputs = [];
+        const timeout = setTimeout(() => {
+          document.body.removeChild(iframe);
+          reject(new Error('Execution timeout (10s)'));
+        }, 10000);
+
+        window.addEventListener('message', function handler(e) {
+          if (e.data && e.data.type === 'js-output') {
+            if (e.data.done) {
+              clearTimeout(timeout);
+              window.removeEventListener('message', handler);
+              document.body.removeChild(iframe);
+              showOutput(outputs.join('\n'), e.data.hasError);
+              resolve();
+            } else {
+              outputs.push(e.data.text);
+            }
+          }
+        });
+
+        const inputLines = customInput.split('\n');
+        const wrappedCode = `
+          (function() {
+            const __outputs = [];
+            const __inputLines = ${JSON.stringify(inputLines)};
+            let __inputIdx = 0;
+
+            const __origLog = console.log;
+            console.log = function(...args) {
+              const text = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+              __outputs.push(text);
+              parent.postMessage({ type: 'js-output', text }, '*');
+            };
+
+            function input() { return __inputLines[__inputIdx++] || ''; }
+            function readline() { return __inputLines[__inputIdx++] || ''; }
+
+            let __hasError = false;
+            try {
+              ${code}
+            } catch(e) {
+              parent.postMessage({ type: 'js-output', text: 'Error: ' + e.message, hasError: true }, '*');
+              __hasError = true;
+            }
+
+            parent.postMessage({ type: 'js-output', done: true, hasError: __hasError }, '*');
+          })();
+        `;
+
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<script>${wrappedCode}<\/script>`);
+        doc.close();
+      });
+    }
+
+    // ─── OUTPUT HELPERS ───────────────────────────────────────────────────────
+    function showOutput(text, isError) {
+      const area = document.getElementById('outputArea');
+      area.innerHTML = '';
+      area.className = 'output-area' + (isError ? ' has-error' : ' has-output');
+      area.textContent = text || '(no output)';
+    }
+
+    function appendOutput(text, isError) {
+      const area = document.getElementById('outputArea');
+      if (area.querySelector('.output-placeholder')) area.innerHTML = '';
+      area.classList.add(isError ? 'has-error' : 'has-output');
+      area.textContent += (area.textContent ? '\n' : '') + text;
+    }
+
+    function clearOutput() {
+      const area = document.getElementById('outputArea');
+      area.className = 'output-area';
+      area.innerHTML = '<div class="output-placeholder"><i class="fas fa-play-circle"></i><p>Click Run to execute</p></div>';
+      document.getElementById('execTime').textContent = '';
+    }
+
+    // ─── STATUS ───────────────────────────────────────────────────────────────
+    function setStatus(type, text) {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      dot.className = 'status-dot ' + type;
+      txt.textContent = text;
+    }
+
+    // ─── TEST CASES ───────────────────────────────────────────────────────────
+    function renderTestCases(testCases) {
+      const container = document.getElementById('testCasesContainer');
+      if (!testCases.length) {
+        container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.3); padding:20px; font-size:0.85rem;">No test cases available.</div>';
+        return;
+      }
+
+      // Separate visible and hidden tests
+      const visibleTests = testCases.filter(tc => !tc.hidden);
+      const hiddenCount = testCases.filter(tc => tc.hidden).length;
+
+      let html = visibleTests.map((tc, i) => `
+        <div class="test-case-item" id="tc-${i}">
+          <div class="test-case-header" onclick="toggleTest(${i})">
+            <div class="test-case-label">
+              <i class="fas fa-vial"></i>
+              Test ${i + 1}: ${escapeHtml(tc.label || 'Case ' + (i + 1))}
+            </div>
+            <span class="test-result-badge pending" id="tc-badge-${i}">
+              <i class="fas fa-clock"></i> Pending
+            </span>
+          </div>
+          <div class="test-case-body" id="tc-body-${i}">
+            <div class="test-io-grid">
+              <div class="test-io-box">
+                <div class="test-io-label">Input</div>
+                <div class="test-io-content">${escapeHtml(tc.input || '')}</div>
+              </div>
+              <div class="test-io-box">
+                <div class="test-io-label">Expected Output</div>
+                <div class="test-io-content">${escapeHtml(tc.expectedOutput || '')}</div>
+              </div>
+            </div>
+            <div class="test-actual-output" id="tc-actual-${i}" style="display:none;">
+              <div class="test-io-label">Actual Output</div>
+              <div class="test-io-content" id="tc-actual-text-${i}"></div>
+              <div class="test-timing" id="tc-timing-${i}" style="display:none;">
+                <i class="fas fa-stopwatch"></i>
+                <span id="tc-time-${i}">0ms</span>
+              </div>
+              <div class="test-diff-view" id="tc-diff-${i}" style="display:none;">
+                <div class="test-diff-header">
+                  <i class="fas fa-code-compare"></i>
+                  Difference (Expected vs Actual)
+                </div>
+                <div id="tc-diff-content-${i}"></div>
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+
+      // Add hidden tests indicator
+      if (hiddenCount > 0) {
+        html += `
+          <div class="hidden-test-item" id="hiddenTestsInfo">
+            <i class="fas fa-lock hidden-test-icon"></i>
+            <div class="hidden-test-text">🔒 ${hiddenCount} Hidden Test${hiddenCount > 1 ? 's' : ''}</div>
+            <div class="hidden-test-hint">Pass all visible tests to unlock</div>
+          </div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function generateDiff(expected, actual) {
+      const expLines = String(expected || '').split('\\n');
+      const actLines = String(actual || '').split('\\n');
+      
+      let html = '';
+      const maxLen = Math.max(expLines.length, actLines.length);
+      
+      for (let i = 0; i < maxLen; i++) {
+        const expLine = expLines[i] || '';
+        const actLine = actLines[i] || '';
+        
+        if (expLine === actLine) {
+          html += `<div class="test-diff-line same">  ${escapeHtml(expLine)}</div>`;
+        } else {
+          if (expLine) {
+            html += `<div class="test-diff-line removed">- ${escapeHtml(expLine)}</div>`;
+          }
+          if (actLine) {
+            html += `<div class="test-diff-line added">+ ${escapeHtml(actLine)}</div>`;
+          }
+        }
+      }
+      
+      return html || '<div class="test-diff-line same">No output difference</div>';
+    }
+
+    function toggleTest(i) {
+      const body = document.getElementById('tc-body-' + i);
+      body.classList.toggle('open');
+    }
+
+    async function runAllTests() {
+      if (!currentProgram || !currentProgram.testCases) return;
+      const lang = currentProgram.language;
+      if (!RUNNABLE_IN_BROWSER.includes(lang)) return;
+
+      if (lang === 'python' && !pyodideReady) {
+        await initPyodide();
+      }
+
+      // Only run visible tests
+      const visibleTests = currentProgram.testCases.filter((tc, i) => !tc.hidden);
+      let allPassed = true;
+
+      for (let i = 0; i < currentProgram.testCases.length; i++) {
+        const tc = currentProgram.testCases[i];
+        if (tc.hidden) continue; // Skip hidden tests
+
+        const badge = document.getElementById('tc-badge-' + i);
+        badge.className = 'test-result-badge running';
+        badge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running';
+
+        try {
+          const startTime = performance.now();
+          let actual = '';
+          if (lang === 'python') {
+            actual = await runPythonForTest(tc.input || '');
+          } else if (lang === 'javascript') {
+            actual = await runJSForTest(tc.input || '');
+          }
+          const endTime = performance.now();
+          const execTime = (endTime - startTime).toFixed(2);
+
+          actual = actual.trim();
+          const expected = (tc.expectedOutput || '').trim();
+          const pass = actual === expected;
+
+          if (!pass) allPassed = false;
+
+          badge.className = 'test-result-badge ' + (pass ? 'pass' : 'fail');
+          badge.innerHTML = pass
+            ? '<i class="fas fa-check"></i> Pass'
+            : '<i class="fas fa-times"></i> Fail';
+
+          // Show actual output
+          const actualEl = document.getElementById('tc-actual-' + i);
+          document.getElementById('tc-actual-text-' + i).textContent = actual || '(empty)';
+          actualEl.style.display = 'block';
+
+          // Show timing
+          const timingEl = document.getElementById('tc-timing-' + i);
+          document.getElementById('tc-time-' + i).textContent = execTime + 'ms';
+          timingEl.style.display = 'flex';
+
+          // Show diff on fail
+          if (!pass) {
+            const diffEl = document.getElementById('tc-diff-' + i);
+            const diffContentEl = document.getElementById('tc-diff-content-' + i);
+            diffContentEl.innerHTML = generateDiff(expected, actual);
+            diffEl.style.display = 'block';
+            
+            // Expand on fail
+            document.getElementById('tc-body-' + i).classList.add('open');
+          }
+        } catch (err) {
+          allPassed = false;
+          badge.className = 'test-result-badge fail';
+          badge.innerHTML = '<i class="fas fa-times"></i> Error';
+
+          // Show error
+          const actualEl = document.getElementById('tc-actual-' + i);
+          document.getElementById('tc-actual-text-' + i).textContent = 'Error: ' + err.message;
+          actualEl.style.display = 'block';
+          document.getElementById('tc-body-' + i).classList.add('open');
+        }
+      }
+
+      // Check if all visible tests passed to unlock hidden tests
+      if (allPassed && currentProgram.testCases.some(tc => tc.hidden)) {
+        const hiddenInfo = document.getElementById('hiddenTestsInfo');
+        if (hiddenInfo) {
+          hiddenInfo.style.display = 'none';
+          // Could add logic here to show hidden tests or run them automatically
+        }
+      }
+    }
+
+    async function runPythonForTest(inputText) {
+      const code = currentProgram.code;
+      const inputLines = inputText.split('\n');
+
+      pyodide.globals.set('_input_lines', pyodide.toPy(inputLines));
+
+      const setupCode = `
+import sys
+from io import StringIO
+_input_iter = iter(_input_lines)
+def _custom_input(prompt=''):
+    try: return next(_input_iter)
+    except StopIteration: return ''
+import builtins
+builtins.input = _custom_input
+_stdout_capture = StringIO()
+sys.stdout = _stdout_capture
+`;
+      const teardownCode = `
+sys.stdout = sys.__stdout__
+_stdout_capture.getvalue()
+`;
+      await pyodide.runPythonAsync(setupCode);
+      await pyodide.runPythonAsync(code);
+      const output = await pyodide.runPythonAsync(teardownCode);
+      return String(output || '');
+    }
+
+    async function runJSForTest(inputText) {
+      return new Promise((resolve, reject) => {
+        const iframe = document.createElement('iframe');
+        iframe.sandbox = 'allow-scripts';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const outputs = [];
+        const timeout = setTimeout(() => {
+          document.body.removeChild(iframe);
+          reject(new Error('timeout'));
+        }, 8000);
+
+        const msgId = 'test_' + Date.now() + '_' + Math.random();
+
+        window.addEventListener('message', function handler(e) {
+          if (e.data && e.data.msgId === msgId) {
+            if (e.data.done) {
+              clearTimeout(timeout);
+              window.removeEventListener('message', handler);
+              document.body.removeChild(iframe);
+              resolve(outputs.join('\n'));
+            } else {
+              outputs.push(e.data.text);
+            }
+          }
+        });
+
+        const inputLines = inputText.split('\n');
+        const code = currentProgram.code;
+        const wrappedCode = `
+          (function() {
+            const __msgId = '${msgId}';
+            const __inputLines = ${JSON.stringify(inputLines)};
+            let __inputIdx = 0;
+            console.log = function(...args) {
+              const text = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+              parent.postMessage({ type: 'js-output', msgId: __msgId, text }, '*');
+            };
+            function input() { return __inputLines[__inputIdx++] || ''; }
+            try { ${code} } catch(e) { console.log('Error: ' + e.message); }
+            parent.postMessage({ type: 'js-output', msgId: __msgId, done: true }, '*');
+          })();
+        `;
+
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<script>${wrappedCode}<\/script>`);
+        doc.close();
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ─── START ────────────────────────────────────────────────────────────────
+    init();
+  </script>
+  <script src="../../Optimization/script.js"></script>
+  <script src="../../Optimization/fullscreen-init.js"></script>
+  <script src="../../Optimization/cursor-effects.js" defer></script>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -62,10 +62,32 @@ class UnifiedTokenManager {
     }
 
     /**
-     * 📥 Load Token from Storage
+     * 📥 Load Token from Storage (with automatic migration)
      */
     loadToken() {
-        const token = localStorage.getItem(this.STORAGE_KEY);
+        // Try standard key first
+        let token = localStorage.getItem(this.STORAGE_KEY);
+        
+        // If not found, check legacy keys and migrate
+        if (!token) {
+            const LEGACY_KEYS = ['githubToken', 'github_api_token'];
+            
+            for (const legacyKey of LEGACY_KEYS) {
+                token = localStorage.getItem(legacyKey);
+                if (token) {
+                    console.log('🔄 Migrating token from legacy key:', legacyKey, '→', this.STORAGE_KEY);
+                    
+                    // Save to standard key
+                    localStorage.setItem(this.STORAGE_KEY, token);
+                    
+                    // Remove legacy key
+                    localStorage.removeItem(legacyKey);
+                    
+                    console.log('✅ Token migration completed');
+                    break;
+                }
+            }
+        }
         
         if (token) {
             console.log('✅ Token loaded:', token.substring(0, 10) + '...' + ' (' + token.length + ' chars)');

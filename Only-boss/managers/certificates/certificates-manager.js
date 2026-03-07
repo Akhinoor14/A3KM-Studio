@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCertificatesList();
     updateStats();
     loadFolderStructure();
+    // Refresh dashboard display after data is ready
+    if (typeof loadDashboard === 'function') loadDashboard();
   } catch (error) {
     console.error('Initialization error:', error);
     showStatus('uploadStatus', 'Error loading certificates data: ' + error.message, 'error');
@@ -57,22 +59,39 @@ function initializeGitHub(token) {
 }
 
 /**
- * Load certificates data from GitHub
+ * Load certificates data from GitHub, with local file fallback
  */
 async function loadCertificatesData() {
+  // Try GitHub first
   try {
-    const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.jsonPath}?${Date.now()}`);
+    const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/main/${encodeURIComponent(GITHUB_CONFIG.jsonPath).replace(/%2F/g, '/')}?${Date.now()}`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to load certificates data: ${response.status}`);
+    if (response.ok) {
+      certificatesData = await response.json();
+      if (!certificatesData.stats) updateStatsData();
+      console.log('Certificates data loaded from GitHub:', certificatesData);
+      return;
     }
-    
-    certificatesData = await response.json();
-    console.log('Certificates data loaded:', certificatesData);
-  } catch (error) {
-    console.error('Error loading certificates data:', error);
-    // Initialize with empty structure if file doesn't exist
-    certificatesData = {
+  } catch (e) {
+    console.warn('GitHub fetch failed, trying local fallback:', e.message);
+  }
+
+  // Try local file fallback
+  try {
+    const localResponse = await fetch(`../../../About%20me/certificates-data.json?${Date.now()}`);
+    if (localResponse.ok) {
+      certificatesData = await localResponse.json();
+      if (!certificatesData.stats) updateStatsData();
+      console.log('Certificates data loaded from local file:', certificatesData);
+      return;
+    }
+  } catch (e) {
+    console.warn('Local fallback failed:', e.message);
+  }
+
+  console.error('All data sources failed — initialising empty structure');
+  // Initialize with empty structure if both sources fail
+  certificatesData = {
       lastUpdated: new Date().toISOString(),
       categories: {
         Academic: {
@@ -101,7 +120,6 @@ async function loadCertificatesData() {
         skillCount: 0
       }
     };
-  }
 }
 
 /**
@@ -226,10 +244,10 @@ document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
   const progressText = document.getElementById('progressText');
   
   try {
-    // Validate GitHub token
-    const token = document.getElementById('githubToken').value.trim();
-    if (!token || token === '') {
-      showStatus('uploadStatus', '❌ Please enter your GitHub token', 'error');
+    // Get GitHub token from central token manager
+    const token = new UnifiedTokenManager().token;
+    if (!token) {
+      showStatus('uploadStatus', '❌ No GitHub token found. Please set your token in the Command Center.', 'error');
       return;
     }
     
@@ -306,6 +324,9 @@ document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
     progressText.textContent = 'Upload complete!';
     
     showStatus('uploadStatus', '✅ Certificate uploaded successfully!', 'success');
+    if (typeof ActivityLogger !== 'undefined') {
+        ActivityLogger.log('upload', `Uploaded: ${certificate.title}`, 'Admin', 'success', certificate.category);
+    }
     
     // Reset form
     setTimeout(() => {
@@ -333,7 +354,10 @@ document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
  * Create certificate object
  */
 function createCertificateObject(formData, file) {
-  const id = generateId(formData.title);
+  const id = generateNextId();
+  // Update the preview field in the form
+  const previewField = document.getElementById('previewCertId');
+  if (previewField) previewField.value = id;
   const fileExtension = file.name.split('.').pop().toLowerCase();
   const fileName = `${formData.title.replace(/[^a-zA-Z0-9]/g, '-')}.${fileExtension}`;
   const folderPath = `${GITHUB_CONFIG.certificatesBasePath}/${formData.category}/${formData.subcategory}`;
@@ -358,13 +382,32 @@ function createCertificateObject(formData, file) {
 }
 
 /**
- * Generate unique ID from title
+ * Generate unique ID from title (legacy, kept for reference)
  */
 function generateId(title) {
   return title.toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+/**
+ * Generate next sequential cert ID: cert-000001
+ */
+function generateNextId() {
+  const prefix = 'cert-';
+  let max = 0;
+  if (certificatesData && certificatesData.categories) {
+    Object.values(certificatesData.categories).forEach(cat => {
+      (cat.certificates || []).forEach(cert => {
+        if (cert.id && cert.id.startsWith(prefix)) {
+          const num = parseInt(cert.id.slice(prefix.length), 10);
+          if (!isNaN(num) && num > max) max = num;
+        }
+      });
+    });
+  }
+  return prefix + String(max + 1).padStart(6, '0');
 }
 
 /**
@@ -537,7 +580,7 @@ function loadCertificatesList() {
             <i class="fas fa-folder"></i> ${cert.subcategory}
           </p>
           <p style="font-size: 0.85rem; color: #666;">
-            <i class="fas fa-file"></i> ${cert.fileName} • ${cert.fileType.toUpperCase()}
+            <i class="fas fa-file"></i> ${cert.fileName || ''}${cert.fileType ? ' • ' + cert.fileType.toUpperCase() : ''}
           </p>
         </div>
         <div style="display: flex; gap: 10px;">
@@ -621,9 +664,12 @@ async function deleteCertificate(id, category) {
   }
   
   try {
-    // Get GitHub token
-    const token = prompt('Enter your GitHub token to confirm deletion:');
-    if (!token) return;
+    // Get GitHub token from central token manager
+    const token = new UnifiedTokenManager().token;
+    if (!token) {
+      showStatus('manageStatus', '❌ No GitHub token. Please set your token in the Command Center.', 'error');
+      return;
+    }
     
     const uploader = initializeGitHub(token);
     
@@ -647,6 +693,9 @@ async function deleteCertificate(id, category) {
       updateStats();
       loadFolderStructure();
       showStatus('manageStatus', '✅ Certificate deleted successfully', 'success');
+      if (typeof ActivityLogger !== 'undefined') {
+          ActivityLogger.log('delete', `Deleted: ${cert.title}`, 'Admin', 'success', category);
+      }
     }
   } catch (error) {
     console.error('Delete error:', error);
@@ -845,6 +894,9 @@ function importData() {
         updateStats();
         loadFolderStructure();
         showStatus('manageStatus', '✅ Data imported and saved to GitHub successfully', 'success');
+        if (typeof ActivityLogger !== 'undefined') {
+            ActivityLogger.log('upload', 'Imported certificates data from file', 'Admin', 'success', 'certificates');
+        }
       }
     } catch (error) {
       showStatus('manageStatus', `❌ Error importing data: ${error.message}`, 'error');
@@ -1030,6 +1082,9 @@ async function saveJSON() {
     await saveCertificatesToGitHub(uploader);
     
     alert('✅ Changes saved to GitHub successfully!');
+    if (typeof ActivityLogger !== 'undefined') {
+        ActivityLogger.log('edit', 'Saved certificates JSON manually', 'Admin', 'success', 'certificates');
+    }
     
     // Refresh all views
     loadCertificatesList();

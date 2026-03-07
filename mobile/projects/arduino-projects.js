@@ -80,7 +80,10 @@
         try {
             showLoadingState();
             
-            const response = await fetch('../../Projects%20Code/Arduino/arduino-data.json');
+            const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
+            let response;
+            try { response = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!response.ok) throw new Error(''); }
+            catch(e) { response = await fetch('../../Projects%20Code/Arduino/arduino-data.json'); }
             if (!response.ok) throw new Error('Failed to load');
             
             const data = await response.json();
