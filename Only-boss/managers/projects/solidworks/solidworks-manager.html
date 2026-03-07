@@ -1912,7 +1912,8 @@
                 dateAdded: new Date().toISOString(),
                 lastModified: new Date().toISOString(),
                 views: 0,
-                downloads: 0
+                downloads: 0,
+                accessType: 'free'
             };
             
             // Add to projects array
@@ -2076,7 +2077,8 @@
                 },
                 dateAdded: new Date().toISOString(),
                 views: 0,
-                downloads: 0
+                downloads: 0,
+                accessType: 'free'
             };
 
             // Add to projects array
@@ -2486,6 +2488,19 @@
             // Display current files
             displayCurrentFiles(project);
             
+            // Access settings
+            const editSW = document.getElementById('editSWAccessType');
+            if (editSW) {
+              editSW.value = project.accessType || 'free';
+              toggleEditSWPriceFields();
+              if (project.price) {
+                const pa = document.getElementById('editSWPriceAmount');
+                const op = document.getElementById('editSWOriginalPrice');
+                if (pa) pa.value = project.price.amount || '';
+                if (op) op.value = project.price.originalPrice || '';
+              }
+            }
+
             // Show modal
             document.getElementById('editModal').classList.add('active');
         }
@@ -2599,6 +2614,13 @@
             document.getElementById('editModal').classList.remove('active');
         }
 
+        function toggleEditSWPriceFields() {
+            const val  = document.getElementById('editSWAccessType')?.value;
+            const show = val === 'paid' || val === 'combo';
+            const g    = document.getElementById('editSWPriceGroup');
+            if (g) g.style.display = show ? '' : 'none';
+        }
+
         // Save edited project
         function saveEditedProject() {
             const id = parseInt(document.getElementById('editProjectId').value);
@@ -2691,7 +2713,18 @@
             
             // Update timestamps
             project.lastModified = new Date().toISOString();
-            
+
+            // Access settings
+            project.accessType = document.getElementById('editSWAccessType')?.value || project.accessType || 'free';
+            const _sw = project.accessType;
+            if (_sw === 'paid' || _sw === 'combo') {
+              const amt  = parseInt(document.getElementById('editSWPriceAmount')?.value)  || 0;
+              const orig = parseInt(document.getElementById('editSWOriginalPrice')?.value) || 0;
+              project.price = { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig - amt) / orig * 100) : null };
+            } else {
+              project.price = null;
+            }
+
             // Save to cache
             saveToCache(projectsData);
             
@@ -3218,6 +3251,28 @@ This part is designed for [specific application] in [industry/system].`
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>Note:</strong> Delete will remove files from JSON. You must manually delete from GitHub folder. Replace will update JSON immediately.
                     </small>
+                </div>
+
+                <div style="background:rgba(204,0,0,0.06);border:1.5px solid rgba(204,0,0,0.2);border-radius:10px;padding:14px;margin-top:16px;">
+                    <label style="color:#cc0000;font-weight:800;font-size:13px;display:block;margin-bottom:10px;">🔐 Access Settings</label>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Access Type</label>
+                        <select id="editSWAccessType" onchange="toggleEditSWPriceFields()" style="width:100%;">
+                            <option value="free">🆓 Free</option>
+                            <option value="paid">💰 Paid</option>
+                            <option value="combo">📦 Combo Only</option>
+                        </select>
+                    </div>
+                    <div id="editSWPriceGroup" style="display:none;">
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Price (BDT)</label>
+                            <input type="number" id="editSWPriceAmount" min="0" placeholder="299" style="width:100%;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Original Price (BDT)</label>
+                            <input type="number" id="editSWOriginalPrice" min="0" placeholder="499" style="width:100%;box-sizing:border-box;">
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 30px;">

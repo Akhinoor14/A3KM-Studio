@@ -1,5 +1,80 @@
-// Only Boss Portal - Simple Two-Step Authentication System
-// New Simple Logic - Direct Password Verification
+// Only Boss Portal - Two-Layer Authentication System
+// Layer 1: Google OAuth admin check (new)
+// Layer 2: SHA-256 password (original)
+
+// ===========================
+// LAYER 1: GOOGLE ADMIN SIGN-IN
+// ===========================
+
+let adminGoogleVerified = false;
+
+function showStep(id) {
+    document.querySelectorAll('.auth-step').forEach(function (s) { s.classList.remove('active'); });
+    var el = document.getElementById(id);
+    if (el) el.classList.add('active');
+}
+
+function showStep0Error(msg) {
+    var el = document.getElementById('error0');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(function () { el.style.display = 'none'; }, 4000);
+}
+
+window.doGoogleSignIn = async function () {
+    var btn = document.getElementById('googleSignInBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    try {
+        var fbAuth = window.A3KM.auth;
+        var provider = new firebase.auth.GoogleAuthProvider();
+        var result = await fbAuth.signInWithPopup(provider);
+        var email = result.user.email;
+        var adminEmails = window.A3KM.ADMIN_EMAILS || [window.A3KM.ADMIN_EMAIL];
+
+        if (!adminEmails.includes(email)) {
+            await fbAuth.signOut();
+            showStep0Error('❌ This account is not authorized as admin.');
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="flex-shrink:0;vertical-align:middle;margin-right:8px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google';
+            return;
+        }
+
+        // Admin verified — unlock password step
+        adminGoogleVerified = true;
+        showStep('step1');
+        setTimeout(function () {
+            var pi = document.getElementById('password1');
+            if (pi) pi.focus();
+        }, 100);
+
+    } catch (err) {
+        if (err.code !== 'auth/popup-closed-by-user') {
+            showStep0Error('❌ Sign-in failed. Please try again.');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="flex-shrink:0;vertical-align:middle;margin-right:8px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google';
+    }
+};
+
+// If Firebase already has an admin session active (e.g. after popup-blocked redirect), skip Step 1
+document.addEventListener('DOMContentLoaded', function () {
+    var fbAuth = window.A3KM && window.A3KM.auth;
+    if (!fbAuth) return;
+    fbAuth.onAuthStateChanged(function (user) {
+        var adminEmails = window.A3KM.ADMIN_EMAILS || [window.A3KM.ADMIN_EMAIL];
+        if (user && adminEmails.includes(user.email) && !adminGoogleVerified) {
+            adminGoogleVerified = true;
+            showStep('step1');
+            setTimeout(function () {
+                var pi = document.getElementById('password1');
+                if (pi) pi.focus();
+            }, 100);
+        }
+    });
+});
 
 // ===========================
 // PASSWORD CONFIGURATION
@@ -242,7 +317,11 @@ async function verifyLogin() {
         showError('⚠️ Please enter the password');
         return;
     }
-    
+    // Guard: Layer 1 must be completed first
+    if (!adminGoogleVerified) {
+        showError('\u26a0\ufe0f Complete Step 1 (Google sign-in) first');
+        return;
+    }    
     // Verify password hash is valid
     const correctHash = getPasswordHash();
     if (!correctHash) {
@@ -306,10 +385,9 @@ window.togglePassword = function(inputId, button) {
 // INITIALIZATION
 // ===========================
 
-// Always show login page - require fresh authentication
-// Clear any previous session when landing on login page
+// Always clear password session on page load (require fresh auth each visit)
 clearSession();
-passwordInput.focus();
+// Password input focus is handled after Google sign-in completes (Step 1 → Step 2)
 
 // Session timeout - 30 minutes
 let inactivityTimer;

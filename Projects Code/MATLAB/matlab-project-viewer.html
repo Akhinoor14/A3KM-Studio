@@ -798,6 +798,7 @@
             // Extract project ID from URL (format: matlab-project-01)
             const projectIdParam = urlParams.get('id');
             const project = projectsData.projects.find(p => p.id === projectIdParam);
+            window.currentMATLABProject = project; // Make it global for download handler
             
             if (!project) {
                 showError('Project not found!');
@@ -871,25 +872,25 @@
                     </h2>
                     <div class="download-grid">
                         ${project.files.code ? `
-                            <a href="${basePath}${project.files.code}" class="download-btn" download>
+                            <button class="download-btn" onclick="handleMATLABDownload('${basePath}${project.files.code}', '${project.files.code}', window.currentMATLABProject)" style="cursor: pointer;">
                                 <i class="fas fa-file-code"></i>
                                 MATLAB Code (.m)
-                            </a>
+                            </button>
                         ` : '<span class="download-btn disabled"><i class="fas fa-file-code"></i> No Code Available</span>'}
                         
                         ${project.files.pdf ? `
-                            <a href="${basePath}${project.files.pdf}" class="download-btn" download>
+                            <button class="download-btn" onclick="handleMATLABDownload('${basePath}${project.files.pdf}', '${project.files.pdf}', window.currentMATLABProject)" style="cursor: pointer;">
                                 <i class="fas fa-file-pdf"></i>
                                 Documentation (PDF)
-                            </a>
+                            </button>
                         ` : '<span class="download-btn disabled"><i class="fas fa-file-pdf"></i> No PDF Available</span>'}
                         
                         ${project.files.zip ? `
-                            <a href="${basePath}${project.files.zip}" class="download-btn" download title="Includes: Code files, Result images, Documentation (if available)">
+                            <button class="download-btn" onclick="handleMATLABDownload('${basePath}${project.files.zip}', '${project.files.zip}', window.currentMATLABProject)" title="Includes: Code files, Result images, Documentation (if available)" style="cursor: pointer;">
                                 <i class="fas fa-file-archive"></i>
                                 Complete Project (ZIP)
                                 <small style="display: block; font-size: 0.75rem; margin-top: 4px; opacity: 0.8;">Includes all files</small>
-                            </a>
+                            </button>
                         ` : '<span class="download-btn disabled"><i class="fas fa-file-archive"></i> No ZIP Available</span>'}
                         
                         ${project.files.youtubeVideo ? `
@@ -1081,5 +1082,58 @@
     <!-- Universal PDF Viewer for Desktop MATLAB Projects -->
     <script src="../../mobile/shared/pdf-viewer.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
+
+    <!-- ──── FIREBASE & ACCESS GATE ──── -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="../../Optimization/firebase-config.js"></script>
+    <script src="../../Optimization/auth-module.js"></script>
+    <link rel="stylesheet" href="../../Optimization/access-gate.css">
+    <script src="../../Optimization/access-gate.js"></script>
+
+    <script>
+    // ── GLOBAL DOWNLOAD HANDLER WITH ACCESS GATE ─────────────────────────────────
+    window.handleMATLABDownload = async function(url, filename, projectData) {
+        if (!url || !projectData) return;
+
+        if (window.A3KM && window.A3KM.checkContentAccess) {
+            // Wait for auth to be ready
+            await new Promise(resolve => {
+                if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                document.addEventListener('a3km:authReady', resolve, { once: true });
+            });
+
+            const meta = {
+                id:         projectData.id,
+                title:      projectData.title,
+                accessType: projectData.accessType || 'free',
+                price:      projectData.price || null
+            };
+
+            if (meta.accessType && meta.accessType !== 'free') {
+                const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                if (!result.allowed) {
+                    window.A3KM.showAccessGate(
+                        result,
+                        () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                .then(r => { if (r.allowed) window.handleMATLABDownload(url, filename, projectData); }),
+                        null
+                    );
+                    return;
+                }
+            }
+        }
+
+        // Proceed with download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || url.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+    // ── END GLOBAL DOWNLOAD HANDLER ───────────────────────────────────────────────
+    </script>
 </body>
 </html>

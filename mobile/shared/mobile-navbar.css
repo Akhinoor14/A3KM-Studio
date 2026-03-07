@@ -3,6 +3,11 @@
    Optimized for Mobile Devices
    Theme: Red, Black, White, Engineering Grid, Architectural
    Similar to Facebook's Bottom Navigation Pattern
+   
+   Layout: 5 Icons Total (4 static + 1 dynamic auth)
+   - Home, About, Projects, Studio (static HTML)
+   - Auth icon (injected by JavaScript)
+   Each icon gets ~20% width (more spacious than 6-7 icons)
    ============================================================================ */
 
 :root {
@@ -80,15 +85,15 @@
     min-width: 60px;
 }
 
-/* Icon Styles */
+/* Icon Styles - Larger for 5-icon layout */
 .mobile-nav-item i {
-    font-size: 24px;
+    font-size: 26px; /* Increased from 24px for better visibility */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Label Styles */
+/* Label Styles - More readable */
 .mobile-nav-label {
-    font-size: 11px;
+    font-size: 0.7rem; /* ~11.2px, slightly larger and more responsive */
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -254,6 +259,63 @@ body {
     }
 }
 
+/* ============================================================================
+   AUTH NAV BUTTON — sign-in / user avatar in bottom nav
+   ============================================================================ */
+
+/* Auth button shares all .mobile-nav-item styles; these are extras */
+.mobile-nav-auth {
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 8px 4px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-inactive);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-width: 60px;
+    text-decoration: none;
+}
+.mobile-nav-auth i {
+    font-size: 26px; /* Matches updated navbar icon size */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mobile-nav-auth .mobile-nav-label {
+    font-size: 0.7rem; /* Matches updated navbar label size */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+/* Signed-in state: icon becomes red */
+.mobile-nav-auth.signed-in {
+    color: var(--primary-red);
+}
+.mobile-nav-auth.signed-in i {
+    filter: drop-shadow(0 0 6px rgba(204, 0, 0, 0.5));
+}
+/* Mini avatar image inside nav */
+.mobile-nav-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(204, 0, 0, 0.6);
+    object-fit: cover;
+    display: none; /* shown when signed in */
+}
+.mobile-nav-auth.signed-in .mobile-nav-avatar {
+    display: block;
+}
+.mobile-nav-auth.signed-in .mobile-nav-auth-icon {
+    display: none;
+}
+
 /* Landscape Mode on Small Devices */
 @media (max-height: 500px) and (orientation: landscape) {
     .mobile-bottom-nav {
@@ -276,3 +338,168 @@ body {
         padding-bottom: 60px;
     }
 }
+
+/* ============================================================================
+   MOBILE AUTH MODAL - Slide-up panel with menu options
+   ============================================================================ */
+
+.mobile-auth-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* Backdrop */
+.mobile-auth-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-auth-modal.active .mobile-auth-backdrop {
+    opacity: 1;
+}
+
+/* Panel Container */
+.mobile-auth-panel {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    background: rgba(10, 10, 10, 0.98);
+    border-top: 2px solid var(--primary-red);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 30px;
+    box-shadow: 
+        0 -8px 40px rgba(0, 0, 0, 0.8),
+        0 -2px 20px rgba(204, 0, 0, 0.3);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobile-auth-panel {
+        padding-bottom: calc(30px + env(safe-area-inset-bottom));
+    }
+}
+
+.mobile-auth-modal.active .mobile-auth-panel {
+    transform: translateY(0);
+}
+
+/* Profile Card */
+.mobile-auth-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.15), rgba(204, 0, 0, 0.08));
+    border: 1px solid rgba(204, 0, 0, 0.3);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.mobile-auth-profile-pic {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-red);
+    object-fit: cover;
+    box-shadow: 0 0 12px rgba(204, 0, 0, 0.4);
+}
+
+.mobile-auth-profile-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mobile-auth-profile-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.mobile-auth-profile-email {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Menu Items */
+.mobile-auth-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 8px;
+    background: rgba(20, 0, 0, 0.4);
+    border: 1px solid rgba(204, 0, 0, 0.2);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mobile-auth-menu-item i {
+    font-size: 1.3rem;
+    color: var(--primary-red);
+    width: 24px;
+    text-align: center;
+}
+
+.mobile-auth-menu-item:active {
+    transform: scale(0.98);
+    background: rgba(204, 0, 0, 0.1);
+}
+
+/* Sign In Button (Special Style) */
+.mobile-auth-signin {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.2), rgba(52, 168, 83, 0.2));
+    border-color: rgba(66, 133, 244, 0.4);
+}
+
+.mobile-auth-signin i {
+    color: #4285F4;
+}
+
+/* Sign Out Button */
+.mobile-auth-signout {
+    background: rgba(139, 0, 0, 0.2);
+    border-color: rgba(204, 0, 0, 0.4);
+    color: #ff6666;
+}
+
+.mobile-auth-signout i {
+    color: #ff4444;
+}
+
+/* Divider */
+.mobile-auth-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.3), transparent);
+    margin: 12px 0;
+}
+
+/* Active Link State */
+.mobile-auth-menu-item.active {
+    background: rgba(204, 0, 0, 0.15);
+    border-color: var(--primary-red);
+}
+

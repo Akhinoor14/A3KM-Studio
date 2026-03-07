@@ -112,6 +112,7 @@
                 </div>
                 <div class="content-info-wrap">
                     <span class="book-category">${book.category}</span>
+                    ${book.accessType === 'paid' ? '<span class="mobile-paid-badge"><i class="fas fa-lock"></i> Paid</span>' : ''}
                     <h3 class="content-item-title">${book.title}</h3>
                     <div class="content-item-meta">
                         <span class="book-pages"><i class="fas fa-file-pdf"></i> ${book.pages} pages</span>

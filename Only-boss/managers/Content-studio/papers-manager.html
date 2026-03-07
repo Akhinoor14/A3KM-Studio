@@ -1314,6 +1314,28 @@
             </div>
           </div>
 
+          <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:16px;">
+            <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:12px;">🔐 Access Settings</label>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Access Type</label>
+              <select id="paperAccessType" onchange="togglePaperPriceFields()" style="width:100%;">
+                <option value="free">🆓 Free — সবার জন্য</option>
+                <option value="paid">💰 Paid — Payment লাগবে</option>
+                <option value="combo">📦 Combo Only — শুধু package এ</option>
+              </select>
+            </div>
+            <div id="paperPriceGroup" style="display:none;">
+              <div style="margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Price (BDT)</label>
+                <input type="number" id="paperPriceAmount" min="0" placeholder="উদাহরণ: 149" style="width:100%; box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Original Price (BDT)</label>
+                <input type="number" id="paperOriginalPrice" min="0" placeholder="উদাহরণ: 249" style="width:100%; box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+
           <button type="submit" class="btn-primary">📤 Upload Research Paper</button>
           
           <div id="upload-success" class="success-message">
@@ -1600,6 +1622,28 @@
               <option value="bn">🇧🇩 বাংলা</option>
               <option value="hi">🇮🇳 हिंदी</option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:14px; margin-top:10px;">
+          <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:10px;">🔐 Access Settings</label>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Access Type</label>
+            <select id="edit-paperAccessType" onchange="toggleEditPaperPriceFields()" style="width:100%;">
+              <option value="free">🆓 Free</option>
+              <option value="paid">💰 Paid</option>
+              <option value="combo">📦 Combo Only</option>
+            </select>
+          </div>
+          <div id="editPaperPriceGroup" style="display:none;">
+            <div style="margin-bottom:8px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Price (BDT)</label>
+              <input type="number" id="edit-paperPriceAmount" min="0" placeholder="149" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Original Price (BDT)</label>
+              <input type="number" id="edit-paperOriginalPrice" min="0" placeholder="249" style="width:100%; box-sizing:border-box;">
+            </div>
           </div>
         </div>
 
@@ -1975,7 +2019,17 @@
         pages: parseInt(document.getElementById('pages').value) || 0,
         language: language,
         downloads: 0,
-        dateAdded: new Date().toISOString().split('T')[0]
+        dateAdded: new Date().toISOString().split('T')[0],
+        accessType: document.getElementById('paperAccessType')?.value || 'free',
+        price: (function() {
+          const at = document.getElementById('paperAccessType')?.value;
+          if (at === 'paid' || at === 'combo') {
+            const amt = parseInt(document.getElementById('paperPriceAmount')?.value) || 0;
+            const orig = parseInt(document.getElementById('paperOriginalPrice')?.value) || 0;
+            return { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null };
+          }
+          return null;
+        })()
       };
       
       papersData.papers.unshift(newPaper);
@@ -2330,6 +2384,19 @@
       document.getElementById('edit-citations').value = paper.citations || 0;
       document.getElementById('edit-pages').value = paper.pages || '';
       document.getElementById('edit-language').value = paper.language || 'en';
+      // Access settings
+      const editPat = document.getElementById('edit-paperAccessType');
+      if (editPat) {
+        editPat.value = paper.accessType || 'free';
+        toggleEditPaperPriceFields();
+        if (paper.price) {
+          document.getElementById('edit-paperPriceAmount').value = paper.price.amount || '';
+          document.getElementById('edit-paperOriginalPrice').value = paper.price.originalPrice || '';
+        } else {
+          document.getElementById('edit-paperPriceAmount').value = '';
+          document.getElementById('edit-paperOriginalPrice').value = '';
+        }
+      }
       
       // Show current PDF path
       const pdfPathSpan = document.getElementById('edit-currentPdfPath');
@@ -2415,7 +2482,20 @@
     function closeEditModal() {
       document.getElementById('edit-modal').classList.remove('active');
     }
-    
+
+    function togglePaperPriceFields() {
+      const val = document.getElementById('paperAccessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('paperPriceGroup');
+      if (g) g.style.display = show ? '' : 'none';
+    }
+    function toggleEditPaperPriceFields() {
+      const val = document.getElementById('edit-paperAccessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('editPaperPriceGroup');
+      if (g) g.style.display = show ? '' : 'none';
+    }
+
     // Save edit
     async function saveEdit(event) {
       event.preventDefault();
@@ -2469,7 +2549,17 @@
         keywords: keywordsInput.split(',').map(k => k.trim()).filter(k => k),
         citations: parseInt(document.getElementById('edit-citations').value) || 0,
         pages: parseInt(document.getElementById('edit-pages').value) || 0,
-        language: document.getElementById('edit-language').value
+        language: document.getElementById('edit-language').value,
+        accessType: document.getElementById('edit-paperAccessType')?.value || papersData.papers[paperIndex].accessType || 'free',
+        price: (function() {
+          const at = document.getElementById('edit-paperAccessType')?.value;
+          if (at === 'paid' || at === 'combo') {
+            const amt = parseInt(document.getElementById('edit-paperPriceAmount')?.value) || 0;
+            const orig = parseInt(document.getElementById('edit-paperOriginalPrice')?.value) || 0;
+            return { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null };
+          }
+          return papersData.papers[paperIndex].price || null;
+        })()
       };
       
       try {

@@ -887,11 +887,29 @@
     async function init() {
       if (!bookId) { showErr('No book ID in URL.'); return; }
 
+      // Wait for Firebase auth to resolve — prevents gate flash for signed-in users
+      await new Promise(resolve => {
+        if (window.A3KM && window.A3KM.currentUser !== undefined) { resolve(); return; }
+        document.addEventListener('a3km:authReady', resolve, { once: true });
+      });
+
       try {
         const res  = await fetch('books.json');
         const data = await res.json();
         bookData   = data.books.find(b => b.id === bookId);
         if (!bookData) { showErr('Book not found.'); return; }
+
+        // Access gate check
+        if (bookData.accessType && bookData.accessType !== 'free' && window.A3KM && window.A3KM.checkContentAccess) {
+          const result = await window.A3KM.checkContentAccess(bookId, 'book', bookData);
+          if (!result.allowed) {
+            window.A3KM.showAccessGate(result,
+              () => window.A3KM.checkContentAccess(bookId, 'book', bookData).then(r => { if (r.allowed) init(); }),
+              null  // onLoginSuccess already handles re-init; don't navigate away
+            );
+            return;
+          }
+        }
 
         document.getElementById('barTitle').textContent      = bookData.title;
         document.getElementById('detailBackBtn').href        = `book-detail.html?id=${bookId}`;
@@ -1716,6 +1734,13 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <link rel="stylesheet" href="../../Optimization/access-gate.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../../Optimization/firebase-config.js"></script>
+  <script src="../../Optimization/auth-module.js"></script>
+  <script src="../../Optimization/access-gate.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

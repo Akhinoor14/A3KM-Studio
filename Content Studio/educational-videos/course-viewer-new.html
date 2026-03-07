@@ -137,6 +137,9 @@
     }
 
     #ytPlayerDiv { position:absolute; inset:0; border-radius:12px; overflow:hidden; }
+    #cfPlayerDiv iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; border-radius:12px; }
+    /* Block right-click on the player area (casual piracy deterrent) */
+    #playerWrapper { -webkit-user-select:none; user-select:none; }
 
     .video-placeholder {
       position:absolute; inset:0;
@@ -437,6 +440,8 @@
           <i class="fas fa-spinner spin"></i>
           <h3>Loading episode…</h3>
         </div>
+        <!-- Cloudflare Stream player (shown for paid CF-hosted episodes) -->
+        <div id="cfPlayerDiv" style="display:none;position:absolute;inset:0;border-radius:12px;overflow:hidden;"></div>
         <div id="ytPlayerDiv"></div>
       </div>
 
@@ -573,11 +578,91 @@
     }
 
     // ════════════════════════════════════════════════
+    // ════════════════════════════════════════════════
+    // Cloudflare Stream signed URL helper
+    // ════════════════════════════════════════════════
+    async function _playCFVideo(cfVideoId) {
+      const ph = document.getElementById('videoPlaceholder');
+      ph.style.display = 'flex';
+      ph.innerHTML = '<i class="fas fa-spinner spin"></i><h3>Loading secure video…</h3>';
+
+      try {
+        const user = window.A3KM?.auth?.currentUser;
+        if (!user) throw new Error('Not signed in');
+        const userToken = await user.getIdToken(/* forceRefresh */ false);
+
+        const res = await fetch('/api/sign-video', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ cfVideoId, contentId: courseId, contentType: 'course', userToken }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'API error ' + res.status);
+        }
+
+        const { iframeUrl } = await res.json();
+
+        // Destroy YouTube player if active
+        if (ytPlayer) { try { ytPlayer.stopVideo(); ytPlayer.destroy(); } catch{} ytPlayer = null; }
+        document.getElementById('ytPlayerDiv').style.display  = 'none';
+
+        const cfDiv = document.getElementById('cfPlayerDiv');
+        cfDiv.style.display = 'block';
+        cfDiv.innerHTML = `<iframe
+          src="${iframeUrl}"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowfullscreen
+          referrerpolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+        ></iframe>`;
+        ph.style.display = 'none';
+
+      } catch (err) {
+        console.error('[CF Stream]', err);
+        ph.style.display = 'flex';
+        ph.innerHTML = `<i class="fas fa-lock" style="font-size:42px;color:#ff6b6b;margin-bottom:12px;"></i>
+          <h3>Secure video unavailable</h3>
+          <p style="font-size:13px;opacity:.7;">${err.message}</p>`;
+      }
+    }
+
+    // ─── Unified episode video loader ─────────────────
+    // Priority: CF Stream → YT Unlisted → YT Public (ep.videoId)
+    function _loadEpisodeVideo(ep) {
+      const cfId  = ep.fullVideo?.cloudflareVideoId;
+      const ytUnl = ep.fullVideo?.youtubeUnlistedId;
+      const ytPub = ep.videoId;
+
+      if (cfId) {
+        _playCFVideo(cfId);
+        return;
+      }
+
+      // YouTube path (unlisted or public) — hide CF div, show YT
+      document.getElementById('cfPlayerDiv').style.display   = 'none';
+      document.getElementById('cfPlayerDiv').innerHTML       = '';
+      document.getElementById('ytPlayerDiv').style.display   = '';
+
+      const videoId = ytUnl || ytPub;
+      if (!videoId) {
+        const ph = document.getElementById('videoPlaceholder');
+        ph.style.display = 'flex';
+        ph.innerHTML = '<i class="fas fa-video-slash" style="font-size:52px;color:var(--primary-red);margin-bottom:16px;"></i><h3>No video available</h3>';
+        return;
+      }
+
+      _playVideo(videoId);
+    }
+
+    // ════════════════════════════════════════════════
     // YouTube IFrame API ready callback
     // ════════════════════════════════════════════════
     function onYouTubeIframeAPIReady() {
       playerReady = true;
-      if (courseData) _playVideo(courseData.playlist[currentEpIdx]?.videoId);
+      const ep = courseData?.playlist[currentEpIdx];
+      if (ep && !ep.fullVideo?.cloudflareVideoId) _playVideo(ep.fullVideo?.youtubeUnlistedId || ep.videoId);
     }
 
     function _playVideo(videoId) {
@@ -628,10 +713,15 @@
       document.getElementById('headerEpLabel').textContent = `Episode ${idx+1} of ${list.length}`;
       document.getElementById('progressBadge').textContent = `${idx+1} / ${list.length}`;
 
-      // Player
-      if (ep.videoId) {
+      // Player — CF Stream takes priority, then YT Unlisted, then YT Public
+      const hasCF  = !!ep.fullVideo?.cloudflareVideoId;
+      const hasAny = hasCF || !!ep.fullVideo?.youtubeUnlistedId || !!ep.videoId;
+      if (hasCF) {
+        // CF signed URL — async, shows spinner itself
+        _loadEpisodeVideo(ep);
+      } else if (hasAny) {
         if (playerReady) {
-          _playVideo(ep.videoId);
+          _loadEpisodeVideo(ep);
         } else {
           const ph = document.getElementById('videoPlaceholder');
           ph.style.display = 'flex';
@@ -778,6 +868,12 @@
         return;
       }
 
+      // Wait for Firebase auth to resolve — prevents gate flash for signed-in users
+      await new Promise(resolve => {
+        if (window.A3KM && window.A3KM.currentUser !== undefined) { resolve(); return; }
+        document.addEventListener('a3km:authReady', resolve, { once: true });
+      });
+
       document.getElementById('backToDetail').href = `course-detail.html?id=${encodeURIComponent(courseId)}`;
 
       // Load courses.json
@@ -803,6 +899,18 @@
         document.getElementById('videoPlaceholder').innerHTML =
           '<i class="fas fa-search"></i><h3>Course not found</h3>';
         return;
+      }
+
+      // Access gate check
+      if (courseData.accessType && courseData.accessType !== 'free' && window.A3KM && window.A3KM.checkContentAccess) {
+        const result = await window.A3KM.checkContentAccess(courseId, 'course', courseData);
+        if (!result.allowed) {
+          window.A3KM.showAccessGate(result,
+            () => window.A3KM.checkContentAccess(courseId, 'course', courseData).then(r => { if (r.allowed) init(); }),
+            null  // onLoginSuccess already handles re-init; don't navigate away
+          );
+          return;
+        }
       }
 
       document.title = `${courseData.title} – A3KM Studio`;
@@ -847,6 +955,9 @@
     window.addEventListener('scroll', () => {
       document.getElementById('desktopNavbar')?.classList.toggle('scrolled', window.scrollY > 50);
     });
+
+    // Block right-click on player area (casual piracy deterrent)
+    document.getElementById('playerWrapper')?.addEventListener('contextmenu', e => e.preventDefault());
 
     // ── Desktop Enhancements ─────────────────────────────────
     function dcTogglePlay() {
@@ -1161,6 +1272,13 @@
     </div>
   </div>
 
+  <link rel="stylesheet" href="../../Optimization/access-gate.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../../Optimization/firebase-config.js"></script>
+  <script src="../../Optimization/auth-module.js"></script>
+  <script src="../../Optimization/access-gate.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

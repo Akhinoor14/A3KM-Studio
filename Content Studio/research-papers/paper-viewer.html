@@ -517,11 +517,30 @@
     // ── Bootstrap ──────────────────────────────────────
     async function init() {
       if (!paperId) { showErr('No paper ID in URL.'); return; }
+
+      // Wait for Firebase auth to resolve — prevents gate flash for signed-in users
+      await new Promise(resolve => {
+        if (window.A3KM && window.A3KM.currentUser !== undefined) { resolve(); return; }
+        document.addEventListener('a3km:authReady', resolve, { once: true });
+      });
+
       try {
         const res  = await fetch('papers.json');
         const data = await res.json();
         paperData  = data.papers.find(p => p.id === paperId);
         if (!paperData) { showErr('Paper not found.'); return; }
+
+        // Access gate check
+        if (paperData.accessType && paperData.accessType !== 'free' && window.A3KM && window.A3KM.checkContentAccess) {
+          const result = await window.A3KM.checkContentAccess(paperId, 'paper', paperData);
+          if (!result.allowed) {
+            window.A3KM.showAccessGate(result,
+              () => window.A3KM.checkContentAccess(paperId, 'paper', paperData).then(r => { if (r.allowed) init(); }),
+              null  // onLoginSuccess already handles re-init; don't navigate away
+            );
+            return;
+          }
+        }
 
         document.getElementById('barTitle').textContent = paperData.title;
         document.getElementById('detailBackBtn').href   = `paper-detail.html?id=${paperId}`;
@@ -1071,6 +1090,13 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <link rel="stylesheet" href="../../Optimization/access-gate.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../../Optimization/firebase-config.js"></script>
+  <script src="../../Optimization/auth-module.js"></script>
+  <script src="../../Optimization/access-gate.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
 </body>
 </html>

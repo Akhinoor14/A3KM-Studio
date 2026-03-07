@@ -108,6 +108,7 @@
                 </div>
                 <div class="content-info-wrap">
                     <span class="course-level ${difficultyClass}">${course.difficulty}</span>
+                    ${course.accessType === 'paid' ? '<span class="mobile-paid-badge"><i class="fas fa-lock"></i> Paid</span>' : ''}
                     <h3 class="content-item-title">${course.title}</h3>
                     <div class="content-item-meta">
                         <span><i class="fas fa-video"></i> ${course.episodes} episodes</span>

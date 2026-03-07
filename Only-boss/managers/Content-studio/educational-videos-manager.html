@@ -1246,6 +1246,28 @@
             <input type="file" id="thumbnail" accept="image/*">
           </div>
 
+          <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:16px;">
+            <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:12px;">🔐 Access Settings</label>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Access Type</label>
+              <select id="uploadAccessType" onchange="toggleUploadVideoPriceFields()" style="width:100%;">
+                <option value="free">🆓 Free — সবার জন্য</option>
+                <option value="paid">💰 Paid — Payment লাগবে</option>
+                <option value="combo">📦 Combo Only — শুধু package এ</option>
+              </select>
+            </div>
+            <div id="uploadVideoPriceGroup" style="display:none;">
+              <div style="margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Price (BDT)</label>
+                <input type="number" id="uploadVideoPriceAmount" min="0" placeholder="উদাহরণ: 299" style="width:100%; box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Original Price (BDT) <span style="font-weight:400;">(discount দেখাতে হলে)</span></label>
+                <input type="number" id="uploadVideoOriginalPrice" min="0" placeholder="উদাহরণ: 499" style="width:100%; box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+
           <button type="submit" class="btn-primary">📤 Upload Course</button>
 
           <div class="progress" id="progress">
@@ -1422,6 +1444,28 @@
         <div class="form-group">
           <label>Tags (comma-separated)</label>
           <input type="text" id="editTags">
+        </div>
+
+        <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:14px;">
+          <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:10px;">🔐 Access Settings</label>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Access Type</label>
+            <select id="editVideoAccessType" onchange="toggleEditVideoPriceFields()" style="width:100%;">
+              <option value="free">🆓 Free</option>
+              <option value="paid">💰 Paid</option>
+              <option value="combo">📦 Combo Only</option>
+            </select>
+          </div>
+          <div id="editVideoPriceGroup" style="display:none;">
+            <div style="margin-bottom:8px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Price (BDT)</label>
+              <input type="number" id="editVideoPriceAmount" min="0" placeholder="299" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Original Price (BDT)</label>
+              <input type="number" id="editVideoOriginalPrice" min="0" placeholder="499" style="width:100%; box-sizing:border-box;">
+            </div>
+          </div>
         </div>
 
         <!-- Playlist Section -->
@@ -2007,6 +2051,16 @@
       document.getElementById('editEnrolled').value = course.enrolled || 0;
       document.getElementById('editInstitution').value = course.institution || 'A3KM Studio';
       document.getElementById('editTags').value = (course.tags || []).join(', ');
+      // Access settings
+      const editVat = document.getElementById('editVideoAccessType');
+      if (editVat) {
+        editVat.value = course.accessType || 'free';
+        toggleEditVideoPriceFields();
+        if (course.price) {
+          document.getElementById('editVideoPriceAmount').value = course.price.amount || '';
+          document.getElementById('editVideoOriginalPrice').value = course.price.originalPrice || '';
+        }
+      }
       
       loadCategories().then(() => {
         document.getElementById('editCategory').value = course.category;
@@ -2025,6 +2079,20 @@
 
     function closeEditModal() {
       document.getElementById('editModal').classList.remove('active');
+    }
+
+    function toggleEditVideoPriceFields() {
+      const val = document.getElementById('editVideoAccessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('editVideoPriceGroup');
+      if (g) g.style.display = show ? '' : 'none';
+    }
+
+    function toggleUploadVideoPriceFields() {
+      const val = document.getElementById('uploadAccessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('uploadVideoPriceGroup');
+      if (g) g.style.display = show ? '' : 'none';
     }
 
     function renderPlaylist() {
@@ -2224,7 +2292,17 @@
           views: 0,
           enrolled: 0,
           language: document.getElementById('language').value,
-          institution: document.getElementById('institution').value
+          institution: document.getElementById('institution').value,
+          accessType: document.getElementById('uploadAccessType')?.value || 'free',
+          price: (function() {
+            const at = document.getElementById('uploadAccessType')?.value;
+            if (at === 'paid' || at === 'combo') {
+              const amt = parseInt(document.getElementById('uploadVideoPriceAmount')?.value) || 0;
+              const orig = parseInt(document.getElementById('uploadVideoOriginalPrice')?.value) || 0;
+              return { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null };
+            }
+            return null;
+          })()
         };
         
         try {
@@ -2544,7 +2622,17 @@
         institution: document.getElementById('editInstitution').value,
         tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
         playlist: currentPlaylist,
-        type: 'educational'
+        type: 'educational',
+        accessType: document.getElementById('editVideoAccessType')?.value || originalCourse.accessType || 'free',
+        price: (function() {
+          const at = document.getElementById('editVideoAccessType')?.value;
+          if (at === 'paid' || at === 'combo') {
+            const amt = parseInt(document.getElementById('editVideoPriceAmount')?.value) || 0;
+            const orig = parseInt(document.getElementById('editVideoOriginalPrice')?.value) || 0;
+            return { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null };
+          }
+          return originalCourse.price || null;
+        })()
       };
       
       try {

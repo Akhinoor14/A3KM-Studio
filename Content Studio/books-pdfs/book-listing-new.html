@@ -651,6 +651,18 @@
       flex-shrink: 0;
     }
 
+    .access-badge {
+      position: absolute; top: 8px; left: 8px;
+      padding: 3px 9px; border-radius: 5px;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.03em;
+      z-index: 3; display: flex; align-items: center; gap: 4px;
+      backdrop-filter: blur(4px);
+    }
+    .access-badge.free  { background: linear-gradient(135deg,rgba(0,137,123,0.92),rgba(0,105,92,0.92)); color:#fff; }
+    .access-badge.paid  { background: linear-gradient(135deg,rgba(204,0,0,0.92),rgba(139,0,0,0.92)); color:#fff; }
+    .access-badge.combo { background: linear-gradient(135deg,rgba(100,0,180,0.92),rgba(70,0,130,0.92)); color:#fff; }
+    .access-badge.owned { background: linear-gradient(135deg,rgba(21,101,192,0.92),rgba(13,71,161,0.92)); color:#fff; }
+
     .book-cover img {
       width: 100%;
       height: 100%;
@@ -1036,16 +1048,53 @@
           </a>
         </li>
         <li class="desktop-nav-item">
-          <a href="../../Contact/contact.html" class="desktop-nav-link" aria-label="Contact Me">
-            <i class="fas fa-envelope"></i>
-            <span>Contact</span>
-          </a>
-        </li>
-        <li class="desktop-nav-item">
           <a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV">
             <i class="fas fa-download"></i>
             <span>CV</span>
           </a>
+        </li>
+        
+        <!-- Auth Dropdown (Always Visible) -->
+        <li class="desktop-nav-item nav-auth-item" id="navAuthDropdown">
+          <div class="nav-auth-trigger" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" title="Account & Access">
+            <img id="navAuthAvatar" class="nav-auth-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User Avatar" aria-hidden="true">
+            <i class="fas fa-chevron-down nav-auth-chevron" aria-hidden="true"></i>
+            <div class="nav-auth-menu" role="menu">
+              <div class="nav-auth-profile" id="navAuthProfile" style="display:none;">
+                <img id="navAuthProfilePic" class="nav-auth-profile-pic" src="" alt="">
+                <div class="nav-auth-profile-info">
+                  <span class="nav-auth-profile-name" id="navAuthProfileName">Guest User</span>
+                  <span class="nav-auth-profile-email" id="navAuthProfileEmail"></span>
+                </div>
+              </div>
+              <div class="nav-auth-divider" id="navAuthDivider1" style="display:none;"></div>
+              <button class="nav-auth-menu-item nav-auth-signin" id="navAuthSignInBtn" onclick="window.A3KM && window.A3KM.loginWithGoogle()" role="menuitem">
+                <i class="fab fa-google"></i>
+                <span>Sign In</span>
+              </button>
+              <a href="/buy.html#my-access" class="nav-auth-menu-item" id="navAuthMyAccess" style="display:none;" role="menuitem">
+                <i class="fas fa-box-open"></i>
+                <span>My Access</span>
+              </a>
+              <a href="/buy.html" class="nav-auth-menu-item" id="navAuthStore" style="display:none;" role="menuitem">
+                <i class="fas fa-store"></i>
+                <span>Premium Store</span>
+              </a>
+              <a href="/Contact/contact.html" class="nav-auth-menu-item" role="menuitem">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+              </a>
+              <a href="/Documentation/" class="nav-auth-menu-item" role="menuitem">
+                <i class="fas fa-book"></i>
+                <span>Guide</span>
+              </a>
+              <div class="nav-auth-divider" id="navAuthDivider2" style="display:none;"></div>
+              <button class="nav-auth-menu-item nav-auth-signout" id="navAuthSignOutBtn" onclick="window.A3KM && window.A3KM.logout()" style="display:none;" role="menuitem">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
         </li>
       </ul>
     </div>
@@ -1079,6 +1128,10 @@
         <strong id="headerTotalPages">—</strong>
         <span>Pages</span>
       </div>
+      <a href="../../buy.html" class="lib-stat-badge" style="background: linear-gradient(135deg, rgba(204,0,0,0.2), rgba(139,0,0,0.15)); border: 2px solid rgba(204,0,0,0.4); cursor: pointer; text-decoration: none; color: #CC0000; transition: all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, rgba(204,0,0,0.35), rgba(139,0,0,0.25)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(204,0,0,0.2), rgba(139,0,0,0.15))'; this.style.transform='translateY(0)';">
+        <i class="fas fa-store"></i>
+        <strong style="font-size: 0.95rem;">Premium Store</strong>
+      </a>
     </div>
   </div>
 
@@ -1378,6 +1431,12 @@
         ? (book.author.length > 22 ? book.author.substring(0, 22) + '\u2026' : book.author)
         : 'Unknown';
       const pagesTag = book.pages ? `<span class="tag-pages">${book.pages}p</span>` : '';
+      const at = book.accessType || 'free';
+      const badge = at === 'paid'
+        ? `<span class="access-badge paid">🔒 Paid${book.price?.amount ? ' ৳'+book.price.amount : ''}</span>`
+        : at === 'combo'
+        ? `<span class="access-badge combo">📦 Bundle</span>`
+        : '';
 
       return `
         <div class="book-card" data-category="${book.category}" data-language="${book.language}">
@@ -1386,6 +1445,7 @@
           <div class="book-cover">
             <img src="${book.cover}" alt="${book.title}" loading="lazy"
                  onerror="this.src='../../Content Storage/books/${categorySlug}/covers/category-default.svg'">
+            ${badge}
             <div class="category-badge">${book.category}</div>
             <div class="book-format-badge">${book.format || 'PDF'}</div>
             <div class="book-cover-overlay">
@@ -1510,7 +1570,23 @@
     }
 
     function openBook(bookId) {
-      window.location.href = `book-detail.html?id=${bookId}`;
+      const book = allBooks.find(b => b.id === bookId);
+      if (book && book.accessType && book.accessType !== 'free' && window.A3KM && window.A3KM.checkContentAccess) {
+        window.A3KM.checkContentAccess(bookId, 'book', book).then(result => {
+          if (result.allowed) {
+            window.location.href = `book-detail.html?id=${bookId}`;
+          } else {
+            window.A3KM.showAccessGate(result,
+              () => window.A3KM.checkContentAccess(bookId, 'book', book).then(r => {
+                if (r.allowed) window.location.href = `book-detail.html?id=${bookId}`;
+              }),
+              () => window.location.href = `book-detail.html?id=${bookId}`
+            );
+          }
+        });
+      } else {
+        window.location.href = `book-detail.html?id=${bookId}`;
+      }
     }
 
     function openInFullscreen(url) {
@@ -1552,5 +1628,13 @@
     })();
   </script>
   <script src="../../Optimization/fullscreen-init.js"></script>
+  <!-- Firebase Auth + Access Gate -->
+  <link rel="stylesheet" href="../../Optimization/access-gate.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../../Optimization/firebase-config.js"></script>
+  <script src="../../Optimization/auth-module.js"></script>
+  <script src="../../Optimization/access-gate.js"></script>
 </body>
 </html>

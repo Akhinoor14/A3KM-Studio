@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+  <title>User Access Manager - A3KM Studio</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans Bengali', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d1f1f 100%);
+    background-image: linear-gradient(rgba(255,152,0,.03) 1px,transparent 1px), linear-gradient(90deg,rgba(255,152,0,.03) 1px,transparent 1px);
+    background-size: 100px 100px;
+    min-height: 100vh; color: #fff;
+  }
+
+  /* NAVBAR */
+  .top-navbar {
+    position: fixed; top:0; left:0; right:0; z-index:1000;
+    background: linear-gradient(135deg,#ffb74d 0%,#ffc107 50%,#ffd54f 100%);
+    box-shadow: 0 4px 20px rgba(255,183,77,.25);
+    border-bottom: 3px solid rgba(255,213,79,.4);
+  }
+  .navbar-content { max-width:1400px; margin:0 auto; padding:12px 30px; display:flex; justify-content:space-between; align-items:center; }
+  .navbar-brand { display:flex; align-items:center; gap:12px; }
+  .navbar-brand .brand-icon { font-size:28px; }
+  .navbar-brand h1 { color:#000; font-size:20px; font-weight:900; margin:0; text-shadow:1px 1px 3px rgba(0,0,0,.3); }
+  .navbar-brand p  { color:#000; font-size:11px; margin:0; font-weight:700; }
+  .navbar-actions { display:flex; gap:10px; align-items:center; }
+  .nav-btn {
+    background:rgba(0,0,0,.15); border:2px solid rgba(0,0,0,.2); border-radius:8px;
+    padding:7px 14px; color:#000; font-weight:700; font-size:12px; cursor:pointer;
+    text-decoration:none; display:flex; align-items:center; gap:6px; transition:background .2s;
+  }
+  .nav-btn:hover { background:rgba(0,0,0,.25); }
+
+  /* LAYOUT */
+  .container { display:flex; min-height:100vh; padding-top:76px; }
+  .sidebar {
+    width:270px; background:linear-gradient(180deg,#1f1111 0%,#2d1414 100%);
+    position:sticky; top:76px; height:calc(100vh - 76px); overflow-y:auto;
+    border-right:3px solid rgba(255,204,128,.4); box-shadow:4px 0 20px rgba(0,0,0,.3); flex-shrink:0;
+  }
+  .sidebar-header { background:linear-gradient(135deg,#ff8a65 0%,#ffb74d 50%,#ffd54f 100%); padding:25px 20px; color:#000; }
+  .sidebar-header h1 { font-size:18px; font-weight:900; margin-bottom:3px; text-shadow:1px 1px 3px rgba(0,0,0,.4); }
+  .sidebar-header p  { font-size:11px; font-weight:700; }
+  .sidebar-nav { padding:15px 0; }
+  .tab-item {
+    display:flex; align-items:center; gap:12px; padding:13px 22px;
+    color:#ddd; cursor:pointer; transition:all .25s; border-left:4px solid transparent;
+    font-weight:600; font-size:13px;
+  }
+  .tab-item:hover  { background:linear-gradient(90deg,rgba(255,204,128,.2),transparent); color:#ffe082; border-left-color:#ffcc80; }
+  .tab-item.active { background:linear-gradient(90deg,rgba(255,204,128,.3),transparent); color:#ffe082; border-left-color:#ffb74d; }
+  .sidebar-stats { margin:15px; padding:15px; background:linear-gradient(135deg,rgba(255,183,77,.15),rgba(255,204,128,.1)); border-radius:10px; border:1px solid rgba(255,152,0,.2); }
+  .sidebar-stats h3 { color:#ffe082; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; font-weight:900; text-shadow:1px 1px 3px rgba(0,0,0,.8); }
+  .stat-row { display:flex; justify-content:space-between; padding:5px 0; color:#ccc; font-size:12px; border-bottom:1px solid rgba(255,255,255,.06); }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-val { font-weight:900; color:#ffe082; font-size:17px; text-shadow:1px 1px 3px rgba(0,0,0,.8); }
+
+  /* MAIN */
+  .main-content { flex:1; background:#f0f0f0; padding:30px; overflow-y:auto; min-width:0; }
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; background:linear-gradient(135deg,rgba(255,107,0,.08),rgba(255,193,7,.04)); padding:20px 24px; border-radius:12px; border:2px solid rgba(255,152,0,.15); }
+  .page-header h2 { font-size:20px; font-weight:900; color:#333; }
+  .page-header p  { font-size:12px; color:#666; margin-top:3px; }
+  .tab-panel  { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* FILTER BAR */
+  .filter-bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; padding:14px 18px; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .filter-bar input, .filter-bar select { border:1px solid #ddd; border-radius:7px; padding:7px 12px; font-size:13px; color:#333; background:#fafafa; outline:none; transition:border-color .2s; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color:#ffb74d; }
+  .filter-bar input { flex:1; min-width:200px; }
+  .filter-count { margin-left:auto; font-size:12px; color:#888; white-space:nowrap; }
+  .btn-refresh { background:linear-gradient(135deg,#ff8a65,#ffb74d); border:none; border-radius:8px; padding:8px 16px; color:#000; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .btn-refresh:hover { opacity:.85; }
+
+  /* USER CARDS */
+  .users-list { display:flex; flex-direction:column; gap:12px; }
+  .user-card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.07); overflow:hidden; transition:box-shadow .2s; border-left:5px solid #ffb74d; }
+  .user-card:hover { box-shadow:0 4px 18px rgba(0,0,0,.11); }
+  .user-card-head { padding:14px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; }
+  .user-card-head:hover { background:#fafafa; }
+  .user-avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; background:linear-gradient(135deg,#ffb74d,#ff8a65); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; color:#000; flex-shrink:0; overflow:hidden; }
+  .user-avatar img { width:100%; height:100%; object-fit:cover; }
+  .user-info { flex:1; min-width:0; }
+  .user-name { font-weight:700; font-size:14px; color:#222; }
+  .user-email { font-size:12px; color:#666; }
+  .user-meta-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:4px; }
+  .access-count-badge { background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; }
+  .access-count-badge.has-access { background:#d1fae5; color:#065f46; }
+  .user-joined { font-size:11px; color:#999; }
+  .user-chevron { font-size:12px; color:#aaa; transition:transform .25s; margin-left:auto; }
+  .user-card.expanded .user-chevron { transform:rotate(180deg); }
+  .user-card-body { display:none; padding:0 18px 18px; border-top:1px solid #f0f0f0; }
+  .user-card.expanded .user-card-body { display:block; }
+
+  /* ACCESS SECTIONS */
+  .access-section { margin-top:16px; }
+  .access-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#888; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .access-tags { display:flex; flex-wrap:wrap; gap:7px; }
+  .access-tag {
+    background:#f0f0f0; border:1px solid #ddd; border-radius:6px;
+    padding:4px 10px; font-size:12px; color:#333; display:flex; align-items:center; gap:6px;
+  }
+  .access-tag .tag-remove {
+    background:none; border:none; cursor:pointer; color:#999; font-size:11px; padding:0; line-height:1;
+  }
+  .access-tag .tag-remove:hover { color:#e53e3e; }
+  .access-tag.combo-tag { background:#ede9fe; border-color:#c4b5fd; color:#5b21b6; }
+  .no-access-msg { font-size:12px; color:#aaa; font-style:italic; }
+
+  /* GRANT ACCESS FORM */
+  .grant-section { margin-top:16px; padding-top:14px; border-top:1px solid #f0f0f0; }
+  .grant-section h4 { font-size:12px; font-weight:700; color:#555; margin-bottom:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .grant-row { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+  .grant-row select, .grant-row input { border:1px solid #ddd; border-radius:7px; padding:7px 10px; font-size:12px; color:#333; outline:none; background:#fafafa; min-width:0; }
+  .grant-row select:focus, .grant-row input:focus { border-color:#ffb74d; }
+  .grant-type-sel { width:110px; flex-shrink:0; }
+  .grant-id-sel { flex:1; min-width:160px; }
+  .btn-grant {
+    background:linear-gradient(135deg,#38a169,#48bb78); border:none; border-radius:7px;
+    padding:7px 14px; color:#fff; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:5px;
+  }
+  .btn-grant:hover { opacity:.85; }
+  .btn-grant:disabled { opacity:.4; cursor:not-allowed; }
+
+  /* PAYMENT HISTORY */
+  .pay-history { margin-top:16px; padding-top:14px; border-top:1px solid #f0f0f0; }
+  .pay-history h4 { font-size:12px; font-weight:700; color:#555; margin-bottom:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .pay-history-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .pay-history-table th { background:#f5f5f5; padding:6px 10px; text-align:left; font-weight:700; color:#666; font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+  .pay-history-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; color:#333; }
+  .pay-history-table tr:last-child td { border-bottom:none; }
+  .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+  .status-dot.approved { background:#38a169; }
+  .status-dot.pending  { background:#ed8936; }
+  .status-dot.rejected { background:#e53e3e; }
+  .no-history { font-size:12px; color:#aaa; font-style:italic; }
+
+  /* STATE BOX */
+  .state-box { text-align:center; padding:4rem 1rem; color:#aaa; background:#fff; border-radius:12px; }
+  .state-box i { font-size:2.5rem; margin-bottom:.8rem; display:block; }
+  .state-box .title { font-size:1rem; font-weight:700; color:#555; margin-bottom:.3rem; }
+
+  /* SPINNER */
+  .spin-inline { display:inline-block; width:12px; height:12px; border:2px solid rgba(0,0,0,.15); border-top-color:#555; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:2rem; right:2rem; background:#1a1a1a; border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:.7rem 1.1rem; font-size:.85rem; color:#fff; z-index:3000; opacity:0; transform:translateY(8px); transition:opacity .25s,transform .25s; pointer-events:none; max-width:320px; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.success { border-color:#4ade80; background:#052e16; }
+  .toast.error   { border-color:#f87171; background:#1c0000; }
+
+  /* AUTH GATE */
+  #authGate { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#1a1a1a,#2d1f1f); z-index:5000; align-items:center; justify-content:center; }
+  #authGate.open { display:flex; }
+  .auth-box { background:#fff; border-radius:16px; padding:2.5rem 2rem; max-width:340px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+  .auth-box .icon { font-size:3rem; margin-bottom:1rem; }
+  .auth-box h2 { font-size:1.3rem; font-weight:900; color:#333; margin-bottom:.3rem; }
+  .auth-box p  { font-size:.85rem; color:#666; margin-bottom:1.5rem; }
+  .btn-google-auth { background:#fff; border:2px solid #ddd; border-radius:8px; padding:.75rem 1.5rem; cursor:pointer; font-size:.95rem; font-weight:600; color:#333; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; width:100%; transition:border-color .2s; }
+  .btn-google-auth:hover { border-color:#ffb74d; }
+  .auth-error { color:#e53e3e; font-size:.8rem; margin-top:.75rem; }
+  </style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="authGate" class="open" role="dialog" aria-modal="true">
+  <div class="auth-box">
+    <div class="icon">👥</div>
+    <h2>Admin Access Required</h2>
+    <p>Sign in with the admin Google account</p>
+    <button class="btn-google-auth" id="googleAuthBtn" onclick="adminLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="auth-error" id="authError" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="top-navbar">
+  <div class="navbar-content">
+    <div class="navbar-brand">
+      <span class="brand-icon">👥</span>
+      <div>
+        <h1>User Access Manager</h1>
+        <p>A3KM Studio — Admin Only</p>
+      </div>
+    </div>
+    <div class="navbar-actions">
+      <a href="payment-requests-manager.html" class="nav-btn"><i class="fas fa-credit-card"></i> Payments</a>
+      <a href="combo-manager.html" class="nav-btn"><i class="fas fa-box-open"></i> Combos</a>
+      <a href="../../../Only-boss/dashboard/only-boss-dashboard-redesigned.html" class="nav-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+      <button class="nav-btn" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>👥 Users</h1>
+      <p>Manage content access per user</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="tab-item active" onclick="switchTab('users')" id="nav-users">
+        <i class="fas fa-users"></i> All Users
+      </div>
+      <div class="tab-item" onclick="switchTab('access')" id="nav-access">
+        <i class="fas fa-key"></i> Has Access
+      </div>
+      <div class="tab-item" onclick="switchTab('noAccess')" id="nav-noAccess">
+        <i class="fas fa-lock"></i> No Access
+      </div>
+    </nav>
+    <div class="sidebar-stats">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span>Total users</span><span class="stat-val" id="stat-total">—</span></div>
+      <div class="stat-row"><span>Has access</span><span class="stat-val" id="stat-hasAccess">—</span></div>
+      <div class="stat-row"><span>Content items</span><span class="stat-val" id="stat-content">—</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h2 id="panelTitle">👥 All Users</h2>
+        <p id="panelSub">Grant or revoke content access for each user</p>
+      </div>
+      <button class="btn-refresh" onclick="loadAll()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <input type="search" id="searchUsers" placeholder="Search name or email…" oninput="applyFilter()">
+      <span class="filter-count" id="filterCount"></span>
+    </div>
+
+    <!-- Users list -->
+    <div class="tab-panel active" id="panel-users">
+      <div class="users-list" id="usersList">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-access">
+      <div class="users-list" id="usersListAccess">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-noAccess">
+      <div class="users-list" id="usersListNoAccess">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../../Optimization/firebase-config.js"></script>
+<script src="../../Optimization/auth-module.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const ADMIN_EMAIL  = window.A3KM.ADMIN_EMAIL; // primary (for fallback)
+  const ADMIN_EMAILS = window.A3KM.ADMIN_EMAILS;
+  const db          = window.A3KM.db;
+  const auth        = window.A3KM.auth;
+  const FS          = firebase.firestore.FieldValue;
+
+  let allUsers     = [];   // { uid, displayName, email, photoURL, createdAt, lastSeen, _access }
+  let accessMap    = {};   // uid → access doc data
+  let paymentMap   = {};   // uid → [ paymentRequest docs ]
+  let allContent   = [];   // flat list of all purchasable items
+  let allCombos    = [];   // combo docs
+  let currentTab   = 'users';
+  let filteredUids = null; // null = show all
+
+  // ─── Auth ─────────────────────────────────────────────
+  auth.onAuthStateChanged(user => {
+    if (user && ADMIN_EMAILS.includes(user.email)) {
+      document.getElementById('authGate').classList.remove('open');
+      loadAll();
+    } else if (user) {
+      auth.signOut();
+      showAuthError('Not an admin account.');
+    }
+  });
+
+  window.adminLogin = async function () {
+    const btn = document.getElementById('googleAuthBtn');
+    btn.disabled = true;
+    btn.textContent = 'Opening Google…';
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') showAuthError(err.message);
+      btn.disabled = false;
+      btn.textContent = 'Sign in with Google';
+    }
+  };
+
+  window.adminLogout = function () {
+    auth.signOut();
+    document.getElementById('authGate').classList.add('open');
+  };
+
+  function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // ─── Load All ──────────────────────────────────────────
+  window.loadAll = async function () {
+    setListsLoading();
+    try {
+      const [usersSnap, accessSnap, paymentsSnap, combosSnap] = await Promise.all([
+        db.collection('users').orderBy('lastSeen', 'desc').get(),
+        db.collection('access').get(),
+        db.collection('paymentRequests').orderBy('submittedAt', 'desc').get(),
+        db.collection('combos').get(),
+        loadContent()
+      ]);
+
+      // Build maps
+      accessMap = {};
+      accessSnap.docs.forEach(d => { accessMap[d.id] = d.data(); });
+
+      paymentMap = {};
+      paymentsSnap.docs.forEach(d => {
+        const data = d.data();
+        if (!paymentMap[data.uid]) paymentMap[data.uid] = [];
+        paymentMap[data.uid].push({ _id: d.id, ...data });
+      });
+
+      allCombos = combosSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      allUsers = usersSnap.docs.map(d => ({
+        uid: d.id,
+        ...d.data(),
+        _access: accessMap[d.id] || {}
+      }));
+
+      // Stats
+      const hasAccessCount = allUsers.filter(u => hasAnyAccess(u._access)).length;
+      document.getElementById('stat-total').textContent     = allUsers.length;
+      document.getElementById('stat-hasAccess').textContent = hasAccessCount;
+      document.getElementById('stat-content').textContent   = allContent.length;
+
+      applyFilter();
+
+    } catch (err) {
+      console.error('[UserMgr] Load error:', err);
+      showToast('Load failed: ' + err.message, 'error');
+    }
+  };
+
+  async function loadContent() {
+    const sources = [
+      { url: '../../../Content Studio/books-pdfs/books.json',          type: 'book',   key: 'books'   },
+      { url: '../../../Content Studio/educational-videos/courses.json', type: 'course', key: 'courses' },
+      { url: '../../../Content Studio/research-papers/papers.json',    type: 'paper',  key: 'papers'  },
+    ];
+    allContent = [];
+    const results = await Promise.allSettled(sources.map(s =>
+      fetch(s.url).then(r => r.ok ? r.json() : Promise.reject()).then(data => ({ ...s, items: data[s.key] || [] }))
+    ));
+    results.forEach(res => {
+      if (res.status === 'fulfilled') {
+        res.value.items.forEach(item => {
+          if (item.accessType === 'paid') {
+            allContent.push({ id: item.id, type: res.value.type, title: item.title || item.id });
+          }
+        });
+      }
+    });
+  }
+
+  function hasAnyAccess(acc) {
+    if (!acc) return false;
+    return ['courses','books','papers','projects','combos'].some(k => (acc[k] || []).length > 0);
+  }
+
+  // ─── Render ───────────────────────────────────────────
+  function setListsLoading() {
+    ['usersList','usersListAccess','usersListNoAccess'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        '<div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>';
+    });
+  }
+
+  function applyFilter() {
+    const q = document.getElementById('searchUsers').value.toLowerCase().trim();
+    let toShow = q
+      ? allUsers.filter(u =>
+          (u.displayName||'').toLowerCase().includes(q) ||
+          (u.email||'').toLowerCase().includes(q)
+        )
+      : allUsers;
+
+    document.getElementById('filterCount').textContent = toShow.length + ' user' + (toShow.length !== 1 ? 's' : '');
+
+    document.getElementById('usersList').innerHTML        = toShow.length ? toShow.map(renderUserCard).join('') : emptyBox('No users found');
+    document.getElementById('usersListAccess').innerHTML  = (() => { const f = toShow.filter(u => hasAnyAccess(u._access)); return f.length ? f.map(renderUserCard).join('') : emptyBox('No users with access'); })();
+    document.getElementById('usersListNoAccess').innerHTML= (() => { const f = toShow.filter(u => !hasAnyAccess(u._access)); return f.length ? f.map(renderUserCard).join('') : emptyBox('All users have access'); })();
+  }
+
+  function emptyBox(msg) {
+    return `<div class="state-box"><i class="fas fa-users-slash"></i><div class="title">${_esc(msg)}</div></div>`;
+  }
+
+  function renderUserCard(u) {
+    const acc       = u._access || {};
+    const accCount  = ['courses','books','papers','projects','combos'].reduce((n,k) => n + (acc[k]||[]).length, 0);
+    const joinDate  = u.createdAt ? new Date(u.createdAt.toDate ? u.createdAt.toDate() : u.createdAt).toLocaleDateString('en-BD',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const photoHTML = u.photoURL
+      ? `<img src="${_esc(u.photoURL)}" alt="" onerror="this.style.display='none'">`
+      : (u.displayName||'?').charAt(0).toUpperCase();
+
+    // Access tags HTML
+    const TYPE_LABELS = { courses:'Course', books:'Book', papers:'Paper', projects:'Project', combos:'Combo' };
+    let tagsHTML = '';
+    let hasAcc = false;
+    ['courses','books','papers','projects'].forEach(listKey => {
+      const ids = acc[listKey] || [];
+      if (!ids.length) return;
+      hasAcc = true;
+      const typeSingular = listKey.slice(0,-1); // remove trailing s
+      tagsHTML += `<div class="access-section"><div class="access-section-title"><i class="fas fa-tag"></i>${TYPE_LABELS[listKey] || listKey}</div>
+        <div class="access-tags">
+          ${ids.map(id => {
+            const item = allContent.find(c => c.id === id);
+            return `<span class="access-tag">
+              ${_esc(item ? item.title : id)}
+              <button class="tag-remove" onclick="revokeOne('${_esc(u.uid)}','${_esc(typeSingular)}','${_esc(id)}')" title="Revoke access">
+                <i class="fas fa-times"></i>
+              </button>
+            </span>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    const comboIds = acc.combos || [];
+    if (comboIds.length) {
+      hasAcc = true;
+      tagsHTML += `<div class="access-section"><div class="access-section-title"><i class="fas fa-box-open"></i>Combos</div>
+        <div class="access-tags">
+          ${comboIds.map(id => {
+            const combo = allCombos.find(c => c.id === id);
+            return `<span class="access-tag combo-tag">
+              ${_esc(combo ? combo.name : id)}
+              <button class="tag-remove" onclick="revokeCombo('${_esc(u.uid)}','${_esc(id)}')" title="Revoke combo">
+                <i class="fas fa-times"></i>
+              </button>
+            </span>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+    if (!hasAcc) tagsHTML = '<div class="no-access-msg">No content access yet.</div>';
+
+    // Content dropdown options
+    const contentOpts = allContent.map(c =>
+      `<option value="${_esc(c.id)}" data-type="${_esc(c.type)}">${_esc(c.type.toUpperCase())}: ${_esc(c.title)}</option>`
+    ).join('');
+    const comboOpts = allCombos.map(c =>
+      `<option value="${_esc(c.id)}" data-type="combo">${_esc(c.name||c.id)}</option>`
+    ).join('');
+
+    // Payment history
+    const userPayments = paymentMap[u.uid] || [];
+    let payHistHTML = '';
+    if (userPayments.length) {
+      payHistHTML = `<table class="pay-history-table">
+        <thead><tr><th>Date</th><th>Amount</th><th>TX ID</th><th>Status</th></tr></thead>
+        <tbody>${userPayments.slice(0,5).map(p => {
+          const d = p.submittedAt ? new Date(p.submittedAt.toDate ? p.submittedAt.toDate() : p.submittedAt).toLocaleDateString('en-BD') : '—';
+          return `<tr>
+            <td>${d}</td>
+            <td>৳${p.totalAmount||0}</td>
+            <td style="font-family:monospace;font-size:11px;color:#333">${_esc(p.transactionId||'—')}</td>
+            <td><span class="status-dot ${p.status}"></span>${_esc(p.status)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    } else {
+      payHistHTML = '<div class="no-history">No payment history</div>';
+    }
+
+    return `<div class="user-card" id="ucard-${_esc(u.uid)}">
+      <div class="user-card-head" onclick="toggleUser('${_esc(u.uid)}')">
+        <div class="user-avatar">${photoHTML}</div>
+        <div class="user-info">
+          <div class="user-name">${_esc(u.displayName || '(No name)')}</div>
+          <div class="user-email">${_esc(u.email || u.uid)}</div>
+          <div class="user-meta-row">
+            <span class="access-count-badge ${accCount > 0 ? 'has-access' : ''}">
+              <i class="fas fa-${accCount > 0 ? 'unlock' : 'lock'}"></i> ${accCount} item${accCount !== 1 ? 's' : ''}
+            </span>
+            <span class="user-joined">Joined ${joinDate}</span>
+          </div>
+        </div>
+        <i class="fas fa-chevron-down user-chevron"></i>
+      </div>
+      <div class="user-card-body">
+        ${tagsHTML}
+
+        <!-- Grant access -->
+        <div class="grant-section">
+          <h4>➕ Grant Access</h4>
+          <div class="grant-row">
+            <select class="grant-type-sel" id="gtype-${_esc(u.uid)}" onchange="updateGrantDropdown('${_esc(u.uid)}')">
+              <option value="content">Content</option>
+              <option value="combo">Combo</option>
+            </select>
+            <select class="grant-id-sel" id="gid-${_esc(u.uid)}">
+              ${contentOpts || '<option>No paid content yet</option>'}
+            </select>
+            <button class="btn-grant" id="gbtn-${_esc(u.uid)}" onclick="grantOne('${_esc(u.uid)}')">
+              <i class="fas fa-plus"></i> Grant
+            </button>
+          </div>
+          <div id="grant-msg-${_esc(u.uid)}" style="font-size:12px;margin-top:6px;"></div>
+        </div>
+
+        <!-- Payment history -->
+        <div class="pay-history">
+          <h4>💳 Payment History</h4>
+          ${payHistHTML}
+        </div>
+
+        <!-- Store for combo options -->
+        <div id="combo-opts-${_esc(u.uid)}" style="display:none">${comboOpts}</div>
+        <div id="content-opts-${_esc(u.uid)}" style="display:none">${contentOpts}</div>
+      </div>
+    </div>`;
+  }
+
+  // ─── Toggle collapse ──────────────────────────────────
+  window.toggleUser = function (uid) {
+    document.getElementById('ucard-' + uid)?.classList.toggle('expanded');
+  };
+
+  // ─── Dropdown switch ──────────────────────────────────
+  window.updateGrantDropdown = function (uid) {
+    const typeSel  = document.getElementById('gtype-' + uid);
+    const idSel    = document.getElementById('gid-' + uid);
+    const isCombo  = typeSel.value === 'combo';
+    const optsEl   = document.getElementById(isCombo ? 'combo-opts-' + uid : 'content-opts-' + uid);
+    idSel.innerHTML = optsEl ? optsEl.innerHTML : '<option>None</option>';
+  };
+
+  // ─── Grant Access ─────────────────────────────────────
+  window.grantOne = async function (uid) {
+    const typeSel = document.getElementById('gtype-' + uid);
+    const idSel   = document.getElementById('gid-'   + uid);
+    const btn     = document.getElementById('gbtn-'  + uid);
+    const msgEl   = document.getElementById('grant-msg-' + uid);
+
+    const selectedOpt = idSel.options[idSel.selectedIndex];
+    const isCombo = typeSel.value === 'combo';
+    const contentId = idSel.value;
+    const contentType = isCombo ? 'combo' : (selectedOpt?.dataset.type || '');
+
+    if (!contentId || !contentType) { msgEl.textContent = '⚠ Select content first'; return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin-inline"></span>';
+    msgEl.textContent = '';
+
+    try {
+      if (isCombo) {
+        await window.A3KM.grantComboAccess(uid, contentId);
+      } else {
+        await window.A3KM.grantAccess(uid, contentType, contentId);
+      }
+
+      // Update local state
+      const user = allUsers.find(u => u.uid === uid);
+      if (user) {
+        const listKey = isCombo ? 'combos' : contentType + 's';
+        if (!user._access[listKey]) user._access[listKey] = [];
+        if (!user._access[listKey].includes(contentId)) {
+          user._access[listKey].push(contentId);
+        }
+        accessMap[uid] = user._access;
+      }
+
+      applyFilter();
+      showToast('✅ Access granted', 'success');
+      msgEl.innerHTML = '<span style="color:#38a169">✅ Done</span>';
+      setTimeout(() => { msgEl.textContent = ''; }, 2000);
+
+    } catch (err) {
+      console.error('[UserMgr] Grant error:', err);
+      showToast('Grant failed: ' + err.message, 'error');
+      msgEl.innerHTML = `<span style="color:#e53e3e">⚠ Failed: ${_esc(err.message)}</span>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-plus"></i> Grant';
+    }
+  };
+
+  // ─── Revoke Access ────────────────────────────────────
+  window.revokeOne = async function (uid, contentType, contentId) {
+    if (!confirm(`Remove access to "${contentId}" for this user?`)) return;
+    try {
+      await window.A3KM.revokeAccess(uid, contentType, contentId);
+      const user = allUsers.find(u => u.uid === uid);
+      if (user) {
+        const listKey = contentType + 's';
+        user._access[listKey] = (user._access[listKey] || []).filter(id => id !== contentId);
+        accessMap[uid] = user._access;
+      }
+      applyFilter();
+      showToast('Access revoked', '');
+    } catch (err) {
+      showToast('Revoke failed: ' + err.message, 'error');
+    }
+  };
+
+  window.revokeCombo = async function (uid, comboId) {
+    if (!confirm('Remove combo access for this user?')) return;
+    try {
+      await db.collection('access').doc(uid).update({ combos: FS.arrayRemove(comboId) });
+      const user = allUsers.find(u => u.uid === uid);
+      if (user) {
+        user._access.combos = (user._access.combos || []).filter(id => id !== comboId);
+        accessMap[uid] = user._access;
+      }
+      applyFilter();
+      showToast('Combo access revoked', '');
+    } catch (err) {
+      showToast('Revoke failed: ' + err.message, 'error');
+    }
+  };
+
+  // ─── Tab switching ────────────────────────────────────
+  window.switchTab = function (tab) {
+    currentTab = tab;
+    ['users','access','noAccess'].forEach(t => {
+      document.getElementById('nav-' + t).classList.toggle('active', t === tab);
+      document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+    });
+    const labels = {
+      users:    ['👥 All Users',       'Grant or revoke content access for each user'],
+      access:   ['🔓 Users With Access','Users who have at least one content item unlocked'],
+      noAccess: ['🔒 Users Without Access','Users who have not purchased any content yet'],
+    };
+    document.getElementById('panelTitle').textContent = labels[tab][0];
+    document.getElementById('panelSub').textContent   = labels[tab][1];
+  };
+
+  // ─── Helpers ──────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function _esc(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+})();
+</script>
+</body>
+</html>

@@ -113,14 +113,14 @@
      */
     async function loadCoursesFromJSON() {
         try {
-            const response = await fetch('../../../Content%20Code/content.json');
+            const response = await fetch('../../../Content%20Studio/educational-videos/courses.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
-            allCourses = data['educational-courses'] || [];
+            allCourses = data.courses || [];
             console.log(`📚 Loaded ${allCourses.length} courses`);
             
-            loadCourse();
+            await loadCourse();
 
             // Fetch real durations from YouTube API after rendering
             refreshDurations();
@@ -141,7 +141,7 @@
     /**
      * Load and render the current course
      */
-    function loadCourse() {
+    async function loadCourse() {
         const courseId = getCourseIdFromUrl();
         currentCourse = allCourses.find(c => c.id === courseId);
 
@@ -150,6 +150,29 @@
             return;
         }
 
+        // Wait for Firebase auth to resolve, then gate check
+        if (window.A3KM) {
+            await new Promise(resolve => {
+                if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                document.addEventListener('a3km:authReady', resolve, { once: true });
+            });
+            if (currentCourse.accessType && currentCourse.accessType !== 'free' && window.A3KM.checkContentAccess) {
+                const result = await window.A3KM.checkContentAccess(currentCourse.id, 'course', currentCourse);
+                if (!result.allowed) {
+                    window.A3KM.showAccessGate(result,
+                        () => window.A3KM.checkContentAccess(currentCourse.id, 'course', currentCourse)
+                                .then(r => { if (r.allowed) _renderCourse(); }),
+                        null
+                    );
+                    return;
+                }
+            }
+        }
+
+        _renderCourse();
+    }
+
+    function _renderCourse() {
         console.log(`\uD83D\uDCD6 Loading course: ${currentCourse.title}`);
         document.title = `${currentCourse.title} – A3KM Studio`;
 

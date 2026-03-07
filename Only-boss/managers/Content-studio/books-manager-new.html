@@ -1271,6 +1271,28 @@
             </div>
           </div>
 
+          <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:16px;">
+            <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:12px;">🔐 Access Settings</label>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Access Type</label>
+              <select id="accessType" onchange="togglePriceFields()" style="width:100%;">
+                <option value="free">🆓 Free — সবার জন্য</option>
+                <option value="paid">💰 Paid — Payment লাগবে</option>
+                <option value="combo">📦 Combo Only — শুধু package এ</option>
+              </select>
+            </div>
+            <div id="priceFieldsGroup" style="display:none;">
+              <div style="margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Price (BDT)</label>
+                <input type="number" id="priceAmount" min="0" placeholder="উদাহরণ: 299" style="width:100%; box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:6px;">Original Price (BDT) <span style="font-weight:400;">(discount দেখাতে হলে)</span></label>
+                <input type="number" id="originalPrice" min="0" placeholder="উদাহরণ: 499" style="width:100%; box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+
           <button type="submit" class="btn-primary">📤 Upload Book</button>
 
           <!-- LIVE PREVIEW -->
@@ -1488,7 +1510,29 @@
           <label>Tags</label>
           <input type="text" id="editTags" placeholder="programming, python, tutorial">
         </div>
-        
+
+        <div class="form-group" style="background:rgba(204,0,0,0.06); border:1.5px solid rgba(204,0,0,0.2); border-radius:10px; padding:14px;">
+          <label style="color:#cc0000; font-weight:800; font-size:13px; display:block; margin-bottom:10px;">🔐 Access Settings</label>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Access Type</label>
+            <select id="editAccessType" onchange="toggleEditPriceFields()" style="width:100%;">
+              <option value="free">🆓 Free</option>
+              <option value="paid">💰 Paid</option>
+              <option value="combo">📦 Combo Only</option>
+            </select>
+          </div>
+          <div id="editPriceGroup" style="display:none;">
+            <div style="margin-bottom:8px;">
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Price (BDT)</label>
+              <input type="number" id="editPriceAmount" min="0" placeholder="299" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Original Price (BDT)</label>
+              <input type="number" id="editOriginalPrice" min="0" placeholder="499" style="width:100%; box-sizing:border-box;">
+            </div>
+          </div>
+        </div>
+
         <!-- Book File Replacement/Deletion -->
         <div class="form-group" style="background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; border: 2px dashed rgba(139, 69, 19, 0.3);">
           <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
@@ -1996,6 +2040,19 @@
     // Initial preview
     updateLivePreview();
 
+    function togglePriceFields() {
+      const val = document.getElementById('accessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('priceFieldsGroup');
+      if (g) g.style.display = show ? '' : 'none';
+    }
+    function toggleEditPriceFields() {
+      const val = document.getElementById('editAccessType')?.value;
+      const show = val === 'paid' || val === 'combo';
+      const g = document.getElementById('editPriceGroup');
+      if (g) g.style.display = show ? '' : 'none';
+    }
+
     // Form submission
     document.getElementById('uploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -2110,7 +2167,17 @@
             size: `${fileSizeMB} MB`,
             format: format,
             language: language,
-            downloads: 0
+            downloads: 0,
+            accessType: document.getElementById('accessType')?.value || 'free',
+            ...((() => {
+              const at = document.getElementById('accessType')?.value;
+              if (at === 'paid' || at === 'combo') {
+                const amt = parseInt(document.getElementById('priceAmount')?.value) || 0;
+                const orig = parseInt(document.getElementById('originalPrice')?.value) || 0;
+                return { price: { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null } };
+              }
+              return {};
+            })())
           }
         });
         
@@ -2605,6 +2672,16 @@
       document.getElementById('editDownloads').value = book.downloads || 0;
       document.getElementById('editSummary').value = stripHtml(book.summary || book.description || '');
       document.getElementById('editTags').value = (book.tags || []).join(', ');
+      // Access settings
+      const editAt = document.getElementById('editAccessType');
+      if (editAt) {
+        editAt.value = book.accessType || 'free';
+        toggleEditPriceFields();
+        if (book.price) {
+          document.getElementById('editPriceAmount').value = book.price.amount || '';
+          document.getElementById('editOriginalPrice').value = book.price.originalPrice || '';
+        }
+      }
       
       // Show current book file path
       const bookFilePathSpan = document.getElementById('edit-currentBookFilePath');
@@ -2657,7 +2734,17 @@
         downloads: parseInt(document.getElementById('editDownloads').value) || 0,
         summary: document.getElementById('editSummary').value,
         tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
-        date: originalBook.date || new Date().toISOString().split('T')[0]
+        date: originalBook.date || new Date().toISOString().split('T')[0],
+        accessType: document.getElementById('editAccessType')?.value || originalBook.accessType || 'free',
+        price: (function() {
+          const at = document.getElementById('editAccessType')?.value;
+          if (at === 'paid' || at === 'combo') {
+            const amt = parseInt(document.getElementById('editPriceAmount')?.value) || 0;
+            const orig = parseInt(document.getElementById('editOriginalPrice')?.value) || 0;
+            return { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig-amt)/orig*100) : null };
+          }
+          return originalBook.price || null;
+        })()
       };
       
       try {

@@ -692,6 +692,7 @@ class GitHubContentUploader {
                 author: author || 'Md Akhinoor Islam',
                 downloads: 0,
                 language: metadata.language || 'en',
+                accessType: 'free',
                 ...metadata
             };
             

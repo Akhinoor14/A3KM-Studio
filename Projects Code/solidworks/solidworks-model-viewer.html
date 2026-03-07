@@ -1320,6 +1320,33 @@
                         return;
                     }
 
+                    // ── ACCESS GATE CHECK ──────────────────────────────
+                    if (window.A3KM && window.A3KM.checkContentAccess) {
+                        // Wait for auth to be ready
+                        await new Promise(resolve => {
+                            if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                            document.addEventListener('a3km:authReady', resolve, { once: true });
+                        });
+                        const meta = {
+                            id:         currentModel.id || String(currentModel.id),
+                            title:      currentModel.title || currentModel.name,
+                            accessType: currentModel.accessType || 'free',
+                            price:      currentModel.price || null
+                        };
+                        if (meta.accessType && meta.accessType !== 'free') {
+                            const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                            if (!result.allowed) {
+                                window.A3KM.showAccessGate(result,
+                                    () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                            .then(r => { if (r.allowed) downloadBtn.click(); }),
+                                    null
+                                );
+                                return;
+                            }
+                        }
+                    }
+                    // ── END ACCESS GATE CHECK ─────────────────────────
+
                     // Disable button and show loading
                     downloadBtn.disabled = true;
                     downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Downloading...</span>';
@@ -1421,5 +1448,14 @@
         }); // End DOMContentLoaded
     </script>
     <script src="../../Optimization/fullscreen-init.js"></script>
+
+    <!-- Firebase Auth System -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="../../Optimization/firebase-config.js"></script>
+    <script src="../../Optimization/auth-module.js"></script>
+    <link rel="stylesheet" href="../../Optimization/access-gate.css">
+    <script src="../../Optimization/access-gate.js"></script>
 </body>
 </html>

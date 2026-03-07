@@ -57,7 +57,7 @@
     }
 
     // ========== LOAD BOOK ==========
-    function loadBook() {
+    async function loadBook() {
         const bookId = getBookIdFromUrl();
         currentBook = allBooks.find(b => b.id === bookId);
 
@@ -73,6 +73,29 @@
             return;
         }
 
+        // Wait for Firebase auth to resolve, then gate check
+        if (window.A3KM) {
+            await new Promise(resolve => {
+                if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                document.addEventListener('a3km:authReady', resolve, { once: true });
+            });
+            if (currentBook.accessType && currentBook.accessType !== 'free' && window.A3KM.checkContentAccess) {
+                const result = await window.A3KM.checkContentAccess(currentBook.id, 'book', currentBook);
+                if (!result.allowed) {
+                    window.A3KM.showAccessGate(result,
+                        () => window.A3KM.checkContentAccess(currentBook.id, 'book', currentBook)
+                                .then(r => { if (r.allowed) _renderBook(); }),
+                        null
+                    );
+                    return;
+                }
+            }
+        }
+
+        _renderBook();
+    }
+
+    function _renderBook() {
         // Update header
         bookTitleHeader.textContent = currentBook.title;
         const backBtn = document.getElementById('backBtn');

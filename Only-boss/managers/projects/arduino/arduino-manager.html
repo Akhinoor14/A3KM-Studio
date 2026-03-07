@@ -1724,7 +1724,8 @@
                 tinkercadUrl: tinkercadUrl,
                 dateAdded: new Date().toISOString(),
                 views: 0,
-                downloads: 0
+                downloads: 0,
+                accessType: 'free'
             };
             
             // Add to data
@@ -2259,7 +2260,8 @@ This project combines [technology 1] with [technology 2] to create a fully funct
                 dateAdded: new Date().toISOString(),
                 lastModified: new Date().toISOString(),
                 views: 0,
-                downloads: 0
+                downloads: 0,
+                accessType: 'free'
             };
 
             arduinoData.projects.push(newProject);
@@ -2326,6 +2328,19 @@ This project combines [technology 1] with [technology 2] to create a fully funct
                 cb.addEventListener('change', updateEditComponentCount);
             });
             
+            // Access settings
+            const editAat = document.getElementById('editArduinoAccessType');
+            if (editAat) {
+              editAat.value = project.accessType || 'free';
+              toggleEditArduinoPriceFields();
+              if (project.price) {
+                const pa = document.getElementById('editArduinoPriceAmount');
+                const op = document.getElementById('editArduinoOriginalPrice');
+                if (pa) pa.value = project.price.amount || '';
+                if (op) op.value = project.price.originalPrice || '';
+              }
+            }
+
             // Show modal
             document.getElementById('editModal').classList.add('active');
         }
@@ -2342,6 +2357,13 @@ This project combines [technology 1] with [technology 2] to create a fully funct
         // Close edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('active');
+        }
+
+        function toggleEditArduinoPriceFields() {
+            const val  = document.getElementById('editArduinoAccessType')?.value;
+            const show = val === 'paid' || val === 'combo';
+            const g    = document.getElementById('editArduinoPriceGroup');
+            if (g) g.style.display = show ? '' : 'none';
         }
 
         // Save edited project
@@ -2414,6 +2436,17 @@ This project combines [technology 1] with [technology 2] to create a fully funct
             // Update statistics
             arduinoData.statistics.lastUpdated = new Date().toISOString();
             project.lastModified = new Date().toISOString();
+
+            // Access settings
+            project.accessType = document.getElementById('editArduinoAccessType')?.value || project.accessType || 'free';
+            const _aat = project.accessType;
+            if (_aat === 'paid' || _aat === 'combo') {
+              const amt  = parseInt(document.getElementById('editArduinoPriceAmount')?.value)  || 0;
+              const orig = parseInt(document.getElementById('editArduinoOriginalPrice')?.value) || 0;
+              project.price = { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig - amt) / orig * 100) : null };
+            } else {
+              project.price = null;
+            }
             
             saveToCache(arduinoData);
             
@@ -3038,6 +3071,28 @@ Projects Storage/Arduino UNO Projects with Tinkercad/
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>Note:</strong> Delete will remove files from JSON. You must manually delete from GitHub folder. Replace will update JSON immediately.
                     </small>
+                </div>
+
+                <div style="background:rgba(204,0,0,0.06);border:1.5px solid rgba(204,0,0,0.2);border-radius:10px;padding:14px;margin-top:16px;">
+                    <label style="color:#cc0000;font-weight:800;font-size:13px;display:block;margin-bottom:10px;">🔐 Access Settings</label>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Access Type</label>
+                        <select id="editArduinoAccessType" onchange="toggleEditArduinoPriceFields()" style="width:100%;">
+                            <option value="free">🆓 Free</option>
+                            <option value="paid">💰 Paid</option>
+                            <option value="combo">📦 Combo Only</option>
+                        </select>
+                    </div>
+                    <div id="editArduinoPriceGroup" style="display:none;">
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Price (BDT)</label>
+                            <input type="number" id="editArduinoPriceAmount" min="0" placeholder="299" style="width:100%;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Original Price (BDT)</label>
+                            <input type="number" id="editArduinoOriginalPrice" min="0" placeholder="499" style="width:100%;box-sizing:border-box;">
+                        </div>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 30px;">

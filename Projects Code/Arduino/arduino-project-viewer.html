@@ -2859,6 +2859,31 @@
         
         // PDF Download for Explanation
         async function downloadExplanationPDF() {
+            // ── ACCESS GATE CHECK ────────────────────────────────────────────────────────
+            if (window.A3KM && window.A3KM.checkContentAccess && currentProject) {
+                await new Promise(resolve => {
+                    if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                    document.addEventListener('a3km:authReady', resolve, { once: true });
+                });
+                const meta = {
+                    id:         currentProject.id || String(currentProject.id),
+                    title:      currentProject.title,
+                    accessType: currentProject.accessType || 'free',
+                    price:      currentProject.price || null
+                };
+                if (meta.accessType && meta.accessType !== 'free') {
+                    const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                    if (!result.allowed) {
+                        window.A3KM.showAccessGate(result,
+                            () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                    .then(r => { if (r.allowed) downloadExplanationPDF(); }),
+                            null
+                        );
+                        return;
+                    }
+                }
+            }
+            // ── END ACCESS GATE CHECK ──────────────────────────────────────────────────
             const pdfUrl = buildFilePath(currentProject.folder, 'explanation.pdf');
             console.log('📄 Loading PDF:', pdfUrl);
             
@@ -2917,6 +2942,31 @@
 
         // PDF Download for README
         async function downloadReadmePDF() {
+            // ── ACCESS GATE CHECK ────────────────────────────────────────────────────────
+            if (window.A3KM && window.A3KM.checkContentAccess && currentProject) {
+                await new Promise(resolve => {
+                    if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                    document.addEventListener('a3km:authReady', resolve, { once: true });
+                });
+                const meta = {
+                    id:         currentProject.id || String(currentProject.id),
+                    title:      currentProject.title,
+                    accessType: currentProject.accessType || 'free',
+                    price:      currentProject.price || null
+                };
+                if (meta.accessType && meta.accessType !== 'free') {
+                    const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                    if (!result.allowed) {
+                        window.A3KM.showAccessGate(result,
+                            () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                    .then(r => { if (r.allowed) downloadReadmePDF(); }),
+                            null
+                        );
+                        return;
+                    }
+                }
+            }
+            // ── END ACCESS GATE CHECK ──────────────────────────────────────────────────
             const pdfUrl = buildFilePath(currentProject.folder, 'readme.pdf');
             console.log('📄 Loading PDF:', pdfUrl);
             
@@ -3797,7 +3847,32 @@
             }
             
             if (downloadBtn) {
-                downloadBtn.addEventListener('click', () => {
+                downloadBtn.addEventListener('click', async () => {
+                    // ── ACCESS GATE CHECK ──────────────────────────────────────
+                    if (window.A3KM && window.A3KM.checkContentAccess && currentProject) {
+                        await new Promise(resolve => {
+                            if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                            document.addEventListener('a3km:authReady', resolve, { once: true });
+                        });
+                        const meta = {
+                            id:         currentProject.id || String(currentProject.id),
+                            title:      currentProject.title,
+                            accessType: currentProject.accessType || 'free',
+                            price:      currentProject.price || null
+                        };
+                        if (meta.accessType && meta.accessType !== 'free') {
+                            const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                            if (!result.allowed) {
+                                window.A3KM.showAccessGate(result,
+                                    () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                            .then(r => { if (r.allowed) downloadBtn.click(); }),
+                                    null
+                                );
+                                return;
+                            }
+                        }
+                    }
+                    // ── END ACCESS GATE CHECK ──────────────────────────────────
                     const code = document.getElementById('codeContent').textContent;
                     const blob = new Blob([code], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
@@ -3812,7 +3887,32 @@
             // Download circuit diagram
             const downloadCircuitBtn = document.getElementById('downloadCircuitBtn');
             if (downloadCircuitBtn) {
-                downloadCircuitBtn.addEventListener('click', () => {
+                downloadCircuitBtn.addEventListener('click', async () => {
+                    // ── ACCESS GATE CHECK ──────────────────────────────────────
+                    if (window.A3KM && window.A3KM.checkContentAccess && currentProject) {
+                        await new Promise(resolve => {
+                            if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+                            document.addEventListener('a3km:authReady', resolve, { once: true });
+                        });
+                        const meta = {
+                            id:         currentProject.id || String(currentProject.id),
+                            title:      currentProject.title,
+                            accessType: currentProject.accessType || 'free',
+                            price:      currentProject.price || null
+                        };
+                        if (meta.accessType && meta.accessType !== 'free') {
+                            const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+                            if (!result.allowed) {
+                                window.A3KM.showAccessGate(result,
+                                    () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                                            .then(r => { if (r.allowed) downloadCircuitBtn.click(); }),
+                                    null
+                                );
+                                return;
+                            }
+                        }
+                    }
+                    // ── END ACCESS GATE CHECK ──────────────────────────────────
                     const circuitImg = document.querySelector('#circuitImageContainer img');
                     if (circuitImg) {
                         const a = document.createElement('a');
@@ -4312,5 +4412,14 @@
     <!-- Universal PDF Viewer for Desktop Arduino Projects -->
     <script src="../../mobile/shared/pdf-viewer.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
+
+    <!-- ──── FIREBASE & ACCESS GATE ──── -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="../../Optimization/firebase-config.js"></script>
+    <script src="../../Optimization/auth-module.js"></script>
+    <link rel="stylesheet" href="../../Optimization/access-gate.css">
+    <script src="../../Optimization/access-gate.js"></script>
 </body>
 </html>

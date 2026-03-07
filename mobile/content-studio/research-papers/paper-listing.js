@@ -84,6 +84,7 @@
                 </div>
                 <div class="content-info-wrap">
                     <span class="paper-status ${statusClass}">${status}</span>
+                    ${paper.accessType === 'paid' ? '<span class="mobile-paid-badge"><i class="fas fa-lock"></i> Paid</span>' : ''}
                     <h3 class="content-item-title">${paper.title}</h3>
                     <div class="content-item-meta">
                         <span><i class="fas fa-user-graduate"></i> ${authors}</span>

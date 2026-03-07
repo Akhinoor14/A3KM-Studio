@@ -141,6 +141,9 @@
             return;
         }
 
+        // Expose globally for download handler
+        window._currentProject = currentProject;
+
         console.log(`✅ Found project: ${currentProject.title}`);
 
         // Setup sequential navigation for Arduino and Solidworks projects
@@ -364,22 +367,22 @@
                         <p style="font-size: 11px; color: rgba(180,180,180,0.8); margin: 0 0 12px 0;">Get 3D models and source files</p>
                         <div class="glb-download-grid">
                             ${currentProject.glbFile ? `
-                            <a href="${currentProject.glbFile}" download class="download-model-btn primary">
+                            <button onclick="handleProjectDownload('${currentProject.glbFile}', '${(currentProject.glbFile||'').split('/').pop()}')" class="download-model-btn primary">
                                 <i class="fas fa-cube"></i>
                                 <span>GLB Model</span>
-                            </a>
+                            </button>
                             ` : ''}
                             ${currentProject.zipDownload ? `
-                            <a href="${currentProject.zipDownload}" download class="download-model-btn">
+                            <button onclick="handleProjectDownload('${currentProject.zipDownload}', '${(currentProject.zipDownload||'').split('/').pop()}')" class="download-model-btn">
                                 <i class="fas fa-file-archive"></i>
                                 <span>Full Package</span>
-                            </a>
+                            </button>
                             ` : ''}
                             ${currentProject.files && currentProject.files.includes('.SLDPRT') ? `
-                            <a href="${currentProject.files[0]}" download class="download-model-btn">
+                            <button onclick="handleProjectDownload('${currentProject.files[0]}', '${(currentProject.files[0]||'').split('/').pop()}')" class="download-model-btn">
                                 <i class="fas fa-drafting-compass"></i>
                                 <span>SLDPRT File</span>
-                            </a>
+                            </button>
                             ` : ''}
                         </div>
                     </div>
@@ -1599,3 +1602,45 @@
     };
 
 })();
+
+// ── GLOBAL DOWNLOAD HANDLER WITH ACCESS GATE ─────────────────────────────────
+window.handleProjectDownload = async function(url, filename) {
+    if (!url) return;
+
+    if (window.A3KM && window.A3KM.checkContentAccess && window._currentProject) {
+        // Wait for auth to be ready
+        await new Promise(resolve => {
+            if (window.A3KM.currentUser !== undefined) { resolve(); return; }
+            document.addEventListener('a3km:authReady', resolve, { once: true });
+        });
+
+        const meta = {
+            id:         window._currentProject.id,
+            title:      window._currentProject.title,
+            accessType: window._currentProject.accessType || 'free',
+            price:      window._currentProject.price || null
+        };
+
+        if (meta.accessType && meta.accessType !== 'free') {
+            const result = await window.A3KM.checkContentAccess(meta.id, 'project', meta);
+            if (!result.allowed) {
+                window.A3KM.showAccessGate(
+                    result,
+                    () => window.A3KM.checkContentAccess(meta.id, 'project', meta)
+                            .then(r => { if (r.allowed) window.handleProjectDownload(url, filename); }),
+                    null
+                );
+                return;
+            }
+        }
+    }
+
+    // Proceed with download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || url.split('/').pop();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+// ── END GLOBAL DOWNLOAD HANDLER ───────────────────────────────────────────────

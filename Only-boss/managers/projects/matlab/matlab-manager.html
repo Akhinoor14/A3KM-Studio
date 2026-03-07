@@ -1908,7 +1908,8 @@
                 dateAdded: new Date().toISOString().split('T')[0],
                 lastModified: new Date().toISOString(),
                 views: 0,
-                downloads: 0
+                downloads: 0,
+                accessType: 'free'
             };
 
             projectsData.projects.push(newProject);
@@ -2131,6 +2132,19 @@
                 cb.addEventListener('change', updateEditToolboxCount);
             });
             
+            // Access settings
+            const editMat = document.getElementById('editMatlabAccessType');
+            if (editMat) {
+              editMat.value = project.accessType || 'free';
+              toggleEditMatlabPriceFields();
+              if (project.price) {
+                const pa = document.getElementById('editMatlabPriceAmount');
+                const op = document.getElementById('editMatlabOriginalPrice');
+                if (pa) pa.value = project.price.amount || '';
+                if (op) op.value = project.price.originalPrice || '';
+              }
+            }
+
             // Show modal
             document.getElementById('editModal').classList.add('active');
         }
@@ -2150,6 +2164,13 @@
         // Close edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('active');
+        }
+
+        function toggleEditMatlabPriceFields() {
+            const val  = document.getElementById('editMatlabAccessType')?.value;
+            const show = val === 'paid' || val === 'combo';
+            const g    = document.getElementById('editMatlabPriceGroup');
+            if (g) g.style.display = show ? '' : 'none';
         }
 
         // Save edited project
@@ -2221,6 +2242,17 @@
             // Update statistics
             projectsData.statistics.lastUpdated = new Date().toISOString();
             project.lastModified = new Date().toISOString();
+
+            // Access settings
+            project.accessType = document.getElementById('editMatlabAccessType')?.value || project.accessType || 'free';
+            const _mat = project.accessType;
+            if (_mat === 'paid' || _mat === 'combo') {
+              const amt  = parseInt(document.getElementById('editMatlabPriceAmount')?.value)  || 0;
+              const orig = parseInt(document.getElementById('editMatlabOriginalPrice')?.value) || 0;
+              project.price = { amount: amt, currency: 'BDT', originalPrice: orig || null, discount: orig > amt ? Math.round((orig - amt) / orig * 100) : null };
+            } else {
+              project.price = null;
+            }
             
             saveToCache(projectsData);
             
@@ -2950,6 +2982,28 @@ Useful for understanding [concept] in [field/application].`
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>Warning:</strong> Replacing files cannot be undone. Original files will be marked as "replaced" in version history.
                     </small>
+                </div>
+
+                <div style="background:rgba(204,0,0,0.06);border:1.5px solid rgba(204,0,0,0.2);border-radius:10px;padding:14px;margin-top:16px;">
+                    <label style="color:#cc0000;font-weight:800;font-size:13px;display:block;margin-bottom:10px;">🔐 Access Settings</label>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Access Type</label>
+                        <select id="editMatlabAccessType" onchange="toggleEditMatlabPriceFields()" style="width:100%;">
+                            <option value="free">🆓 Free</option>
+                            <option value="paid">💰 Paid</option>
+                            <option value="combo">📦 Combo Only</option>
+                        </select>
+                    </div>
+                    <div id="editMatlabPriceGroup" style="display:none;">
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Price (BDT)</label>
+                            <input type="number" id="editMatlabPriceAmount" min="0" placeholder="299" style="width:100%;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;">Original Price (BDT)</label>
+                            <input type="number" id="editMatlabOriginalPrice" min="0" placeholder="499" style="width:100%;box-sizing:border-box;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-actions">
