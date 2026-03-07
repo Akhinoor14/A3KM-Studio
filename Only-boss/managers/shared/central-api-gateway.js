@@ -84,7 +84,13 @@ class CentralAPIGateway {
             return false;
         }
         
-        // Create uploader instance
+        // Create uploader instance (guard: class may not exist in all managers)
+        if (typeof GitHubContentUploader === 'undefined') {
+            console.warn('⚠️ GitHubContentUploader not available in this context — skipping uploader init');
+            this.emit('token:changed', { status: 'active' });
+            return true;
+        }
+
         this.uploader = new GitHubContentUploader({
             token: token,
             owner: 'Akhinoor14',

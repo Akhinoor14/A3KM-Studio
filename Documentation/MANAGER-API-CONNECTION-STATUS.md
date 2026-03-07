@@ -24,7 +24,7 @@
 - ✅ Cross-manager token sharing enabled
 - ✅ Project managers retain advanced features via hybrid architecture
 
-**🎨 NEW - Unified Theme System (March 6, 2026):**
+** NEW - Unified Theme System (March 6, 2026):**
 - ✅ All 10 managers now share uniform dark-red premium design
 - ✅ Single CSS file (`unified-theme.css`) controls all styling
 - ✅ Neural cursor effects enabled on all managers
@@ -285,28 +285,6 @@ const githubToken = tokenManager.loadToken(); // Uses 'github_token'
 
 ## 4. Settings Managers
 
-### 4.1 Site Settings Manager
-**File:** `settings/site-settings-manager.html`  
-**Status:** ℹ️ **DIFFERENT PURPOSE**
-
-**API Keys Managed:**
-```javascript
-{
-  api: {
-    githubToken: "ghp_...",           // GitHub Personal Access Token
-    youtubeApiKey: "AIzaSy...",       // YouTube Data API v3 Key
-    gmapApiKey: "AIzaSy...",          // Google Maps API Key
-    analyticsId: "G-...",             // Google Analytics
-    searchConsoleId: "...",           // Google Search Console
-  }
-}
-```
-
-**Features:**
-- Stores API keys in localStorage
-- Configures YouTube API key for educational-videos-manager
-- No direct API calls (configuration only)
-
 ---
 
 ## 5. API Dependency Graph
@@ -361,7 +339,7 @@ YouTube Data API v3
     │   └── localStorage ('youtube_api_key')
     │
     ├── Configured In:
-    │   └── settings/site-settings-manager.html
+    │   └── command-center.html (API Configuration tab)
     │
     ├── Integration Script:
     │   └── youtube-integration.js

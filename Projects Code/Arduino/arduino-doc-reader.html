@@ -641,7 +641,10 @@
        DATA LOADING
     ══════════════════════════════════════════════════════════ */
     async function loadProjectsData() {
-        const resp = await fetch('arduino-data.json');
+        const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
+        let resp;
+        try { resp = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!resp.ok) throw new Error(''); }
+        catch(e) { resp = await fetch('arduino-data.json'); }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         projects = data.projects.map(p => {

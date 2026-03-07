@@ -2,1590 +2,774 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-  <meta name="theme-color" content="#0a0000">
+    <meta name="theme-color" content="#0a0000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>Arduino Project Viewer - A3KM Studio</title>
-    
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../Optimization/styles.css">
-    <link rel="stylesheet" href="../../Optimization/navbar-autohide.css">
     <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
-    
-    <!-- PDF Library for watermark/header/footer injection -->
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    
-    <!-- Markdown & Syntax Highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         :root {
             --primary-red: #8B0000;
+            --primary-red-light: #CC0000;
             --primary-red-dark: #5a0000;
-            --bg-dark: rgba(10, 10, 10, 0.98);
-            --bg-card: rgba(26, 0, 0, 0.95);
-            --border-primary: rgba(139, 0, 0, 0.3);
-            --border-hover: rgba(139, 0, 0, 0.7);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-white: rgba(255, 255, 255, 0.95);
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        .viewer-nav,
-        .content-wrapper {
-            position: relative;
-            z-index: 1;
-        }
-
-        .viewer-nav {
-            display: none !important; /* Hide the top navigation bar */
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background: rgba(10, 10, 10, 0.98);
-            border-bottom: 2px solid var(--border-primary);
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 1000;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 2px 20px rgba(139, 0, 0, 0.3);
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(90, 0, 0, 0.15));
-            border: 2px solid var(--border-primary);
-            border-radius: 10px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(139, 0, 0, 0.2);
-        }
-
-        .back-btn:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.4), rgba(90, 0, 0, 0.3));
-            border-color: var(--primary-red);
-            transform: translateX(-5px);
-            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
-        }
-
-        .back-btn i {
-            transition: transform 0.3s ease;
-        }
-
-        .back-btn:hover i {
-            transform: translateX(-3px);
-        }
-
-        /* Navigation Controls */
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .nav-control-btn {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(90, 0, 0, 0.3));
-            border: 2px solid rgba(139, 0, 0, 0.4);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .nav-control-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.4), rgba(90, 0, 0, 0.5));
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
-        }
-
-        .nav-control-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            background: linear-gradient(135deg, rgba(80, 80, 80, 0.2), rgba(60, 60, 60, 0.3));
-            border-color: rgba(100, 100, 100, 0.3);
-        }
-
-        .nav-control-btn i {
-            color: var(--primary-red);
-        }
-
-        .nav-control-btn:disabled i {
-            color: rgba(150, 150, 150, 0.5);
-        }
-
-        .project-counter {
-            background: rgba(139, 0, 0, 0.2);
-            border: 2px solid rgba(139, 0, 0, 0.4);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .keyboard-hint-badge {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(139, 0, 0, 0.3);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.7);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .keyboard-hint-badge kbd {
-            background: rgba(139, 0, 0, 0.3);
-            border: 1px solid rgba(139, 0, 0, 0.5);
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-family: monospace;
-            font-size: 0.7rem;
-            color: var(--primary-red);
-        }
-
-        .project-header {
-            background: var(--bg-card);
-            border: 2px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 20px 25px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .project-number {
-            display: inline-block;
-            padding: 4px 12px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 8px;
-        }
-
-        .project-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary-red);
-            margin: 8px 0;
-        }
-
-        .project-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        .project-meta {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(139, 0, 0, 0.1);
-            border: 1px solid var(--border-primary);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .meta-item i {
-            color: var(--primary-red);
-        }
-
-        .content-wrapper {
-            max-width: 1600px;
-            margin: 20px auto 40px;
-            padding: 0 30px;
-        }
-
-        /* New Layout Sections */
-
-        /* ── Documentation Entry Card ───────────────────────── */
-        .doc-entry-card {
-            width: 100%;
-            background: var(--bg-card);
-            border: 2px solid var(--border-primary);
-            border-radius: 18px;
-            padding: 36px 40px;
-            margin-bottom: 30px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            gap: 32px;
-            transition: all 0.35s ease;
-            box-sizing: border-box;
-        }
-
-        .doc-entry-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(139,0,0,0.08) 0%, rgba(90,0,0,0.04) 100%);
-            opacity: 0;
-            transition: opacity 0.35s ease;
-            pointer-events: none;
-        }
-
-        .doc-entry-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary-red), transparent);
-            opacity: 0;
-            transition: opacity 0.35s ease;
-        }
-
-        .doc-entry-card:hover {
-            border-color: var(--primary-red);
-            box-shadow: 0 12px 40px rgba(139,0,0,0.25), 0 0 60px rgba(139,0,0,0.08);
-            transform: translateY(-4px);
-        }
-
-        .doc-entry-card:hover::before,
-        .doc-entry-card:hover::after {
-            opacity: 1;
-        }
-
-        .doc-entry-icon-wrap {
-            flex-shrink: 0;
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, rgba(139,0,0,0.25), rgba(90,0,0,0.15));
-            border: 2px solid rgba(139,0,0,0.4);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.4rem;
-            color: var(--primary-red);
-            transition: all 0.35s ease;
-            box-shadow: 0 4px 15px rgba(139,0,0,0.2);
-        }
-
-        .doc-entry-card:hover .doc-entry-icon-wrap {
-            background: linear-gradient(135deg, rgba(139,0,0,0.4), rgba(90,0,0,0.3));
-            transform: scale(1.08) rotate(-3deg);
-            box-shadow: 0 6px 20px rgba(139,0,0,0.4);
-        }
-
-        .doc-entry-body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .doc-entry-title {
-            color: var(--primary-red);
-            font-size: 1.6rem;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .doc-entry-desc {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin: 0 0 20px 0;
-        }
-
-        .doc-entry-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .doc-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            background: rgba(139,0,0,0.12);
-            border: 1px solid rgba(139,0,0,0.3);
-            border-radius: 20px;
-            color: var(--text-primary);
-            font-size: 0.82rem;
-            font-weight: 600;
-            transition: all 0.25s ease;
-        }
-
-        .doc-tag i {
-            color: var(--primary-red);
-            font-size: 0.9rem;
-        }
-
-        .doc-entry-card:hover .doc-tag {
-            background: rgba(139,0,0,0.2);
-            border-color: rgba(139,0,0,0.5);
-        }
-
-        .doc-entry-cta {
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 20px 24px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 14px;
-            color: white;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: all 0.35s ease;
-            box-shadow: 0 4px 15px rgba(139,0,0,0.35);
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .doc-entry-cta i {
-            font-size: 1.6rem;
-            transition: transform 0.35s ease;
-        }
-
-        .doc-entry-card:hover .doc-entry-cta {
-            background: linear-gradient(135deg, #a00000, var(--primary-red));
-            box-shadow: 0 6px 25px rgba(139,0,0,0.55);
-            transform: scale(1.05);
-        }
-
-        .doc-entry-card:hover .doc-entry-cta i {
-            transform: translateX(4px);
-        }
-
-        .action-buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 2px solid rgba(139, 0, 0, 0.3);
-        }
-
-        .circuit-components-grid {
-            display: grid;
-            grid-template-columns: 65% 35%;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .content-section {
-            background: var(--bg-card);
-            border: 2px solid var(--border-primary);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 25px;
-            transition: all 0.3s ease;
-        }
-
-        .content-section:hover {
-            border-color: var(--border-hover);
-            box-shadow: 0 8px 25px rgba(139, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .section-title {
-            color: var(--primary-red);
-            font-size: 1.5rem;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(139, 0, 0, 0.2);
-        }
-
-        .section-title i {
-            font-size: 1.3rem;
-            opacity: 0.9;
-        }
-
-
-        .components-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            gap: 12px;
-            max-height: 500px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .components-section {
-            background: var(--bg-card);
-            border: 2px solid var(--border-primary);
-            border-radius: 15px;
-            padding: 30px;
-            height: auto;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-        }
-
-        .components-section:hover {
-            border-color: var(--primary-red);
-            box-shadow: 0 8px 25px rgba(139, 0, 0, 0.2);
-        }
-
-        .component-item {
-            padding: 14px 16px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.08), rgba(90, 0, 0, 0.05));
-            border-left: 4px solid var(--primary-red);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .component-item::before {
-            content: '▸';
-            color: var(--primary-red);
-            font-weight: bold;
-        }
-
-        .component-item:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.15), rgba(90, 0, 0, 0.1));
-            border-left-width: 6px;
-            padding-left: 14px;
-            transform: translateX(4px);
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border: 2px solid var(--border-primary);
-            border-radius: 10px;
-            color: white;
-            text-decoration: none;
-            text-align: center;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(139, 0, 0, 0.5);
-            background: linear-gradient(135deg, var(--primary-red-dark), var(--primary-red));
-        }
-
-        .action-btn i {
-            font-size: 1.05rem;
-        }
-
-        /* Navigation Arrows */
-        .nav-arrows {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-            gap: 20px;
-        }
-
-        .nav-arrow {
-            flex: 1;
-            padding: 20px;
-            background: var(--bg-card);
-            border: 2px solid var(--border-primary);
-            border-radius: 12px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .nav-arrow:hover {
-            border-color: var(--primary-red);
-            transform: translateY(-3px);
-        }
-
-        .nav-arrow.prev {
-            justify-content: flex-start;
-        }
-
-        .nav-arrow.next {
-            justify-content: flex-end;
-        }
-
-        .nav-arrow-icon {
-            font-size: 2rem;
-            color: var(--primary-red);
-        }
-
-        .nav-arrow-text {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .nav-arrow-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        /* Circuit Image */
-        .circuit-image {
-            width: 100%;
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            border: 2px solid var(--border-primary);
-            margin: 20px 0;
-            cursor: zoom-in;
-            transition: transform 0.3s ease;
-        }
-
-        .circuit-image:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 30px rgba(139, 0, 0, 0.4);
-        }
-
-        #circuitImageContainer {
-            min-height: 750px;
-            max-height: 750px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(20, 0, 0, 0.5), rgba(30, 10, 10, 0.4));
-            padding: 30px;
-            border: 2px solid var(--border-primary);
-            overflow: auto;
-            width: 100%;
-            position: relative;
-        }
-
-        #circuitImageContainer::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 12px;
-            padding: 2px;
-            background: linear-gradient(135deg, var(--border-primary), transparent);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        #circuitPlaceholder {
-            padding: 80px 20px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px dashed var(--border-primary);
-            border-radius: 12px;
-            color: var(--text-secondary);
-        }
-
-        #circuitPlaceholder i {
-            font-size: 3rem;
-            color: var(--border-primary);
-            margin-bottom: 15px;
-        }
-
-        /* Scroll to Top Button */
-        .scroll-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border: 2px solid var(--border-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 999;
-        }
-        
-        .scroll-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .scroll-to-top:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(139, 0, 0, 0.5);
-        }
-        
-        .scroll-to-top i {
-            color: #fff;
-            font-size: 1.3rem;
-        }
-
-        /* Keyboard hint animations */
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(10px); }
-        }
-
-        /* ============================================
-           READING PROGRESS BAR
-           ============================================ */
+            --bg-card: rgba(18,0,0,0.88);
+            --border-primary: rgba(139,0,0,0.3);
+            --border-hover: rgba(139,0,0,0.65);
+            --text-primary: rgba(255,255,255,0.95);
+            --text-secondary: rgba(255,255,255,0.62);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+        /* Reading Progress */
         .reading-progress {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-red), #ff3333);
-            width: 0%;
-            z-index: 10000;
-            transition: width 0.1s ease;
-            box-shadow: 0 2px 10px rgba(139, 0, 0, 0.5);
+            position:fixed; top:0; left:0; height:3px; width:0%;
+            background:linear-gradient(90deg,var(--primary-red),#ff3333);
+            z-index:10001; box-shadow:0 0 8px rgba(139,0,0,0.6); transition:width 0.1s;
+        }
+
+        /* ── Sticky Header ───────────────────────── */
+        .viewer-header {
+            position:sticky; top:0; z-index:100; height:60px;
+            background:rgba(8,0,0,0.97);
+            border-bottom:2px solid var(--border-primary);
+            display:flex; align-items:center; padding:0 26px; gap:14px;
+            backdrop-filter:blur(24px);
+            box-shadow:0 2px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,0,0,0.1);
+        }
+        .back-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            padding:8px 16px; background:transparent;
+            border:1.5px solid var(--border-primary); border-radius:8px;
+            color:var(--text-primary); text-decoration:none;
+            font-weight:700; font-size:0.87rem; transition:all 0.25s; flex-shrink:0;
+        }
+        .back-btn:hover { background:rgba(139,0,0,0.15); border-color:var(--primary-red); transform:translateX(-3px); }
+        .header-title-wrap { flex:1; overflow:hidden; }
+        .header-title { font-size:0.95rem; font-weight:700; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+        .hdr-nav { display:flex; align-items:center; gap:9px; flex-shrink:0; }
+        .hdr-btn {
+            display:inline-flex; align-items:center; gap:6px; padding:7px 13px;
+            background:rgba(139,0,0,0.1); border:1.5px solid var(--border-primary);
+            border-radius:8px; color:var(--text-primary); font-size:0.85rem;
+            font-weight:700; cursor:pointer; transition:all 0.25s;
+        }
+        .hdr-btn:hover:not(:disabled) { background:rgba(139,0,0,0.25); border-color:var(--primary-red); transform:scale(1.03); }
+        .hdr-btn:disabled { opacity:0.28; cursor:not-allowed; }
+        .proj-counter {
+            padding:7px 13px; background:rgba(139,0,0,0.12);
+            border:1.5px solid var(--border-primary); border-radius:8px;
+            font-size:0.87rem; font-weight:800; color:var(--text-primary); white-space:nowrap;
+        }
+
+        /* ── Hero Bar ───────────────────────── */
+        .hero-bar {
+            height:56px; display:flex; align-items:center; padding:0 26px; gap:14px;
+            background:linear-gradient(135deg,rgba(12,0,0,0.82),rgba(20,5,5,0.78));
+            border-bottom:1px solid rgba(139,0,0,0.18); overflow:hidden;
+        }
+        .proj-num-badge {
+            flex-shrink:0; padding:3px 12px;
+            background:linear-gradient(135deg,var(--primary-red),var(--primary-red-dark));
+            border-radius:20px; font-size:0.77rem; font-weight:900; color:#fff;
+            letter-spacing:0.5px; box-shadow:0 2px 8px rgba(139,0,0,0.35);
+        }
+        .hero-title {
+            flex:1; font-size:1.3rem; font-weight:800; color:var(--text-primary);
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:0; line-height:1.2;
+        }
+        .hero-chips { display:flex; gap:8px; flex-shrink:0; }
+        .chip { padding:4px 11px; border-radius:20px; font-size:0.75rem; font-weight:700; border:1.5px solid; white-space:nowrap; }
+        .chip-cat { background:rgba(139,0,0,0.15); border-color:rgba(139,0,0,0.4); color:rgba(255,160,160,0.9); }
+        .chip-diff { background:rgba(0,120,60,0.12); border-color:rgba(0,200,100,0.3); color:rgba(100,230,160,0.9); }
+        .chip-diff.mid { background:rgba(120,80,0,0.12); border-color:rgba(220,160,0,0.3); color:rgba(255,190,80,0.9); }
+        .chip-diff.adv { background:rgba(150,0,0,0.12); border-color:rgba(255,50,50,0.3); color:rgba(255,120,120,0.9); }
+
+        /* ── Main Grid ───────────────────────── */
+        .main-grid {
+            display:grid; grid-template-columns:65fr 35fr;
+            gap:22px; max-width:1600px; margin:22px auto; padding:0 26px 50px; align-items:start;
+        }
+
+        /* ── Media Column ───────────────────────── */
+        .media-col { display:flex; flex-direction:column; gap:15px; position:sticky; top:118px; }
+        .media-container {
+            position:relative; width:100%; aspect-ratio:16/9; background:#000;
+            border-radius:14px; overflow:hidden;
+            border:2px solid var(--border-primary);
+            box-shadow:0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,0,0,0.08);
+            transition:border-color 0.3s;
+        }
+        .media-container:hover { border-color:rgba(139,0,0,0.55); }
+        .media-container.image-mode { aspect-ratio:unset; min-height:360px; max-height:680px; }
+        .media-container #ytDiv,
+        .media-container #ytDiv iframe {
+            position:absolute; top:0; left:0; width:100%; height:100%; border:0;
+        }
+        .media-placeholder {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            height:100%; min-height:300px; gap:14px; color:var(--text-secondary);
+        }
+        .media-placeholder i { font-size:2.5rem; color:var(--border-primary); }
+
+        /* ── Video Controls ───────────────────────── */
+        .vc-bar {
+            background:rgba(8,0,0,0.97); border:2px solid var(--border-primary);
+            border-radius:12px; padding:11px 15px; flex-direction:column; gap:9px;
+            backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,0.5);
+        }
+        .vc-row1 { display:flex; align-items:center; gap:11px; }
+        .vc-prog {
+            flex:1; height:5px; background:rgba(255,255,255,0.1); border-radius:3px;
+            cursor:pointer; position:relative; transition:height 0.18s;
+        }
+        .vc-prog:hover { height:8px; }
+        .vc-fill {
+            position:absolute; top:0; left:0; height:100%;
+            background:linear-gradient(90deg,var(--primary-red),#cc3333);
+            border-radius:3px; pointer-events:none; transition:width 0.1s;
+        }
+        .vc-thumb {
+            position:absolute; top:50%; transform:translate(-50%,-50%);
+            width:13px; height:13px; background:#fff; border-radius:50%;
+            box-shadow:0 0 6px rgba(139,0,0,0.6); opacity:0; transition:opacity 0.18s; pointer-events:none;
+        }
+        .vc-prog:hover .vc-thumb { opacity:1; }
+        .vc-time {
+            font-size:0.77rem; font-weight:700; color:var(--text-secondary);
+            white-space:nowrap; min-width:92px; text-align:right; font-variant-numeric:tabular-nums;
+        }
+        .vc-row2 { display:flex; align-items:center; gap:5px; }
+        .vc-btn {
+            background:none; border:none; color:rgba(255,255,255,0.68); cursor:pointer;
+            padding:6px 8px; border-radius:6px; font-size:0.9rem; transition:all 0.18s;
+            display:inline-flex; align-items:center; justify-content:center; gap:5px;
+        }
+        .vc-btn:hover { color:#fff; background:rgba(139,0,0,0.22); }
+        .vc-vol-wrap { display:flex; align-items:center; gap:5px; position:relative; }
+        .vc-unmute {
+            display:none; align-items:center; gap:6px;
+            background:rgba(139,0,0,0.2); border:1px solid rgba(139,0,0,0.45);
+            border-radius:20px; padding:4px 12px; color:rgba(255,140,140,0.95);
+            font-size:0.77rem; font-weight:700; cursor:pointer; transition:all 0.2s;
+            animation:pulse-hint 2s infinite;
+        }
+        .vc-unmute:hover { background:rgba(139,0,0,0.35); color:#fff; }
+        @keyframes pulse-hint {
+            0%,100% { box-shadow:0 0 0 0 rgba(139,0,0,0.4); }
+            50% { box-shadow:0 0 0 5px rgba(139,0,0,0); }
+        }
+        .vc-vol { width:66px; height:4px; cursor:pointer; accent-color:var(--primary-red); vertical-align:middle; }
+        .vc-loop {
+            display:inline-flex; align-items:center; gap:5px; padding:3px 9px;
+            background:rgba(139,0,0,0.14); border:1px solid rgba(139,0,0,0.3);
+            border-radius:20px; color:rgba(255,120,120,0.8); font-size:0.72rem; font-weight:700;
+        }
+
+        /* ── Nav Arrows ───────────────────────── */
+        .nav-arrows { display:flex; gap:13px; }
+        .nav-arrow {
+            flex:1; padding:13px 16px; background:var(--bg-card);
+            border:2px solid var(--border-primary); border-radius:12px;
+            text-decoration:none; color:var(--text-primary);
+            display:flex; align-items:center; gap:13px; transition:all 0.28s; min-width:0;
+        }
+        .nav-arrow:hover { border-color:var(--primary-red); background:rgba(139,0,0,0.08); transform:translateY(-2px); box-shadow:0 6px 20px rgba(139,0,0,0.18); }
+        .nav-arrow.next { justify-content:flex-end; }
+        .na-i { font-size:1.1rem; color:var(--primary-red); flex-shrink:0; transition:transform 0.22s; }
+        .nav-arrow.prev:hover .na-i { transform:translateX(-3px); }
+        .nav-arrow.next:hover .na-i { transform:translateX(3px); }
+        .na-label { display:block; font-size:0.7rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:2px; }
+        .na-title { display:block; font-size:0.87rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+
+        /* ── Sidebar Column ───────────────────────── */
+        .sidebar-col { display:flex; flex-direction:column; gap:14px; }
+
+        /* Statement Card */
+        .stmt-card {
+            background:linear-gradient(160deg,rgba(22,2,2,0.92),rgba(14,0,0,0.88));
+            border:1.5px solid rgba(139,0,0,0.28); border-radius:14px;
+            padding:18px 20px; transition:border-color 0.28s;
+            position:relative; overflow:hidden;
+        }
+        .stmt-card::before {
+            content:''; position:absolute; top:0; left:0; width:4px; height:100%;
+            background:linear-gradient(180deg,var(--primary-red),rgba(139,0,0,0.2));
+            border-radius:14px 0 0 14px;
+        }
+        .stmt-card:hover { border-color:rgba(139,0,0,0.48); }
+        .stmt-hdr {
+            display:flex; align-items:center; gap:10px; margin-bottom:12px;
+        }
+        .stmt-hdr-icon {
+            width:30px; height:30px; border-radius:8px; flex-shrink:0;
+            background:rgba(139,0,0,0.2); border:1.5px solid rgba(139,0,0,0.35);
+            display:flex; align-items:center; justify-content:center;
+            color:var(--primary-red); font-size:0.85rem;
+        }
+        .stmt-hdr-text {
+            font-size:0.78rem; font-weight:800; color:rgba(255,255,255,0.55);
+            text-transform:uppercase; letter-spacing:0.9px;
+        }
+        .stmt-text { font-size:0.91rem; line-height:1.7; color:rgba(255,255,255,0.82); padding-left:4px; }
+        .stmt-text.clamp { display:-webkit-box; -webkit-line-clamp:3; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+        .stmt-more { display:none; align-items:center; gap:6px; margin-top:10px; background:none; border:none; color:var(--primary-red); font-size:0.81rem; font-weight:700; cursor:pointer; transition:gap 0.2s; padding:2px 0; }
+        .stmt-more:hover { gap:9px; }
+
+        /* Components Card */
+        .side-card {
+            background:linear-gradient(160deg,rgba(20,2,2,0.9),rgba(12,0,0,0.86));
+            border:1.5px solid rgba(139,0,0,0.25); border-radius:14px;
+            padding:18px 20px; transition:border-color 0.28s;
+        }
+        .side-card:hover { border-color:rgba(139,0,0,0.44); }
+        .sc-ttl {
+            display:flex; align-items:center; gap:10px;
+            margin-bottom:14px; padding-bottom:12px;
+            border-bottom:1px solid rgba(139,0,0,0.18);
+        }
+        .sc-ttl-icon {
+            width:30px; height:30px; border-radius:8px; flex-shrink:0;
+            background:rgba(139,0,0,0.2); border:1.5px solid rgba(139,0,0,0.35);
+            display:flex; align-items:center; justify-content:center;
+            color:var(--primary-red); font-size:0.85rem;
+        }
+        .sc-ttl-label { font-size:0.78rem; font-weight:800; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.9px; flex:1; }
+        .sc-ttl-count { font-size:0.72rem; font-weight:800; padding:2px 9px; background:rgba(139,0,0,0.18); border:1px solid rgba(139,0,0,0.3); border-radius:20px; color:rgba(255,140,140,0.75); }
+        .comp-list { list-style:none; display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(139,0,0,0.3) transparent; }
+        .comp-item {
+            display:flex; align-items:center; gap:10px;
+            padding:9px 12px;
+            background:rgba(255,255,255,0.03); border:1px solid rgba(139,0,0,0.14);
+            border-radius:8px; font-size:0.875rem; color:rgba(255,255,255,0.72);
+            transition:all 0.18s;
+        }
+        .comp-item-dot { width:6px; height:6px; border-radius:50%; background:var(--primary-red); flex-shrink:0; opacity:0.7; }
+        .comp-item:hover { background:rgba(139,0,0,0.1); color:rgba(255,255,255,0.92); border-color:rgba(139,0,0,0.3); transform:translateX(3px); }
+
+        /* Doc Card — navbar-press style */
+        .doc-card {
+            display:flex; align-items:stretch;
+            background:linear-gradient(135deg,rgba(100,0,0,0.22) 0%,rgba(60,0,0,0.18) 100%);
+            border:1.5px solid rgba(139,0,0,0.42); border-radius:14px;
+            cursor:pointer; overflow:hidden; transition:all 0.2s;
+            text-decoration:none; position:relative; user-select:none;
+        }
+        .doc-card::after {
+            content:''; position:absolute; inset:0; border-radius:13px;
+            background:radial-gradient(ellipse at 50% 0%,rgba(139,0,0,0.18),transparent 70%);
+            pointer-events:none; opacity:0; transition:opacity 0.2s;
+        }
+        .doc-card:hover {
+            background:linear-gradient(135deg,rgba(139,0,0,0.32) 0%,rgba(100,0,0,0.26) 100%);
+            border-color:rgba(220,0,0,0.75);
+            box-shadow:0 0 0 1px rgba(139,0,0,0.25), 0 10px 30px rgba(139,0,0,0.38);
+            transform:translateY(-3px);
+        }
+        .doc-card:hover::after { opacity:1; }
+        .doc-card:active { transform:scale(0.985) translateY(0); box-shadow:0 0 0 1px rgba(139,0,0,0.4), 0 2px 8px rgba(139,0,0,0.3); transition:all 0.08s; }
+        .doc-icon {
+            flex-shrink:0; width:58px; display:flex; align-items:center; justify-content:center;
+            font-size:1.5rem; color:var(--primary-red);
+            border-right:1px solid rgba(139,0,0,0.2);
+            background:rgba(139,0,0,0.08); transition:all 0.2s;
+        }
+        .doc-card:hover .doc-icon { background:rgba(139,0,0,0.16); color:var(--primary-red-light); }
+        .doc-mid { flex:1; min-width:0; padding:14px 12px 13px 14px; }
+        .doc-title { font-size:0.97rem; font-weight:800; color:rgba(255,255,255,0.95); letter-spacing:0.1px; display:block; margin-bottom:7px; }
+        .doc-badges { display:flex; gap:4px; flex-wrap:wrap; }
+        .doc-badge {
+            font-size:0.63rem; font-weight:700; padding:2px 7px; border-radius:20px;
+            background:rgba(139,0,0,0.18); border:1px solid rgba(139,0,0,0.3);
+            color:rgba(255,140,140,0.8); letter-spacing:0.4px; text-transform:uppercase; white-space:nowrap;
+        }
+        .doc-cta {
+            flex-shrink:0; display:flex; align-items:center; gap:6px;
+            margin:10px 14px 10px 0; align-self:center;
+            padding:8px 14px; background:rgba(139,0,0,0.25);
+            border:1.5px solid rgba(139,0,0,0.5); border-radius:9px;
+            font-size:0.8rem; font-weight:800; color:rgba(255,150,150,0.95);
+            white-space:nowrap; transition:all 0.2s;
+        }
+        .doc-cta i { font-size:0.72rem; transition:transform 0.18s; }
+        .doc-card:hover .doc-cta { background:var(--primary-red); border-color:var(--primary-red-light); color:#fff; box-shadow:0 2px 12px rgba(139,0,0,0.4); }
+        .doc-card:hover .doc-cta i { transform:translateX(3px); }
+        .doc-card:active .doc-cta { background:var(--primary-red-dark); }
+
+        /* Action Buttons */
+        .action-btns { display:flex; flex-direction:column; gap:9px; }
+        .action-btn {
+            display:flex; align-items:center; justify-content:center; gap:9px;
+            padding:12px 20px; border-radius:10px; font-weight:700;
+            font-size:0.88rem; cursor:pointer; transition:all 0.2s;
+            text-align:center; text-decoration:none; border:1.5px solid;
+            user-select:none;
+        }
+        .action-btn.primary {
+            background:linear-gradient(135deg,var(--primary-red),var(--primary-red-dark));
+            border-color:rgba(204,0,0,0.5); color:#fff;
+            box-shadow:0 2px 10px rgba(139,0,0,0.25);
+        }
+        .action-btn.primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(139,0,0,0.45); border-color:var(--primary-red-light); }
+        .action-btn.primary:active { transform:scale(0.98); box-shadow:0 1px 6px rgba(139,0,0,0.3); transition:all 0.08s; }
+        .action-btn.secondary {
+            background:rgba(139,0,0,0.08); border-color:rgba(139,0,0,0.25);
+            color:rgba(255,255,255,0.75);
+        }
+        .action-btn.secondary:hover { background:rgba(139,0,0,0.18); border-color:rgba(139,0,0,0.5); color:#fff; transform:translateY(-1px); }
+        .action-btn.secondary:active { transform:scale(0.98); transition:all 0.08s; }
+
+        /* Scroll to Top */
+        .scroll-top { position:fixed; bottom:26px; right:26px; width:44px; height:44px; background:linear-gradient(135deg,var(--primary-red),var(--primary-red-dark)); border:2px solid var(--border-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; visibility:hidden; transition:all 0.28s; z-index:99; color:#fff; font-size:1.05rem; box-shadow:0 4px 15px rgba(139,0,0,0.4); }
+        .scroll-top.show { opacity:1; visibility:visible; }
+        .scroll-top:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(139,0,0,0.5); }
+
+        /* Animations */
+        @keyframes bounceIn { 0%{transform:scale(0.3);opacity:0} 50%{transform:scale(1.05)} 70%{transform:scale(0.9)} 100%{transform:scale(1);opacity:1} }
+        @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+
+        /* Responsive */
+        @media (max-width:1100px) { .main-grid { grid-template-columns:60fr 40fr; } }
+        @media (max-width:860px) {
+            .main-grid { grid-template-columns:1fr; }
+            .media-col { position:static; }
+            .hero-chips { display:none; }
+            .hero-title { font-size:1.1rem; }
+        }
+        @media (max-width:600px) {
+            .viewer-header,.hero-bar,.main-grid { padding-left:14px; padding-right:14px; }
+            .hdr-btn span { display:none; }
         }
     </style>
 </head>
 <body class="bg-system-container">
 
+    <!-- Immediate Mobile Detection -->
+    <script>
+    (function() {
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        }
+        if (isMobile()) {
+            var p = new URLSearchParams(window.location.search);
+            var id = p.get('id') || p.get('project') || '1';
+            window.location.replace('../../mobile/projects/project-viewer.html?id=' + id + '&category=arduino');
+        }
+    })();
+    </script>
 
-    <!-- Top Navigation -->
-    <div class="viewer-nav">
-        <a href="arduino-projects.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Arduino Projects
-        </a>
-        
-        <div class="nav-controls">
-            <button class="nav-control-btn" id="prevProjectBtn" title="Previous Project (Left Arrow)">
-                <i class="fas fa-chevron-left"></i>
-                Previous
-            </button>
-            
-            <div class="project-counter" id="projectCounter">
-                <i class="fas fa-microchip"></i> <span id="currentProjectNum">1</span> / <span id="totalProjects">23</span>
-            </div>
-            
-            <button class="nav-control-btn" id="nextProjectBtn" title="Next Project (Right Arrow)">
-                Next
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            
-            <div class="keyboard-hint-badge">
-                <i class="fas fa-keyboard"></i>
-                <kbd>←</kbd> <kbd>→</kbd>
-            </div>
+    <div class="reading-progress" id="readProg"></div>
+
+    <!-- Sticky Header -->
+    <header class="viewer-header">
+        <a href="#" class="back-btn" onclick="goBack(event)"><i class="fas fa-arrow-left"></i><span>Back</span></a>
+        <div class="header-title-wrap"><span class="header-title" id="hdrTitle">Arduino Project</span></div>
+        <div class="hdr-nav">
+            <button class="hdr-btn" id="hdrPrev" disabled><i class="fas fa-chevron-left"></i><span>Prev</span></button>
+            <span class="proj-counter" id="projCounter">1 / 23</span>
+            <button class="hdr-btn" id="hdrNext"><span>Next</span><i class="fas fa-chevron-right"></i></button>
         </div>
-        
-        <div class="project-title-nav" id="navTitle">Arduino Project</div>
+    </header>
+
+    <!-- Hero Bar -->
+    <div class="hero-bar">
+        <span class="proj-num-badge" id="projNum">01</span>
+        <h1 class="hero-title" id="heroTitle">LED Pattern Control</h1>
+        <div class="hero-chips">
+            <span class="chip chip-cat" id="catChip">LED Basics</span>
+            <span class="chip chip-diff" id="diffChip">Beginner</span>
+        </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="content-wrapper">
-        <!-- Back Button -->
-        <a href="arduino-projects.html" class="back-btn" style="display: inline-flex; margin-bottom: 20px;">
-            <i class="fas fa-arrow-left"></i> Back to Arduino Projects
-        </a>
+    <!-- Main Grid -->
+    <div class="main-grid">
 
-        <!-- Project Header (Compact) -->
-        <div class="project-header">
-            <span class="project-number" id="projectNumber">Project 01</span>
-            <h1 class="project-title" id="projectTitle">LED Pattern Control</h1>
-            <p class="project-subtitle" id="projectSubtitle">Control LED blinking patterns</p>
-        </div>
+        <!-- LEFT: Media Column -->
+        <div class="media-col">
 
-        <!-- Circuit Diagram + Components Grid -->
-        <div class="circuit-components-grid">
-            <!-- Circuit Diagram (65%) -->
-            <div class="content-section">
-                <h2 class="section-title"><i class="fas fa-network-wired"></i> Circuit Diagram</h2>
-                <div id="circuitImageContainer"></div>
-            </div>
-
-            <!-- Components + Action Buttons (35%) -->
-            <div class="components-section">
-                <h2 class="section-title"><i class="fas fa-tools"></i> Components Used</h2>
-                <ul class="components-list" id="componentsList"></ul>
-                
-                <!-- Action Buttons Inside Components Card -->
-                <div class="action-buttons-container">
-                    <button class="action-btn" id="downloadBtn">
-                        <i class="fas fa-download"></i> Download Code
-                    </button>
-                    <button class="action-btn" id="downloadCircuitBtn">
-                        <i class="fas fa-image"></i> Download Circuit
-                    </button>
-                    <a href="#" id="tinkercadLink" class="action-btn" target="_blank">
-                        <i class="fas fa-external-link-alt"></i> View on Tinkercad
-                    </a>
+            <!-- Media Container -->
+            <div class="media-container" id="mediaCont">
+                <div class="media-placeholder" id="mediaPlaceholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Documentation Entry Card (Full Width) -->
-        <div class="doc-entry-card" id="docEntryCard" onclick="openDocViewer()" role="button" tabindex="0" aria-label="Open project documentation">
-            <div class="doc-entry-icon-wrap">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <div class="doc-entry-body">
-                <h2 class="doc-entry-title">
-                    <i class="fas fa-graduation-cap"></i> Project Documentation
-                </h2>
-                <p class="doc-entry-desc" id="docEntryDesc">
-                    Complete learning resources for this project — step-by-step guide, source code, circuit explanation, and PDF exports. Includes Night Mode, Sepia Mode, zoom controls, and Table of Contents.
-                </p>
-                <div class="doc-entry-tags">
-                    <span class="doc-tag"><i class="fas fa-file-alt"></i> README</span>
-                    <span class="doc-tag"><i class="fas fa-graduation-cap"></i> Explanation</span>
-                    <span class="doc-tag"><i class="fas fa-code"></i> Source Code</span>
-                    <span class="doc-tag"><i class="fas fa-file-pdf"></i> PDF Export</span>
-                    <span class="doc-tag"><i class="fas fa-moon"></i> Night Mode</span>
-                    <span class="doc-tag"><i class="fas fa-list-ul"></i> Table of Contents</span>
+            <!-- Video Controls -->
+            <div class="vc-bar" id="vcBar" style="display:none">
+                <div class="vc-row1">
+                    <div class="vc-prog" id="vcProg">
+                        <div class="vc-fill" id="vcFill"></div>
+                        <div class="vc-thumb" id="vcThumb"></div>
+                    </div>
+                    <span class="vc-time" id="vcTime">0:00 / 0:00</span>
+                </div>
+                <div class="vc-row2">
+                    <button class="vc-btn" id="vcPlay" onclick="togglePlay()" title="Play/Pause (Space)"><i class="fas fa-pause"></i></button>
+                    <div class="vc-vol-wrap">
+                        <button class="vc-btn" id="vcMute" onclick="toggleMute()" title="Mute (M)"><i class="fas fa-volume-mute"></i></button>
+                        <button class="vc-unmute" id="vcUnmute" onclick="unmute()"><i class="fas fa-volume-mute"></i> Click to unmute</button>
+                        <input type="range" class="vc-vol" id="vcVol" min="0" max="100" value="100">
+                    </div>
+                    <span class="vc-loop"><i class="fas fa-redo-alt"></i> Loop</span>
+                    <div style="flex:1"></div>
+                    <button class="vc-btn" onclick="toggleFS()" title="Fullscreen (F)"><i class="fas fa-expand"></i></button>
                 </div>
             </div>
-            <div class="doc-entry-cta">
-                <i class="fas fa-arrow-right"></i>
-                <span>Open Docs</span>
-            </div>
-        </div>
 
-        <!-- Navigation Arrows -->
-        <div class="nav-arrows" id="navArrows"></div>
-    </div>
+            <!-- Nav Arrows (directly below player) -->
+            <div class="nav-arrows" id="navArrows"></div>
+
+        </div><!-- /media-col -->
+
+        <!-- RIGHT: Sidebar -->
+        <div class="sidebar-col">
+
+            <!-- Project Statement -->
+            <div class="stmt-card" id="stmtCard">
+                <div class="stmt-hdr">
+                    <div class="stmt-hdr-icon"><i class="fas fa-bullseye"></i></div>
+                    <span class="stmt-hdr-text">Project Statement</span>
+                </div>
+                <p class="stmt-text clamp" id="stmtText">Loading...</p>
+                <button class="stmt-more" id="stmtBtn" onclick="toggleStmt()"><i class="fas fa-chevron-down"></i> Read more</button>
+            </div>
+
+            <!-- Components -->
+            <div class="side-card">
+                <div class="sc-ttl">
+                    <div class="sc-ttl-icon"><i class="fas fa-microchip"></i></div>
+                    <span class="sc-ttl-label">Components</span>
+                    <span class="sc-ttl-count" id="compCount">—</span>
+                </div>
+                <ul class="comp-list" id="compList"></ul>
+            </div>
+
+            <!-- Documentation Card -->
+            <div class="doc-card" id="docCard" onclick="openDocViewer()" role="button" tabindex="0" aria-label="Open project documentation">
+                <div class="doc-icon"><i class="fas fa-book-open"></i></div>
+                <div class="doc-mid">
+                    <span class="doc-title">Explanation &amp; Code</span>
+                    <div class="doc-badges">
+                        <span class="doc-badge">README</span>
+                        <span class="doc-badge">PDF</span>
+                        <span class="doc-badge">Night Mode</span>
+                        <span class="doc-badge">TOC</span>
+                    </div>
+                </div>
+                <div class="doc-cta"><span>Open Docs</span><i class="fas fa-arrow-right"></i></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-btns">
+                <button class="action-btn primary" id="dlCode"><i class="fas fa-download"></i> Download Code</button>
+                <button class="action-btn secondary" id="dlCircuit"><i class="fas fa-image"></i> Download Circuit</button>
+                <a href="#" class="action-btn secondary" id="tcLink" onclick="openTinkercad(event)" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> View on Tinkercad</a>
+            </div>
+
+        </div><!-- /sidebar-col -->
+    </div><!-- /main-grid -->
+
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-arrow-up"></i></button>
 
     <script src="../../Optimization/script.js"></script>
     <script>
-        // Configuration
-        const ARDUINO_BASE_PATH = ['..', '..', 'Projects Storage', 'Arduino UNO Projects with Tinkercad']
-            .map(part => encodeURIComponent(part))
-            .join('/') + '/';
-
-        // Build file path with proper encoding
-        function buildFilePath(folder, fileName) {
-            const path = `${ARDUINO_BASE_PATH}${encodeURIComponent(folder)}/${encodeURIComponent(fileName)}`;
-            console.log(`📍 Building path: ${path}`);
-            return path;
-        }
-
-        // Projects data - Load from JSON file
-        let projects = [];
-        let projectsData = null;
-        let currentProject = null;
-
-        // Fetch projects data from JSON file
-        async function loadProjectsData() {
-            try {
-                console.log('📡 Fetching arduino-data.json...');
-                const response = await fetch('arduino-data.json');
-                console.log('📡 Response status:', response.status, response.statusText);
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to load projects data: ${response.status} ${response.statusText}`);
-                }
-                
-                projectsData = await response.json();
-                console.log('📦 JSON parsed successfully:', projectsData);
-                
-                if (!projectsData || !projectsData.projects || !Array.isArray(projectsData.projects)) {
-                    throw new Error('Invalid JSON structure - missing projects array');
-                }
-                
-                projects = projectsData.projects;
-                console.log(`✅ Loaded ${projects.length} Arduino projects from JSON`);
-                
-                // Map category names from JSON to viewer format
-                projects = projects.map(p => {
-                    let oldCategory = p.category;
-                    if (oldCategory === 'led-basics') oldCategory = 'led';
-                    else if (oldCategory === 'sensors-actuators') oldCategory = 'sensors';
-                    else if (oldCategory === 'display-input') oldCategory = 'display';
-                    else if (oldCategory === 'advanced-projects') oldCategory = 'advanced';
-                    return {...p, category: oldCategory};
-                });
-                
-                console.log(`🔄 Projects mapped, still ${projects.length} projects`);
-                
-                // NOW select the current project after data is loaded
-                selectCurrentProject();
-                
-                return projects;
-            } catch (error) {
-                console.error('❌ Error loading projects data:', error);
-                console.error('❌ Error details:', error.message);
-                projects = [];
-                
-                // Show error to user
-                document.body.innerHTML = `
-                    <div style="text-align:center;padding:100px;color:white;background:#1a0000;">
-                        <h1 style="color:#ff4444;">⚠️ Failed to Load Arduino Projects</h1>
-                        <p style="font-size:1.2rem;margin:20px 0;">Could not load project data.</p>
-                        <p style="color:#ff8888;margin:10px 0;">Error: ${error.message}</p>
-                        <p style="margin-top:40px;">
-                            <a href="arduino-projects.html" style="color:#8b0000;text-decoration:underline;">← Go Back to Projects List</a>
-                        </p>
-                    </div>
-                `;
-                
-                return projects;
-            }
-        }
-
-        // Get current project from URL (support ?id=, ?project=, and ?category=)
-        function selectCurrentProject() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            console.log('📋 Total projects loaded:', projects.length);
-            console.log('🔍 First few project IDs:', projects.slice(0, 5).map(p => `${p.id} (${p.title})`));
-            
-            // Try category-based parameter (from category cards)
-            const categoryFilter = urlParams.get('category');
-            if (categoryFilter) {
-                const categoryProjects = projects.filter(p => p.category === categoryFilter);
-                if (categoryProjects.length > 0) {
-                    currentProject = categoryProjects[0]; // Select first project in category
-                    console.log('✅ Category filter:', categoryFilter, '→ Found', categoryProjects.length, 'projects');
-                    console.log('✅ Selected project:', currentProject.title);
-                    return;
-                }
-            }
-            
-            // Try folder-based parameter (newer method)
-            const projectFolder = urlParams.get('project');
-            if (projectFolder) {
-                currentProject = projects.find(p => p.folder === decodeURIComponent(projectFolder));
-                if (currentProject) {
-                    console.log('✅ Found by folder:', projectFolder, '→', currentProject.title);
-                    return;
-                }
-            }
-            
-            // Fallback to ID-based parameter (legacy support)
-            const projectId = parseInt(urlParams.get('id')) || 1;
-            console.log('🔍 Searching for project with ID:', projectId, '(type:', typeof projectId + ')');
-            currentProject = projects.find(p => {
-                console.log(`  Checking project ${p.id} (type: ${typeof p.id})`);
-                return p.id === projectId;
-            });
-            
-            if (currentProject) {
-                console.log('✅ Found by ID:', projectId, '→', currentProject.title);
-                return;
-            }
-            
-            // Final fallback to first project
-            if (projects.length > 0) {
-                currentProject = projects[0];
-                console.warn('⚠️ No valid project found, defaulting to first project:', currentProject.title);
-            } else {
-                console.error('❌ No projects available!');
-            }
-        }
-
-        // Load project data
-        function loadProject() {
-            if (!currentProject) {
-                console.error('❌ No project selected! Cannot load project data.');
-                document.body.innerHTML = '<div style="text-align:center;padding:100px;color:white;"><h1>Error: No project found</h1><p>Please check the URL or go back to <a href="arduino-projects.html">Arduino Projects</a></p></div>';
-                return;
-            }
-            
-            console.log('📂 Loading project:', currentProject.title);
-            console.log('📁 Folder path:', currentProject.folder);
-            console.log('📄 Code file:', currentProject.codeFile);
-            
-            // Update UI
-            document.getElementById('projectNumber').textContent = `Project ${String(currentProject.id).padStart(2, '0')}`;
-            document.getElementById('projectTitle').textContent = currentProject.title;
-            document.getElementById('projectSubtitle').textContent = currentProject.subtitle;
-            document.getElementById('navTitle').textContent = currentProject.title;
-            
-            // Update components
-            const componentsList = document.getElementById('componentsList');
-            componentsList.innerHTML = currentProject.components.map(comp => 
-                `<li class="component-item"><i class="fas fa-check-circle"></i> ${comp}</li>`
-            ).join('');
-            
-            // Update Tinkercad link from project data
-            const tinkercadLink = document.getElementById('tinkercadLink');
-            if (currentProject.tinkercad && currentProject.tinkercad !== '#') {
-                tinkercadLink.href = currentProject.tinkercad;
-                tinkercadLink.target = '_blank';
-                tinkercadLink.rel = 'noopener noreferrer';
-                tinkercadLink.style.opacity = '1';
-                tinkercadLink.style.pointerEvents = 'auto';
-                tinkercadLink.style.background = 'linear-gradient(135deg, var(--primary-red), var(--primary-red-dark))';
-            } else {
-                tinkercadLink.href = '#';
-                tinkercadLink.style.opacity = '0.4';
-                tinkercadLink.style.pointerEvents = 'none';
-                tinkercadLink.style.background = 'rgba(139, 0, 0, 0.2)';
-            }
-            
-            loadCircuitImage();
-            updateNavigation();
-            
-            // Update navigation buttons (for new navbar controls)
-            setTimeout(() => updateNavigationButtons(), 100);
-        }
-
-        // Load circuit image with multiple format support
-        function loadCircuitImage() {
-            const container = document.getElementById('circuitImageContainer');
-            
-            // Show loading state
-            container.innerHTML = `
-                <div style="text-align:center;padding:40px;">
-                    <i class="fas fa-spinner fa-spin" style="font-size:2.5rem;color:var(--border-primary);margin-bottom:15px;display:block;"></i>
-                    <p style="color:var(--text-secondary);">Loading circuit diagram...</p>
-                </div>
-            `;
-            
-            // Generate possible circuit image paths
-            const imageNames = [
-                'circuit.png',
-                'Circuit.png', 
-                'CIRCUIT.png',
-                'circuit.jpg',
-                'Circuit.jpg',
-                'circuit-diagram.png', 
-                'Circuit-diagram.png',
-                'Circuit Diagram.png',
-                'schematic.png',
-                'Schematic.png',
-                'diagram.png',
-                'Diagram.png',
-                'breadboard.png',
-                'Breadboard.png'
-            ];
-            
-            const allPaths = imageNames.map(name => ({
-                name: name,
-                path: buildFilePath(currentProject.folder, name)
-            }));
-            
-            let currentIndex = 0;
-            let foundImages = [];
-            
-            function tryNextImage() {
-                if (currentIndex >= allPaths.length) {
-                    // Check if any images were found
-                    if (foundImages.length > 0) {
-                        displayImageWithSelector(foundImages);
-                    } else {
-                        // No image found, show placeholder
-                        container.innerHTML = `
-                            <div id="circuitPlaceholder" style="text-align:center;padding:60px 20px;background:rgba(0,0,0,0.3);border:2px dashed var(--border-primary);border-radius:12px;">
-                                <i class="fas fa-image" style="font-size:3rem;color:var(--border-primary);margin-bottom:15px;display:block;"></i>
-                                <p style="color:var(--text-secondary);margin-bottom:10px;">Circuit diagram not available</p>
-                                <p style="color:var(--text-secondary);font-size:0.85rem;opacity:0.7;">View this project on Tinkercad to see the circuit</p>
-                            </div>
-                        `;
-                    }
-                    return;
-                }
-                
-                const testImage = new Image();
-                const currentPath = allPaths[currentIndex];
-                
-                testImage.onload = function() {
-                    // Image loaded successfully
-                    foundImages.push(currentPath);
-                    console.log(`✅ Found circuit image: ${currentPath.name}`);
-                    currentIndex++;
-                    tryNextImage();
-                };
-                
-                testImage.onerror = function() {
-                    // Try next path
-                    currentIndex++;
-                    tryNextImage();
-                };
-                
-                testImage.src = currentPath.path;
-            }
-            
-            function displayImageWithSelector(images) {
-                if (images.length === 1) {
-                    // Single image - display directly
-                    container.innerHTML = `<img src="${images[0].path}" alt="Circuit Diagram" class="circuit-image" style="width:100%;border-radius:12px;border:2px solid var(--border-primary);">`;
-                } else {
-                    // Multiple images - show selector
-                    let html = `
-                        <div style="margin-bottom:15px;padding:12px;background:rgba(26,0,0,0.7);border:2px solid var(--border-primary);border-radius:10px;display:flex;align-items:center;gap:12px;">
-                            <i class="fas fa-images" style="color:var(--primary-red);font-size:1.1rem;"></i>
-                            <label style="color:var(--text-primary);font-weight:700;font-size:0.9rem;">${images.length} Images:</label>
-                            <select id="imageSelector" style="flex:1;padding:8px 12px;background:rgba(10,10,10,0.95);border:2px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-weight:600;cursor:pointer;">
-                    `;
-                    images.forEach((img, idx) => {
-                        html += `<option value="${idx}">${img.name}</option>`;
-                    });
-                    html += `
-                            </select>
-                        </div>
-                        <img id="circuitImg" src="${images[0].path}" alt="Circuit Diagram" class="circuit-image" style="width:100%;border-radius:12px;border:2px solid var(--border-primary);">
-                    `;
-                    container.innerHTML = html;
-                    
-                    // Add change listener
-                    document.getElementById('imageSelector').addEventListener('change', (e) => {
-                        document.getElementById('circuitImg').src = images[e.target.value].path;
-                    });
-                }
-            }
-            
-            // Start trying images
-            tryNextImage();
-        }
-
-        // Update navigation arrows (bottom prev/next)
-        function updateNavigation() {
-            const navArrows = document.getElementById('navArrows');
-            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-            const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
-            const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
-            
-            let html = '';
-            
-            if (prevProject) {
-                html += `
-                    <a href="?id=${prevProject.id}" class="nav-arrow prev" id="prevProjectLink">
-                        <div>
-                            <i class="fas fa-arrow-left nav-arrow-icon"></i>
-                        </div>
-                        <div>
-                            <div class="nav-arrow-text">Previous</div>
-                            <div class="nav-arrow-title">${prevProject.title}</div>
-                        </div>
-                    </a>
-                `;
-            } else {
-                html += '<div></div>';
-            }
-            
-            if (nextProject) {
-                html += `
-                    <a href="?id=${nextProject.id}" class="nav-arrow next" id="nextProjectLink">
-                        <div style="text-align: right;">
-                            <div class="nav-arrow-text">Next</div>
-                            <div class="nav-arrow-title">${nextProject.title}</div>
-                        </div>
-                        <div>
-                            <i class="fas fa-arrow-right nav-arrow-icon"></i>
-                        </div>
-                    </a>
-                `;
-            }
-            
-            navArrows.innerHTML = html;
-            console.log('🧭 Navigation updated: Prev =', prevProject?.title, '| Next =', nextProject?.title);
-        }
-
-        // Keyboard Navigation Setup
-        function setupKeyboardNavigation() {
-            document.addEventListener('keydown', (e) => {
-                // Ignore if user is typing in input/textarea
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
-                
-                // Don't trigger in fullscreen mode
-                const docSection = document.getElementById('documentationSection');
-                if (docSection && docSection.classList.contains('fullscreen')) {
-                    return;
-                }
-                
-                const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-                const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
-                const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
-                
-                // Left Arrow or 'P' key - Previous project
-                if ((e.key === 'ArrowLeft' || e.key === 'p' || e.key === 'P') && prevProject) {
-                    e.preventDefault();
-                    console.log('⬅️ Navigating to previous:', prevProject.title);
-                    window.location.href = `?id=${prevProject.id}`;
-                }
-                
-                // Right Arrow - Next project
-                if (e.key === 'ArrowRight' && nextProject) {
-                    e.preventDefault();
-                    console.log('➡️ Navigating to next:', nextProject.title);
-                    window.location.href = `?id=${nextProject.id}`;
-                }
-                
-                // Home key - First project
-                if (e.key === 'Home') {
-                    e.preventDefault();
-                    console.log('🏠 Navigating to first project');
-                    window.location.href = `?id=1`;
-                }
-                
-                // End key - Last project
-                if (e.key === 'End') {
-                    e.preventDefault();
-                    console.log('🏁 Navigating to last project');
-                    window.location.href = `?id=${projects.length}`;
-                }
-                
-                // Show keyboard shortcuts hint (? key)
-                if (e.key === '?' && !e.shiftKey) {
-                    showKeyboardShortcuts();
-                }
-            });
-            
-            // Show keyboard hint on first load
-            setTimeout(() => {
-                showKeyboardHint();
-            }, 2000);
-        }
-
-        // Show keyboard shortcuts modal
-        function showKeyboardShortcuts() {
-            const existing = document.getElementById('keyboardShortcutsModal');
-            if (existing) {
-                existing.remove();
-                return;
-            }
-            
-            const modal = document.createElement('div');
-            modal.id = 'keyboardShortcutsModal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(10, 10, 10, 0.98);
-                border: 2px solid var(--primary-red);
-                border-radius: 15px;
-                padding: 30px;
-                z-index: 10000;
-                max-width: 500px;
-                width: 90%;
-                box-shadow: 0 10px 50px rgba(139, 0, 0, 0.5);
-            `;
-            
-            modal.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="color: var(--primary-red); margin: 0; font-size: 1.5rem;">
-                        <i class="fas fa-keyboard"></i> Keyboard Shortcuts
-                    </h3>
-                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer; padding: 5px 10px;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div style="display: grid; gap: 12px; color: var(--text-secondary);">
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(139, 0, 0, 0.1); border-radius: 8px;">
-                        <span><i class="fas fa-arrow-left" style="color: var(--primary-red);"></i> Left Arrow / P</span>
-                        <strong>Previous Project</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(139, 0, 0, 0.1); border-radius: 8px;">
-                        <span><i class="fas fa-arrow-right" style="color: var(--primary-red);"></i> Right Arrow / N</span>
-                        <strong>Next Project</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(139, 0, 0, 0.1); border-radius: 8px;">
-                        <span><i class="fas fa-home" style="color: var(--primary-red);"></i> Home</span>
-                        <strong>First Project</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(139, 0, 0, 0.1); border-radius: 8px;">
-                        <span><i class="fas fa-flag-checkered" style="color: var(--primary-red);"></i> End</span>
-                        <strong>Last Project</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(139, 0, 0, 0.1); border-radius: 8px;">
-                        <span><i class="fas fa-question-circle" style="color: var(--primary-red);"></i> ?</span>
-                        <strong>Show This Help</strong>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Close on backdrop click
-            setTimeout(() => {
-                document.addEventListener('click', function closeModal(e) {
-                    if (!modal.contains(e.target)) {
-                        modal.remove();
-                        document.removeEventListener('click', closeModal);
-                    }
-                });
-            }, 100);
-        }
-
-        // Toast notification helper
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            const borderColor = type === 'success' ? 'rgba(0, 200, 0, 0.4)' : 'rgba(200, 0, 0, 0.4)';
-            const bg = type === 'success' ? 'linear-gradient(135deg, #1a4a1a, #0d2d0d)' : 'linear-gradient(135deg, #4a1a1a, #2d0d0d)';
-            toast.style.cssText = `
-                position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-                background: ${bg}; color: white; padding: 12px 24px;
-                border-radius: 25px; font-size: 0.9rem; font-weight: 600; z-index: 10000;
-                border: 1px solid ${borderColor}; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-                animation: bounceIn 0.4s ease-out; pointer-events: none;
-            `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.4s ease-out';
-                setTimeout(() => toast.remove(), 400);
-            }, 2000);
-        }
-
-        // Show keyboard hint badge
-        function showKeyboardHint() {
-            const hint = document.createElement('div');
-            hint.id = 'keyboardHint';
-            hint.style.cssText = `
-                position: fixed;
-                bottom: 90px;
-                right: 30px;
-                background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-                color: white;
-                padding: 12px 18px;
-                border-radius: 25px;
-                font-size: 0.85rem;
-                font-weight: 700;
-                z-index: 998;
-                cursor: pointer;
-                box-shadow: 0 4px 20px rgba(139, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease-out;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            `;
-            
-            hint.innerHTML = `
-                <i class="fas fa-keyboard"></i>
-                Press <strong style="padding: 2px 6px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 0 4px;">?</strong> for shortcuts
-            `;
-            
-            hint.onclick = () => showKeyboardShortcuts();
-            
-            document.body.appendChild(hint);
-            
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                hint.style.animation = 'fadeOut 0.5s ease-out';
-                setTimeout(() => hint.remove(), 500);
-            }, 5000);
-        }
-
-        function setupEventListeners() {
-            // Download circuit diagram
-            const downloadCircuitBtn = document.getElementById('downloadCircuitBtn');
-            if (downloadCircuitBtn) {
-                downloadCircuitBtn.addEventListener('click', () => {
-                    const circuitImg = document.querySelector('#circuitImageContainer img');
-                    if (circuitImg) {
-                        const a = document.createElement('a');
-                        a.href = circuitImg.src;
-                        a.download = `${currentProject.folder}_Circuit_Diagram.png`;
-                        a.click();
-                    } else {
-                        alert('Circuit diagram not loaded yet!');
-                    }
-                });
-            }
-
-            // Download code (fetch directly from project folder)
-            const downloadBtn = document.getElementById('downloadBtn');
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', async () => {
-                    const names = [currentProject.codeFile, 'Arduino C++ code.ino', `${currentProject.folder}.ino`];
-                    for (const name of names) {
-                        if (!name || name === '#') continue;
-                        try {
-                            const resp = await fetch(buildFilePath(currentProject.folder, name));
-                            if (resp.ok) {
-                                const code = await resp.text();
-                                const blob = new Blob([code], { type: 'text/plain' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url; a.download = name; a.click();
-                                URL.revokeObjectURL(url);
-                                return;
-                            }
-                        } catch (e) {}
-                    }
-                    showToast('Code file not found!', 'error');
-                });
-            }
-            
-            // Keyboard Navigation (arrow keys)
-            document.addEventListener('keydown', (e) => {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-                if (e.key === 'ArrowLeft' && currentIndex > 0) {
-                    e.preventDefault();
-                    window.location.href = `?id=${projects[currentIndex - 1].id}`;
-                }
-                if (e.key === 'ArrowRight' && currentIndex < projects.length - 1) {
-                    e.preventDefault();
-                    window.location.href = `?id=${projects[currentIndex + 1].id}`;
-                }
-            });
-        }
-
-        async function initViewer() {
-            await loadProjectsData();
-            try { loadProject(); } catch(e) { console.error('loadProject error:', e); }
-            try { setupEventListeners(); } catch(e) { console.error('setupEventListeners error:', e); }
-            updateNavigationButtons();
-            setupKeyboardNavigation();
-        }
-
-        // Open documentation reader page
-        function openDocViewer() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id') || '1';
-            window.location.href = `arduino-doc-reader.html?id=${encodeURIComponent(id)}`;
-        }
-
-        // Keyboard accessibility for doc card
-        document.addEventListener('DOMContentLoaded', () => {
-            const card = document.getElementById('docEntryCard');
-            if (card) {
-                card.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDocViewer(); }
-                });
-            }
-        });
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initViewer);
+    /* ── Back Navigation ─────────────────────────────────── */
+    function goBack(e){
+        e.preventDefault();
+        if(document.referrer && document.referrer.includes('arduino-projects')){
+            history.back();
         } else {
-            initViewer();
+            window.location.href='arduino-projects.html';
         }
+    }
 
-        function updateNavigationButtons() {
-            const prevBtn = document.getElementById('prevProjectBtn');
-            const nextBtn = document.getElementById('nextProjectBtn');
-            const currentNumSpan = document.getElementById('currentProjectNum');
-            const totalSpan = document.getElementById('totalProjects');
-            
-            if (!currentProject) return;
-            
-            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-            
-            // Update counter
-            if (currentNumSpan) currentNumSpan.textContent = currentIndex + 1;
-            if (totalSpan) totalSpan.textContent = projects.length;
-            
-            // Update button states
-            if (prevBtn) {
-                prevBtn.disabled = currentIndex === 0;
-                prevBtn.onclick = () => {
-                    if (currentIndex > 0) {
-                        const prevProject = projects[currentIndex - 1];
-                        console.log('⬅️ Button: Navigating to', prevProject.title);
-                        window.location.href = `?id=${prevProject.id}`;
-                    }
-                };
-            }
-            
-            if (nextBtn) {
-                nextBtn.disabled = currentIndex === projects.length - 1;
-                nextBtn.onclick = () => {
-                    if (currentIndex < projects.length - 1) {
-                        const nextProject = projects[currentIndex + 1];
-                        console.log('➡️ Button: Navigating to', nextProject.title);
-                        window.location.href = `?id=${nextProject.id}`;
-                    }
-                };
-            }
+    /* ── State ─────────────────────────────────── */
+    const BASE = ['..','..','Projects Storage','Arduino UNO Projects with Tinkercad']
+        .map(s => encodeURIComponent(s)).join('/') + '/';
+    let projects = [], cur = null, ytPlayer = null, ytApiReady = false, ytPending = null;
+    let isMuted = true, progTimer = null, stmtOpen = false;
+
+    /* ── Helpers ─────────────────────────────────── */
+    function fp(folder, file) { return BASE + encodeURIComponent(folder) + '/' + encodeURIComponent(file); }
+    function fmtT(s) { s = Math.max(0,Math.floor(s||0)); return Math.floor(s/60)+':'+(s%60+'').padStart(2,'0'); }
+    function catName(c) { return {led:'LED Basics','led-basics':'LED Basics',sensors:'Sensors & Actuators','sensors-actuators':'Sensors & Actuators',display:'Display & Input','display-input':'Display & Input',advanced:'Advanced','advanced-projects':'Advanced'}[c] || c; }
+    function diffClass(d) { return d==='Advanced'?'adv':d==='Intermediate'?'mid':''; }
+
+    function toast(msg, type) {
+        var t=document.createElement('div');
+        var bg=type==='error'?'linear-gradient(135deg,#4a1a1a,#2d0d0d)':'linear-gradient(135deg,#1a3a1a,#0d250d)';
+        t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:'+bg+';color:#fff;padding:11px 22px;border-radius:22px;font-size:0.88rem;font-weight:600;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,0.5);pointer-events:none;';
+        t.textContent=msg; document.body.appendChild(t);
+        setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(function(){ t.remove(); },400); },2400);
+    }
+
+    /* ── Data Loading ─────────────────────────────────── */
+    async function loadData() {
+        try {
+            const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
+            var r;
+            try { r = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!r.ok) throw new Error(''); }
+            catch(e) { r = await fetch('arduino-data.json'); }
+            if (!r.ok) throw new Error('HTTP '+r.status);
+            var d = await r.json();
+            if (!d || !d.projects || !d.projects.length) throw new Error('Invalid JSON');
+            var cmap = {'led-basics':'led','sensors-actuators':'sensors','display-input':'display','advanced-projects':'advanced'};
+            projects = d.projects.map(function(p){ return Object.assign({},p,{category:cmap[p.category]||p.category}); });
+            selectProject();
+        } catch(e) {
+            document.body.innerHTML='<div style="text-align:center;padding:100px;color:#fff;"><h2 style="color:#f44">Failed to load projects</h2><p>'+e.message+'</p><a href="arduino-projects.html" style="color:#8b0000;">Back</a></div>';
         }
+    }
 
-        function navigateToProject(direction) {
-            const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-            let newIndex;
-            
-            if (direction === 'prev') {
-                newIndex = currentIndex - 1;
-                if (newIndex < 0) return; // Already at first project
-            } else if (direction === 'next') {
-                newIndex = currentIndex + 1;
-                if (newIndex >= projects.length) return; // Already at last project
+    function selectProject() {
+        var p = new URLSearchParams(window.location.search);
+        var id = parseInt(p.get('id'))||1, folder = p.get('project'), cat = p.get('category');
+        if (cat) cur = projects.find(function(x){ return x.category===cat; }) || projects[0];
+        else if (folder) cur = projects.find(function(x){ return x.folder===decodeURIComponent(folder); }) || projects[0];
+        else cur = projects.find(function(x){ return x.id===id; }) || projects[0];
+    }
+
+    /* ── UI Population ─────────────────────────────────── */
+    function loadProject() {
+        if (!cur) return;
+        document.title = cur.title + ' - Arduino Projects';
+        document.getElementById('hdrTitle').textContent = cur.title;
+        var idx = projects.findIndex(function(p){ return p.id===cur.id; });
+        document.getElementById('projCounter').textContent = (idx+1)+' / '+projects.length;
+        document.getElementById('projNum').textContent = (cur.id+'').padStart(2,'0');
+        document.getElementById('heroTitle').textContent = cur.title;
+        document.getElementById('catChip').textContent = catName(cur.category);
+        var diff = cur.difficulty || 'Beginner';
+        var dc = document.getElementById('diffChip');
+        dc.textContent = diff; dc.className = 'chip chip-diff ' + diffClass(diff);
+
+        /* Statement */
+        var stmt = cur.project_statement || cur.subtitle || cur.description || '';
+        var el = document.getElementById('stmtText');
+        el.textContent = stmt;
+        setTimeout(function(){
+            if (el.scrollHeight > el.clientHeight + 4) {
+                document.getElementById('stmtBtn').style.display = 'flex';
             }
-            
-            const newProject = projects[newIndex];
-            
-            // Use ID-based URL for consistency
-            console.log('🔄 Navigating to:', newProject.title);
-            window.location.href = `?id=${newProject.id}`;
+        }, 80);
+
+        /* Components */
+        var comps = cur.components||[];
+        document.getElementById('compList').innerHTML = comps.map(function(c){
+            return '<li class="comp-item"><span class="comp-item-dot"></span>' + c + '</li>';
+        }).join('');
+        var cc = document.getElementById('compCount');
+        if(cc) cc.textContent = comps.length ? comps.length + ' items' : '\u2014';
+
+        /* Tinkercad */
+        var tc = document.getElementById('tcLink');
+        if (cur.tinkercad && cur.tinkercad !== '#') {
+            tc.dataset.url = cur.tinkercad; tc.style.opacity='1'; tc.style.pointerEvents='auto';
+        } else { tc.dataset.url=''; tc.style.opacity='0.3'; tc.style.pointerEvents='none'; }
+
+        updateNav();
+        setupMedia();
+    }
+
+    /* ── Header/Arrow Nav ─────────────────────────────────── */
+    function updateNav() {
+        var idx = projects.findIndex(function(p){ return p.id===cur.id; });
+        var prev = idx>0?projects[idx-1]:null, next = idx<projects.length-1?projects[idx+1]:null;
+        var pb=document.getElementById('hdrPrev'), nb=document.getElementById('hdrNext');
+        pb.disabled=!prev; nb.disabled=!next;
+        pb.onclick=function(){ if(prev) goto(prev.id); };
+        nb.onclick=function(){ if(next) goto(next.id); };
+
+        var na=document.getElementById('navArrows');
+        na.innerHTML =
+            (prev?'<a href="?id='+prev.id+'" class="nav-arrow prev"><i class="fas fa-arrow-left na-i"></i><div><span class="na-label">Previous</span><span class="na-title">'+escH(prev.title)+'</span></div></a>':'<div></div>') +
+            (next?'<a href="?id='+next.id+'" class="nav-arrow next"><div style="text-align:right"><span class="na-label">Next</span><span class="na-title">'+escH(next.title)+'</span></div><i class="fas fa-arrow-right na-i"></i></a>':'');
+    }
+    function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function goto(id){ window.location.href='?id='+id; }
+
+    /* ── Media ─────────────────────────────────── */
+    function setupMedia() {
+        var hasVid = cur.youtube_id && cur.youtube_id.trim();
+        if (hasVid) {
+            document.getElementById('vcBar').style.display='flex';
+            initYT(cur.youtube_id.trim());
+        } else {
+            document.getElementById('vcBar').style.display='none';
+            loadCircuit();
         }
+    }
 
-        /* ============================================
-        function updateProgressBar() {
-            const progressBar = document.getElementById('readingProgress');
-            if (!progressBar) return;
-
-            const windowHeight = window.innerHeight;
-            const documentHeight = document.documentElement.scrollHeight;
-            const scrollTop = window.scrollY;
-
-            const scrollableHeight = documentHeight - windowHeight;
-            const scrollPercentage = (scrollTop / scrollableHeight) * 100;
-
-            progressBar.style.width = Math.min(scrollPercentage, 100) + '%';
-        }
-
-        /* ============================================
-           ZOOM CONTROLS FOR DOCUMENTATION
-           ============================================ */
-        let zoomLevel = 100;
-        const zoomMin = 60;
-        const zoomMax = 150;
-        const zoomStep = 10;
-
-        // Load saved zoom level from localStorage
-        const savedZoom = localStorage.getItem('docZoomLevel');
-        if (savedZoom) {
-            zoomLevel = parseInt(savedZoom);
-        }
-
-        function updateZoom(newLevel) {
-            zoomLevel = Math.max(zoomMin, Math.min(zoomMax, newLevel));
-            
-            // Apply zoom to all markdown content
-            document.querySelectorAll('.markdown-content').forEach(content => {
-                content.style.fontSize = `${zoomLevel}%`;
-            });
-
-            // Update display
-            const zoomLevelDisplay = document.getElementById('zoomLevel');
-            if (zoomLevelDisplay) {
-                zoomLevelDisplay.textContent = `${zoomLevel}%`;
-            }
-
-            // Update button states
-            const zoomInBtn = document.getElementById('zoomInBtn');
-            const zoomOutBtn = document.getElementById('zoomOutBtn');
-            
-            if (zoomInBtn) {
-                zoomInBtn.disabled = (zoomLevel >= zoomMax);
-                zoomInBtn.style.opacity = (zoomLevel >= zoomMax) ? '0.5' : '1';
-                zoomInBtn.style.cursor = (zoomLevel >= zoomMax) ? 'not-allowed' : 'pointer';
-            }
-            
-            if (zoomOutBtn) {
-                zoomOutBtn.disabled = (zoomLevel <= zoomMin);
-                zoomOutBtn.style.opacity = (zoomLevel <= zoomMin) ? '0.5' : '1';
-                zoomOutBtn.style.cursor = (zoomLevel <= zoomMin) ? 'not-allowed' : 'pointer';
-            }
-
-            // Save to localStorage
-            localStorage.setItem('docZoomLevel', zoomLevel.toString());
-
-            console.log(`🔍 Zoom level: ${zoomLevel}%`);
-        }
-
-        // Initialize zoom level on page load
-        updateZoom(zoomLevel);
-
-        // Zoom In Button
-        document.getElementById('zoomInBtn')?.addEventListener('click', () => {
-            updateZoom(zoomLevel + zoomStep);
+    /* ── YouTube ─────────────────────────────────── */
+    function onYouTubeIframeAPIReady() {
+        ytApiReady = true;
+        if (ytPending) { createYT(ytPending); ytPending=null; }
+    }
+    function initYT(vid) {
+        var mc=document.getElementById('mediaCont');
+        mc.className='media-container'; mc.style.aspectRatio='16/9';
+        mc.innerHTML='<div id="ytDiv" style="width:100%;height:100%;"></div>';
+        if (ytApiReady) { createYT(vid); }
+        else { ytPending=vid; if(typeof YT!=='undefined'&&YT.loaded){ createYT(vid); ytPending=null; } }
+    }
+    function createYT(vid) {
+        if (ytPlayer) { try{ ytPlayer.destroy(); }catch(e){} ytPlayer=null; }
+        ytPlayer = new YT.Player('ytDiv', {
+            videoId: vid,
+            playerVars: { autoplay:1, mute:1, loop:1, playlist:vid, controls:0, rel:0, modestbranding:1, playsinline:1, enablejsapi:1, iv_load_policy:3, origin:window.location.origin },
+            events: { onReady:onYTReady, onStateChange:onYTState }
         });
+    }
+    function onYTReady(e) {
+        if (!e || !e.target) return;
+        e.target.playVideo();
+        var hint=document.getElementById('vcUnmute');
+        if(hint){ hint.style.display='flex'; setTimeout(function(){ hint.style.display='none'; },4200); }
+        startProg();
+    }
+    function onYTState(e) {
+        var ic=document.getElementById('vcPlay').querySelector('i');
+        if(e.data===YT.PlayerState.PLAYING){ ic.className='fas fa-pause'; startProg(); }
+        else if(e.data===YT.PlayerState.PAUSED){ ic.className='fas fa-play'; stopProg(); }
+        else if(e.data===YT.PlayerState.ENDED){ try{ e.target.playVideo(); }catch(err){} }
+    }
+    function startProg() { if(progTimer)clearInterval(progTimer); progTimer=setInterval(updProg,500); }
+    function stopProg() { if(progTimer){clearInterval(progTimer);progTimer=null;} }
+    function updProg() {
+        if(!ytPlayer||typeof ytPlayer.getCurrentTime!=='function')return;
+        try{
+            var c=ytPlayer.getCurrentTime()||0, t=ytPlayer.getDuration()||0;
+            if(t>0){ var p=(c/t)*100; document.getElementById('vcFill').style.width=p+'%'; document.getElementById('vcThumb').style.left=p+'%'; document.getElementById('vcTime').textContent=fmtT(c)+' / '+fmtT(t); }
+        }catch(e){}
+    }
+    function togglePlay() { if(!ytPlayer)return; try{ ytPlayer.getPlayerState()===YT.PlayerState.PLAYING?ytPlayer.pauseVideo():ytPlayer.playVideo(); }catch(e){} }
+    function toggleMute() {
+        if(!ytPlayer)return;
+        try{
+            if(isMuted){ ytPlayer.unMute(); ytPlayer.setVolume(parseInt(document.getElementById('vcVol').value)||100); isMuted=false; document.getElementById('vcMute').innerHTML='<i class="fas fa-volume-up"></i>'; document.getElementById('vcUnmute').style.display='none'; }
+            else{ ytPlayer.mute(); isMuted=true; document.getElementById('vcMute').innerHTML='<i class="fas fa-volume-mute"></i>'; }
+        }catch(e){}
+    }
+    function unmute(){ if(isMuted)toggleMute(); }
+    function toggleFS(){ var mc=document.getElementById('mediaCont'); document.fullscreenElement?document.exitFullscreen():mc.requestFullscreen&&mc.requestFullscreen(); }
 
-        // Zoom Out Button
-        document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
-            updateZoom(zoomLevel - zoomStep);
+    /* ── Circuit Image ─────────────────────────────────── */
+    function loadCircuit() {
+        var mc=document.getElementById('mediaCont');
+        mc.className='media-container image-mode'; mc.style.aspectRatio='unset';
+        mc.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--border-primary);"></i></div>';
+        var names=['circuit.png','Circuit.png','CIRCUIT.png','circuit.jpg','Circuit.jpg','circuit-diagram.png','Circuit-diagram.png','Circuit Diagram.png','schematic.png','Schematic.png','diagram.png','Diagram.png','breadboard.png','Breadboard.png'];
+        var i=0, found=[];
+        function tryNext(){
+            if(i>=names.length){ found.length?showImgs(found):mc.innerHTML='<div class="media-placeholder"><i class="fas fa-image"></i><p>No circuit diagram</p></div>'; return; }
+            var img=new Image(), path=fp(cur.folder,names[i]);
+            img.onload=function(){ found.push({name:names[i],path:path}); i++; tryNext(); };
+            img.onerror=function(){ i++; tryNext(); };
+            img.src=path;
+        }
+        function showImgs(imgs){
+            if(imgs.length===1){ mc.innerHTML='<img src="'+imgs[0].path+'" alt="Circuit Diagram" style="width:100%;max-height:620px;object-fit:contain;border-radius:10px;">'; return; }
+            var html='<div style="padding:10px 14px;background:rgba(26,0,0,0.8);border-bottom:2px solid var(--border-primary);display:flex;align-items:center;gap:10px;"><i class="fas fa-images" style="color:var(--primary-red);"></i><select id="imgSel" style="flex:1;padding:6px 10px;background:rgba(10,10,10,0.95);border:2px solid var(--border-primary);border-radius:6px;color:#fff;cursor:pointer;">';
+            imgs.forEach(function(im,idx){ html+='<option value="'+idx+'">'+im.name+'</option>'; });
+            html+='</select></div><img id="cImg" src="'+imgs[0].path+'" alt="Circuit" style="width:100%;max-height:560px;object-fit:contain;">';
+            mc.innerHTML=html;
+            document.getElementById('imgSel').addEventListener('change',function(e){ document.getElementById('cImg').src=imgs[e.target.value].path; });
+        }
+        tryNext();
+    }
+
+    /* ── Statement Expand ─────────────────────────────────── */
+    function toggleStmt(){
+        stmtOpen=!stmtOpen;
+        var el=document.getElementById('stmtText'), btn=document.getElementById('stmtBtn');
+        stmtOpen?(el.classList.remove('clamp'),btn.innerHTML='<i class="fas fa-chevron-up"></i> Show less'):(el.classList.add('clamp'),btn.innerHTML='<i class="fas fa-chevron-down"></i> Read more');
+    }
+
+    /* ── Tinkercad ─────────────────────────────────── */
+    function openTinkercad(e){
+        e.preventDefault();
+        var url = document.getElementById('tcLink').dataset.url;
+        if(url) window.open(url,'_blank','noopener,noreferrer');
+    }
+
+    /* ── Doc Viewer ─────────────────────────────────── */
+    function openDocViewer(){
+        var id=new URLSearchParams(window.location.search).get('id')||'1';
+        window.location.href='arduino-doc-reader.html?id='+encodeURIComponent(id);
+    }
+
+    /* ── Downloads ─────────────────────────────────── */
+    async function dlCode(){
+        var names=[(cur.files||{}).code, cur.codeFile, cur.folder+'.ino'].filter(Boolean);
+        for(var n of names){ try{ var r=await fetch(fp(cur.folder,n)); if(r.ok){ var blob=await r.blob(); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=n; a.click(); URL.revokeObjectURL(a.href); toast('Code downloaded!'); return; } }catch(e){} }
+        toast('Code file not found!','error');
+    }
+    function dlCircuit(){
+        var img=document.querySelector('#mediaCont img')||document.querySelector('#cImg');
+        if(img){ var a=document.createElement('a'); a.href=img.src; a.download=cur.folder+'_Circuit.png'; a.click(); }
+        else toast('Circuit not available','error');
+    }
+
+    /* ── Progress Bar Events ─────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function(){
+        /* Seek */
+        var prog=document.getElementById('vcProg'), dragging=false;
+        if(prog){
+            prog.addEventListener('click',function(e){ seek(e); });
+            prog.addEventListener('mousedown',function(){ dragging=true; });
+            document.addEventListener('mousemove',function(e){ if(!dragging||!ytPlayer)return; var r=prog.getBoundingClientRect(); var f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); document.getElementById('vcFill').style.width=f*100+'%'; document.getElementById('vcThumb').style.left=f*100+'%'; });
+            document.addEventListener('mouseup',function(e){ if(!dragging)return; dragging=false; seek(e); });
+        }
+        function seek(e){ if(!ytPlayer)return; try{ var r=prog.getBoundingClientRect(); var f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); ytPlayer.seekTo(f*(ytPlayer.getDuration()||0),true); }catch(err){} }
+
+        /* Volume */
+        var vol=document.getElementById('vcVol');
+        if(vol){ vol.addEventListener('input',function(e){ if(!ytPlayer)return; try{ var v=parseInt(e.target.value); ytPlayer.setVolume(v); if(v===0){ isMuted=true; document.getElementById('vcMute').innerHTML='<i class="fas fa-volume-mute"></i>'; ytPlayer.mute(); }else if(isMuted){ isMuted=false; ytPlayer.unMute(); document.getElementById('vcMute').innerHTML='<i class="fas fa-volume-up"></i>'; document.getElementById('vcUnmute').style.display='none'; } }catch(err){} }); }
+
+        /* Doc card keyboard */
+        document.getElementById('docCard')&&document.getElementById('docCard').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDocViewer(); } });
+
+        /* Download buttons */
+        document.getElementById('dlCode')&&document.getElementById('dlCode').addEventListener('click',dlCode);
+        document.getElementById('dlCircuit')&&document.getElementById('dlCircuit').addEventListener('click',dlCircuit);
+
+        /* Scroll top */
+        window.addEventListener('scroll',function(){
+            var h=document.documentElement.scrollHeight-window.innerHeight;
+            document.getElementById('readProg').style.width=(h>0?(window.scrollY/h)*100:0)+'%';
+            var st=document.getElementById('scrollTop'); st&&(window.scrollY>300?st.classList.add('show'):st.classList.remove('show'));
         });
+    });
 
-        // Reset Zoom Button
-        document.getElementById('zoomResetBtn')?.addEventListener('click', () => {
-            updateZoom(100);
-        });
+    /* ── Keyboard Shortcuts ─────────────────────────────────── */
+    document.addEventListener('keydown',function(e){
+        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+        var idx=projects.findIndex(function(p){ return p.id===cur.id; });
+        switch(e.key){
+            case 'ArrowLeft': case 'p': case 'P': if(idx>0){e.preventDefault();goto(projects[idx-1].id);} break;
+            case 'ArrowRight': case 'n': case 'N': if(idx<projects.length-1){e.preventDefault();goto(projects[idx+1].id);} break;
+            case ' ': e.preventDefault(); togglePlay(); break;
+            case 'm': case 'M': e.preventDefault(); toggleMute(); break;
+            case 'f': case 'F': e.preventDefault(); toggleFS(); break;
+            case 'Home': e.preventDefault(); goto(projects[0].id); break;
+            case 'End': e.preventDefault(); goto(projects[projects.length-1].id); break;
+        }
+    });
 
-        // Keyboard shortcuts for zoom
-        document.addEventListener('keydown', (e) => {
-            // Check if Ctrl (or Cmd on Mac) is pressed
-            if (e.ctrlKey || e.metaKey) {
-                // Don't trigger when typing in input/textarea
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
-
-                // Zoom In: Ctrl + Plus or Ctrl + =
-                if (e.key === '+' || e.key === '=') {
-                    e.preventDefault();
-                    updateZoom(zoomLevel + zoomStep);
-                }
-                
-                // Zoom Out: Ctrl + Minus or Ctrl + -
-                if (e.key === '-' || e.key === '_') {
-                    e.preventDefault();
-                    updateZoom(zoomLevel - zoomStep);
-                }
-                
-                // Reset Zoom: Ctrl + 0
-                if (e.key === '0') {
-                    e.preventDefault();
-                    updateZoom(100);
-                }
-            }
-        });
-
-        // Scroll event listener for TOC and Progress Bar
-        window.addEventListener('scroll', () => { updateProgressBar(); });
-
-        // Initialize Progress Bar on page load
-        updateProgressBar();
+    /* ── Init ─────────────────────────────────── */
+    async function init(){
+        await loadData();
+        loadProject();
+    }
+    document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
     </script>
-    <!-- Universal PDF Viewer for Desktop Arduino Projects -->
-    <script src="../../mobile/shared/pdf-viewer.js"></script>
-  <script src="../../Optimization/fullscreen-init.js"></script>
-  <script src="../../Optimization/navbar-autohide.js"></script>
-    <!-- Neural Grid Cursor Effect -->
+
+    <script src="../../Optimization/fullscreen-init.js"></script>
+    <script src="../../Optimization/navbar-autohide.js"></script>
     <script src="../../Optimization/cursor-effects.js" defer></script>
 </body>
 </html>

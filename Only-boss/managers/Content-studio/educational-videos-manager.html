@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1215,6 +1215,9 @@
     #editRichCourseSummary blockquote { border-left:3px solid #CC0000; margin:8px 0; padding:6px 12px; background:rgba(204,0,0,0.08); color:rgba(255,255,255,0.7); font-style:italic; border-radius:0 4px 4px 0; }
     #editRichCourseSummary hr { border:none; border-top:1px solid rgba(204,0,0,0.4); margin:10px 0; }
   </style>
+    <!-- Shared Admin Navbar -->
+    <link rel="stylesheet" href="../../shared/only-boss-navbar.css">
+    <script src="../../shared/only-boss-navbar.js" defer></script>
 </head>
 <body>
   <!-- Neural Cursor -->
@@ -1271,7 +1274,6 @@
           <div class="tab-item" onclick="switchTab('upload')">📤 Upload Course</div>
           <div class="tab-item" onclick="switchTab('manage')">📋 Manage Courses</div>
           <div class="tab-item" onclick="switchTab('stats')">📈 Statistics</div>
-          <div class="tab-item" onclick="switchTab('json')">🔧 JSON Editor</div>
         </div>
       </div>
       <div class="quick-stats">
@@ -1383,6 +1385,11 @@
           <div class="form-group">
             <label>Course Title</label>
             <input type="text" id="title" placeholder="Complete Arduino Programming Course" required>
+          </div>
+
+          <div class="form-group">
+            <label>Course ID (Auto-generated)</label>
+            <input type="text" id="previewCourseId" readonly placeholder="Will be assigned on upload..." style="opacity:0.7;cursor:not-allowed;">
           </div>
 
           <div class="form-group">
@@ -1643,64 +1650,6 @@
         </div>
       </div>
 
-      <!-- JSON EDITOR TAB -->
-      <div id="jsonTab" class="tab-content">
-        <div class="content-header">
-          <h2>🔧 JSON Editor</h2>
-          <p>Directly edit the raw course data file — always Validate before saving.</p>
-        </div>
-
-        <!-- Guidance Panel -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
-          <div style="background:rgba(139,0,0,0.08); border:1px solid rgba(204,0,0,0.25); border-left:3px solid #CC0000; border-radius:8px; padding:14px;">
-            <div style="color:#CC0000; font-weight:700; font-size:13px; margin-bottom:8px;">📋 JSON Structure</div>
-            <pre style="color:rgba(255,255,255,0.55); font-size:11px; line-height:1.7; margin:0; font-family:Consolas,monospace; white-space:pre-wrap;">{
-  "categoryGroups": [ ... ],
-  "courses": [ ... ]
-}</pre>
-            <p style="color:rgba(255,255,255,0.35); font-size:11px; margin:8px 0 0;">দুটো top-level key থাকতে হবে।</p>
-          </div>
-
-          <div style="background:rgba(139,0,0,0.08); border:1px solid rgba(204,0,0,0.25); border-left:3px solid #8B0000; border-radius:8px; padding:14px;">
-            <div style="color:#CC0000; font-weight:700; font-size:13px; margin-bottom:8px;">🏷️ categoryGroups Format</div>
-            <pre style="color:rgba(255,255,255,0.55); font-size:11px; line-height:1.7; margin:0; font-family:Consolas,monospace; white-space:pre-wrap;">{
-  "name": "Engineering",
-  "icon": "⚙️",
-  "order": 1,
-  "categories": [
-    "Electrical Eng.",
-    "Robotics"
-  ]
-}</pre>
-            <p style="color:rgba(255,255,255,0.35); font-size:11px; margin:8px 0 0;">Sector edit করলে dropdown auto-update হবে।</p>
-          </div>
-
-          <div style="background:rgba(80,0,0,0.12); border:1px solid rgba(204,0,0,0.3); border-left:3px solid #f44336; border-radius:8px; padding:14px;">
-            <div style="color:#f44336; font-weight:700; font-size:13px; margin-bottom:8px;">⚠️ সতর্কতা</div>
-            <ul style="color:rgba(255,255,255,0.5); font-size:12px; line-height:2; margin:0; padding-left:16px;">
-              <li>Save করার আগে <strong style="color:#fff;">Validate</strong> চাপো</li>
-              <li>Comma বা bracket ভুল হলে <strong style="color:#f44336;">সব data নষ্ট</strong> হবে</li>
-              <li>Edit করার আগে JSON <strong style="color:#fff;">copy করে backup</strong> রাখো</li>
-              <li><code style="background:rgba(204,0,0,0.2); padding:1px 5px; border-radius:3px;">courses</code> array empty রাখলে কোনো course দেখাবে না</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Toolbar + hint row -->
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
-          <div class="json-toolbar" style="margin-bottom:0;">
-            <button class="btn-validate" onclick="validateJSON()">✅ Validate JSON</button>
-            <button class="btn-format" onclick="formatJSON()">📋 Format JSON</button>
-            <button class="btn-save-json" onclick="saveJSON()">💾 Save Changes</button>
-            <button class="btn-download" onclick="reloadJSON()">🔄 Reload Original</button>
-          </div>
-          <span style="color:rgba(255,255,255,0.3); font-size:12px;">💡 Ctrl+A → সব select · Tab → indent</span>
-        </div>
-
-        <div class="json-editor-area">
-          <textarea id="jsonEditor" placeholder="Loading JSON data..."></textarea>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1984,6 +1933,7 @@
   <script src="../shared/unified-token-manager.js"></script>
   <script src="../shared/central-api-gateway.js"></script>
   <script src="github-content-uploader.js"></script>
+  <script src="../../shared/activity-logger.js"></script>
   <script src="content-manager.js"></script>
   <script src="youtube-integration.js"></script>
   <script>
@@ -2459,6 +2409,24 @@
     let currentPlaylist = [];
     const ITEMS_PER_PAGE = 12;
 
+    function generateNextId() {
+      const prefix = 'course-';
+      let max = 0;
+      currentContent.forEach(c => {
+        if (c.id && c.id.startsWith(prefix)) {
+          const num = parseInt(c.id.slice(prefix.length), 10);
+          if (!isNaN(num) && num > max) max = num;
+        }
+      });
+      return prefix + String(max + 1).padStart(6, '0');
+    }
+
+    function checkDuplicateCourse(title) {
+      return currentContent.find(c =>
+        c.title.trim().toLowerCase() === title.trim().toLowerCase()
+      );
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
@@ -2468,10 +2436,13 @@
       // Save current tab to localStorage for persistence
       localStorage.setItem('educationalVideosManager_activeTab', tabName);
       
+      if (tabName === 'upload') {
+        const el = document.getElementById('previewCourseId');
+        if (el) el.value = generateNextId();
+      }
       if (tabName === 'manage') { loadManageContent(); resetPagination(); }
       if (tabName === 'stats') loadStatistics();
       if (tabName === 'dashboard') loadDashboard();
-      if (tabName === 'json') loadJSONEditor();
     }
 
     function resetPagination() {
@@ -3010,8 +2981,15 @@
           return;
         }
         
-        const courseId = `course-${Date.now()}`;
+        const courseId = generateNextId();
         const category = document.getElementById('category').value;
+
+        // Duplicate check
+        const dup = checkDuplicateCourse(document.getElementById('title').value);
+        if (dup) {
+          const proceed = confirm(`⚠️ A course titled "${dup.title}" (ID: ${dup.id}) already exists.\n\nUpload anyway?`);
+          if (!proceed) return;
+        }
         
         // Upload PDFs first if any episodes have pending PDFs
         alert('⏳ Uploading course and lecture PDFs...');
@@ -3433,64 +3411,6 @@
       }
     }
 
-    // JSON Editor Functions
-    async function loadJSONEditor() {
-      try {
-        const data = await contentManager.loadContent(CONTENT_TYPE);
-        document.getElementById('jsonEditor').value = JSON.stringify(data, null, 2);
-      } catch (error) {
-        alert('❌ Failed to load JSON: ' + error.message);
-      }
-    }
-
-    async function reloadJSON() {
-      if (confirm('🔄 Reload original JSON from server? Unsaved changes will be lost.')) {
-        await loadJSONEditor();
-      }
-    }
-
-    function validateJSON() {
-      try {
-        const jsonText = document.getElementById('jsonEditor').value;
-        JSON.parse(jsonText);
-        alert('✅ JSON is valid!');
-      } catch (error) {
-        alert('❌ Invalid JSON: ' + error.message);
-      }
-    }
-
-    function formatJSON() {
-      try {
-        const jsonText = document.getElementById('jsonEditor').value;
-        const parsed = JSON.parse(jsonText);
-        document.getElementById('jsonEditor').value = JSON.stringify(parsed, null, 2);
-        alert('✅ JSON formatted successfully!');
-      } catch (error) {
-        alert('❌ Cannot format invalid JSON: ' + error.message);
-      }
-    }
-
-    async function saveJSON() {
-      try {
-        const jsonText = document.getElementById('jsonEditor').value;
-        const parsed = JSON.parse(jsonText);
-        
-        if (!confirm('⚠️ This will overwrite the entire courses.json file. Are you absolutely sure?')) {
-          return;
-        }
-        
-        await contentManager.saveContent(CONTENT_TYPE, parsed);
-        // Sync category groups from newly saved data
-        if (parsed.categoryGroups && parsed.categoryGroups.length > 0) {
-          CATEGORY_GROUPS = parsed.categoryGroups;
-          initVideoCategories();
-        }
-        alert('✅ JSON saved successfully!');
-        loadManageContent();
-      } catch (error) {
-        alert(`? Save failed: ${error.message}`);
-      }
-    }
 
     window.addEventListener('DOMContentLoaded', () => {
       loadCategories();

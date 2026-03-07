@@ -367,6 +367,9 @@
   .modal-body { padding: 24px 28px; }
   .modal-footer { padding: 18px 28px; border-top: 1px solid var(--border-red); display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 0; background: rgba(20,4,4,0.99); }
   </style>
+    <!-- Shared Admin Navbar -->
+    <link rel="stylesheet" href="../../../shared/only-boss-navbar.css">
+    <script src="../../../shared/only-boss-navbar.js" defer></script>
 </head>
 <body>
   <div class="neural-cursor" id="neuralCursor"></div>
@@ -395,7 +398,6 @@
       <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token"><i class="fas fa-sync-alt"></i></button>
       <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token"><i class="fas fa-bug"></i> Debug</button>
       <a href="../category-selector.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back</span></a>
-      <button class="btn-save" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i><span>Push to GitHub</span></button>
     </div>
   </div>
 
@@ -467,7 +469,7 @@
         <div class="content-header-row">
           <div>
             <h2><i class="fas fa-plus-circle"></i> Add New Website</h2>
-            <p>Fill in all fields and push to GitHub</p>
+            <p>Fill in all fields — changes save to GitHub automatically</p>
           </div>
           <button class="btn-secondary" onclick="resetAddForm()"><i class="fas fa-undo"></i> Reset</button>
         </div>
@@ -481,6 +483,10 @@
               <div class="form-group span-2">
                 <label class="form-label">Site Title <span class="required">*</span></label>
                 <input type="text" class="form-input" id="fTitle" placeholder="e.g. A3KM Studio" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-fingerprint"></i> Site ID <span style="color:var(--text-secondary);font-size:11px;">(auto-generated)</span></label>
+                <input type="text" class="form-input" id="previewProjectId" readonly style="background:rgba(0,0,0,0.3);color:var(--primary-red);font-family:monospace;font-size:13px;cursor:not-allowed;" placeholder="web-XXXXXX">
               </div>
               <div class="form-group span-2">
                 <label class="form-label">Short Subtitle</label>
@@ -682,21 +688,27 @@
       <div id="exportTab" class="tab-content">
         <div class="content-header-row">
           <div>
-            <h2><i class="fas fa-cloud-upload-alt"></i> Export / GitHub</h2>
-            <p>Push websites.json to GitHub repository</p>
+            <h2><i class="fas fa-file-export"></i> Export</h2>
+            <p>Backup & preview current data</p>
           </div>
         </div>
-
         <div class="export-section">
-          <h3><i class="fab fa-github"></i> GitHub Configuration</h3>
+          <h3><i class="fas fa-info-circle"></i> Auto-Save</h3>
+          <p style="color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:14px;">
+            All changes (add, edit, delete) are <strong style="color:#81c784;">automatically pushed to GitHub</strong> immediately.<br>
+            No manual push needed. The status indicator in the header shows save state.
+          </p>
           <div class="github-status-box">
             <div class="github-info-row"><i class="fas fa-lock"></i><span>Token: <strong id="exportTokenStatus">Checking...</strong></span></div>
             <div class="github-info-row"><i class="fas fa-database"></i><span>File: <code>Projects Code/websites/websites.json</code></span></div>
             <div class="github-info-row"><i class="fas fa-info-circle"></i><span id="exportRecordCount">0 records in memory</span></div>
           </div>
-          <button class="btn-submit" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i> Push websites.json to GitHub</button>
         </div>
-
+        <div class="export-section">
+          <h3><i class="fas fa-download"></i> Backup Download</h3>
+          <p style="color:rgba(255,255,255,0.5);margin-bottom:14px;">Download a local backup copy of websites.json.</p>
+          <button class="btn-submit" style="width:auto;padding:12px 28px;" onclick="downloadJSON()"><i class="fas fa-download"></i> Download websites.json</button>
+        </div>
         <div class="export-section">
           <h3><i class="fas fa-code"></i> JSON Preview</h3>
           <pre class="json-preview" id="jsonPreview">Loading...</pre>
@@ -823,6 +835,8 @@
   <!-- SCRIPTS -->
   <script src="../../shared/unified-token-manager.js"></script>
   <script src="../../shared/central-api-gateway.js"></script>
+  <script src="../../../Content-studio/github-content-uploader.js"></script>
+  <script src="../../../shared/activity-logger.js"></script>
   <script src="../github-api-handler.js"></script>
   <script src="../shared-utilities.js"></script>
 
@@ -830,10 +844,11 @@
   // ═══════════════════════════════════════════════════════
   //  STATE & CONFIG
   // ═══════════════════════════════════════════════════════
-  const JSON_PATH        = '../../../../Projects Code/websites/websites.json';
-  const GITHUB_FILE_PATH = 'A3KM Studio/Projects Code/websites/websites.json';
+  // Single source of truth — GitHub repo
+  const GITHUB_RAW_URL   = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/websites/websites.json';
+  const GITHUB_REPO_PATH = 'Projects Code/websites/websites.json';
 
-  let githubHandler, tokenManager, centralAPI;
+  let githubHandler, tokenManager, centralAPI, githubUploader;
   let websitesData = { lastUpdated: '', version: '1.0.0', description: 'Websites by Md Akhinoor Islam', statistics: {}, projects: [] };
   let tagInputs = { tech: [], tags: [] };
 
@@ -980,6 +995,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     tokenManager  = new UnifiedTokenManager();
     centralAPI    = CentralAPIGateway.getInstance();
+    githubUploader = centralAPI.getUploader();
     githubHandler = new GitHubAPIHandler();
 
     const token = tokenManager.loadToken();
@@ -988,6 +1004,8 @@
 
     updateTokenStatus();
     loadData();
+    // Auto-refresh every 60 seconds
+    setInterval(() => { loadData(); }, 60000);
     initTagInputs();
     initCursor();
 
@@ -1113,25 +1131,103 @@
     // Save current tab to localStorage for persistence
     localStorage.setItem('websitesManager_activeTab', name);
     
+    if (name === 'add') {
+      const idField = document.getElementById('previewProjectId');
+      if (idField) idField.value = generateNextId();
+    }
     if (name === 'manage') renderManageGrid();
     if (name === 'export') updateJsonPreview();
     if (name === 'dashboard') updateDashboard();
   }
 
   // ═══════════════════════════════════════════════════════
-  //  LOAD DATA (local file)
+  //  LOAD DATA (GitHub raw — always fresh)
   // ═══════════════════════════════════════════════════════
+  function generateNextId() {
+    const prefix = 'web-';
+    const projects = websitesData.projects || [];
+    const nums = projects
+      .map(p => { const m = String(p.id).match(/web-(\d+)$/); return m ? parseInt(m[1]) : 0; })
+      .filter(n => n > 0);
+    const max = nums.length > 0 ? Math.max(...nums) : 0;
+    return prefix + String(max + 1).padStart(6, '0');
+  }
+
   async function loadData() {
     try {
-      const r = await fetch(JSON_PATH + '?t=' + Date.now());
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const r = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+      if (!r.ok) throw new Error('GitHub raw ' + r.status);
       websitesData = await r.json();
-      updateDashboard();
-      updateSidebarStats();
     } catch(e) {
-      console.warn('Could not load websites.json', e);
-      showToast('Could not load websites.json — starting fresh', 'error');
+      // Fallback to local for offline / first load
+      try {
+        const fb = await fetch('../../../../Projects%20Code/websites/websites.json?t=' + Date.now());
+        websitesData = await fb.json();
+      } catch { console.warn('Could not load websites.json', e); }
     }
+    updateDashboard();
+    updateSidebarStats();
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  CENTRAL PUSH (all changes go through here)
+  // ═══════════════════════════════════════════════════════
+  async function pushData(commitMsg) {
+    rebuildStatistics();
+    websitesData.lastUpdated = new Date().toISOString();
+    const badge = document.getElementById('tokenStatus');
+    const prevHTML = badge.innerHTML;
+    const prevClass = badge.className;
+    badge.className = 'token-status checking';
+    badge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    // #3 Local backup
+    try { localStorage.setItem('websites_backup', JSON.stringify(websitesData)); } catch(_){}
+    // #2 Progress bar
+    const _bar = document.getElementById('pushProgressBar');
+    if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'block'; _bar.style.width = '30%'; }
+    try {
+      const tokenStatus = await centralAPI.getStatus();
+      if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+        throw new Error('No valid token');
+      }
+      if (_bar) _bar.style.width = '70%';
+      await githubUploader.uploadFile(
+        GITHUB_REPO_PATH,
+        JSON.stringify(websitesData, null, 2),
+        commitMsg
+      );
+      if (_bar) { _bar.style.width = '100%'; setTimeout(() => { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }, 800); }
+      badge.className = 'token-status active';
+      badge.innerHTML = '<i class="fas fa-check-circle"></i> Saved ✔';
+      // #4 Activity log
+      logActivity(commitMsg);
+      setTimeout(() => {
+        badge.className = 'token-status active';
+        badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
+      }, 3000);
+    } catch(e) {
+      if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }
+      badge.className = prevClass;
+      badge.innerHTML = prevHTML;
+      if (!githubHandler.isAuthenticated() || (e.message && e.message.toLowerCase().includes('token'))) {
+        if (confirm('GitHub token missing. Configure in Command Center?')) {
+          window.location.href = '../../shared/command-center.html?tab=api';
+        }
+      } else {
+        showToast('Push failed: ' + e.message, 'error');
+      }
+      throw e;
+    }
+  }
+
+  // #4 Activity history log
+  function logActivity(action) {
+    const h = JSON.parse(localStorage.getItem('websites_history') || '[]');
+    h.unshift({ action, timestamp: new Date().toISOString() });
+    if (h.length > 20) h.pop();
+    localStorage.setItem('websites_history', JSON.stringify(h));
+    const type = action.startsWith('Add') ? 'upload' : action.startsWith('Delete') ? 'delete' : 'edit';
+    if (typeof ActivityLogger !== 'undefined') ActivityLogger.log(type, action, 'Admin', 'success', 'Websites');
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1224,7 +1320,7 @@
     if (!title || !url || !cat || !desc) { showToast('Please fill in all required fields', 'error'); return; }
 
     const projects = websitesData.projects || [];
-    const nextId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1;
+    const nextId = generateNextId();
     const techArr  = tagInputs.tech.slice();
     const tagsArr  = tagInputs.tags.slice();
 
@@ -1245,13 +1341,21 @@
       lastUpdated: new Date().toISOString().split('T')[0]
     };
 
+    // #1 Duplicate check
+    const _dup = projects.map(p => p.title.toLowerCase().trim());
+    if (_dup.includes(entry.title.toLowerCase().trim())) {
+      if (!confirm(`⚠️ "${entry.title}" already exists. Add anyway?`)) return;
+    }
     websitesData.projects = [...projects, entry];
     websitesData.lastUpdated = new Date().toISOString();
     rebuildStatistics();
     updateDashboard();
-    showToast('Website added! Don\'t forget to push to GitHub.', 'success');
     resetAddForm();
     switchTabByName('manage');
+    // Auto-push directly to GitHub
+    pushData('Add website: ' + title)
+      .then(() => showToast('Website added & saved to GitHub!', 'success'))
+      .catch(() => showToast('Added locally but GitHub push failed', 'error'));
   }
 
   function switchTabByName(name) {
@@ -1324,7 +1428,7 @@
         '<div class="card-actions">' +
           '<button onclick="editWebsite(' + p.id + ')" style="background:rgba(255,170,0,0.15);color:#ffaa00;border-color:rgba(255,170,0,0.35);"><i class="fas fa-edit"></i> Edit</button>' +
           '<button onclick="window.open(\'' + safeUrl + '\',\'_blank\')"><i class="fas fa-external-link-alt"></i></button>' +
-          '<button onclick="deleteWebsite(' + p.id + ')" class="btn-delete"><i class="fas fa-trash"></i></button>' +
+          '<button onclick="deleteWebsite(\'' + p.id + '\')" class="btn-delete"><i class="fas fa-trash"></i></button>' +
         '</div>' +
       '</div></div>';
   }
@@ -1386,16 +1490,23 @@
     updateDashboard();
     renderManageGrid();
     document.getElementById('editModalOverlay').classList.remove('active');
-    showToast('Changes saved! Push to GitHub to persist.', 'success');
+    // Auto-push directly to GitHub
+    pushData('Update website: ' + title)
+      .then(() => showToast('Changes saved to GitHub!', 'success'))
+      .catch(() => showToast('Saved locally but GitHub push failed', 'error'));
   }
 
   function deleteWebsite(id) {
-    if (!confirm('Delete this entry? This cannot be undone until you push to GitHub.')) return;
+    const entry = (websitesData.projects || []).find(p => p.id === id);
+    if (!confirm('Delete "' + (entry?.title || id) + '"? This cannot be undone.')) return;
     websitesData.projects = (websitesData.projects || []).filter(p => p.id !== id);
     rebuildStatistics();
     updateDashboard();
     renderManageGrid();
-    showToast('Entry removed. Push to GitHub to save.', 'info');
+    // Auto-push directly to GitHub
+    pushData('Delete website: ' + (entry?.title || id))
+      .then(() => showToast('Deleted & saved to GitHub!', 'success'))
+      .catch(() => showToast('Deleted locally but GitHub push failed', 'error'));
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1407,38 +1518,13 @@
   }
 
   // ═══════════════════════════════════════════════════════
-  //  PUSH TO GITHUB  (uses GitHubAPIHandler — no manual config needed)
+  //  DOWNLOAD JSON (backup only)
   // ═══════════════════════════════════════════════════════
-  async function pushToGitHub() {
-    rebuildStatistics();
-    websitesData.lastUpdated = new Date().toISOString();
-
-    const btn = document.querySelector('.btn-save');
-    const origHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span> Pushing...</span>';
-    btn.disabled = true;
-
-    try {
-      await githubHandler.verifyToken();
-      await githubHandler.uploadTextFile(
-        GITHUB_FILE_PATH,
-        JSON.stringify(websitesData, null, 2),
-        'websites.json updated via Websites Manager — ' + new Date().toLocaleDateString()
-      );
-      showToast('websites.json pushed to GitHub successfully!', 'success');
-    } catch(e) {
-      console.error(e);
-      if (!githubHandler.isAuthenticated() || (e.message && e.message.toLowerCase().includes('token'))) {
-        if (confirm('GitHub token is missing or invalid. Configure token in Command Center?')) {
-          window.location.href = '../../shared/command-center.html?tab=api';
-        }
-      } else {
-        showToast('Push failed: ' + e.message, 'error');
-      }
-    } finally {
-      btn.innerHTML = origHtml;
-      btn.disabled = false;
-    }
+  function downloadJSON() {
+    const blob = new Blob([JSON.stringify(websitesData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'websites.json'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1462,5 +1548,7 @@
 
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   </script>
+    <!-- #2 Push Progress Bar -->
+    <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
 </body>
 </html>

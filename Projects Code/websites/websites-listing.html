@@ -496,9 +496,17 @@
     let filteredProjects = [];
     let currentFilters = { search: '', category: 'all', sort: 'id-asc', status: 'all', view: 'grid' };
 
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/websites/websites.json';
+
     async function loadProjects() {
       try {
-        const res  = await fetch('websites.json');
+        let res;
+        try {
+          res = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+          if (!res.ok) throw new Error('GitHub raw ' + res.status);
+        } catch {
+          res = await fetch('websites.json?t=' + Date.now());
+        }
         const data = await res.json();
         allProjects = data.projects || [];
 

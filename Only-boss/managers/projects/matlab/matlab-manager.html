@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -37,6 +37,8 @@
       --primary-light: #FF4444;
       --text-primary: rgba(255,255,255,0.95);
       --text-secondary: rgba(255,255,255,0.6);
+      --matlab-blue: #0076A8;
+      --matlab-blue-dark: #005580;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -136,8 +138,8 @@
     .container {
       position: relative; z-index: 1;
       max-width: 1600px; margin: 40px auto; padding: 0 40px;
-      display: grid; grid-template-columns: 280px 1fr; gap: 30px;
     }
+    .main-layout { display: grid; grid-template-columns: 280px 1fr; gap: 30px; padding-top: 30px; align-items: start; }
     .sidebar {
       background: var(--bg-sidebar);
       border: 1px solid var(--border-red);
@@ -166,6 +168,26 @@
     .quick-stats h3 { color: var(--primary-red); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; font-weight: 700; }
     .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: var(--text-secondary); font-size: 0.9rem; }
     .stat-value { color: var(--primary-red); font-weight: 700; font-size: 1.3rem; }
+    /* === SIDEBAR STATS PANEL === */
+    .stats-panel {
+      padding: 20px; margin: 0 15px 15px;
+      background: rgba(139,0,0,0.08); border-radius: 12px;
+      border: 1px solid var(--border-red);
+    }
+    .stats-panel h3 {
+      color: var(--primary-red); font-size: 0.9rem; text-transform: uppercase;
+      margin-bottom: 15px; letter-spacing: 1px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stat-item-sidebar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; color: var(--text-secondary); font-size: 0.9rem;
+      border-bottom: 1px solid rgba(139,0,0,0.12);
+    }
+    .stat-item-sidebar:last-child { border-bottom: none; }
+    .stat-item-sidebar span:last-child {
+      color: var(--primary-red); font-weight: 700; font-size: 1.1rem;
+    }
     .content-area {
       background: linear-gradient(160deg, rgba(14,2,2,0.97) 0%, rgba(6,0,0,0.95) 100%);
       border: 1px solid var(--border-red); border-radius: 18px; padding: 35px;
@@ -320,7 +342,7 @@
     #editRichDesc blockquote { border-left:3px solid #CC0000; margin:8px 0; padding:6px 12px; background:rgba(204,0,0,0.08); color:rgba(255,255,255,0.7); font-style:italic; border-radius:0 4px 4px 0; }
     #editRichDesc hr { border:none; border-top:1px solid rgba(204,0,0,0.4); margin:10px 0; }
     @media (max-width: 1024px) {
-      .container { grid-template-columns: 1fr; }
+      .main-layout { grid-template-columns: 1fr; }
       .sidebar { position: relative; top: 0; }
       .form-row, .form-grid { grid-template-columns: 1fr; }
     }
@@ -336,7 +358,168 @@
       .card-actions { flex-direction: column; gap: 8px; }
       .card-actions button { width: 100%; }
     }
+    /* === HEADER LAYOUT (Arduino-style) === */
+    .header-container {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .header-content { display: flex; flex-direction: column; gap: 6px; } /* legacy, kept for compat */
+    .header-title h1 { font-size: 2rem; color: white; margin: 0 0 4px; font-weight: 800; text-shadow: 0 0 20px rgba(204,0,0,0.5); }
+    .header-title p  { font-size: 0.95rem; color: var(--text-secondary); margin: 0; }
+    .header-actions  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    /* === TOKEN STATUS BADGE === */
+    .token-status {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .token-status.active   { background: rgba(76,175,80,0.1);  border-color: rgba(76,175,80,0.4);  color: #4CAF50; }
+    .token-status.missing  { background: rgba(204,0,0,0.12);   border-color: var(--border-mid);    color: var(--primary-red); }
+    .token-status.checking { background: rgba(255,193,7,0.1);  border-color: rgba(255,193,7,0.4);  color: #FFC107; }
+    .token-status.error    { background: rgba(244,67,54,0.1);  border-color: rgba(244,67,54,0.4);  color: #F44336; }
+    /* === TOKEN ACTION BUTTONS === */
+    .token-refresh-btn, .token-debug-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--border-red);
+      background: rgba(204,0,0,0.08); color: rgba(255,255,255,0.7);
+    }
+    .token-refresh-btn:hover, .token-debug-btn:hover {
+      background: rgba(204,0,0,0.18); color: var(--text-primary); transform: translateY(-1px);
+    }
+    /* === BACK BUTTON (header-actions) === */
+    .back-btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.15); }
+    .back-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    /* === ALERTS === */
+    .alert { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 0.93rem; }
+    .alert-info { background: rgba(0,118,168,0.1); border: 1px solid rgba(0,118,168,0.3); color: rgba(255,255,255,0.85); }
+    .alert-warning { background: rgba(204,0,0,0.1); border: 1px solid var(--border-mid); color: rgba(255,255,255,0.85); }
+    .alert i { color: var(--primary-red); font-size: 1.1rem; margin-top: 2px; flex-shrink: 0; }
+    /* === SEARCH BOX === */
+    .search-box { position: relative; margin-bottom: 20px; }
+    .search-box input { width: 100%; padding: 12px 15px 12px 42px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-red); border-radius: 10px; color: var(--text-primary); font-size: 0.93rem; font-family: inherit; }
+    .search-box input:focus { outline: none; border-color: var(--primary-red); box-shadow: 0 0 12px rgba(204,0,0,0.2); }
+    .search-box .fa-search { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    /* === MANAGE PROJECTS – CARD GRID (matches public matlab-projects.html) === */
+    .manage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 22px 18px; margin-top: 20px; }
+    .manage-card {
+      background: linear-gradient(170deg, rgba(24,4,4,0.99) 0%, rgba(14,1,1,1) 50%, rgba(7,0,0,1) 100%);
+      border: 1.5px solid rgba(204,0,0,0.3); border-top: 2px solid rgba(220,45,45,0.7);
+      border-radius: 13px; overflow: hidden; display: flex; flex-direction: column;
+      position: relative; cursor: default;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,60,60,0.12);
+      transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .manage-card::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,60,60,0.12), transparent); transition: left 0.6s ease; z-index:1; }
+    .manage-card:hover::after { left:100%; }
+    .manage-card:hover { border-color: rgba(204,0,0,0.8); border-top-color: rgba(255,80,80,1); transform: translateY(-6px) scale(1.012); box-shadow: 0 18px 50px rgba(204,0,0,0.45), 0 0 40px rgba(204,0,0,0.15); }
+    /* Thumbnail */
+    .manage-card-thumb {
+      position: relative; width: 100%; aspect-ratio: 16/9;
+      background: linear-gradient(135deg, rgba(30,3,3,0.95), rgba(8,0,0,0.9));
+      border-bottom: 2px solid var(--primary-red); overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .manage-card-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; transition: transform 0.4s ease, opacity 0.8s ease; }
+    .manage-card-thumb::after { content:''; position:absolute; bottom:0; left:0; right:0; height:30%; background: linear-gradient(to top, rgba(7,0,0,0.85), transparent); z-index:2; pointer-events:none; }
+    .manage-card:hover .manage-card-thumb img { transform: scale(1.05); }
+    .manage-card-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--primary-red); font-size:2.8rem; opacity:0.3; z-index:0; }
+    /* Checkbox overlay */
+    .manage-card-check { position:absolute; top:10px; left:10px; z-index:10; width:22px; height:22px; cursor:pointer; accent-color: var(--primary-red); }
+    /* Number badge */
+    .manage-card-num { position:absolute; top:0; right:0; background: linear-gradient(135deg, rgba(200,0,0,0.93), rgba(110,0,0,0.97)); color:rgba(255,255,255,0.95); padding:5px 12px 5px 15px; border-radius:0 0 0 10px; font-size:0.68rem; font-weight:800; z-index:10; letter-spacing:0.5px; }
+    /* Card body */
+    .manage-card-body { padding: 14px 16px 12px; flex:1; display:flex; flex-direction:column; position:relative; z-index:2; }
+    .manage-card-cat { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background: linear-gradient(135deg, rgba(204,0,0,0.16), rgba(120,0,0,0.1)); border:1px solid rgba(204,0,0,0.45); border-radius:6px; font-size:0.66rem; font-weight:700; color:rgba(255,175,175,0.92); margin-bottom:8px; width:fit-content; }
+    .manage-card-title { font-size: 1rem; font-weight:800; color:#fff; margin:0 0 5px; padding-right:50px; line-height:1.35; transition: color 0.3s; }
+    .manage-card:hover .manage-card-title { color: var(--accent-red,#FF4444); }
+    .manage-card-sub { font-size:0.82rem; color:rgba(255,255,255,0.55); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .manage-card-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+    .manage-card-tag { background:rgba(204,0,0,0.12); border:1px solid rgba(204,0,0,0.3); color:rgba(255,120,120,0.9); padding:3px 9px; border-radius:5px; font-size:0.68rem; font-weight:600; }
+    /* Footer */
+    .manage-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:10px; border-top:1px solid rgba(204,0,0,0.18); }
+    .manage-card:hover .manage-card-footer { border-top-color: rgba(204,0,0,0.38); }
+    .manage-diff { padding:3px 9px; border-radius:5px; font-size:0.68rem; font-weight:700; display:flex; align-items:center; gap:4px; }
+    .manage-diff-beginner { background:rgba(0,200,0,0.12); border:1px solid rgba(0,255,0,0.28); color:#44ff44; }
+    .manage-diff-intermediate { background:rgba(255,165,0,0.12); border:1px solid rgba(255,165,0,0.28); color:#FFA500; }
+    .manage-diff-advanced { background:rgba(204,0,0,0.15); border:1px solid rgba(255,0,0,0.28); color:#FF4444; }
+    .manage-diff-expert { background:rgba(150,0,150,0.15); border:1px solid rgba(200,0,200,0.28); color:#FF80FF; }
+    /* Action buttons */
+    .manage-card-actions { display:flex; gap:6px; }
+    .manage-act-btn { width:32px; height:32px; border-radius:7px; border:1px solid var(--border-red); background:rgba(0,0,0,0.4); color:var(--primary-red); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:13px; }
+    .manage-act-btn:hover { background:var(--primary-red); color:white; transform:scale(1.08); }
+    .manage-act-btn.del { border-color:rgba(244,67,54,0.4); color:#f44336; }
+    .manage-act-btn.del:hover { background:#f44336; color:white; }
+    /* Carousel dots */
+    .manage-carousel-dots { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); display:flex; gap:4px; z-index:5; }
+    .manage-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.4); transition:all 0.3s; }
+    .manage-dot.active { background:var(--primary-red); transform:scale(1.2); }
+    /* Project info (legacy — keep for search DOM queries) */
+    .icon-btn { display:none; }
+    /* === STAT CARDS === */
+    .stat-value { font-size: 2.5rem; font-weight: 800; color: var(--primary-red); line-height: 1; margin: 8px 0 5px; display: block; }
+    .stat-label { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+    /* === BUTTONS === */
+    .btn-secondary { padding: 10px 20px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-red); border-radius: 8px; color: var(--text-secondary); cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-secondary:hover { background: rgba(204,0,0,0.1); color: var(--primary-red); border-color: var(--border-mid); }
+    /* === JSON EDITOR === */
+    .json-editor { width: 100%; min-height: 500px; background: #0d0000; color: #d4d4d4; border: 1px solid var(--border-mid); border-radius: 12px; padding: 20px; font-family: 'Consolas','Monaco',monospace; font-size: 14px; line-height: 1.6; resize: vertical; }
+    .json-editor:focus { outline: none; border-color: var(--primary-red); }
+    .editor-toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    /* === FOLDER TREE === */
+    .folder-tree { font-family: 'Consolas','Monaco',monospace; background: rgba(0,0,0,0.4); border: 1px solid var(--border-red); border-radius: 12px; padding: 20px; line-height: 1.8; }
+    .folder-tree ul { list-style: none; padding-left: 20px; margin: 0; }
+    .folder-tree li { color: var(--text-secondary); }
+    .folder-tree .folder { color: var(--primary-red); font-weight: 600; }
+    .folder-tree .folder > i, .folder-tree li > i { margin-right: 6px; }
+    /* === FILE UPLOAD AREAS === */
+    .file-upload-area { padding: 30px 20px; background: rgba(0,0,0,0.4); border: 2px dashed var(--border-mid); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-muted); }
+    .file-upload-area:hover { border-color: var(--primary-red); background: rgba(204,0,0,0.06); }
+    .file-upload-area input[type="file"] { display: none; }
+    .file-upload-area-small { padding: 12px; background: rgba(0,0,0,0.3); border: 1px dashed var(--border-mid); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-muted); font-size: 0.82rem; }
+    .file-upload-area-small:hover { border-color: var(--primary-red); }
+    .image-preview-box { position: relative; }
+    .image-preview-box img { width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-red); display: block; }
+    .image-preview-box .remove-btn { position: absolute; top: 12px; right: 4px; background: rgba(200,0,0,0.85); border: none; color: white; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .image-preview-box .filename { font-size: 0.73rem; color: var(--text-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* === EDIT MODAL AS FULL OVERLAY === */
+    .edit-modal { display: none; position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.92); overflow-y: auto; padding: 20px; }
+    .edit-modal.active { display: block; }
+    .edit-modal-content { max-width: 900px; margin: 20px auto; background: linear-gradient(160deg, rgba(18,4,4,0.99) 0%, rgba(6,0,0,0.99) 100%); border: 1px solid var(--border-mid); border-radius: 18px; padding: 35px; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 60px rgba(139,0,0,0.3); position: relative; }
+    .edit-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-red); }
+    .edit-modal-header h2 { color: var(--primary-red); font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .modal-close-btn { width: 36px; height: 36px; background: rgba(204,0,0,0.15); border: 1px solid var(--border-mid); border-radius: 50%; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; }
+    .modal-close-btn:hover { background: var(--primary-red); color: white; transform: rotate(90deg); }
+    .edit-form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .edit-form-group label { color: var(--text-primary); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+    .edit-form-group input, .edit-form-group select { padding: 10px 14px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-red); border-radius: 8px; color: var(--text-primary); font-size: 0.93rem; font-family: inherit; }
+    .edit-form-group input:focus, .edit-form-group select:focus { outline: none; border-color: var(--primary-red); box-shadow: 0 0 10px rgba(204,0,0,0.2); }
+    .edit-toolboxes-section { margin-bottom: 20px; padding: 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-red); border-radius: 10px; }
+    .edit-toolboxes-section h3 { color: var(--primary-red); font-size: 0.97rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .edit-toolboxes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .edit-toolbox-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-red); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .edit-toolbox-item:hover { border-color: var(--border-mid); }
+    .edit-toolbox-item input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; flex-shrink: 0; }
+    .edit-toolbox-item label { color: var(--text-secondary); font-size: 0.86rem; cursor: pointer; }
+    .edit-toolbox-counter { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: rgba(0,200,100,0.1); border-radius: 15px; color: #4CAF50; font-size: 0.78rem; font-weight: 600; }
+    .file-replacement-section { margin-bottom: 20px; padding: 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-red); border-radius: 10px; }
+    .file-replacement-section h4 { color: var(--primary-red); font-size: 0.93rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .file-replace-item { display: grid; grid-template-columns: 200px 1fr; gap: 15px; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(139,0,0,0.15); }
+    .file-replace-item:last-of-type { border-bottom: none; }
+    .file-replace-item label { color: var(--text-secondary); font-size: 0.86rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .file-replace-item input[type="file"] { padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-red); border-radius: 6px; color: var(--text-primary); font-size: 0.82rem; width: 100%; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-red); }
+    .modal-btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: 1px solid transparent; }
+    .modal-btn-cancel { background: rgba(0,0,0,0.4); color: var(--text-secondary); border-color: var(--border-red); }
+    .modal-btn-cancel:hover { background: rgba(204,0,0,0.1); color: var(--primary-red); }
+    .modal-btn-save { background: linear-gradient(135deg, var(--dark-red), var(--primary-red)); color: white; border-color: var(--border-mid); box-shadow: 0 4px 15px rgba(139,0,0,0.4); }
+    .modal-btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.5); }
+    /* === PROGRESS OVERLAY — ALWAYS HIDDEN === */
+    .progress-overlay, .progress-container { display: none !important; }
   </style>
+    <!-- Shared Admin Navbar -->
+    <link rel="stylesheet" href="../../../shared/only-boss-navbar.css">
+    <script src="../../../shared/only-boss-navbar.js" defer></script>
 </head>
 <body>
   <!-- Neural Cursor -->
@@ -355,17 +538,17 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="header-content">
-                <a href="../category-selector.html" class="back-button">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Categories
-                </a>
-                <h1>
-                    <i class="fas fa-chart-line"></i>
-                    MATLAB Manager
-                </h1>
-                <p>Manage MATLAB simulations, code files, and analysis projects</p>
-                <div class="token-controls">
+            <div class="header-container">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>MATLAB Manager</h1>
+                        <p>Upload, edit &amp; organize MATLAB simulations and code projects</p>
+                    </div>
+                </div>
+                <div class="header-actions">
                     <span id="tokenStatus" class="token-status checking">
                         <i class="fas fa-spinner fa-spin"></i>
                         Checking token...
@@ -376,6 +559,14 @@
                     <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
                         <i class="fas fa-bug"></i> Debug
                     </button>
+                    <a href="../category-selector.html" class="btn back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back</span>
+                    </a>
+                    <button class="btn btn-save" onclick="saveJSON()">
+                        <i class="fas fa-save"></i>
+                        <span>Save JSON</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -384,6 +575,10 @@
         <div class="main-layout">
             <!-- Sidebar Navigation -->
             <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1><i class="fas fa-chart-line"></i> MATLAB</h1>
+                    <p>Projects Manager</p>
+                </div>
                 <div class="tab-list">
                     <div class="tab-item" onclick="switchTab('dashboard')">
                         <i class="fas fa-chart-line"></i>
@@ -397,13 +592,37 @@
                         <i class="fas fa-tasks"></i>
                         Manage Projects
                     </div>
-                    <div class="tab-item" onclick="switchTab('json')">
-                        <i class="fas fa-code"></i>
-                        JSON Editor
-                    </div>
                     <div class="tab-item" onclick="switchTab('structure')">
                         <i class="fas fa-folder-tree"></i>
                         Folder Structure
+                    </div>
+                </div>
+
+                <div class="stats-panel">
+                    <h3><i class="fas fa-chart-pie"></i> Quick Stats</h3>
+                    <div class="stat-item-sidebar">
+                        <span>Total Projects</span>
+                        <span id="sidebarTotal">0</span>
+                    </div>
+                    <div class="stat-item-sidebar">
+                        <span>Renewable Energy</span>
+                        <span id="sidebarRenewable">0</span>
+                    </div>
+                    <div class="stat-item-sidebar">
+                        <span>Power Systems</span>
+                        <span id="sidebarPower">0</span>
+                    </div>
+                    <div class="stat-item-sidebar">
+                        <span>Heat Transfer</span>
+                        <span id="sidebarHeat">0</span>
+                    </div>
+                    <div class="stat-item-sidebar">
+                        <span>Control Systems</span>
+                        <span id="sidebarControl">0</span>
+                    </div>
+                    <div class="stat-item-sidebar">
+                        <span>Simulink Models</span>
+                        <span id="sidebarSimulink">0</span>
                     </div>
                 </div>
             </aside>
@@ -467,6 +686,10 @@
                             <div class="form-group">
                                 <label><i class="fas fa-tag"></i> Project Title *</label>
                                 <input type="text" id="projectTitle" list="titleSuggestions" required placeholder="e.g., Solar PV Analysis">
+                                <div style="margin-top:8px;">
+                                    <label style="font-size:11px;color:var(--text-secondary);"><i class="fas fa-fingerprint"></i> Project ID (auto)</label>
+                                    <input type="text" id="previewProjectId" class="form-input" readonly style="background:rgba(0,0,0,0.3);color:var(--primary-red);font-family:monospace;font-size:13px;cursor:not-allowed;margin-top:4px;" placeholder="matlab-XXXXXX">
+                                </div>
                                 <datalist id="titleSuggestions">
                                     <option value="Solar Panel Optimization">
                                     <option value="Wind Turbine Simulation">
@@ -483,11 +706,11 @@
                                 <label><i class="fas fa-folder"></i> Category *</label>
                                 <select id="projectCategory" onchange="updateCategoryHelper()" required>
                                     <option value="">Select category...</option>
-                                    <option value="renewable">?? Renewable Energy</option>
-                                    <option value="power">? Power Systems</option>
-                                    <option value="heat">?? Heat Transfer</option>
-                                    <option value="control">??? Control Systems</option>
-                                    <option value="simulink">?? Simulink Models</option>
+                                    <option value="renewable">&#9728;&#65039; Renewable Energy</option>
+                                    <option value="power">&#9889; Power Systems</option>
+                                    <option value="heat">&#128293; Heat Transfer</option>
+                                    <option value="control">&#9881;&#65039; Control Systems</option>
+                                    <option value="simulink">&#128202; Simulink Models</option>
                                 </select>
                                 <small id="categoryHelper" style="color: #CC0000; display: block; margin-top: 5px; font-style: italic;"></small>
                             </div>
@@ -819,10 +1042,7 @@
                                 <i class="fas fa-upload"></i>
                                 Upload Project
                             </button>
-                            <button type="button" class="btn btn-secondary" onclick="pushToGitHub()" style="background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); color: white;">
-                                <i class="fab fa-github"></i>
-                                Push to GitHub
-                            </button>
+                
                             <button type="reset" class="btn btn-secondary">
                                 <i class="fas fa-redo"></i>
                                 Reset Form
@@ -848,11 +1068,11 @@
                             </span>
                             <select id="bulkCategory" style="padding: 8px 12px; background: rgba(0, 118, 168, 0.1); border: 2px solid rgba(0, 118, 168, 0.3); border-radius: 6px; color: white;">
                                 <option value="">Move to category...</option>
-                                <option value="renewable">?? Renewable Energy</option>
-                                <option value="power">? Power Systems</option>
-                                <option value="heat">?? Heat Transfer</option>
-                                <option value="control">??? Control Systems</option>
-                                <option value="simulink">?? Simulink Models</option>
+                                <option value="renewable">&#9728;&#65039; Renewable Energy</option>
+                                <option value="power">&#9889; Power Systems</option>
+                                <option value="heat">&#128293; Heat Transfer</option>
+                                <option value="control">&#9881;&#65039; Control Systems</option>
+                                <option value="simulink">&#128202; Simulink Models</option>
                             </select>
                             <button class="btn btn-secondary" onclick="bulkMoveCategory()">
                                 <i class="fas fa-folder-open"></i> Move
@@ -881,52 +1101,6 @@
                             Next <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                </div>
-
-                <!-- JSON Editor Tab -->
-                <div id="json" class="tab-content">
-                    <h2><i class="fas fa-code"></i> JSON Data Editor</h2>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>Warning:</strong> Direct JSON editing requires careful attention. Invalid JSON will break the system.
-                        </div>
-                    </div>
-
-                    <div class="editor-toolbar">
-                        <button class="btn btn-secondary" onclick="validateJSON()">
-                            <i class="fas fa-check-circle"></i>
-                            Validate
-                        </button>
-                        <button class="btn btn-secondary" onclick="formatJSON()">
-                            <i class="fas fa-indent"></i>
-                            Format
-                        </button>
-                        <button class="btn btn-primary" onclick="saveJSON()">
-                            <i class="fas fa-save"></i>
-                            Save Changes
-                        </button>
-                        <button class="btn btn-secondary" onclick="downloadJSON()">
-                            <i class="fas fa-download"></i>
-                            Export JSON
-                        </button>
-                        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
-                            <i class="fas fa-upload"></i>
-                            Import JSON
-                        </button>
-                        <button class="btn btn-secondary" onclick="clearCache()">
-                            <i class="fas fa-sync"></i>
-                            Clear Cache
-                        </button>
-                        <button class="btn btn-secondary" onclick="reloadJSON()">
-                            <i class="fas fa-rotate-left"></i>
-                            Reload Original
-                        </button>
-                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importJSON(event)">
-                    </div>
-
-                    <textarea id="jsonEditor" class="json-editor" spellcheck="false"></textarea>
                 </div>
 
                 <!-- Folder Structure Tab -->
@@ -960,11 +1134,11 @@
         let projectsData = {
             projects: [],
             categories: {
-                renewable: { name: "Renewable Energy Analysis", icon: "??", count: 0 },
-                power: { name: "Power Systems & Electrical", icon: "?", count: 0 },
-                heat: { name: "Heat Transfer & Thermodynamics", icon: "??", count: 0 },
-                control: { name: "Control Systems", icon: "???", count: 0 },
-                simulink: { name: "Simulink Models", icon: "??", count: 0 }
+                renewable: { name: "Renewable Energy Analysis", icon: "\u2600\uFE0F", count: 0 },
+                power: { name: "Power Systems & Electrical", icon: "\u26A1", count: 0 },
+                heat: { name: "Heat Transfer & Thermodynamics", icon: "\uD83D\uDD25", count: 0 },
+                control: { name: "Control Systems", icon: "\u2699\uFE0F", count: 0 },
+                simulink: { name: "Simulink Models", icon: "\uD83D\uDCCA", count: 0 }
             },
             statistics: {
                 totalProjects: 0,
@@ -979,8 +1153,19 @@
         let selectedProjects = new Set();
         const CACHE_KEY = 'matlab_projects_cache';
         const CACHE_DURATION = 3600000; // 1 hour
+        const GITHUB_RAW_URL   = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/MATLAB/matlab-data.json';
+        const GITHUB_REPO_PATH = 'Projects Code/MATLAB/matlab-data.json';
 
         // ===== SECURITY & VALIDATION =====
+        function generateNextId() {
+            const prefix = 'matlab-';
+            const nums = projectsData.projects
+                .map(p => { const m = String(p.id).match(/matlab-(\d+)$/); return m ? parseInt(m[1]) : 0; })
+                .filter(n => n > 0);
+            const max = nums.length > 0 ? Math.max(...nums) : 0;
+            return prefix + String(max + 1).padStart(6, '0');
+        }
+
         function sanitizeInput(input) {
             const div = document.createElement('div');
             div.textContent = input;
@@ -1005,8 +1190,7 @@
             );
             
             if (exactMatch) {
-                alert(`⚠️ Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
-                return false;
+                return confirm(`⚠️ "${exactMatch.title}" already exists in "${exactMatch.category || 'your list'}"!\n\nAdd anyway?`);
             }
             
             // Similarity check (>80% similar)
@@ -1120,19 +1304,29 @@
 
         // Load existing data from JSON file
         async function loadExistingData() {
-            // Try cache first
+            // GitHub raw first (always most current)
+            try {
+                const r = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+                if (r.ok) {
+                    projectsData = await r.json();
+                    saveToCache(projectsData);
+                    updateStats();
+                    renderProjectsList();updateFolderStructure();
+                    return;
+                }
+            } catch(e) { /* fall through to cache */ }
+
+            // Cache fallback (offline support)
             const cached = loadFromCache();
             if (cached) {
                 projectsData = cached;
                 console.log('?? Loaded from cache:', projectsData.projects.length, 'projects');
                 updateStats();
-                renderProjectsList();
-                updateJSONEditor();
-                updateFolderStructure();
+                renderProjectsList();updateFolderStructure();
                 return;
             }
 
-            // Fetch fresh data
+            // Local file fallback
             try {
                 const response = await fetch('../../../Projects Code/MATLAB/matlab-data.json');
                 if (response.ok) {
@@ -1146,24 +1340,36 @@
                 console.log('?? Starting with empty project list');
             }
             updateStats();
-            renderProjectsList();
-            updateJSONEditor();
-            updateFolderStructure();
+            renderProjectsList();updateFolderStructure();
         }
 
         // Update statistics
         function updateStats() {
+            const projects = projectsData.projects;
             const stats = {
-                total: projectsData.projects.length,
-                simulations: projectsData.projects.filter(p => p.category === 'simulations' || p.category === 'Renewable Energy').length,
-                analysis: projectsData.projects.filter(p => p.category === 'analysis').length,
-                signal: projectsData.projects.filter(p => p.category === 'signal-processing').length
+                total:      projects.length,
+                simulations: projects.filter(p => p.category === 'simulations' || p.category === 'Renewable Energy' || p.category === 'renewable').length,
+                analysis:   projects.filter(p => p.category === 'analysis').length,
+                signal:     projects.filter(p => p.category === 'signal-processing').length,
+                renewable:  projects.filter(p => p.category === 'renewable' || p.category === 'Renewable Energy').length,
+                power:      projects.filter(p => p.category === 'power' || p.category === 'Power Systems').length,
+                heat:       projects.filter(p => p.category === 'heat' || p.category === 'Heat Transfer').length,
+                control:    projects.filter(p => p.category === 'control' || p.category === 'Control Systems').length,
+                simulink:   projects.filter(p => p.category === 'simulink' || p.category === 'Simulink Model' || p.category === 'Simulink Models').length
             };
 
             document.getElementById('totalProjects').textContent = stats.total;
             document.getElementById('simulationsCount').textContent = stats.simulations;
             document.getElementById('analysisCount').textContent = stats.analysis;
             document.getElementById('signalCount').textContent = stats.signal;
+
+            // Update sidebar Quick Stats
+            document.getElementById('sidebarTotal').textContent    = stats.total;
+            document.getElementById('sidebarRenewable').textContent = stats.renewable;
+            document.getElementById('sidebarPower').textContent     = stats.power;
+            document.getElementById('sidebarHeat').textContent      = stats.heat;
+            document.getElementById('sidebarControl').textContent   = stats.control;
+            document.getElementById('sidebarSimulink').textContent  = stats.simulink;
 
             // Update global statistics
             projectsData.statistics = {
@@ -1197,11 +1403,40 @@
 
             // Save current tab to localStorage for persistence
             localStorage.setItem('matlabManager_activeTab', tabName);
+
+            if (tabName === 'add') {
+                const idField = document.getElementById('previewProjectId');
+                if (idField) idField.value = generateNextId();
+            }
         }
 
         // Upload form handler
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // Token check (book-manager style)
+            const tokenStatus = await centralAPI.getStatus();
+            if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+                alert('⚠️ GitHub token is missing or invalid. Please configure your token first.');
+                return;
+            }
+
+            // Capture file refs BEFORE any form reset later
+            const _mCodeArr   = Array.from(document.getElementById('codeFiles').files);
+            const _mZipF      = document.getElementById('zipFile').files[0] || null;
+            const _mPdfF      = document.getElementById('pdfFile').files[0] || null;
+            const _mReadF     = document.getElementById('readmeFile').files[0] || null;
+            const _mImgMap    = {
+                ivCurve: 'iv_curve.png', pvCurve: 'pv_curve.png', efficiencyGraph: 'efficiency.png',
+                tempEffect: 'temp_effect.png', irradianceVar: 'irradiance_variation.png',
+                surface3d: 'surface_3d.png', comparison: 'comparison.png', simulink: 'simulink_model.png'
+            };
+            const _mMappedImgs = [];
+            Object.entries(_mImgMap).forEach(([id, fname]) => {
+                const f = document.getElementById(id)?.files[0];
+                if (f) _mMappedImgs.push({ file: f, name: fname });
+            });
+            const _mOtherImgs = Array.from(document.getElementById('otherResults')?.files || []);
 
             const title = sanitizeInput(document.getElementById('projectTitle').value);
             const category = document.getElementById('projectCategory').value;
@@ -1210,20 +1445,13 @@
             const youtubeUrl = document.getElementById('youtubeUrl').value;
 
             // Duplicate check
-            if (!checkDuplicate(title)) {
-                return;
-            }
+            if (!checkDuplicate(title)) return;
 
             // Collect individual image uploads
             const imageFileMapping = {
-                'ivCurve': 'iv_curve.png',
-                'pvCurve': 'pv_curve.png',
-                'efficiencyGraph': 'efficiency.png',
-                'tempEffect': 'temp_effect.png',
-                'irradianceVar': 'irradiance_variation.png',
-                'surface3d': 'surface_3d.png',
-                'comparison': 'comparison.png',
-                'simulink': 'simulink_model.png'
+                'ivCurve': 'iv_curve.png', 'pvCurve': 'pv_curve.png', 'efficiencyGraph': 'efficiency.png',
+                'tempEffect': 'temp_effect.png', 'irradianceVar': 'irradiance_variation.png',
+                'surface3d': 'surface_3d.png', 'comparison': 'comparison.png', 'simulink': 'simulink_model.png'
             };
 
             const imageFiles = [];
@@ -1234,120 +1462,83 @@
                 }
             });
 
-            // Add other results (multiple files)
             const otherResults = document.getElementById('otherResults');
             if (otherResults && otherResults.files.length > 0) {
-                Array.from(otherResults.files).forEach(file => {
-                    imageFiles.push(file.name);
-                });
+                Array.from(otherResults.files).forEach(file => { imageFiles.push(file.name); });
             }
 
             // Validate file sizes
-            const allFiles = [
-                ...document.getElementById('codeFiles').files,
-                ...Array.from(document.getElementById('zipFile').files),
-                ...Array.from(document.getElementById('pdfFile').files),
-                ...Array.from(document.getElementById('readmeFile').files)
-            ];
-            
-            // Add all image files for validation
+            const allFiles = [...document.getElementById('codeFiles').files, ...Array.from(document.getElementById('zipFile').files), ...Array.from(document.getElementById('pdfFile').files), ...Array.from(document.getElementById('readmeFile').files)];
             Object.keys(imageFileMapping).forEach(inputId => {
                 const fileInput = document.getElementById(inputId);
-                if (fileInput && fileInput.files.length > 0) {
-                    allFiles.push(...fileInput.files);
-                }
+                if (fileInput && fileInput.files.length > 0) { allFiles.push(...fileInput.files); }
             });
-            if (otherResults && otherResults.files.length > 0) {
-                allFiles.push(...otherResults.files);
-            }
-
-            for (const file of allFiles) {
-                if (!validateFileSize(file)) return;
-            }
+            if (otherResults && otherResults.files.length > 0) { allFiles.push(...otherResults.files); }
+            for (const file of allFiles) { if (!validateFileSize(file)) return; }
 
             const codeFiles = Array.from(document.getElementById('codeFiles').files).map(f => f.name);
             const zipFile = document.getElementById('zipFile').files[0]?.name || '';
             const pdfFile = document.getElementById('pdfFile').files[0]?.name || '';
             const readmeFile = document.getElementById('readmeFile').files[0]?.name || '';
 
-            const nextId = projectsData.projects.length + 1;
-            const folderName = generateFolderName(nextId, title);
-            
-            // Get selected toolboxes
+            const newProjectId = generateNextId();
+            const seqNum = projectsData.projects.length + 1;
+            const folderName = generateFolderName(seqNum, title);
             const selectedToolboxes = [];
-            document.querySelectorAll('input[id^="tool-"]:checked').forEach(cb => {
-                selectedToolboxes.push(cb.value);
-            });
-            
+            document.querySelectorAll('input[id^="tool-"]:checked').forEach(cb => { selectedToolboxes.push(cb.value); });
             const difficulty = document.getElementById('projectDifficulty').value || 'Intermediate';
 
             const newProject = {
-                id: `matlab-project-${String(nextId).padStart(2, '0')}`,
-                category: category,
-                folder: folderName,
-                title: title,
-                subtitle: subtitle,
-                description: description,
-                difficulty: difficulty,
-                toolboxes: selectedToolboxes,
-                files: {
-                    code: codeFiles.length > 0 ? codeFiles[0] : '',
-                    images: imageFiles,
-                    pdf: pdfFile,
-                    readme: readmeFile,
-                    zip: zipFile,
-                    youtubeVideo: youtubeUrl
-                },
-                tags: [category, "MATLAB", ...selectedToolboxes.slice(0, 3)],
-                dateAdded: new Date().toISOString().split('T')[0],
-                lastModified: new Date().toISOString(),
-                views: 0,
-                downloads: 0
+                id: newProjectId, category: category, folder: folderName, title: title, subtitle: subtitle,
+                description: description, difficulty: difficulty, toolboxes: selectedToolboxes,
+                files: { code: codeFiles.length > 0 ? codeFiles[0] : '', images: imageFiles, pdf: pdfFile, readme: readmeFile, zip: zipFile, youtubeVideo: youtubeUrl },
+                tags: [category, "MATLAB", ...selectedToolboxes.slice(0, 3)], dateAdded: new Date().toISOString().split('T')[0],
+                lastModified: new Date().toISOString(), views: 0, downloads: 0
             };
 
-            projectsData.projects.push(newProject);
-            projectsData.statistics.lastUpdated = new Date().toISOString();
-            saveToCache(projectsData); // Update cache
+            const _dup = projectsData.projects.map(p => p.title.toLowerCase().trim());
+            if (_dup.includes(newProject.title.toLowerCase().trim())) {
+                if (!confirm(`⚠️ "${newProject.title}" already exists. Add anyway?`)) return;
+            }
 
-            updateStats();
-            renderProjectsList();
-            updateJSONEditor();
-            updateFolderStructure();
-            
-            const toolboxList = selectedToolboxes.length > 0 ? selectedToolboxes.join(', ') : 'None specified';
-            const categoryName = {
-                'renewable': '?? Renewable Energy',
-                'power': '? Power Systems',
-                'heat': '?? Heat Transfer',
-                'control': '??? Control Systems',
-                'simulink': '?? Simulink Models'
-            }[category] || category;
-
-            // Build image upload instructions
-            const imageInstructions = imageFiles.length > 0 
-                ? `\n?? Result Images (${imageFiles.length}):\n${imageFiles.map(img => `   � ${img}`).join('\n')}`
-                : '\n?? No result images selected (upload later if needed)';
-            
-            const docsInstructions = pdfFile || readmeFile 
-                ? `\n?? Documentation: ${[pdfFile && `PDF: ${pdfFile}`, readmeFile && `README: ${readmeFile}`].filter(Boolean).join(', ')}`
-                : '';
-
-            alert(`✅ Project Created Successfully!\n\n?? Project Details:\n?? ID: ${newProject.id}\n?? Folder: "${folderName}"\n?? Category: ${categoryName}\n?? Difficulty: ${difficulty}\n?? Toolboxes: ${selectedToolboxes.length}\n?? Code Files: ${codeFiles.length}${imageInstructions}${docsInstructions}\n\n??? MATLAB Tools Used:\n${toolboxList}\n\n?? Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder: "Projects Storage/MATLAB Projects/${folderName}/"\n3. Upload files to the folder:\n   - .m code files\n   - Result images (with exact names shown above)\n   ${pdfFile ? `- PDF documentation: ${pdfFile}\n   ` : ''}${readmeFile ? `- README file: ${readmeFile}\n   ` : ''}- ZIP file (if any)\n4. Update matlab-data.json in repository\n5. Project will appear on matlab-projects.html`);
-
-            this.reset();
-            // Clear all previews
-            ['ivPreview', 'pvPreview', 'effPreview', 'tempPreview', 'irrPreview', 
-             'surfPreview', 'compPreview', 'simPreview', 'otherPreview', 'pdfPreview', 'readmePreview'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = '';
+            projectsData.projects.push(newProject); projectsData.statistics.lastUpdated = new Date().toISOString();
+            saveToCache(projectsData); updateStats(); renderProjectsList();updateFolderStructure(); this.reset();
+            ['ivPreview', 'pvPreview', 'effPreview', 'tempPreview', 'irrPreview', 'surfPreview', 'compPreview', 'simPreview', 'otherPreview', 'pdfPreview', 'readmePreview'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.innerHTML = '';
             });
-            document.getElementById('codeFilesList').innerHTML = '';
-            
-            // Switch to manage tab
-            document.querySelector('.nav-tab button:nth-child(1)').classList.remove('active');
-            document.querySelector('.nav-tab:nth-child(3) button').classList.add('active');
-            document.getElementById('upload').classList.remove('active');
-            document.getElementById('manage').classList.add('active');
+            if (document.getElementById('codeFilesList')) document.getElementById('codeFilesList').innerHTML = '';
+
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            progressContainer.style.display = 'block';
+
+            try {
+                progressText.textContent = '🔍 Preparing uploads...'; progressFill.style.width = '10%';
+                const _fb = 'Projects Storage/MATLAB Projects/' + newProject.folder; const _ups = [];
+                _mCodeArr.forEach(f => _ups.push({ file: f, path: _fb + '/' + f.name }));
+                _mMappedImgs.forEach(({ file, name }) => _ups.push({ file, path: _fb + '/' + name }));
+                _mOtherImgs.forEach(f => _ups.push({ file: f, path: _fb + '/' + f.name }));
+                if (_mPdfF) _ups.push({ file: _mPdfF, path: _fb + '/' + _mPdfF.name });
+                if (_mReadF) _ups.push({ file: _mReadF, path: _fb + '/README.md' });
+                if (_mZipF) _ups.push({ file: _mZipF, path: _fb + '/' + _mZipF.name });
+
+                let _done = 0;
+                for (const { file, path } of _ups) {
+                    const pct = 15 + Math.round((_done / Math.max(_ups.length, 1)) * 65);
+                    progressFill.style.width = pct + '%'; progressText.textContent = '📤 ' + file.name;
+                    await githubUploader.uploadBinaryFile(path, file, 'Upload: ' + file.name); _done++;
+                }
+
+                progressText.textContent = '🗄️ Updating matlab-data.json...'; progressFill.style.width = '88%';
+                await githubUploader.uploadFile(GITHUB_REPO_PATH, JSON.stringify(projectsData, null, 2), 'Add MATLAB: ' + newProject.title);
+                logActivity('Add MATLAB: ' + newProject.title);
+                progressFill.style.width = '100%'; progressText.textContent = '✅ Complete!';
+                await new Promise(r => setTimeout(r, 1000)); progressContainer.style.display = 'none';
+                showAlert('success', `✅ "${newProject.title}" uploaded to GitHub!`);
+            } catch (error) {
+                progressContainer.style.display = 'none'; showAlert('error', '❌ Upload failed: ' + error.message);
+            }
         });
 
         // Render projects list
@@ -1365,11 +1556,20 @@
                 return;
             }
 
+            // Search filter
+            const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase();
+
             // Pagination
-            const totalPages = Math.ceil(projectsData.projects.length / ITEMS_PER_PAGE);
+            const filtered = projectsData.projects.filter(p =>
+                !searchQuery ||
+                (p.title || '').toLowerCase().includes(searchQuery) ||
+                (p.category || '').toLowerCase().includes(searchQuery)
+            );
+
+            const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+            if (currentPage > totalPages) currentPage = totalPages;
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
-            const end = start + ITEMS_PER_PAGE;
-            const pageProjects = projectsData.projects.slice(start, end);
+            const pageProjects = filtered.slice(start, start + ITEMS_PER_PAGE);
 
             document.getElementById('currentPageNum').textContent = currentPage;
             document.getElementById('totalPages').textContent = totalPages;
@@ -1377,91 +1577,97 @@
             document.getElementById('nextBtn').disabled = currentPage === totalPages;
             document.getElementById('paginationControls').style.display = totalPages > 1 ? 'flex' : 'none';
 
-            container.innerHTML = pageProjects.map(project => {
-                // Build all result image paths from files.images array
-                const hasImages = project.folder && project.files && project.files.images && project.files.images.length > 0;
-                const images = hasImages ? project.files.images : [];
-                const imageUrls = images.map(img => 
-                    `../../Projects%20Storage/MATLAB%20Projects/${encodeURIComponent(project.folder)}/${img}`
-                );
-                
+            const catNames = {
+                renewable: 'Renewable Energy',
+                power: 'Power Systems',
+                heat: 'Heat Transfer',
+                control: 'Control Systems',
+                simulink: 'Simulink'
+            };
+
+            const diffClass = (d) => ({
+                'Beginner': 'manage-diff-beginner',
+                'Intermediate': 'manage-diff-intermediate',
+                'Advanced': 'manage-diff-advanced',
+                'Expert': 'manage-diff-expert'
+            })[d] || 'manage-diff-intermediate';
+
+            container.innerHTML = `<div class="manage-grid">${pageProjects.map((project, idx) => {
+                const num = start + idx + 1;
+                const hasImages = project.folder && project.files?.images?.length > 0;
+                const imageUrls = hasImages
+                    ? project.files.images.map(img =>
+                        `../../../../Projects%20Storage/MATLAB%20Projects/${encodeURIComponent(project.folder)}/${img}`)
+                    : [];
+                const catName = catNames[project.category] || project.category || 'General';
+                const diff = project.difficulty || 'Intermediate';
+                const tags = (project.tags || []).slice(0, 3);
+                const isChecked = selectedProjects.has(project.id) ? 'checked' : '';
+
+                const thumbHtml = imageUrls.length > 0
+                    ? `<div class="manage-carousel" data-images='${JSON.stringify(imageUrls).replace(/'/g, "&apos;")}' style="position:absolute;inset:0;">
+                        ${imageUrls.map((url, i) => `<img src="${url}" alt="${sanitizeInput(project.title)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i===0?'1':'0'};transition:opacity 0.8s ease;" onerror="this.style.display='none'">`).join('')}
+                        ${imageUrls.length > 1 ? `<div class="manage-carousel-dots">${imageUrls.map((_,i) => `<span class="manage-dot${i===0?' active':''}"></span>`).join('')}</div>` : ''}
+                       </div>`
+                    : `<div class="manage-card-fallback"><i class="fas fa-chart-line"></i></div>`;
+
                 return `
-                <div class="project-item" data-id="${project.id}">
-                    <input type="checkbox" onchange="toggleSelection('${project.id}')" style="width: 20px; height: 20px; cursor: pointer;" ${selectedProjects.has(project.id) ? 'checked' : ''}>
-                    <div class="project-thumbnail">
-                        ${imageUrls.length > 0 ? `
-                            <div class="matlab-carousel-manager" data-images='${JSON.stringify(imageUrls)}' style="position:relative;width:100%;height:100%;">
-                                ${imageUrls.map((url, imgIndex) => `
-                                    <img 
-                                        src="${url}" 
-                                        alt="${sanitizeInput(project.title)} - Result ${imgIndex + 1}"
-                                        class="carousel-img ${imgIndex === 0 ? 'active' : ''}"
-                                        style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:${imgIndex === 0 ? '1' : '0'};transition:opacity 0.8s ease;border-radius:6px;"
-                                        onerror="this.style.display='none'"
-                                    />
-                                `).join('')}
-                                ${imageUrls.length > 1 ? `
-                                    <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5;">
-                                        ${imageUrls.map((_, i) => `<span class="carousel-dot ${i === 0 ? 'active' : ''}" style="width:6px;height:6px;border-radius:50%;background:${i === 0 ? 'var(--matlab-blue)' : 'rgba(255,255,255,0.5)'};transition:all 0.3s;"></span>`).join('')}
-                                    </div>
-                                ` : ''}
+                <div class="manage-card" data-id="${project.id}">
+                    <!-- Thumb -->
+                    <div class="manage-card-thumb">
+                        ${thumbHtml}
+                        <input type="checkbox" class="manage-card-check" onchange="toggleSelection('${project.id}')" ${isChecked} title="Select">
+                        <div class="manage-card-num">#${String(num).padStart(2,'0')}</div>
+                    </div>
+                    <!-- Body -->
+                    <div class="manage-card-body">
+                        <span class="manage-card-cat"><i class="fas fa-folder"></i> ${sanitizeInput(catName)}</span>
+                        <h3 class="manage-card-title">${sanitizeInput(project.title)}</h3>
+                        ${project.subtitle ? `<p class="manage-card-sub">${sanitizeInput(project.subtitle)}</p>` : ''}
+                        ${tags.length > 0 ? `<div class="manage-card-tags">${tags.map(t => `<span class="manage-card-tag">${sanitizeInput(t)}</span>`).join('')}</div>` : ''}
+                        <div class="manage-card-footer">
+                            <span class="manage-diff ${diffClass(diff)}">
+                                <i class="fas fa-signal"></i> ${diff}
+                            </span>
+                            <div class="manage-card-actions">
+                                <button class="manage-act-btn" onclick="editProject('${project.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="manage-act-btn del" onclick="deleteProject('${project.id}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
-                        ` : ''}
-                        <div class="thumbnail-fallback" ${imageUrls.length > 0 ? 'style="display:none;"' : ''}>
-                            <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
-                    <div class="project-info">
-                        <h3>${sanitizeInput(project.title)}</h3>
-                        <p><i class="fas fa-folder"></i> ${project.folder || project.id}</p>
-                        <p><i class="fas fa-tag"></i> ${projectsData.categories[project.category]?.name || project.category}</p>
-                        <p><i class="fas fa-file-code"></i> Code: ${project.files?.code || 'N/A'}</p>
-                    </div>
-                    <div class="project-actions">
-                        <button class="icon-btn" onclick="editProject('${project.id}')" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="icon-btn delete" onclick="deleteProject('${project.id}')" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('')}</div>`;
             
-            // Initialize carousels after rendering
+            // Initialize carousels
             setTimeout(initializeManagerCarousels, 100);
         }
         
         // Initialize auto-rotating carousels in manager
         function initializeManagerCarousels() {
-            const carousels = document.querySelectorAll('.matlab-carousel-manager');
+            const carousels = document.querySelectorAll('.manage-carousel');
             
             carousels.forEach(carousel => {
+                if (carousel._initialized) return;
+                carousel._initialized = true;
                 try {
-                    const images = JSON.parse(carousel.dataset.images);
+                    const images = JSON.parse(carousel.dataset.images.replace(/&apos;/g, "'"));
                     if (images.length <= 1) return;
                     
                     let currentIdx = 0;
-                    const imgs = carousel.querySelectorAll('.carousel-img');
-                    const dots = carousel.querySelectorAll('.carousel-dot');
+                    const imgs = carousel.querySelectorAll('img');
+                    const dots = carousel.querySelectorAll('.manage-dot');
                     
-                    // Auto-rotate every 3 seconds
                     setInterval(() => {
-                        // Fade out current
                         imgs[currentIdx].style.opacity = '0';
-                        if (dots[currentIdx]) {
-                            dots[currentIdx].style.background = 'rgba(255,255,255,0.5)';
-                        }
-                        
-                        // Next index
+                        if (dots[currentIdx]) dots[currentIdx].classList.remove('active');
                         currentIdx = (currentIdx + 1) % images.length;
-                        
-                        // Fade in next
                         imgs[currentIdx].style.opacity = '1';
-                        if (dots[currentIdx]) {
-                            dots[currentIdx].style.background = 'var(--matlab-blue)';
-                        }
-                    }, 3000);
+                        if (dots[currentIdx]) dots[currentIdx].classList.add('active');
+                    }, 3200);
                 } catch (e) {
                     console.error('Carousel init error:', e);
                 }
@@ -1469,14 +1675,9 @@
         }
 
         // Search functionality
-        document.getElementById('searchInput')?.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const items = document.querySelectorAll('.project-item');
-
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(searchTerm) ? 'grid' : 'none';
-            });
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            currentPage = 1;
+            renderProjectsList();
         });
 
         // Edit/Delete functions
@@ -1620,9 +1821,7 @@
             
             // Update displays
             updateStats();
-            renderProjectsList();
-            updateJSONEditor();
-            updateFolderStructure();
+            renderProjectsList();updateFolderStructure();
             closeEditModal();
             
             const filesInfo = replacedFiles.length > 0 
@@ -1633,91 +1832,32 @@
                 ? `\n\n?? Toolboxes: ${project.toolboxes.join(', ')}` 
                 : '';
             
-            alert(`✅ Project updated successfully!${toolboxList}${filesInfo}\n\n?? Remember to:\n1. Download JSON and push to GitHub\n2. Replace files in Projects Storage/MATLAB Projects/${project.folder}/`);
+            pushData('Update MATLAB: ' + project.title)
+                .then(() => showAlert('success', `✅ "${project.title}" updated & saved to GitHub!${filesInfo}`))
+                .catch(() => showAlert('success', `✅ "${project.title}" updated locally. Push failed — check token.`));
         }
 
         function deleteProject(id) {
             const project = projectsData.projects.find(p => p.id === id);
             if (!project) return;
 
-            if (confirm(`?? Delete "${project.title}"?\n\nThis action cannot be undone. You'll need to manually delete the folder from GitHub.`)) {
+            if (confirm(`Delete "${project.title}"? This cannot be undone.`)) {
                 projectsData.projects = projectsData.projects.filter(p => p.id !== id);
+                projectsData.statistics.lastUpdated = new Date().toISOString();
+                saveToCache(projectsData);
                 updateStats();
-                renderProjectsList();
-                updateJSONEditor();
-                updateFolderStructure();
-                alert('✅ Project deleted from JSON!\n\n?? Don\'t forget to:\n1. Delete folder from Projects Storage/MATLAB Projects/\n2. Download updated JSON\n3. Push changes to GitHub');
-            }
-        }
-
-        // JSON Editor functions
-        function updateJSONEditor() {
-            const editor = document.getElementById('jsonEditor');
-            if (editor) {
-                editor.value = JSON.stringify(projectsData, null, 2);
-            }
-        }
-
-        function validateJSON() {
-            const editor = document.getElementById('jsonEditor');
-            try {
-                JSON.parse(editor.value);
-                alert('✅ JSON is valid! All syntax checks passed.');
-            } catch (error) {
-                alert('❌ Invalid JSON:\n\n' + error.message);
-            }
-        }
-
-        function formatJSON() {
-            const editor = document.getElementById('jsonEditor');
-            try {
-                const parsed = JSON.parse(editor.value);
-                editor.value = JSON.stringify(parsed, null, 2);
-                alert('✅ JSON formatted successfully!');
-            } catch (error) {
-                alert('❌ Cannot format invalid JSON:\n\n' + error.message);
-            }
-        }
-
-        function saveJSON() {
-            const editor = document.getElementById('jsonEditor');
-            try {
-                projectsData = JSON.parse(editor.value);
-                updateStats();
-                renderProjectsList();
-                updateFolderStructure();
-                alert('✅ Changes saved to memory!\n\nClick "Download" to get the updated JSON file.');
-            } catch (error) {
-                alert('❌ Cannot save invalid JSON:\n\n' + error.message);
-            }
-        }
-
-        function downloadJSON() {
-            const dataStr = JSON.stringify(projectsData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'matlab-data.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('✅ JSON downloaded!\n\n?? Upload to: Projects Code/MATLAB/matlab-data.json');
-        }
-
-        async function reloadJSON() {
-            if (confirm('🔄 Reload original JSON from server? Unsaved changes will be lost.')) {
-                try {
-                    const response = await fetch('../../../Projects Code/MATLAB/matlab-data.json?' + Date.now());
-                    if (response.ok) {
-                        projectsData = await response.json();
-                        document.getElementById('jsonEditor').value = JSON.stringify(projectsData, null, 2);
-                        alert('✅ JSON reloaded from server!');
-                    } else {
-                        alert('❌ Failed to reload JSON from server.');
-                    }
-                } catch (error) {
-                    alert('❌ Error reloading: ' + error.message);
-                }
+                renderProjectsList();updateFolderStructure();
+                pushData('Delete MATLAB: ' + project.title)
+                    .then(() => {
+                        showAlert('success', `✅ "${project.title}" deleted & pushed to GitHub!`);
+                        // #5 Smart delete
+                        if (project.folder && confirm(`📁 Also delete "${project.folder}" folder from GitHub?`)) {
+                            githubHandler.deleteFolder('Projects Storage/MATLAB Projects/' + project.folder, 'Delete folder: ' + project.folder)
+                                .then(() => showAlert('success', `📁 Folder "${project.folder}" deleted from GitHub!`))
+                                .catch(e => showAlert('error', `Folder delete failed: ${e.message}`));
+                        }
+                    })
+                    .catch(() => showAlert('success', `✅ "${project.title}" deleted locally. Push failed — check token.`));
             }
         }
 
@@ -1941,9 +2081,7 @@
                 
                 saveToCache(projectsData);
                 updateStats();
-                renderProjectsList();
-                updateJSONEditor();
-                clearSelection();
+                renderProjectsList();clearSelection();
                 alert(`✅ ${selectedProjects.size} project(s) moved!\n\n?? Download updated JSON and update folder locations in GitHub.`);
             }
         }
@@ -1954,9 +2092,7 @@
                 
                 saveToCache(projectsData);
                 updateStats();
-                renderProjectsList();
-                updateJSONEditor();
-                updateFolderStructure();
+                renderProjectsList();updateFolderStructure();
                 clearSelection();
                 alert(`✅ ${selectedProjects.size} project(s) deleted!\n\n?? Remember to delete folders from GitHub and download updated JSON.`);
             }
@@ -1981,9 +2117,7 @@
                         projectsData = imported;
                         saveToCache(projectsData);
                         updateStats();
-                        renderProjectsList();
-                        updateJSONEditor();
-                        updateFolderStructure();
+                        renderProjectsList();updateFolderStructure();
                         alert('✅ Data imported successfully!');
                     }
                 } catch (error) {
@@ -2007,11 +2141,11 @@
             const helper = document.getElementById('categoryHelper');
             
             const helpers = {
-                'renewable': '?? Examples: Solar optimization, wind turbine analysis',
-                'power': '? Examples: Grid analysis, transformer modeling',
-                'heat': '?? Examples: Thermal analysis, cooling systems',
-                'control': '??? Examples: PID controllers, stability analysis',
-                'simulink': '?? Examples: Block diagrams, system dynamics'
+                'renewable': 'e.g. Solar optimization, wind turbine analysis',
+                'power': 'e.g. Grid analysis, transformer modeling',
+                'heat': 'e.g. Thermal analysis, cooling systems',
+                'control': 'e.g. PID controllers, stability analysis',
+                'simulink': 'e.g. Block diagrams, system dynamics'
             };
             
             helper.textContent = helpers[category] || '';
@@ -2104,6 +2238,7 @@
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadExistingData();
+            setInterval(() => loadExistingData(), 60000);
             
             // Setup drag & drop
             setupDragDrop('codeDropZone', 'codeFiles', handleCodeFiles);
@@ -2162,9 +2297,11 @@
     <!-- Central API System (March 2026 Integration) -->
     <script src="../../shared/unified-token-manager.js"></script>
     <script src="../../shared/central-api-gateway.js"></script>
+    <script src="../../Content-studio/github-content-uploader.js"></script>
     
     <!-- Project-Specific Modules -->
     <script src="../shared-utilities.js"></script>
+    <script src="../../../shared/activity-logger.js"></script>
     <script src="../github-api-handler.js"></script>
     <script src="../version-history.js"></script>
     <script src="../tags-system.js"></script>
@@ -2178,12 +2315,12 @@
     <script>
         // Initialize Advanced Features
         let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
-        let tokenManager, centralAPI; // Central API integration
-
+            let tokenManager, centralAPI, githubUploader; // Central API integration
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize central API system first
             tokenManager = new UnifiedTokenManager();
             centralAPI = CentralAPIGateway.getInstance();
+            githubUploader = centralAPI.getUploader(); // Book-manager style uploader
             
             // Initialize modules
             githubHandler = new GitHubAPIHandler();
@@ -2390,8 +2527,53 @@
         });
 
         // GitHub Push Function
+        function showAlert(type, message) {
+            const el = document.getElementById(type + 'Alert');
+            if (el) { el.textContent = message; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 5000); }
+            else { console.log('[' + type + ']', message); }
+        }
+
+        async function pushData(commitMsg) {
+            const badge = document.getElementById('tokenStatus');
+            const prevHTML = badge.innerHTML;
+            const prevClass = badge.className;
+            badge.className = 'token-status checking';
+            badge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            try { localStorage.setItem(CACHE_KEY + '_backup', localStorage.getItem(CACHE_KEY) || ''); } catch(_){}
+            const _bar = document.getElementById('pushProgressBar');
+            if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'block'; _bar.style.width = '30%'; }
+            try {
+                const tokenStatus = await centralAPI.getStatus();
+                if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+                    throw new Error('No valid token');
+                }
+                if (_bar) _bar.style.width = '70%';
+                await githubUploader.uploadFile(GITHUB_REPO_PATH, JSON.stringify(projectsData, null, 2), commitMsg);
+                if (_bar) { _bar.style.width = '100%'; setTimeout(() => { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }, 800); }
+                badge.className = 'token-status active';
+                badge.innerHTML = '<i class="fas fa-check-circle"></i> Saved ✔';
+                logActivity(commitMsg);
+                setTimeout(() => { badge.className = 'token-status active'; badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active'; }, 3000);
+            } catch(e) {
+                if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }
+                badge.className = prevClass; badge.innerHTML = prevHTML; throw e;
+            }
+        }
+
+        // #4 Activity history log
+        function logActivity(action) {
+            const key = CACHE_KEY + '_history';
+            const h = JSON.parse(localStorage.getItem(key) || '[]');
+            h.unshift({ action, timestamp: new Date().toISOString() });
+            if (h.length > 20) h.pop();
+            localStorage.setItem(key, JSON.stringify(h));
+            const type = action.startsWith('Add') ? 'upload' : action.startsWith('Delete') ? 'delete' : 'edit';
+            if (typeof ActivityLogger !== 'undefined') ActivityLogger.log(type, action, 'Admin', 'success', 'MATLAB');
+        }
+
         window.pushToGitHub = async function() {
-            if (!await githubHandler.verifyToken()) {
+            const tokenStatus = await centralAPI.getStatus();
+            if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
                 showGitHubAuthModal(githubHandler);
                 return;
             }
@@ -2403,15 +2585,11 @@
             }
 
             try {
-                await showUploadProgressModal(async (updateProgress) => {
-                    await githubHandler.uploadTextFile(
-                        'Projects Code/MATLAB/matlab-data.json',
-                        JSON.stringify(projectsData, null, 2),
-                        'Update MATLAB projects data'
-                    );
-                    updateProgress(100, 'Complete!');
-                });
-                
+                await githubUploader.uploadFile(
+                    'Projects Code/MATLAB/matlab-data.json',
+                    JSON.stringify(projectsData, null, 2),
+                    'Update MATLAB projects data'
+                );
                 alert('✅ Pushed to GitHub successfully!');
             } catch (error) {
                 alert('❌ GitHub push failed: ' + error.message);
@@ -2484,11 +2662,11 @@
                 <div class="edit-form-group">
                     <label><i class="fas fa-folder"></i> Category</label>
                     <select id="editCategory" required>
-                        <option value="renewable">?? Renewable Energy</option>
-                        <option value="power">? Power Systems</option>
-                        <option value="heat">?? Heat Transfer</option>
-                        <option value="control">??? Control Systems</option>
-                        <option value="simulink">?? Simulink Models</option>
+                        <option value="renewable">&#9728;&#65039; Renewable Energy</option>
+                        <option value="power">&#9889; Power Systems</option>
+                        <option value="heat">&#128293; Heat Transfer</option>
+                        <option value="control">&#9881;&#65039; Control Systems</option>
+                        <option value="simulink">&#128202; Simulink Models</option>
                     </select>
                 </div>
 
@@ -2582,7 +2760,7 @@
                         Replace Project Files
                     </h4>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">
-                        ?? Upload new versions to replace existing files. Leave empty to keep current files.
+                        <i class="fas fa-info-circle"></i> Upload new versions to replace existing files. Leave empty to keep current files.
                     </p>
                     
                     <div class="file-replace-item">
@@ -2666,8 +2844,8 @@
 </script>
 
     <!-- Progress Bar Overlay (Books Manager Style) -->
-    <div id="progressOverlay" class="progress-overlay"></div>
-    <div id="progressContainer" class="progress-container">
+    <div id="progressOverlay" class="progress-overlay" style="display:none"></div>
+    <div id="progressContainer" class="progress-container" style="display:none">
         <div class="progress-bar">
             <div id="progressFill" class="progress-fill"></div>
         </div>
@@ -2676,5 +2854,7 @@
 
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
+    <!-- #2 Push Progress Bar -->
+    <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
 </body>
 </html>

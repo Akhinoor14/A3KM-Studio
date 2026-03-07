@@ -501,7 +501,10 @@
 
     async function loadProjects() {
       try {
-        const res  = await fetch('arduino-data.json');
+        const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
+        let res;
+        try { res = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!res.ok) throw new Error(''); }
+        catch(e) { res = await fetch('arduino-data.json'); }
         const data = await res.json();
         // Merge metadata (difficulty) into each project
         allProjects = (data.projects || []).map(p => ({

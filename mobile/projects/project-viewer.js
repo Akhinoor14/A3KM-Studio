@@ -402,6 +402,21 @@
                     </div>
                 </div>
             </section>
+            ` : currentProject.youtube_id ? `
+            <div class="yt-player-section" style="width:100%;margin-bottom:24px;">
+                <div id="ytPlayerBox" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px 12px 0 0;border:2px solid rgba(204,0,0,0.4);border-bottom:none;background:#000;">
+                    <div id="ytPlayer" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+                </div>
+                <div id="ytControls" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.9);border:2px solid rgba(204,0,0,0.4);border-top:1px solid rgba(204,0,0,0.2);border-radius:0 0 12px 12px;">
+                    <button id="ytPlayBtn" onclick="window.projectViewer.ytTogglePlay()" style="background:rgba(204,0,0,0.25);border:1px solid rgba(204,0,0,0.5);border-radius:8px;color:#fff;padding:8px 16px;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;">
+                        <i class="fas fa-pause" id="ytPlayIcon"></i>
+                    </button>
+                    <button id="ytMuteBtn" onclick="window.projectViewer.ytToggleMute()" style="background:rgba(204,0,0,0.25);border:1px solid rgba(204,0,0,0.5);border-radius:8px;color:#fff;padding:8px 16px;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;">
+                        <i class="fas fa-volume-mute" id="ytMuteIcon"></i>
+                    </button>
+                    <span style="color:rgba(255,255,255,0.4);font-size:11px;margin-left:auto;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">▶ Auto</span>
+                </div>
+            </div>
             ` : circuitImagePath ? `
             <div class="project-image">
                 <img src="${circuitImagePath}" alt="${currentProject.title}" style="width:100%;border-radius:12px;border:2px solid var(--border-primary);" onerror="this.parentElement.style.display='none'; console.error('Failed to load circuit image:', this.src);">
@@ -741,7 +756,7 @@
 
             <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-top: 32px;">
                 ${hasTinkercad ? `
-                <button class="action-btn" onclick="window.open('${currentProject.tinkercadLink}', '_blank')" style="padding: 14px 24px; background: #00979d; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
+                <button class="action-btn" onclick="window.open('${currentProject.tinkercad || currentProject.tinkercadLink}', '_blank')" style="padding: 14px 24px; background: #00979d; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
                     <i class="fas fa-play"></i> Simulate in Tinkercad
                 </button>
                 ` : ''}
@@ -762,21 +777,21 @@
                 ` : ''}
             </div>
             
-            ${(currentProject.category === 'arduino' || currentProject.category === 'solidworks') && sequentialProjects.length > 1 ? `
+            ${(isArduino || urlCategory === 'solidworks') && sequentialProjects.length > 1 ? `
             <section style="margin-top: 32px; padding-top: 24px; border-top: 2px solid rgba(139,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
                     ${currentProjectIndex > 0 ? `
                     <button onclick="window.projectViewer.navigateToPrevProject()" style="flex: 1; padding: 14px 20px; background: rgba(204, 0, 0, 0.1); color: var(--text-primary); border: 2px solid var(--primary-red); border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95rem; transition: all 0.3s ease;">
                         <i class="fas fa-chevron-left"></i>
                         <div style="text-align: left;">
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Previous ${currentProject.category === 'solidworks' ? 'Model' : 'Project'}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Previous ${urlCategory === 'solidworks' ? 'Model' : 'Project'}</div>
                             <div style="font-size: 0.9rem; font-weight: 700;">${sequentialProjects[currentProjectIndex - 1].title}</div>
                         </div>
                     </button>
                     ` : '<div style="flex: 1;"></div>'}
                     
                     <div style="text-align: center; padding: 0 12px;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">${currentProject.category === 'solidworks' ? 'Model' : 'Project'}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">${urlCategory === 'solidworks' ? 'Model' : 'Project'}</div>
                         <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-red);">${currentProjectIndex + 1}<span style="font-size: 1rem; color: var(--text-secondary);">/${sequentialProjects.length}</span></div>
                     </div>
                     
@@ -892,6 +907,11 @@
                 loadExplanation(explanationPath);
             }
         }
+
+        // Initialize YouTube player if needed
+        if (currentProject.youtube_id) {
+            initYouTubePlayer(currentProject.youtube_id);
+        }
     }
 
     function loadModelViewerLibrary() {
@@ -904,6 +924,54 @@
         link.rel = 'stylesheet';
         link.href = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.css';
         document.head.appendChild(link);
+    }
+
+    // === YouTube IFrame Player ===
+    let ytPlayer = null;
+
+    function initYouTubePlayer(videoId) {
+        if (!videoId) return;
+        if (window.YT && window.YT.Player) {
+            createYTPlayer(videoId);
+            return;
+        }
+        window._pendingYTVideoId = videoId;
+        window.onYouTubeIframeAPIReady = function() {
+            if (window._pendingYTVideoId) {
+                createYTPlayer(window._pendingYTVideoId);
+                window._pendingYTVideoId = null;
+            }
+        };
+        if (!document.getElementById('ytApiScript')) {
+            const script = document.createElement('script');
+            script.id = 'ytApiScript';
+            script.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(script);
+        }
+    }
+
+    function createYTPlayer(videoId) {
+        const playerEl = document.getElementById('ytPlayer');
+        if (!playerEl) return;
+        ytPlayer = new YT.Player('ytPlayer', {
+            videoId: videoId,
+            playerVars: {
+                autoplay: 1,
+                mute: 1,
+                loop: 1,
+                playlist: videoId,
+                controls: 0,
+                modestbranding: 1,
+                rel: 0,
+                iv_load_policy: 3,
+                playsinline: 1
+            },
+            events: {
+                onReady: function(e) {
+                    e.target.playVideo();
+                }
+            }
+        });
     }
 
     /**
@@ -1458,7 +1526,8 @@
             };
             
             // Add next/prev navigation for Arduino projects
-            if (currentProject.category === 'arduino' && sequentialProjects.length > 1) {
+            const _urlCat1 = new URLSearchParams(window.location.search).get('category');
+            if (_urlCat1 === 'arduino' && sequentialProjects.length > 1) {
                 if (currentProjectIndex > 0) {
                     viewerOptions.prevCallback = () => navigateToProject(sequentialProjects[currentProjectIndex - 1].id);
                 }
@@ -1488,7 +1557,8 @@
             };
             
             // Add next/prev navigation for Arduino projects
-            if (currentProject.category === 'arduino' && sequentialProjects.length > 1) {
+            const _urlCat2 = new URLSearchParams(window.location.search).get('category');
+            if (_urlCat2 === 'arduino' && sequentialProjects.length > 1) {
                 if (currentProjectIndex > 0) {
                     viewerOptions.prevCallback = () => navigateToProject(sequentialProjects[currentProjectIndex - 1].id);
                 }
@@ -1513,7 +1583,34 @@
                 navigateToProject(nextProject.id);
             }
         },
-        
+
+        // YouTube Player Controls
+        ytTogglePlay: function() {
+            if (!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') return;
+            const state = ytPlayer.getPlayerState();
+            if (state === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+                const icon = document.getElementById('ytPlayIcon');
+                if (icon) icon.className = 'fas fa-play';
+            } else {
+                ytPlayer.playVideo();
+                const icon = document.getElementById('ytPlayIcon');
+                if (icon) icon.className = 'fas fa-pause';
+            }
+        },
+        ytToggleMute: function() {
+            if (!ytPlayer || typeof ytPlayer.isMuted !== 'function') return;
+            if (ytPlayer.isMuted()) {
+                ytPlayer.unMute();
+                const icon = document.getElementById('ytMuteIcon');
+                if (icon) icon.className = 'fas fa-volume-up';
+            } else {
+                ytPlayer.mute();
+                const icon = document.getElementById('ytMuteIcon');
+                if (icon) icon.className = 'fas fa-volume-mute';
+            }
+        },
+
         // GLB Viewer Control Functions
         toggleAutoRotate: function() {
             const viewer = document.getElementById('modelViewer');

@@ -32,13 +32,18 @@
     bindChips('diffChips',  (v) => { activeDiff = v; applyFilters(); });
   });
 
+  const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/programming/programs.json';
+  const LOCAL_PATH = '../../../Projects%20Code/programming/programs.json';
+
   /* ─── Load JSON ─── */
   function loadPrograms() {
-    fetch('../../../Projects%20Code/programming/programs.json')
+    // Try GitHub raw first (always fresh), fallback to local
+    fetch(GITHUB_RAW_URL + '?t=' + Date.now())
       .then((r) => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (!r.ok) throw new Error('GitHub raw ' + r.status);
         return r.json();
       })
+      .catch(() => fetch(LOCAL_PATH).then((r) => r.json()))
       .then((data) => {
         allPrograms = Array.isArray(data.programs) ? data.programs : [];
         applyFilters();
@@ -298,11 +303,12 @@
   /* Call updateMobileStats after programs load */
   const originalLoadPrograms = loadPrograms;
   loadPrograms = function () {
-    fetch('../../../Projects%20Code/programming/programs.json')
+    fetch(GITHUB_RAW_URL + '?t=' + Date.now())
       .then((r) => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (!r.ok) throw new Error('GitHub raw ' + r.status);
         return r.json();
       })
+      .catch(() => fetch(LOCAL_PATH).then((r) => r.json()))
       .then((data) => {
         allPrograms = Array.isArray(data.programs) ? data.programs : [];
         applyFilters();
@@ -312,6 +318,7 @@
         document.getElementById('programsList').innerHTML =
           '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i>' +
           '<p>Failed to load programs.<br>Please refresh.</p></div>';
+      });
       });
   };
 

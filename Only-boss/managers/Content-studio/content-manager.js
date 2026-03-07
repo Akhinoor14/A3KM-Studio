@@ -118,15 +118,8 @@ class ContentManager {
             // 🔄 AUTO-SYNC: If video-content updated, sync to mobile content.json
             if (contentType === 'video-content') {
                 try {
-                    // Use unified sync system if available
-                    if (window.unifiedVideoSync) {
-                        await window.unifiedVideoSync.syncDesktopToMobile();
-                        console.log('✅ Mobile content.json auto-synced (Unified Sync)');
-                    } else {
-                        // Fallback to old method
-                        await this.syncVideoToMobileContentJSON();
-                        console.log('✅ Mobile content.json auto-synced (Legacy method)');
-                    }
+                    await this.syncVideoToMobileContentJSON();
+                    console.log('✅ Mobile content.json auto-synced after edit');
                 } catch (syncError) {
                     console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
                 }
@@ -143,6 +136,10 @@ class ContentManager {
                 title: updates.title || items[index].title,
                 timestamp: new Date().toISOString()
             });
+
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', `Edited: ${updates.title || items[index].title}`, 'Admin', 'success', contentType);
+            }
             
             return { success: true, item: items[index] };
             
@@ -157,6 +154,91 @@ class ContentManager {
      */
     async updateContent(contentType, contentId, updates) {
         return await this.editContent(contentType, contentId, updates);
+    }
+
+    // ==================== SAVE / UPLOAD CONTENT ====================
+
+    /**
+     * Save entire content JSON (replace all data).
+     * Used by JSON editor "Save Changes" button.
+     */
+    async saveContent(contentType, data) {
+        try {
+            const jsonFileName = this.getJSONFileName(contentType);
+            const jsonPath = `Content Studio/${contentType}/${jsonFileName}`;
+
+            await this.githubUploader.replaceJSON(jsonPath, data);
+
+            // 🔄 AUTO-SYNC: If video-content saved, sync to mobile content.json
+            if (contentType === 'video-content') {
+                try {
+                    await this.syncVideoToMobileContentJSON();
+                    console.log('✅ Mobile content.json auto-synced after JSON save');
+                } catch (syncError) {
+                    console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
+                }
+            }
+
+            // Invalidate cache so next load fetches fresh data
+            delete this.cache[contentType];
+
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('edit', `Saved JSON: ${contentType}`, 'Admin', 'success', contentType);
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error saving content:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Upload (add) a new content item to the JSON array.
+     * Used by educational-videos-manager and other flat-array managers.
+     */
+    async uploadContent(contentType, item) {
+        try {
+            const data = await this.loadContent(contentType);
+            const items = this.getItemsFromData(data, contentType);
+
+            items.push(item);
+            this.setItemsToData(data, contentType, items);
+
+            const jsonFileName = this.getJSONFileName(contentType);
+            const jsonPath = `Content Studio/${contentType}/${jsonFileName}`;
+            await this.githubUploader.replaceJSON(jsonPath, data);
+
+            // 🔄 AUTO-SYNC: If video-content uploaded, sync to mobile content.json
+            if (contentType === 'video-content') {
+                try {
+                    await this.syncVideoToMobileContentJSON();
+                    console.log('✅ Mobile content.json auto-synced after upload');
+                } catch (syncError) {
+                    console.warn('⚠️ Mobile sync failed (non-critical):', syncError.message);
+                }
+            }
+
+            // Invalidate cache
+            delete this.cache[contentType];
+
+            this.addToHistory({
+                action: 'upload',
+                contentType,
+                contentId: item.id,
+                title: item.title,
+                timestamp: new Date().toISOString()
+            });
+
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('upload', `Uploaded: ${item.title}`, 'Admin', 'success', contentType);
+            }
+
+            return { success: true, item };
+        } catch (error) {
+            console.error('Error uploading content:', error);
+            throw error;
+        }
     }
 
     /**
@@ -304,6 +386,10 @@ class ContentManager {
                 title: item.title,
                 timestamp: new Date().toISOString()
             });
+
+            if (typeof ActivityLogger !== 'undefined') {
+                ActivityLogger.log('delete', `Deleted: ${item.title}`, 'Admin', 'success', contentType);
+            }
             
             return { success: true, message: 'Deleted successfully' };
             

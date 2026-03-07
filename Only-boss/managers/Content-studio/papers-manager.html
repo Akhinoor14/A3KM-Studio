@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1244,6 +1244,9 @@
     #editRichAbstract blockquote { border-left:3px solid #1565C0; margin:8px 0; padding:6px 12px; background:rgba(21,101,192,0.08); color:rgba(210,220,240,0.7); font-style:italic; border-radius:0 4px 4px 0; }
     #editRichAbstract hr { border:none; border-top:1px solid rgba(21,101,192,0.4); margin:10px 0; }
   </style>
+    <!-- Shared Admin Navbar -->
+    <link rel="stylesheet" href="../../shared/only-boss-navbar.css">
+    <script src="../../shared/only-boss-navbar.js" defer></script>
 </head>
 <body>
   <!-- Neural Cursor -->
@@ -1283,9 +1286,6 @@
         </div>
         <div class="tab-item" data-tab="statistics" onclick="switchTab('statistics')">
           <span>📈</span> Statistics
-        </div>
-        <div class="tab-item" data-tab="json-editor" onclick="switchTab('json-editor')">
-          <span>🔧</span> JSON Editor
         </div>
       </div>
 
@@ -1470,6 +1470,11 @@
           <div class="form-group">
             <label>📝 Paper Title *</label>
             <input type="text" id="title" placeholder="Enter complete paper title..." required>
+          </div>
+
+          <div class="form-group">
+            <label>🔖 Paper ID (Auto-generated)</label>
+            <input type="text" id="previewPaperId" readonly placeholder="Will be assigned on upload..." style="opacity:0.7;cursor:not-allowed;">
           </div>
 
           <div class="form-row">
@@ -1855,57 +1860,6 @@
         </div>
       </div>
 
-      <!-- JSON Editor Tab -->
-      <div id="json-editor-tab" class="tab-content">
-        <div class="content-header">
-          <h2>🔧 JSON Editor</h2>
-          <p>Advanced editing of papers.json database file</p>
-        </div>
-        
-        <!-- JSON Editor Warning & Instructions -->
-        <div style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, rgba(255,152,0,0.12), rgba(255,87,34,0.08)); border: 2px solid rgba(255,152,0,0.3); border-radius: 10px;">
-          <h3 style="color: #FFB74D; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-exclamation-triangle"></i> ⚠️ Advanced Users Only
-          </h3>
-          <div style="color: rgba(255,255,255,0.85); line-height: 1.8;">
-            <p style="margin-bottom: 12px;"><strong>What is this?</strong> This editor provides direct access to the <code style="background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px;">papers.json</code> file that stores all your research papers data.</p>
-            <p style="margin-bottom: 15px;"><strong>⚠️ Warning:</strong> Manual editing can break your database if JSON syntax is incorrect. Always validate before saving!</p>
-            <ul style="padding-left: 20px; margin-bottom: 12px;">
-              <li><strong>✓ Validate JSON:</strong> Checks for syntax errors (commas, brackets, quotes)</li>
-              <li><strong>🎨 Format JSON:</strong> Auto-indents and beautifies code</li>
-              <li><strong>🔄 Reload Original:</strong> Discards all changes and reloads from file</li>
-              <li><strong>💾 Save Changes:</strong> Writes to file (validates automatically)</li>
-            </ul>
-            <p style="margin-top: 15px; padding: 12px; background: rgba(76,175,80,0.15); border-left: 3px solid #66BB6A; border-radius: 4px;">
-              <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Use the regular Upload/Manage tabs for safer editing. This editor is best for bulk operations, category structure changes, or database migrations.
-            </p>
-          </div>
-        </div>
-        
-        <div class="json-editor-container">
-          <div class="json-toolbar">
-            <button class="btn-validate" onclick="validateJSON()">
-              <i class="fas fa-check-circle"></i>
-              Validate JSON
-            </button>
-            <button class="btn-format" onclick="formatJSON()">
-              <i class="fas fa-magic"></i>
-              Format JSON
-            </button>
-            <button class="btn-import" onclick="saveJSON()">
-              <i class="fas fa-save"></i>
-              Save Changes
-            </button>
-            <button class="btn-download" onclick="reloadJSON()">
-              <i class="fas fa-sync-alt"></i>
-              Reload Original
-            </button>
-          </div>
-          <div class="json-editor-area">
-            <textarea id="json-editor" class="json-editor" spellcheck="false"></textarea>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -2089,6 +2043,7 @@
   <!-- Scripts -->
   <script src="../shared/unified-token-manager.js"></script>
   <script src="../shared/central-api-gateway.js"></script>
+  <script src="../../shared/activity-logger.js"></script>
   <script src="content-manager.js"></script>
   <script src="github-content-uploader.js"></script>
   <script>
@@ -2136,6 +2091,24 @@
     let currentPage = 1;
     const papersPerPage = 12;
     let filteredPapers = [];
+
+    function generateNextId() {
+      const prefix = 'paper-';
+      let max = 0;
+      (papersData.papers || []).forEach(p => {
+        if (p.id && p.id.startsWith(prefix)) {
+          const num = parseInt(p.id.slice(prefix.length), 10);
+          if (!isNaN(num) && num > max) max = num;
+        }
+      });
+      return prefix + String(max + 1).padStart(6, '0');
+    }
+
+    function checkDuplicatePaper(title, excludeId) {
+      return (papersData.papers || []).find(p =>
+        p.id !== excludeId && p.title.trim().toLowerCase() === title.trim().toLowerCase()
+      );
+    }
     
     // Load categories from JSON with grouped display (150+ categories in 9 sectors)
     async function loadCategories() {
@@ -2646,7 +2619,7 @@
       const keywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k);
       
       const newPaper = {
-        id: 'paper-' + Date.now(),
+        id: generateNextId(),
         category: category,
         field: field,
         title: title,
@@ -2664,6 +2637,12 @@
         downloads: 0,
         dateAdded: new Date().toISOString().split('T')[0]
       };
+
+      const dup = checkDuplicatePaper(title, null);
+      if (dup) {
+        const proceed = confirm(`⚠️ A paper titled "${dup.title}" (ID: ${dup.id}) already exists.\n\nUpload anyway?`);
+        if (!proceed) return;
+      }
       
       papersData.papers.unshift(newPaper);
       
@@ -3324,49 +3303,6 @@
       }
     }
     
-    // JSON Editor functions
-    function validateJSON() {
-      const editor = document.getElementById('json-editor');
-      try {
-        JSON.parse(editor.value);
-        alert('✅ JSON is valid!');
-      } catch (error) {
-        alert('❌ Invalid JSON: ' + error.message);
-      }
-    }
-    
-    function formatJSON() {
-      const editor = document.getElementById('json-editor');
-      try {
-        const formatted = JSON.stringify(JSON.parse(editor.value), null, 2);
-        editor.value = formatted;
-        alert('✨ JSON formatted successfully!');
-      } catch (error) {
-        alert('❌ Cannot format invalid JSON: ' + error.message);
-      }
-    }
-    
-    async function saveJSON() {
-      const editor = document.getElementById('json-editor');
-      try {
-        const data = JSON.parse(editor.value);
-        await contentManager.saveJSON('Content Studio/research-papers/papers.json', data);
-        papersData = data;
-        filteredPapers = [...papersData.papers];
-        updateDashboard();
-        loadFilterCategories();
-        renderPapers();
-        alert('✅ JSON saved successfully!');
-      } catch (error) {
-        alert('❌ Failed to save: ' + error.message);
-      }
-    }
-    
-    async function reloadJSON() {
-      await loadPapers();
-      document.getElementById('json-editor').value = JSON.stringify(papersData, null, 2);
-      alert('🔄 JSON reloaded from file!');
-    }
     
     // Tab switching
     function switchTab(tabName) {
@@ -3379,11 +3315,12 @@
       // Save current tab to localStorage for persistence
       localStorage.setItem('papersManager_activeTab', tabName);
       
+      if (tabName === 'upload') {
+        const el = document.getElementById('previewPaperId');
+        if (el) el.value = generateNextId();
+      }
       if (tabName === 'statistics') {
         updateStatistics();
-      } else if (tabName === 'json-editor') {
-        document.getElementById('json-editor').value = JSON.stringify(papersData, null, 2);
-      } else if (tabName === 'manage') {
         applyFilters();
       }
     }
@@ -3393,8 +3330,12 @@
       if (!confirm('Save papers.json to GitHub?')) return;
       
       try {
-        const uploader = new GitHubContentUploader();
-        await uploader.uploadFile(
+        const tokenStatus = await gateway.getStatus();
+        if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+          alert('⚠️ GitHub token missing or invalid. Please set up your token first.');
+          return;
+        }
+        await githubUploader.uploadFile(
           'Content Studio/research-papers/papers.json',
           JSON.stringify(papersData, null, 2),
           'Updated research papers data'

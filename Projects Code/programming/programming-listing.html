@@ -1080,9 +1080,19 @@
       matlab:     { class: 'matlab',     label: 'MATLAB', icon: 'fas fa-chart-line',  prism: 'matlab'     }
     };
 
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/programming/programs.json';
+
     async function loadPrograms() {
       try {
-        const response = await fetch('programs.json');
+        // Try GitHub raw URL first — always reflects latest push
+        let response;
+        try {
+          response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
+          if (!response.ok) throw new Error('GitHub raw ' + response.status);
+        } catch {
+          // Fallback to local relative path (for local dev without internet)
+          response = await fetch('programs.json?t=' + Date.now());
+        }
         const data     = await response.json();
         allPrograms      = data.programs || [];
         filteredPrograms = [...allPrograms];
