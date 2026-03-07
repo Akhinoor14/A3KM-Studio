@@ -5731,18 +5731,20 @@ if (!projectsGrid) {
 }
 
 // Mobile Navigation Toggle
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on nav links
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
+if (hamburger) {
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
     });
-});
+
+    // Close mobile menu when clicking on nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
+    });
+}
 
 // Set permanent dark mode
 document.documentElement.setAttribute('data-theme', 'dark');
@@ -6177,18 +6179,20 @@ function filterProjects(category) {
     }
 }
 
-// Filter button event listeners
-filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Update active filter button
-        filterBtns.forEach(button => button.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // Filter projects
-        const category = btn.getAttribute('data-filter');
-        filterProjects(category);
+// Filter button event listeners (only for pages with the old projects-grid)
+if (projectsGrid) {
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update active filter button
+            filterBtns.forEach(button => button.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Filter projects
+            const category = btn.getAttribute('data-filter');
+            filterProjects(category);
+        });
     });
-});
+}
 
 // Initialize projects
 console.log('🎨 Initializing projects...');

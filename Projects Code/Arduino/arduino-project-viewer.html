@@ -28,36 +28,18 @@
             --bg-dark: rgba(10, 10, 10, 0.98);
             --bg-card: rgba(26, 0, 0, 0.95);
             --border-primary: rgba(139, 0, 0, 0.3);
+            --border-hover: rgba(139, 0, 0, 0.7);
             --text-primary: rgba(255, 255, 255, 0.95);
             --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-white: rgba(255, 255, 255, 0.95);
         }
 
         body {
-            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
-            background-attachment: fixed;
             min-height: 100vh;
             margin: 0;
             padding: 0;
             position: relative;
             overflow-x: hidden;
-        }
-
-        /* Engineering Grid Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, rgba(139,0,0,0.03) 0 1px, transparent 1px 30px),
-                repeating-linear-gradient(90deg, rgba(139,0,0,0.03) 0 1px, transparent 1px 30px),
-                repeating-linear-gradient(45deg, rgba(139,0,0,0.05) 0 2px, transparent 2px 20px);
-            background-size: 30px 30px, 30px 30px, 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.6;
         }
 
         .viewer-nav,
@@ -189,14 +171,6 @@
             color: var(--primary-red);
         }
 
-        .content-wrapper {
-            margin-top: 20px; /* Changed from 80px since nav is hidden */
-            padding: 20px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
         .project-header {
             background: var(--bg-card);
             border: 2px solid var(--border-primary);
@@ -255,11 +229,168 @@
 
         .content-wrapper {
             max-width: 1600px;
-            margin: 170px auto 40px;
+            margin: 20px auto 40px;
             padding: 0 30px;
         }
 
         /* New Layout Sections */
+
+        /* ── Documentation Entry Card ───────────────────────── */
+        .doc-entry-card {
+            width: 100%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 18px;
+            padding: 36px 40px;
+            margin-bottom: 30px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            transition: all 0.35s ease;
+            box-sizing: border-box;
+        }
+
+        .doc-entry-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(139,0,0,0.08) 0%, rgba(90,0,0,0.04) 100%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            pointer-events: none;
+        }
+
+        .doc-entry-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary-red), transparent);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .doc-entry-card:hover {
+            border-color: var(--primary-red);
+            box-shadow: 0 12px 40px rgba(139,0,0,0.25), 0 0 60px rgba(139,0,0,0.08);
+            transform: translateY(-4px);
+        }
+
+        .doc-entry-card:hover::before,
+        .doc-entry-card:hover::after {
+            opacity: 1;
+        }
+
+        .doc-entry-icon-wrap {
+            flex-shrink: 0;
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, rgba(139,0,0,0.25), rgba(90,0,0,0.15));
+            border: 2px solid rgba(139,0,0,0.4);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            color: var(--primary-red);
+            transition: all 0.35s ease;
+            box-shadow: 0 4px 15px rgba(139,0,0,0.2);
+        }
+
+        .doc-entry-card:hover .doc-entry-icon-wrap {
+            background: linear-gradient(135deg, rgba(139,0,0,0.4), rgba(90,0,0,0.3));
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 20px rgba(139,0,0,0.4);
+        }
+
+        .doc-entry-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .doc-entry-title {
+            color: var(--primary-red);
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-entry-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+
+        .doc-entry-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .doc-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(139,0,0,0.12);
+            border: 1px solid rgba(139,0,0,0.3);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .doc-tag i {
+            color: var(--primary-red);
+            font-size: 0.9rem;
+        }
+
+        .doc-entry-card:hover .doc-tag {
+            background: rgba(139,0,0,0.2);
+            border-color: rgba(139,0,0,0.5);
+        }
+
+        .doc-entry-cta {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 14px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.35s ease;
+            box-shadow: 0 4px 15px rgba(139,0,0,0.35);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .doc-entry-cta i {
+            font-size: 1.6rem;
+            transition: transform 0.35s ease;
+        }
+
+        .doc-entry-card:hover .doc-entry-cta {
+            background: linear-gradient(135deg, #a00000, var(--primary-red));
+            box-shadow: 0 6px 25px rgba(139,0,0,0.55);
+            transform: scale(1.05);
+        }
+
+        .doc-entry-card:hover .doc-entry-cta i {
+            transform: translateX(4px);
+        }
+
         .action-buttons-container {
             display: flex;
             flex-direction: column;
@@ -273,10 +404,6 @@
             display: grid;
             grid-template-columns: 65% 35%;
             gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .documentation-section {
             margin-bottom: 30px;
         }
 
@@ -311,1017 +438,6 @@
             opacity: 0.9;
         }
 
-        .doc-tabs {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 0;
-            border-bottom: 3px solid var(--border-primary);
-            padding-bottom: 0;
-            background: rgba(10, 0, 0, 0.3);
-            padding: 12px 12px 0 12px;
-            border-radius: 12px 12px 0 0;
-        }
-
-        .doc-tab {
-            padding: 12px 18px;
-            background: rgba(20, 0, 0, 0.5);
-            border: 2px solid rgba(139, 0, 0, 0.3);
-            border-bottom: none;
-            border-radius: 10px 10px 0 0;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-            margin-bottom: -3px;
-            white-space: nowrap;
-        }
-
-        .doc-tab i {
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
-        }
-
-        .doc-tab:hover {
-            background: rgba(139, 0, 0, 0.15);
-            color: var(--text-primary);
-            border-color: var(--border-hover);
-            transform: translateY(-3px);
-        }
-
-        .doc-tab:hover i {
-            transform: scale(1.15);
-        }
-
-        .doc-tab.active {
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            color: white;
-            border-color: var(--primary-red);
-            border-bottom: 3px solid var(--primary-red);
-            box-shadow: 0 -4px 12px rgba(139, 0, 0, 0.4);
-            transform: translateY(-3px);
-        }
-
-        .doc-tab.active i {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .doc-tab.pdf-download-btn {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(90, 0, 0, 0.25));
-            border: 2px solid var(--border-primary);
-            border-radius: 10px;
-            margin-left: auto;
-            border-bottom: 2px solid var(--border-primary) !important;
-        }
-
-        .doc-tab.pdf-download-btn:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.35), rgba(90, 0, 0, 0.4));
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(139, 0, 0, 0.5);
-        }
-
-        .doc-tab.pdf-download-btn i {
-            color: var(--primary-red);
-            font-size: 1.2rem;
-        }
-
-        /* Disabled PDF button state */
-        .doc-tab.pdf-download-btn.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(80, 80, 80, 0.25));
-            border-color: rgba(100, 100, 100, 0.3);
-            position: relative;
-        }
-
-        .doc-tab.pdf-download-btn.disabled:hover {
-            transform: none;
-            box-shadow: none;
-            background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(80, 80, 80, 0.25));
-        }
-
-        .doc-tab.pdf-download-btn.disabled i {
-            color: rgba(150, 150, 150, 0.6);
-        }
-
-        .doc-tab.pdf-download-btn.disabled::after {
-            content: '🔒';
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.85rem;
-            opacity: 0.6;
-        }
-
-        /* Documentation Controls Container */
-        .doc-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 100;
-        }
-
-        /* Zoom Controls */
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 15px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.15), rgba(90, 0, 0, 0.1));
-            border: 2px solid rgba(139, 0, 0, 0.3);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .zoom-btn {
-            background: transparent;
-            border: none;
-            color: var(--primary-red);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .zoom-btn:hover {
-            background: rgba(139, 0, 0, 0.2);
-            transform: scale(1.1);
-        }
-
-        .zoom-btn:active {
-            transform: scale(0.95);
-        }
-
-        .zoom-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .zoom-level {
-            font-weight: 700;
-            color: var(--primary-red);
-            min-width: 50px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .zoom-reset-btn {
-            background: transparent;
-            border: none;
-            color: rgba(139, 0, 0, 0.6);
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(139, 0, 0, 0.3);
-        }
-
-        .zoom-reset-btn:hover {
-            color: var(--primary-red);
-            border-color: var(--primary-red);
-            background: rgba(139, 0, 0, 0.1);
-        }
-
-        /* Fullscreen Button */
-        .fullscreen-btn {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(90, 0, 0, 0.4));
-            border: 2px solid rgba(139, 0, 0, 0.5);
-            border-radius: 10px;
-            padding: 10px 18px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            z-index: 100;
-        }
-
-        .fullscreen-btn:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.5), rgba(90, 0, 0, 0.6));
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
-        }
-
-        .fullscreen-btn i {
-            font-size: 1.1rem;
-            color: var(--primary-red);
-        }
-
-        /* Fullscreen Mode - True Browser Fullscreen (fallback CSS) */
-        .documentation-section.fullscreen-fallback {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 99999;
-            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
-            padding: 80px 40px 40px 40px;
-            overflow-y: auto;
-            animation: fullscreenFadeIn 0.3s ease;
-            scroll-behavior: smooth;
-        }
-        
-        @keyframes fullscreenFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        /* Hide section title in fullscreen fallback */
-        .documentation-section.fullscreen-fallback .section-title {
-            display: none;
-        }
-
-        /* Fixed tabs at top in fullscreen fallback */
-        .documentation-section.fullscreen-fallback .doc-tabs {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100000;
-            background: rgba(20, 20, 20, 0.95);
-            padding: 10px;
-            border-radius: 12px;
-            border: 2px solid rgba(139, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-        }
-
-        /* Controls positioning in fallback fullscreen mode */
-        .documentation-section.fullscreen-fallback .doc-controls {
-            position: fixed;
-            top: 20px;
-            right: 30px;
-            z-index: 10001;
-            margin-bottom: 0;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .documentation-section.fullscreen-fallback .zoom-controls {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(139, 0, 0, 0.5);
-        }
-
-        /* Fullscreen button positioning in fallback fullscreen mode */
-        .documentation-section.fullscreen-fallback .fullscreen-btn {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.5), rgba(90, 0, 0, 0.6));
-            box-shadow: 0 4px 20px rgba(139, 0, 0, 0.5);
-        }
-
-        /* Better markdown content display in fullscreen fallback */
-        .documentation-section.fullscreen-fallback .markdown-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px;
-            background: rgba(20, 20, 20, 0.7);
-            border-radius: 15px;
-            border: 2px solid rgba(139, 0, 0, 0.3);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Code container in fullscreen fallback */
-        .documentation-section.fullscreen-fallback .code-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Reading Toolbar Styles */
-        .reading-toolbar {
-            position: sticky;
-            top: 0; /* Changed from 70px since viewer-nav is hidden */
-            background: rgba(20, 20, 20, 0.95);
-            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            z-index: 999;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        #documentationSection:fullscreen .reading-toolbar,
-        .fullscreen-fallback .reading-toolbar,
-        body:fullscreen .reading-toolbar {
-            position: fixed;
-            top: 0;
-            left: 0; /* Start from left edge */
-            right: 340px; /* Leave space for TOC */
-            transform: none; /* Remove centering transform */
-            z-index: 10001;
-            width: auto;
-            max-width: none;
-            opacity: 1;
-            margin: 0;
-            padding: 12px 20px;
-            justify-content: flex-start; /* Align to left */
-            overflow-x: auto; /* Allow horizontal scroll if needed */
-            overflow-y: visible;
-        }
-
-        .toolbar-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 0 10px;
-            border-right: 1px solid rgba(139, 0, 0, 0.2);
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
-        .toolbar-group:last-child {
-            border-right: none;
-        }
-
-        .toolbar-group.doc-tabs-group {
-            flex-wrap: wrap;
-            gap: 8px;
-            max-width: 50%;
-        }
-
-        .toolbar-btn.doc-tab.active {
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-color: var(--primary-red);
-            box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
-        }
-
-        .toolbar-btn {
-            background: rgba(139, 0, 0, 0.2);
-            border: 1px solid rgba(139, 0, 0, 0.3);
-            border-radius: 6px;
-            padding: 6px 10px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .toolbar-btn:hover {
-            background: rgba(139, 0, 0, 0.4);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
-        }
-
-        .toolbar-btn.active {
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-color: var(--primary-red);
-            box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
-        }
-
-        .toolbar-btn i {
-            font-size: 1rem;
-        }
-
-        /* Compact toolbar buttons in fullscreen */
-        #documentationSection:fullscreen .toolbar-btn,
-        .fullscreen-fallback .toolbar-btn {
-            padding: 6px 8px;
-            font-size: 0.8rem;
-        }
-        
-        #documentationSection:fullscreen .toolbar-btn span,
-        .fullscreen-fallback .toolbar-btn span {
-            font-size: 0.8rem;
-        }
-        
-        #documentationSection:fullscreen .toolbar-btn i,
-        .fullscreen-fallback .toolbar-btn i {
-            font-size: 0.9rem;
-        }
-        
-        /* Ensure toolbar doesn't overflow */
-        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar {
-            height: 6px;
-        }
-        
-        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.5);
-        }
-        
-        #documentationSection:fullscreen .reading-toolbar::-webkit-scrollbar-thumb {
-            background: var(--primary-red);
-            border-radius: 3px;
-        }
-
-        .font-size-display {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: var(--primary-red);
-            font-weight: 600;
-            min-width: 60px;
-            text-align: center;
-        }
-
-        .zoom-level {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: var(--primary-red);
-            font-weight: 600;
-            min-width: 60px;
-            text-align: center;
-        }
-
-        /* Night Mode */
-        body.night-mode,
-        body.night-mode #documentationSection:fullscreen {
-            background: linear-gradient(180deg, #1a1a1a, #0d0d0d) !important;
-        }
-
-        body.night-mode .markdown-content,
-        body.night-mode .code-container,
-        body.night-mode #documentationSection:fullscreen .markdown-content,
-        body.night-mode #documentationSection:fullscreen .code-container {
-            background: rgba(30, 30, 30, 0.95) !important;
-            color: #e0e0e0 !important;
-        }
-
-        body.night-mode img,
-        body.night-mode video {
-            opacity: 0.9;
-        }
-
-        /* Sepia Mode - Warm Reading Experience */
-        body.sepia-mode,
-        body.sepia-mode #documentationSection:fullscreen {
-            background: linear-gradient(180deg, #f4ecd8, #e8dcc0) !important;
-        }
-
-        body.sepia-mode .markdown-content,
-        body.sepia-mode .code-container,
-        body.sepia-mode #documentationSection:fullscreen .markdown-content,
-        body.sepia-mode #documentationSection:fullscreen .code-container {
-            background: rgba(244, 236, 216, 0.95) !important;
-            color: #3a2f1f !important;
-        }
-
-        /* Sepia Mode - Text Colors */
-        body.sepia-mode .markdown-content h1,
-        body.sepia-mode .markdown-content h2,
-        body.sepia-mode .markdown-content h3,
-        body.sepia-mode .markdown-content h4,
-        body.sepia-mode .markdown-content h5,
-        body.sepia-mode .markdown-content h6 {
-            color: #2a1f0f !important;
-        }
-
-        body.sepia-mode .markdown-content p,
-        body.sepia-mode .markdown-content li,
-        body.sepia-mode .markdown-content td,
-        body.sepia-mode .markdown-content th {
-            color: #3a2f1f !important;
-        }
-
-        /* Sepia Mode - Table Backgrounds */
-        body.sepia-mode table,
-        body.sepia-mode thead,
-        body.sepia-mode tbody,
-        body.sepia-mode tr {
-            background: rgba(232, 220, 192, 0.6) !important;
-        }
-
-        body.sepia-mode th {
-            background: rgba(139, 0, 0, 0.15) !important;
-            color: #2a1f0f !important;
-        }
-
-        body.sepia-mode td {
-            background: rgba(244, 236, 216, 0.5) !important;
-            color: #3a2f1f !important;
-        }
-
-        body.sepia-mode .code-block,
-        body.sepia-mode pre {
-            background: #e8dcc0 !important;
-            color: #3a2f1f !important;
-        }
-
-        body.sepia-mode code {
-            color: #5b4636 !important;
-        }
-
-        /* Font Size Classes */
-        body.font-small .markdown-content {
-            font-size: 0.9rem;
-        }
-
-        body.font-medium .markdown-content {
-            font-size: 1rem;
-        }
-
-        body.font-large .markdown-content {
-            font-size: 1.15rem;
-        }
-
-        body.font-xlarge .markdown-content {
-            font-size: 1.3rem;
-        }
-
-        /* Smooth scroll for fullscreen fallback section */
-        .documentation-section.fullscreen-fallback::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        .documentation-section.fullscreen-fallback::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .documentation-section.fullscreen-fallback::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--primary-red), #5a0000);
-            border-radius: 6px;
-        }
-
-        .documentation-section.fullscreen-fallback::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #c80000, var(--primary-red));
-        }
-
-        /* Browser Fullscreen API styles */
-        :fullscreen {
-            background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.95));
-        }
-
-        #documentationSection:fullscreen {
-            padding: 60px 340px 20px 0; /* Changed left padding from 20px to 0 */
-            overflow-y: auto;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
-            min-height: 100vh;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #documentationSection:fullscreen .section-title {
-            display: none;
-        }
-
-        /* Invisible trigger area - no longer needed but keep for compatibility */
-        .fullscreen-top-trigger {
-            display: none;
-        }
-
-        /* Show TOC Sidebar in Fullscreen */
-        #documentationSection:fullscreen .toc-sidebar {
-            display: block !important;
-            position: fixed !important;
-            top: 0 !important;
-            right: 0 !important;
-            width: 320px;
-            height: 100vh;
-            background: rgba(10, 10, 10, 0.98);
-            backdrop-filter: blur(20px);
-            border-left: 3px solid var(--primary-red);
-            z-index: 10005 !important; /* Higher than toolbar */
-            transform: translateX(0) !important;
-            padding: 30px 20px;
-            overflow-y: auto;
-            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.9);
-        }
-
-        /* Show TOC toggle button in fullscreen */
-        #documentationSection:fullscreen .toc-toggle {
-            display: flex !important;
-            position: fixed;
-            bottom: 30px;
-            right: 340px;
-            z-index: 10003;
-        }
-
-        #documentationSection:fullscreen .doc-content {
-            min-height: calc(100vh - 120px);
-            width: 100%;
-            padding-left: 20px; /* Add left padding to content instead of container */
-        }
-
-        #documentationSection:fullscreen .markdown-content {
-            max-width: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 30px;
-            background: rgba(20, 20, 20, 0.7);
-            border-radius: 15px;
-            border: 2px solid rgba(139, 0, 0, 0.3);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            min-height: calc(100vh - 100px);
-            flex: 1;
-        }
-
-        #documentationSection:fullscreen .code-container {
-            max-width: 100%;
-            width: 100%;
-            margin: 0;
-            min-height: calc(100vh - 160px);
-        }
-
-        #documentationSection:fullscreen .code-content {
-            max-height: calc(100vh - 240px);
-            overflow-y: auto;
-        }
-
-        .doc-content {
-            display: none !important;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .doc-content.active {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .code-container {
-            background: linear-gradient(135deg, #1a1a1a, #1e1e1e);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid rgba(139, 0, 0, 0.3);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .code-header {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(20, 0, 0, 0.6));
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
-        }
-
-        .code-header span {
-            color: var(--primary-red);
-            font-weight: 700;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .code-header span::before {
-            content: '';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-        }
-
-        .code-content {
-            padding: 25px;
-            color: #d4d4d4;
-            font-family: 'Consolas', 'Courier New', monospace;
-            overflow-x: auto;
-            white-space: pre;
-            line-height: 1.6;
-            font-size: 0.95rem;
-            background: rgba(0, 0, 0, 0.3);
-            max-height: 600px;
-        }
-
-        .copy-btn {
-            padding: 10px 18px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.25), rgba(90, 0, 0, 0.2));
-            border: 2px solid var(--border-primary);
-            border-radius: 8px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .copy-btn i {
-            font-size: 1rem;
-        }
-
-        .copy-btn:hover {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.4), rgba(90, 0, 0, 0.35));
-            border-color: var(--border-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
-        }
-
-        .markdown-content {
-            color: var(--text-white);
-            line-height: 1.8;
-            padding: 30px;
-            background: rgba(20, 0, 0, 0.4);
-            border-radius: 0 0 12px 12px;
-            font-size: 1.1rem;
-            max-height: 700px;
-            overflow-y: auto;
-            min-height: 500px;
-        }
-
-        .markdown-content h1,
-        .markdown-content h2,
-        .markdown-content h3,
-        .markdown-content h4,
-        .markdown-content h5,
-        .markdown-content h6 {
-            color: var(--text-white);
-            font-weight: 700;
-            line-height: 1.3;
-            margin: 2em 0 1em;
-            padding-bottom: 0.3em;
-            border-bottom: 2px solid rgba(139, 0, 0, 0.3);
-        }
-        
-        .markdown-content h1 { font-size: 2.5rem; }
-        .markdown-content h2 { font-size: 2rem; }
-        .markdown-content h3 { font-size: 1.6rem; }
-        .markdown-content h4 { font-size: 1.3rem; }
-        .markdown-content h5 { font-size: 1.1rem; }
-        .markdown-content h6 { font-size: 1rem; }
-        
-        .markdown-content p {
-            margin: 1.5em 0;
-            line-height: 1.8;
-            color: var(--text-secondary);
-        }
-        
-        .markdown-content code {
-            background: rgba(139, 0, 0, 0.15);
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95em;
-            color: var(--primary-red);
-            border: 1px solid var(--border-primary);
-        }
-        
-        .markdown-content pre {
-            background: rgba(10, 10, 10, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            overflow-x: auto;
-            margin: 2em 0;
-            border: 2px solid var(--border-primary);
-        }
-        
-        .markdown-content pre code {
-            background: none;
-            padding: 0;
-            border: none;
-            color: inherit;
-            font-size: 0.9em;
-        }
-        
-        .markdown-content ul,
-        .markdown-content ol {
-            margin: 1.5em 0;
-            padding-left: 2em;
-        }
-        
-        .markdown-content li {
-            margin: 0.8em 0;
-            line-height: 1.7;
-            color: var(--text-secondary);
-        }
-
-        .markdown-content ul li::marker {
-            color: var(--primary-red);
-        }
-
-        .markdown-content ol li::marker {
-            color: var(--primary-red);
-            font-weight: 700;
-        }
-        
-        .markdown-content strong {
-            color: var(--text-primary);
-            font-weight: 700;
-        }
-
-        .markdown-content em {
-            color: rgba(255, 255, 255, 0.8);
-            font-style: italic;
-        }
-
-        .markdown-content blockquote {
-            margin: 2em 0;
-            padding: 1.5em 2em;
-            background: rgba(139, 0, 0, 0.1);
-            border-left: 5px solid var(--primary-red);
-            border-radius: 0 10px 10px 0;
-            font-style: italic;
-            color: var(--text-white);
-        }
-
-        .markdown-content hr {
-            border: none;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-red), transparent);
-            margin: 3em 0;
-        }
-
-        .markdown-content a {
-            color: var(--primary-red);
-            text-decoration: underline;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .markdown-content a:hover {
-            color: #C80000;
-        }
-
-        .markdown-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 15px;
-            margin: 2em 0;
-            border: 3px solid var(--border-primary);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        /* ============================================
-           READING MODES - NIGHT & SEPIA
-           ============================================ */
-        
-        /* Night Mode */
-        body.night-mode {
-            background: linear-gradient(180deg, #0a0a0a, #121212);
-        }
-
-        body.night-mode .markdown-content {
-            background: rgba(15, 15, 15, 0.95);
-            color: rgba(200, 200, 200, 0.95);
-        }
-
-        body.night-mode .markdown-content h1,
-        body.night-mode .markdown-content h2,
-        body.night-mode .markdown-content h3,
-        body.night-mode .markdown-content h4,
-        body.night-mode .markdown-content h5,
-        body.night-mode .markdown-content h6 {
-            color: rgba(255, 255, 255, 0.95);
-        }
-
-        body.night-mode .markdown-content strong {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        body.night-mode .markdown-content p,
-        body.night-mode .markdown-content li {
-            color: rgba(200, 200, 200, 0.9);
-        }
-
-        /* Sepia Mode */
-        body.sepia-mode {
-            background: linear-gradient(180deg, #f4ecd8, #e8dcc0);
-        }
-
-        body.sepia-mode .markdown-content {
-            background: rgba(251, 243, 219, 0.98);
-            color: rgba(60, 50, 40, 0.95);
-        }
-
-        body.sepia-mode .markdown-content h1,
-        body.sepia-mode .markdown-content h2,
-        body.sepia-mode .markdown-content h3,
-        body.sepia-mode .markdown-content h4,
-        body.sepia-mode .markdown-content h5,
-        body.sepia-mode .markdown-content h6 {
-            color: #3d2817;
-        }
-
-        body.sepia-mode .markdown-content strong {
-            color: #2a1810;
-            font-weight: 700;
-        }
-
-        body.sepia-mode .markdown-content p,
-        body.sepia-mode .markdown-content li {
-            color: rgba(60, 50, 40, 0.9);
-        }
-
-        body.sepia-mode .markdown-content a {
-            color: #8b4513;
-        }
-
-        body.sepia-mode .markdown-content code {
-            background: rgba(139, 69, 19, 0.15);
-            color: #8b4513;
-            border-color: rgba(139, 69, 19, 0.3);
-        }
-
-        body.sepia-mode .markdown-content blockquote {
-            background: rgba(139, 69, 19, 0.1);
-            border-left-color: #8b4513;
-            color: rgba(60, 50, 40, 0.95);
-        }
-
-        body.sepia-mode .reading-toolbar {
-            background: rgba(251, 243, 219, 0.98);
-            border-bottom-color: rgba(139, 69, 19, 0.3);
-        }
-
-        body.sepia-mode .toc-sidebar {
-            background: rgba(251, 243, 219, 0.98);
-            color: rgba(60, 50, 40, 0.95);
-        }
-
-        body.sepia-mode .toc-link {
-            color: rgba(60, 50, 40, 0.8);
-        }
-
-        body.sepia-mode .toc-link:hover {
-            color: #8b4513;
-        }
-
-        /* Table styling matching blog */
-        .markdown-content .table-wrapper {
-            overflow-x: auto;
-            margin: 2em 0;
-        }
-
-        .markdown-content table,
-        .markdown-content .markdown-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2em 0;
-            background: rgba(10, 10, 10, 0.9);
-            border: 2px solid var(--border-primary);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .markdown-content th {
-            padding: 12px 15px;
-            border: 1px solid var(--border-primary);
-            text-align: left;
-            background: linear-gradient(135deg, var(--primary-red), #5a0000);
-            color: var(--text-white);
-            font-weight: 700;
-        }
-
-        .markdown-content td {
-            padding: 12px 15px;
-            border: 1px solid var(--border-primary);
-            text-align: left;
-            color: var(--text-secondary);
-        }
-
-        .markdown-content tbody tr:hover {
-            background: rgba(139, 0, 0, 0.08);
-        }
-
-        .markdown-content::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .markdown-content::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .markdown-content::-webkit-scrollbar-thumb {
-            background: rgba(139, 0, 0, 0.4);
-            border-radius: 4px;
-        }
-
-        .markdown-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 0, 0, 0.6);
-        }
 
         .components-list {
             list-style: none;
@@ -1580,296 +696,9 @@
             transition: width 0.1s ease;
             box-shadow: 0 2px 10px rgba(139, 0, 0, 0.5);
         }
-
-        /* ============================================
-           TABLE OF CONTENTS (TOC)
-           ============================================ */
-        /* Floating TOC Button */
-        .toc-toggle {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border: 3px solid var(--border-primary);
-            border-radius: 50%;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 900;
-            box-shadow: 0 8px 30px rgba(139, 0, 0, 0.6);
-        }
-
-        .toc-toggle:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 12px 40px rgba(139, 0, 0, 0.8);
-        }
-
-        /* TOC Sidebar */
-        .toc-sidebar {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 350px;
-            height: 100vh;
-            background: rgba(10, 10, 10, 0.98);
-            backdrop-filter: blur(20px);
-            border-left: 3px solid var(--primary-red);
-            padding: 30px;
-            overflow-y: auto;
-            transition: right 0.4s ease;
-            z-index: 10002;
-            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.8);
-        }
-
-        .toc-sidebar.active {
-            right: 0 !important;
-        }
-
-        .toc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--border-primary);
-        }
-
-        .toc-header h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .toc-close {
-            width: 35px;
-            height: 35px;
-            background: rgba(139, 0, 0, 0.15);
-            border: 2px solid var(--border-primary);
-            border-radius: 10px;
-            color: var(--primary-red);
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .toc-close:hover {
-            background: var(--primary-red);
-            color: white;
-        }
-
-        /* Hide TOC close button in fullscreen mode */
-        #documentationSection:fullscreen .toc-close,
-        .fullscreen-fallback .toc-close,
-        body:fullscreen .toc-close {
-            display: none !important;
-        }
-
-        .toc-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .toc-nav a {
-            display: block;
-            padding: 10px 15px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-left: 3px solid var(--border-primary);
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .toc-nav a:hover {
-            color: var(--text-primary);
-            border-left-color: var(--primary-red);
-            padding-left: 20px;
-            background: rgba(139, 0, 0, 0.1);
-        }
-
-        .toc-nav a.active {
-            color: var(--primary-red);
-            border-left-color: var(--primary-red);
-            background: rgba(139, 0, 0, 0.15);
-            font-weight: 700;
-        }
-
-        /* TOC heading level indentation with proper spacing */
-        .toc-link.toc-h1 { 
-            padding-left: 15px !important;
-            font-size: 1rem; 
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        
-        .toc-link.toc-h2 { 
-            padding-left: 30px !important;
-            font-size: 0.95rem; 
-            font-weight: 600;
-        }
-        
-        .toc-link.toc-h3 { 
-            padding-left: 45px !important;
-            font-size: 0.9rem; 
-            font-weight: 500;
-        }
-        
-        .toc-link.toc-h4 { 
-            padding-left: 60px !important;
-            font-size: 0.85rem; 
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        /* ========================================
-           CIRCUIT DIAGRAM & WIRING ENHANCEMENTS
-           Desktop Enhanced Circuit Visualization
-           ======================================== */
-        
-        /* Pinout & Connection Tables - Cyan Electronics Theme */
-        .markdown-content table td:first-child {
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-        }
-        
-        /* Circuit diagram code blocks - Enhanced monospace */
-        .markdown-content pre code {
-            font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
-            font-size: 15px;
-            line-height: 1.5;
-            letter-spacing: 0.05em;
-        }
-        
-        /* Pin/Component highlight in code */
-        .markdown-content code {
-            font-weight: 600;
-        }
-        
-        /* Circuit & Wiring images - Premium frame */
-        .markdown-content img[alt*="Circuit"],
-        .markdown-content img[alt*="circuit"],
-        .markdown-content img[alt*="Wiring"],
-        .markdown-content img[alt*="wiring"],
-        .markdown-content img[alt*="Diagram"],
-        .markdown-content img[alt*="diagram"],
-        .markdown-content img[alt*="Pinout"],
-        .markdown-content img[alt*="pinout"] {
-            border: 3px solid rgba(78, 205, 196, 0.6);
-            border-radius: 12px;
-            box-shadow: 
-                0 12px 40px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 40px rgba(78, 205, 196, 0.3);
-            background: linear-gradient(135deg, rgba(0, 15, 30, 0.5), rgba(20, 0, 10, 0.4));
-            padding: 20px;
-            margin: 30px auto;
-            display: block;
-        }
-        
-        /* Table enhancements for pin connections */
-        .markdown-content table {
-            background: linear-gradient(135deg, rgba(0, 10, 20, 0.95), rgba(15, 0, 5, 0.9));
-            border: 2px solid rgba(139, 0, 0, 0.4);
-        }
-        
-        .markdown-content table thead {
-            background: linear-gradient(135deg, rgba(204, 0, 0, 0.3), rgba(139, 0, 0, 0.2));
-        }
-        
-        .markdown-content table th {
-            color: #FFFFFF;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            border-bottom: 2px solid rgba(204, 0, 0, 0.6);
-        }
-        
-        .markdown-content table td {
-            border-bottom: 1px solid rgba(80, 80, 80, 0.3);
-            border-right: 1px solid rgba(80, 80, 80, 0.2);
-        }
-        
-        .markdown-content table tbody tr:hover {
-            background: rgba(78, 205, 196, 0.08);
-        }
-        
-        /* Connection flow diagrams - Center aligned */
-        .markdown-content p {
-            line-height: 1.8;
-        }
-        
-        /* Code blocks with circuit diagrams */
-        .markdown-content pre {
-            background: linear-gradient(135deg, rgba(0, 10, 20, 0.98), rgba(10, 0, 0, 0.95));
-            border: 2px solid rgba(78, 205, 196, 0.3);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 8px 24px rgba(0, 0, 0, 0.4);
-        }
-        
-        /* List items with pin descriptions */
-        .markdown-content ul li {
-            line-height: 1.8;
-            margin-bottom: 8px;
-        }
-        
-        .markdown-content ul li code {
-            background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(0, 0, 0, 0.6));
-            border: 1px solid rgba(78, 205, 196, 0.4);
-            color: #4ECDC4;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-        
-        /* Blockquotes for circuit notes */
-        .markdown-content blockquote {
-            border-left: 5px solid rgba(255, 214, 0, 0.6);
-            background: linear-gradient(135deg, rgba(255, 214, 0, 0.08), rgba(0, 0, 0, 0.5));
-            padding: 16px 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-        }
-        
-        /* Headings for circuit sections */
-        .markdown-content h2,
-        .markdown-content h3 {
-            margin-top: 40px;
-            padding-bottom: 12px;
-        }
-        
-        .markdown-content h2 {
-            border-bottom: 3px solid rgba(204, 0, 0, 0.5);
-        }
-        
-        .markdown-content h3 {
-            border-left: 5px solid rgba(78, 205, 196, 0.6);
-            padding-left: 16px;
-        }
     </style>
 </head>
-<body>
-    <!-- Reading Progress Bar -->
-    <div class="reading-progress" id="readingProgress"></div>
-
-    <!-- Table of Contents Floating Button -->
-    <button class="toc-toggle" id="tocToggle" title="Table of Contents">
-        <i class="fas fa-list"></i>
-    </button>
+<body class="bg-system-container">
 
 
     <!-- Top Navigation -->
@@ -1904,6 +733,11 @@
 
     <!-- Main Content -->
     <div class="content-wrapper">
+        <!-- Back Button -->
+        <a href="arduino-projects.html" class="back-btn" style="display: inline-flex; margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Back to Arduino Projects
+        </a>
+
         <!-- Project Header (Compact) -->
         <div class="project-header">
             <span class="project-number" id="projectNumber">Project 01</span>
@@ -1939,92 +773,31 @@
             </div>
         </div>
 
-        <!-- Documentation Section (Full Width) -->
-        <div class="content-section documentation-section" id="documentationSection">
-            <h2 class="section-title"><i class="fas fa-book-open"></i> Documentation</h2>
-            
-            <!-- Unified Reading Toolbar with Doc Tabs -->
-            <div class="reading-toolbar" id="readingToolbar">
-                <!-- Doc Tabs Group -->
-                <div class="toolbar-group doc-tabs-group">
-                    <button class="toolbar-btn doc-tab active" data-tab="readme" id="readmeTabBtn" onclick="switchToTab('readme')">
-                        <i class="fas fa-file-alt"></i> <span>README</span>
-                    </button>
-                    <button class="toolbar-btn doc-tab" data-tab="explanation" id="explanationTabBtn" onclick="switchToTab('explanation')">
-                        <i class="fas fa-graduation-cap"></i> <span>Explanation</span>
-                    </button>
-                    <button class="toolbar-btn doc-tab" data-tab="code" id="codeTabBtn" onclick="switchToTab('code')">
-                        <i class="fas fa-code"></i> <span>Code</span>
-                    </button>
-                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="explanation" id="pdfExpBtn" title="Download Explanation PDF">
-                        <i class="fas fa-file-pdf"></i> <span>PDF Exp</span>
-                    </button>
-                    <button class="toolbar-btn doc-tab pdf-download-btn" data-action="readme" id="pdfReadBtn" title="Download README PDF">
-                        <i class="fas fa-file-pdf"></i> <span>PDF Read</span>
-                    </button>
-                </div>
-                
-                <!-- Reading Mode Group -->
-                <div class="toolbar-group">
-                    <button class="toolbar-btn" id="defaultModeBtn" title="Default Mode (D)">
-                        <i class="fas fa-sun"></i>
-                        <span>Default</span>
-                    </button>
-                    <button class="toolbar-btn" id="nightModeBtn" title="Night Mode (N)">
-                        <i class="fas fa-moon"></i>
-                        <span>Night</span>
-                    </button>
-                    <button class="toolbar-btn" id="sepiaModeBtn" title="Sepia Mode (S)">
-                        <i class="fas fa-book-open"></i>
-                        <span>Sepia</span>
-                    </button>
-                </div>
-
-                <!-- Navigation Group -->
-                <div class="toolbar-group">
-                    <button class="toolbar-btn" id="fullscreenBtn" title="Fullscreen (F)" onclick="toggleFullscreen()">
-                        <i class="fas fa-expand"></i>
-                        <span>Fullscreen</span>
-                    </button>
+        <!-- Documentation Entry Card (Full Width) -->
+        <div class="doc-entry-card" id="docEntryCard" onclick="openDocViewer()" role="button" tabindex="0" aria-label="Open project documentation">
+            <div class="doc-entry-icon-wrap">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="doc-entry-body">
+                <h2 class="doc-entry-title">
+                    <i class="fas fa-graduation-cap"></i> Project Documentation
+                </h2>
+                <p class="doc-entry-desc" id="docEntryDesc">
+                    Complete learning resources for this project — step-by-step guide, source code, circuit explanation, and PDF exports. Includes Night Mode, Sepia Mode, zoom controls, and Table of Contents.
+                </p>
+                <div class="doc-entry-tags">
+                    <span class="doc-tag"><i class="fas fa-file-alt"></i> README</span>
+                    <span class="doc-tag"><i class="fas fa-graduation-cap"></i> Explanation</span>
+                    <span class="doc-tag"><i class="fas fa-code"></i> Source Code</span>
+                    <span class="doc-tag"><i class="fas fa-file-pdf"></i> PDF Export</span>
+                    <span class="doc-tag"><i class="fas fa-moon"></i> Night Mode</span>
+                    <span class="doc-tag"><i class="fas fa-list-ul"></i> Table of Contents</span>
                 </div>
             </div>
-
-            <!-- README Tab (now default) -->
-            <div class="doc-content active" id="readmeTab" style="display: block;">
-                <div class="markdown-content" id="readmeContent">Loading README...</div>
+            <div class="doc-entry-cta">
+                <i class="fas fa-arrow-right"></i>
+                <span>Open Docs</span>
             </div>
-
-            <!-- Explanation Tab -->
-            <div class="doc-content" id="explanationTab" style="display: none;">
-                <div class="markdown-content" id="explanationContent">Loading explanation...</div>
-            </div>
-
-            <!-- Code Tab -->
-            <div class="doc-content" id="codeTab" style="display: none;">
-                <div class="code-container">
-                    <div class="code-header">
-                        <span id="codeFileName">sketch.ino</span>
-                        <div>
-                            <button class="copy-btn" id="downloadCodeBtn"><i class="fas fa-download"></i> Download</button>
-                            <button class="copy-btn" id="copyCodeBtn"><i class="fas fa-copy"></i> Copy</button>
-                        </div>
-                    </div>
-                    <pre class="code-content" id="codeContent">// Loading code...</pre>
-                </div>
-            </div>
-            
-            <!-- Table of Contents Sidebar (Inside Documentation Section for Fullscreen) -->
-            <aside class="toc-sidebar" id="tocSidebar">
-                <div class="toc-header">
-                    <h3><i class="fas fa-list-ul"></i> Table of Contents</h3>
-                    <button class="toc-close" id="tocClose">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <nav class="toc-nav" id="tocNav">
-                    <!-- TOC links will be generated dynamically -->
-                </nav>
-            </aside>
         </div>
 
         <!-- Navigation Arrows -->
@@ -2176,7 +949,6 @@
             document.getElementById('projectTitle').textContent = currentProject.title;
             document.getElementById('projectSubtitle').textContent = currentProject.subtitle;
             document.getElementById('navTitle').textContent = currentProject.title;
-            document.getElementById('codeFileName').textContent = currentProject.codeFile;
             
             // Update components
             const componentsList = document.getElementById('componentsList');
@@ -2193,19 +965,13 @@
                 tinkercadLink.style.opacity = '1';
                 tinkercadLink.style.pointerEvents = 'auto';
                 tinkercadLink.style.background = 'linear-gradient(135deg, var(--primary-red), var(--primary-red-dark))';
-                console.log('✅ Tinkercad link set from project data:', currentProject.tinkercad);
             } else {
                 tinkercadLink.href = '#';
                 tinkercadLink.style.opacity = '0.4';
                 tinkercadLink.style.pointerEvents = 'none';
                 tinkercadLink.style.background = 'rgba(139, 0, 0, 0.2)';
-                console.log('⚠️ No Tinkercad link in project data, will check README');
             }
             
-            // Load files
-            loadCode();
-            loadExplanation();
-            loadReadme();
             loadCircuitImage();
             updateNavigation();
             
@@ -2365,325 +1131,6 @@
             console.log('🧭 Navigation updated: Prev =', prevProject?.title, '| Next =', nextProject?.title);
         }
 
-        // ===== READING FEATURES =====
-
-        // Default Mode (Clear all modes)
-        function setDefaultMode() {
-            document.body.classList.remove('night-mode');
-            document.body.classList.remove('sepia-mode');
-            
-            const defaultBtn = document.getElementById('defaultModeBtn');
-            const nightBtn = document.getElementById('nightModeBtn');
-            const sepiaBtn = document.getElementById('sepiaModeBtn');
-            
-            defaultBtn.classList.add('active');
-            nightBtn.classList.remove('active');
-            sepiaBtn.classList.remove('active');
-            
-            localStorage.setItem('arduinoReadingMode', 'default');
-            console.log('☀️ Default mode activated');
-        }
-
-        // Night Mode Toggle
-        function toggleNightMode() {
-            document.body.classList.add('night-mode');
-            document.body.classList.remove('sepia-mode');
-            
-            const defaultBtn = document.getElementById('defaultModeBtn');
-            const nightBtn = document.getElementById('nightModeBtn');
-            const sepiaBtn = document.getElementById('sepiaModeBtn');
-            
-            defaultBtn.classList.remove('active');
-            nightBtn.classList.add('active');
-            sepiaBtn.classList.remove('active');
-            
-            localStorage.setItem('arduinoReadingMode', 'night');
-            console.log('🌙 Night mode activated');
-        }
-
-        // Sepia Mode Toggle
-        function toggleSepiaMode() {
-            document.body.classList.add('sepia-mode');
-            document.body.classList.remove('night-mode');
-            
-            const defaultBtn = document.getElementById('defaultModeBtn');
-            const nightBtn = document.getElementById('nightModeBtn');
-            const sepiaBtn = document.getElementById('sepiaModeBtn');
-            
-            defaultBtn.classList.remove('active');
-            nightBtn.classList.remove('active');
-            sepiaBtn.classList.add('active');
-            
-            localStorage.setItem('arduinoReadingMode', 'sepia');
-            console.log('📜 Sepia mode activated');
-        }
-
-        // Table of Contents Toggle
-        function toggleTOC() {
-            const sidebar = document.getElementById('tocSidebar');
-            sidebar.classList.toggle('active');
-            console.log('📑 TOC toggled:', sidebar.classList.contains('active'));
-        }
-
-        // Fullscreen Toggle - EXPOSED TO GLOBAL SCOPE for onclick
-        window.toggleFullscreen = async function toggleFullscreen() {
-            const docSection = document.getElementById('documentationSection');
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            
-            if (!docSection) {
-                console.error('❌ Documentation section not found');
-                return;
-            }
-            
-            try {
-                // Check if already in fullscreen
-                if (!document.fullscreenElement) {
-                    // Enter fullscreen - try multiple methods for browser compatibility
-                    if (docSection.requestFullscreen) {
-                        await docSection.requestFullscreen();
-                    } else if (docSection.webkitRequestFullscreen) {
-                        await docSection.webkitRequestFullscreen();
-                    } else if (docSection.mozRequestFullScreen) {
-                        await docSection.mozRequestFullScreen();
-                    } else if (docSection.msRequestFullscreen) {
-                        await docSection.msRequestFullscreen();
-                    } else {
-                        // Fallback to CSS fullscreen
-                        throw new Error('Fullscreen API not supported');
-                    }
-                    
-                    const icon = fullscreenBtn?.querySelector('i');
-                    const text = fullscreenBtn?.querySelector('span');
-                    if (icon) icon.className = 'fas fa-compress';
-                    if (text) text.textContent = 'Exit';
-                    if (fullscreenBtn) fullscreenBtn.title = 'Exit Fullscreen (Esc or F)';
-                    
-                    // Regenerate TOC for fullscreen mode
-                    setTimeout(() => {
-                        generateTOC();
-                        console.log('📋 TOC regenerated for fullscreen');
-                    }, 100);
-                    
-                    console.log('📺 Fullscreen activated');
-                } else {
-                    // Exit fullscreen
-                    if (document.exitFullscreen) {
-                        await document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        await document.webkitExitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        await document.mozCancelFullScreen();
-                    } else if (document.msExitFullscreen) {
-                        await document.msExitFullscreen();
-                    }
-                    
-                    const icon = fullscreenBtn?.querySelector('i');
-                    const text = fullscreenBtn?.querySelector('span');
-                    if (icon) icon.className = 'fas fa-expand';
-                    if (text) text.textContent = 'Fullscreen';
-                    if (fullscreenBtn) fullscreenBtn.title = 'Fullscreen (F)';
-                    
-                    console.log('📺 Fullscreen exited');
-                }
-            } catch (error) {
-                console.error('❌ Fullscreen request failed:', error);
-                console.log('💡 Using CSS fallback fullscreen mode');
-                
-                // Fallback to CSS fullscreen if API not supported
-                const isFullscreen = docSection.classList.contains('fullscreen-fallback');
-                docSection.classList.toggle('fullscreen-fallback');
-                
-                const icon = fullscreenBtn?.querySelector('i');
-                const text = fullscreenBtn?.querySelector('span');
-                
-                if (!isFullscreen) {
-                    // Entering fallback fullscreen
-                    if (icon) icon.className = 'fas fa-compress';
-                    if (text) text.textContent = 'Exit';
-                    if (fullscreenBtn) fullscreenBtn.title = 'Exit Fullscreen (Esc)';
-                    console.log('📺 CSS Fallback fullscreen activated');
-                } else {
-                    // Exiting fallback fullscreen
-                    if (icon) icon.className = 'fas fa-expand';
-                    if (text) text.textContent = 'Fullscreen';
-                    if (fullscreenBtn) fullscreenBtn.title = 'Fullscreen (F)';
-                    console.log('📺 CSS Fallback fullscreen exited');
-                }
-                
-                // Regenerate TOC
-                setTimeout(() => {
-                    generateTOC();
-                }, 100);
-            }
-        }
-
-        // Listen for fullscreen changes (including ESC key)
-        document.addEventListener('fullscreenchange', () => {
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            const tocSidebar = document.getElementById('tocSidebar');
-            const docSection = document.getElementById('documentationSection');
-            
-            if (!document.fullscreenElement) {
-                // Exited fullscreen - refresh the page to reset all states
-                const projectId = new URLSearchParams(window.location.search).get('id');
-                console.log(`🔄 Exiting fullscreen - Refreshing to Project #${projectId}`);
-                
-                // Reload the same project page
-                window.location.reload();
-                return; // Stop execution as page will reload
-                
-                console.log(`📺 Fullscreen exited - Returned to Project #${projectId} page (${activeTabName} tab)`);
-            } else {
-                // Entered fullscreen - update button to show Exit
-                const icon = fullscreenBtn?.querySelector('i');
-                const text = fullscreenBtn?.querySelector('span');
-                if (icon) icon.className = 'fas fa-compress';
-                if (text) text.textContent = 'Exit';
-                if (fullscreenBtn) fullscreenBtn.title = 'Exit Fullscreen (Esc or F)';
-                
-                // Save current scroll position AND active tab before entering fullscreen
-                sessionStorage.setItem('preFullscreenScrollPos', window.scrollY.toString());
-                const activeTab = document.querySelector('.doc-tab.active');
-                if (activeTab) {
-                    sessionStorage.setItem('preFullscreenActiveTab', activeTab.dataset.tab);
-                }
-                
-                const projectId = new URLSearchParams(window.location.search).get('id');
-                console.log(`📺 Fullscreen entered for Project #${projectId}`);
-            }
-        });
-
-        // Zoom Management
-        let currentZoom = 100; // Default 100%
-        const zoomLevels = [75, 85, 90, 100, 110, 125, 150, 175, 200];
-
-        function updateZoomDisplay() {
-            document.getElementById('zoomLevel').textContent = currentZoom + '%';
-            document.body.style.fontSize = currentZoom + '%';
-            localStorage.setItem('arduinoZoomLevel', currentZoom);
-        }
-
-        function zoomIn() {
-            const currentIndex = zoomLevels.indexOf(currentZoom);
-            if (currentIndex < zoomLevels.length - 1) {
-                currentZoom = zoomLevels[currentIndex + 1];
-                updateZoomDisplay();
-            }
-        }
-
-        function zoomOut() {
-            const currentIndex = zoomLevels.indexOf(currentZoom);
-            if (currentIndex > 0) {
-                currentZoom = zoomLevels[currentIndex - 1];
-                updateZoomDisplay();
-            }
-        }
-
-        function resetZoom() {
-            currentZoom = 100;
-            updateZoomDisplay();
-        }
-
-        function resetZoom() {
-            currentZoom = 100;
-            updateZoomDisplay();
-        }
-
-        function decreaseFontSize() {
-            const currentIndex = zoomLevels.indexOf(currentZoom);
-            if (currentIndex > 0) {
-                currentZoom = zoomLevels[currentIndex - 1];
-                updateZoomDisplay();
-            }
-        }
-
-        function resetFontSize() {
-            currentZoom = 100;
-            updateZoomDisplay();
-        }
-
-        // Load Reading Preferences from localStorage
-        function loadReadingPreferences() {
-            // Load reading mode
-            const savedMode = localStorage.getItem('arduinoReadingMode');
-            const defaultBtn = document.getElementById('defaultModeBtn');
-            const nightBtn = document.getElementById('nightModeBtn');
-            const sepiaBtn = document.getElementById('sepiaModeBtn');
-            
-            if (savedMode === 'night') {
-                document.body.classList.add('night-mode');
-                nightBtn?.classList.add('active');
-            } else if (savedMode === 'sepia') {
-                document.body.classList.add('sepia-mode');
-                sepiaBtn?.classList.add('active');
-            } else {
-                defaultBtn?.classList.add('active');
-            }
-            
-            // Load zoom level
-            const savedZoom = parseInt(localStorage.getItem('arduinoZoomLevel'));
-            if (savedZoom && zoomLevels.includes(savedZoom)) {
-                currentZoom = savedZoom;
-                updateZoomDisplay();
-            } else {
-                updateZoomDisplay();
-            }
-        }
-
-        // Keyboard Shortcuts for Reading Features
-        function setupReadingKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                // Skip if user is typing
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
-                
-                // Skip if Ctrl/Cmd is pressed (for zoom shortcuts)
-                if (e.ctrlKey || e.metaKey) {
-                    return;
-                }
-                
-                // Default Mode: D
-                if (e.key === 'd' || e.key === 'D') {
-                    e.preventDefault();
-                    setDefaultMode();
-                }
-                
-                // Night Mode: N
-                if (e.key === 'n' || e.key === 'N') {
-                    e.preventDefault();
-                    toggleNightMode();
-                }
-                
-                // Sepia Mode: S
-                if (e.key === 's' || e.key === 'S') {
-                    e.preventDefault();
-                    toggleSepiaMode();
-                }
-                
-                // Table of Contents: T
-                if (e.key === 't' || e.key === 'T') {
-                    e.preventDefault();
-                    toggleTOC();
-                }
-                
-                // Fullscreen: F
-                if (e.key === 'f' || e.key === 'F') {
-                    e.preventDefault();
-                    toggleFullscreen();
-                }
-                
-                // Exit CSS Fallback Fullscreen: Escape
-                if (e.key === 'Escape') {
-                    const docSection = document.getElementById('documentationSection');
-                    if (docSection && docSection.classList.contains('fullscreen-fallback')) {
-                        e.preventDefault();
-                        toggleFullscreen(); // Toggle off the CSS fallback
-                    }
-                }
-            });
-        }
-
         // Keyboard Navigation Setup
         function setupKeyboardNavigation() {
             document.addEventListener('keydown', (e) => {
@@ -2709,8 +1156,8 @@
                     window.location.href = `?id=${prevProject.id}`;
                 }
                 
-                // Right Arrow or 'N' key - Next project
-                if ((e.key === 'ArrowRight' || e.key === 'n' || e.key === 'N') && nextProject) {
+                // Right Arrow - Next project
+                if (e.key === 'ArrowRight' && nextProject) {
                     e.preventDefault();
                     console.log('➡️ Navigating to next:', nextProject.title);
                     window.location.href = `?id=${nextProject.id}`;
@@ -2741,10 +1188,6 @@
                 showKeyboardHint();
             }, 2000);
         }
-            setTimeout(() => {
-                showKeyboardHint();
-            }, 2000);
-        
 
         // Show keyboard shortcuts modal
         function showKeyboardShortcuts() {
@@ -2817,6 +1260,26 @@
             }, 100);
         }
 
+        // Toast notification helper
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const borderColor = type === 'success' ? 'rgba(0, 200, 0, 0.4)' : 'rgba(200, 0, 0, 0.4)';
+            const bg = type === 'success' ? 'linear-gradient(135deg, #1a4a1a, #0d2d0d)' : 'linear-gradient(135deg, #4a1a1a, #2d0d0d)';
+            toast.style.cssText = `
+                position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+                background: ${bg}; color: white; padding: 12px 24px;
+                border-radius: 25px; font-size: 0.9rem; font-weight: 600; z-index: 10000;
+                border: 1px solid ${borderColor}; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                animation: bounceIn 0.4s ease-out; pointer-events: none;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.4s ease-out';
+                setTimeout(() => toast.remove(), 400);
+            }, 2000);
+        }
+
         // Show keyboard hint badge
         function showKeyboardHint() {
             const hint = document.createElement('div');
@@ -2856,960 +1319,7 @@
             }, 5000);
         }
 
-        // ========== NEW PDF SYSTEM: Load & Inject Watermark/Header/Footer ==========
-        
-        // PDF Download for Explanation
-        async function downloadExplanationPDF() {
-            const pdfUrl = buildFilePath(currentProject.folder, 'explanation.pdf');
-            console.log('📄 Loading PDF:', pdfUrl);
-            
-            try {
-                // Show loading indicator
-                const loadingMsg = document.createElement('div');
-                loadingMsg.id = 'pdfLoadingMsg';
-                loadingMsg.style.cssText = `
-                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background: rgba(10, 10, 10, 0.95); padding: 30px 50px; border-radius: 12px;
-                    border: 2px solid var(--primary-red); z-index: 10000; text-align: center;
-                `;
-                loadingMsg.innerHTML = `
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-red); margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-primary); margin: 0;">Processing PDF...</p>
-                `;
-                document.body.appendChild(loadingMsg);
-                
-                // Fetch the PDF
-                const response = await fetch(pdfUrl);
-                if (!response.ok) {
-                    throw new Error(`PDF not found: ${pdfUrl}`);
-                }
-                
-                const existingPdfBytes = await response.arrayBuffer();
-                
-                // Load PDF with pdf-lib
-                const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-                
-                // Add watermark, header, footer to all pages
-                await addWatermarkHeaderFooter(pdfDoc, `${currentProject.title} - Explanation`);
-                
-                // Save modified PDF
-                const pdfBytes = await pdfDoc.save();
-                
-                // Download
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${currentProject.folder}_Explanation_A3KM.pdf`;
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                // Remove loading indicator
-                document.body.removeChild(loadingMsg);
-                console.log('✅ PDF downloaded with watermark/header/footer');
-                
-            } catch (error) {
-                console.error('❌ PDF loading error:', error);
-                const loadingMsg = document.getElementById('pdfLoadingMsg');
-                if (loadingMsg) document.body.removeChild(loadingMsg);
-                alert(`Error loading PDF: ${error.message}\n\nPlease ensure explanation.pdf exists in the project folder.`);
-            }
-        }
-
-        // PDF Download for README
-        async function downloadReadmePDF() {
-            const pdfUrl = buildFilePath(currentProject.folder, 'readme.pdf');
-            console.log('📄 Loading PDF:', pdfUrl);
-            
-            try {
-                // Show loading indicator
-                const loadingMsg = document.createElement('div');
-                loadingMsg.id = 'pdfLoadingMsg';
-                loadingMsg.style.cssText = `
-                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background: rgba(10, 10, 10, 0.95); padding: 30px 50px; border-radius: 12px;
-                    border: 2px solid var(--primary-red); z-index: 10000; text-align: center;
-                `;
-                loadingMsg.innerHTML = `
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-red); margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-primary); margin: 0;">Processing PDF...</p>
-                `;
-                document.body.appendChild(loadingMsg);
-                
-                // Fetch the PDF
-                const response = await fetch(pdfUrl);
-                if (!response.ok) {
-                    throw new Error(`PDF not found: ${pdfUrl}`);
-                }
-                
-                const existingPdfBytes = await response.arrayBuffer();
-                
-                // Load PDF with pdf-lib
-                const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-                
-                // Add watermark, header, footer to all pages
-                await addWatermarkHeaderFooter(pdfDoc, `${currentProject.title} - README`);
-                
-                // Save modified PDF
-                const pdfBytes = await pdfDoc.save();
-                
-                // Download
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${currentProject.folder}_README_A3KM.pdf`;
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                // Remove loading indicator
-                document.body.removeChild(loadingMsg);
-                console.log('✅ PDF downloaded with watermark/header/footer');
-                
-            } catch (error) {
-                console.error('❌ PDF loading error:', error);
-                const loadingMsg = document.getElementById('pdfLoadingMsg');
-                if (loadingMsg) document.body.removeChild(loadingMsg);
-                alert(`Error loading PDF: ${error.message}\n\nPlease ensure readme.pdf exists in the project folder.`);
-            }
-        }
-
-        // Add Watermark, Header, and Footer to PDF using pdf-lib
-        async function addWatermarkHeaderFooter(pdfDoc, documentTitle) {
-            const pages = pdfDoc.getPages();
-            const totalPages = pages.length;
-            const currentDate = new Date().toLocaleDateString('en-GB', { 
-                day: '2-digit', 
-                month: 'short', 
-                year: 'numeric' 
-            });
-            
-            // Embed fonts
-            const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-            const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            const helveticaOblique = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaOblique);
-            
-            for (let i = 0; i < totalPages; i++) {
-                const page = pages[i];
-                const { width, height } = page.getSize();
-                
-                // ========== WATERMARK: "Noor Academy" Center Diagonal ==========
-                const watermarkText = 'Noor Academy';
-                const watermarkSize = 60;
-                const watermarkWidth = helveticaBold.widthOfTextAtSize(watermarkText, watermarkSize);
-                
-                page.drawText(watermarkText, {
-                    x: (width - watermarkWidth) / 2,
-                    y: height / 2 - watermarkSize / 2,
-                    size: watermarkSize,
-                    font: helveticaBold,
-                    color: PDFLib.rgb(0.75, 0.86, 0.94), // Light blue-gray
-                    opacity: 0.12,
-                    rotate: PDFLib.degrees(45)
-                });
-                
-                // ========== HEADER: A3KM Studio Logo + Text ==========
-                // Logo (simplified shape representation)
-                page.drawRectangle({
-                    x: 40,
-                    y: height - 45,
-                    width: 22,
-                    height: 22,
-                    borderColor: PDFLib.rgb(0.8, 0, 0),
-                    borderWidth: 1,
-                    color: PDFLib.rgb(0.06, 0.06, 0.06),
-                    opacity: 1
-                });
-                
-                page.drawCircle({
-                    x: 51,
-                    y: height - 34,
-                    size: 4,
-                    borderColor: PDFLib.rgb(1, 1, 1),
-                    borderWidth: 1.2,
-                    opacity: 1
-                });
-                
-                page.drawLine({
-                    start: { x: 42, y: height - 44 },
-                    end: { x: 60, y: height - 44 },
-                    thickness: 2,
-                    color: PDFLib.rgb(0.8, 0, 0),
-                    opacity: 1
-                });
-                
-                // Header text
-                page.drawText('A3KM Studio', {
-                    x: 70,
-                    y: height - 32,
-                    size: 12,
-                    font: helveticaBold,
-                    color: PDFLib.rgb(0.8, 0, 0) // Red
-                });
-                
-                page.drawText('Engineering · Innovation · Projects', {
-                    x: 70,
-                    y: height - 44,
-                    size: 8,
-                    font: helvetica,
-                    color: PDFLib.rgb(0.4, 0.4, 0.4) // Gray
-                });
-                
-                // Header line
-                page.drawLine({
-                    start: { x: 40, y: height - 50 },
-                    end: { x: width - 40, y: height - 50 },
-                    thickness: 1.5,
-                    color: PDFLib.rgb(0.8, 0, 0),
-                    opacity: 0.5
-                });
-                
-                // ========== FOOTER: Title, Date, Page Number ==========
-                // Footer line
-                page.drawLine({
-                    start: { x: 40, y: 45 },
-                    end: { x: width - 40, y: 45 },
-                    thickness: 1,
-                    color: PDFLib.rgb(0.8, 0, 0),
-                    opacity: 0.3
-                });
-                
-                // Document title (left)
-                const shortTitle = documentTitle.length > 50 ? documentTitle.substring(0, 47) + '...' : documentTitle;
-                page.drawText(shortTitle, {
-                    x: 40,
-                    y: 30,
-                    size: 8,
-                    font: helveticaOblique,
-                    color: PDFLib.rgb(0.31, 0.31, 0.31)
-                });
-                
-                // Generation date (center)
-                const dateText = `Generated: ${currentDate}`;
-                const dateWidth = helvetica.widthOfTextAtSize(dateText, 8);
-                page.drawText(dateText, {
-                    x: (width - dateWidth) / 2,
-                    y: 30,
-                    size: 8,
-                    font: helvetica,
-                    color: PDFLib.rgb(0.31, 0.31, 0.31)
-                });
-                
-                // Page number (right)
-                const pageText = `Page ${i + 1} of ${totalPages}`;
-                const pageWidth = helveticaBold.widthOfTextAtSize(pageText, 8);
-                page.drawText(pageText, {
-                    x: width - 40 - pageWidth,
-                    y: 30,
-                    size: 8,
-                    font: helveticaBold,
-                    color: PDFLib.rgb(0.8, 0, 0)
-                });
-            }
-        }
-
-        // Load Arduino code with multiple file support
-        async function loadCode() {
-            const codeContent = document.getElementById('codeContent');
-            const codeContainer = document.querySelector('.code-container');
-            
-            // Show loading state
-            codeContent.innerHTML = '<span style="color: var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i> Loading Arduino code...</span>';
-            
-            try {
-                // Check for multiple .ino files
-                const allFiles = await discoverAllInoFiles();
-                
-                if (allFiles.length > 1) {
-                    // Multiple files found - show dropdown selector
-                    showMultiCodeSelector(allFiles);
-                    await loadSingleCode(allFiles[0]);
-                } else if (allFiles.length === 1) {
-                    await loadSingleCode(allFiles[0]);
-                } else {
-                    // Fallback to original method
-                    const possibleNames = [
-                        currentProject.codeFile,
-                        'Arduino C++ code.ino',
-                        `${currentProject.folder}.ino`,
-                        `${currentProject.title.toLowerCase().replace(/\s+/g, '-')}.ino`
-                    ];
-                    
-                    let codeLoaded = false;
-                    
-                    for (const fileName of possibleNames) {
-                        if (codeLoaded) break;
-                        
-                        const url = buildFilePath(currentProject.folder, fileName);
-                        
-                        try {
-                            const response = await fetch(url);
-                            if (response.ok) {
-                                const code = await response.text();
-                                codeContent.textContent = code;
-                                codeLoaded = true;
-                                console.log(`✅ Loaded code from: ${url}`);
-                                break;
-                            }
-                        } catch (err) {
-                            console.log(`Failed to load from ${url}`);
-                        }
-                    }
-                    
-                    if (!codeLoaded) {
-                        codeContent.innerHTML = `<span style="color: rgba(255,200,200,0.7);">// Arduino code file not found\n// Expected file: ${currentProject.codeFile}\n// Project: ${currentProject.title}\n\n// Please check the Arduino folder structure</span>`;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading code:', error);
-                codeContent.innerHTML = `<span style="color: rgba(255,100,100,0.8);">// Error loading code\n// ${error.message}</span>`;
-            }
-        }
-        
-        async function loadSingleCode(fileName) {
-            const codeContent = document.getElementById('codeContent');
-            const url = buildFilePath(currentProject.folder, fileName);
-            
-            try {
-                const response = await fetch(url);
-                if (response.ok) {
-                    const code = await response.text();
-                    codeContent.textContent = code;
-                    document.getElementById('codeFileName').textContent = fileName;
-                    console.log(`✅ Loaded: ${fileName}`);
-                    return true;
-                }
-            } catch (err) {
-                console.log(`Failed: ${url}`);
-            }
-            return false;
-        }
-        
-        function showMultiCodeSelector(files) {
-            const codeHeader = document.querySelector('.code-header');
-            let container = document.getElementById('multiCodeSelector');
-            
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'multiCodeSelector';
-                container.style.cssText = `
-                    margin-top: 12px; padding: 12px; background: rgba(26, 0, 0, 0.7);
-                    border: 2px solid var(--border-primary); border-radius: 10px;
-                    display: flex; align-items: center; gap: 12px;
-                `;
-                
-                const icon = document.createElement('i');
-                icon.className = 'fas fa-code-branch';
-                icon.style.cssText = 'color: var(--primary-red); font-size: 1.1rem;';
-                
-                const label = document.createElement('label');
-                label.textContent = `${files.length} Code Files:`;
-                label.style.cssText = 'color: var(--text-primary); font-weight: 700; font-size: 0.9rem;';
-                
-                const select = document.createElement('select');
-                select.id = 'codeFileSelect';
-                select.style.cssText = `
-                    flex: 1; padding: 8px 12px; background: rgba(10,10,10,0.95);
-                    border: 2px solid var(--border-primary); border-radius: 8px;
-                    color: var(--text-primary); font-weight: 600; cursor: pointer;
-                `;
-                
-                files.forEach(f => {
-                    const opt = document.createElement('option');
-                    opt.value = f;
-                    opt.textContent = f;
-                    select.appendChild(opt);
-                });
-                
-                select.onchange = async () => await loadSingleCode(select.value);
-                
-                container.append(icon, label, select);
-                codeHeader.parentNode.insertBefore(container, codeHeader.nextSibling);
-            }
-        }
-        
-        // Helper functions for multiple .ino file support
-        async function discoverAllInoFiles() {
-            const knownFilePatterns = [
-                currentProject.codeFile,
-                'Arduino C++ code.ino',
-                'Arduino C++ code - class code.ino',
-                'Push serially.ino',
-                'push any button.ino',
-                '0 to 6 then 6-1.ino',
-                '0 to 6 then 6-1 class code.ino',
-                '0-6 quickly and shows a random number.ino',
-                'edited.ino',
-                'attiny85-lcd-clock.ino'
-            ];
-            
-            const foundFiles = [];
-            for (const fileName of knownFilePatterns) {
-                if (!fileName || fileName === '#') continue;
-                
-                const url = buildFilePath(currentProject.folder, fileName);
-                
-                try {
-                    const response = await fetch(url, { method: 'HEAD' });
-                    if (response.ok && !foundFiles.includes(fileName)) {
-                        foundFiles.push(fileName);
-                        console.log(`✅ Found: ${fileName}`);
-                    }
-                } catch (err) {}
-            }
-            return foundFiles;
-        }
-
-        // Load explanation
-        async function loadExplanation() {
-            const explanationContent = document.getElementById('explanationContent');
-            const variations = [
-                'Code Explanation (for beginner).md',
-                'Code Explaination (for beginner).md',
-                'Code & Circuit Explanation(for beginner).md'
-            ];
-            
-            for (const fileName of variations) {
-                const filePath = buildFilePath(currentProject.folder, fileName);
-                try {
-                    const response = await fetch(filePath);
-                    if (response.ok) {
-                        const text = await response.text();
-                        // Pass filePath to fix relative image paths
-                        explanationContent.innerHTML = convertMarkdown(text, filePath);
-                        console.log('✅ Explanation loaded');
-                        
-                        // Generate TOC after content loaded
-                        setTimeout(() => {
-                            generateTOC();
-                        }, 200);
-                        
-                        return;
-                    }
-                } catch (error) {
-                    console.log(`Failed: ${fileName}`);
-                }
-            }
-            explanationContent.innerHTML = '<p style="text-align:center;padding:40px;color:rgba(255,255,255,0.5);">Explanation not available</p>';
-        }
-
-        // Load README
-        async function loadReadme() {
-            const readmeContent = document.getElementById('readmeContent');
-            const filePath = buildFilePath(currentProject.folder, 'README.md');
-            
-            try {
-                const response = await fetch(filePath);
-                if (response.ok) {
-                    const text = await response.text();
-                    // Pass filePath to fix relative image paths
-                    readmeContent.innerHTML = convertMarkdown(text, filePath);
-                    console.log('✅ README loaded');
-                    
-                    // Extract Tinkercad link from README
-                    extractTinkercadLink(text);
-                    
-                    // Generate TOC after content loaded
-                    setTimeout(() => {
-                        generateTOC();
-                    }, 200);
-                } else {
-                    readmeContent.innerHTML = '<p style="text-align:center;padding:40px;color:rgba(255,255,255,0.5);">README not available</p>';
-                }
-            } catch (error) {
-                console.error('❌ Error loading README:', error);
-                readmeContent.innerHTML = '<p style="text-align:center;padding:40px;color:rgba(255,100,100,0.8);">Error loading README</p>';
-            }
-        }
-
-        // Extract Tinkercad link from README content
-        function extractTinkercadLink(readmeText) {
-            const tinkercadLink = document.getElementById('tinkercadLink');
-            
-            // Skip if already set from project data
-            if (currentProject.tinkercad && currentProject.tinkercad !== '#') {
-                console.log('ℹ️ Using Tinkercad link from project data');
-                return;
-            }
-            
-            // Look for Tinkercad URL patterns in README
-            const patterns = [
-                /https:\/\/www\.tinkercad\.com\/things\/[a-zA-Z0-9-]+/g,
-                /\[.*?\]\((https:\/\/www\.tinkercad\.com\/things\/[^)]+)\)/g
-            ];
-            
-            let tinkercadUrl = null;
-            
-            for (const pattern of patterns) {
-                const matches = readmeText.match(pattern);
-                if (matches && matches.length > 0) {
-                    // Extract URL from markdown link if needed
-                    const match = matches[0];
-                    if (match.includes('](')) {
-                        const urlMatch = match.match(/\((https:\/\/[^)]+)\)/);
-                        if (urlMatch) tinkercadUrl = urlMatch[1];
-                    } else {
-                        tinkercadUrl = match;
-                    }
-                    break;
-                }
-            }
-            
-            // Update Tinkercad button if URL found in README
-            if (tinkercadUrl) {
-                tinkercadLink.href = tinkercadUrl;
-                tinkercadLink.target = '_blank';
-                tinkercadLink.rel = 'noopener noreferrer';
-                tinkercadLink.style.opacity = '1';
-                tinkercadLink.style.pointerEvents = 'auto';
-                tinkercadLink.style.background = 'linear-gradient(135deg, var(--primary-red), var(--primary-red-dark))';
-                console.log('✅ Tinkercad link extracted from README:', tinkercadUrl);
-            } else {
-                console.log('⚠️ No Tinkercad link found in README');
-            }
-        }
-
-        // Enhanced markdown converter using marked.js with syntax highlighting
-        function convertMarkdown(text, filePath = '') {
-            if (!text) return '';
-            
-            // Wait for marked.js to load
-            if (typeof marked === 'undefined') {
-                console.warn('⚠️ marked.js not loaded yet, using fallback');
-                return convertMarkdownFallback(text);
-            }
-            
-            try {
-                // Configure marked.js for better rendering
-                marked.setOptions({
-                    breaks: true,
-                    gfm: true,
-                    headerIds: true,
-                    mangle: false,
-                    pedantic: false,
-                    sanitize: false,
-                    smartLists: true,
-                    smartypants: false,
-                    highlight: function(code, lang) {
-                        // Syntax highlighting with highlight.js
-                        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
-                            try {
-                                return hljs.highlight(code, { language: lang }).value;
-                            } catch (err) {
-                                console.warn('Highlight error:', err);
-                            }
-                        }
-                        return code;
-                    }
-                });
-                
-                // Parse markdown with marked.js
-                let html = marked.parse(text);
-                
-                // Fix relative image paths if filePath is provided
-                if (filePath) {
-                    // Extract base directory from file path
-                    const lastSlashIndex = filePath.lastIndexOf('/');
-                    if (lastSlashIndex !== -1) {
-                        const baseDir = filePath.substring(0, lastSlashIndex + 1);
-                        
-                        // Replace relative image paths (src="filename.ext") with absolute paths
-                        // Only fix paths that don't start with http://, https://, or /
-                        html = html.replace(/(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi, (match, prefix, src, suffix) => {
-                            // Resolve relative path
-                            const resolvedPath = baseDir + src;
-                            return prefix + resolvedPath + suffix;
-                        });
-                    }
-                }
-                
-                // Apply syntax highlighting to code blocks after rendering
-                setTimeout(() => {
-                    if (typeof hljs !== 'undefined') {
-                        document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
-                            hljs.highlightElement(block);
-                        });
-                    }
-                }, 100);
-                
-                return html;
-            } catch (error) {
-                console.error('❌ marked.js parsing error:', error);
-                return convertMarkdownFallback(text);
-            }
-        }
-        
-        // Fallback markdown converter (original bulletproof version)
-        function convertMarkdownFallback(text) {
-            if (!text) return '';
-            
-            let html = text
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-            
-            // Code blocks (must be before inline code)
-            html = html.replace(/```([\w]*)\r?\n([\s\S]*?)```/g, (match, lang, code) => {
-                const language = lang || 'plaintext';
-                return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
-            });
-            
-            // BULLETPROOF TABLE PARSER - Handles all markdown table formats
-            html = html.replace(/^(\|.+\|)\s*[\r\n]+(\|[\s\-:|]+\|)\s*[\r\n]+((?:\|.+\|[\r\n]*)*)/gm, (match, header, separator, body) => {
-                console.log('📊 Table detected');
-                
-                // Clean and parse header
-                const headerCells = header
-                    .trim()
-                    .split('|')
-                    .slice(1, -1) // Remove leading/trailing empty from split
-                    .map(cell => cell.trim())
-                    .filter(cell => cell.length > 0);
-                
-                if (headerCells.length === 0) {
-                    console.warn('⚠️ Invalid table header');
-                    return match;
-                }
-                
-                // Parse alignment from separator
-                const alignments = separator
-                    .trim()
-                    .split('|')
-                    .slice(1, -1)
-                    .map(sep => {
-                        const s = sep.trim();
-                        if (s.startsWith(':') && s.endsWith(':')) return 'center';
-                        if (s.endsWith(':')) return 'right';
-                        return 'left';
-                    });
-                
-                // Build header with alignment
-                const headerRow = '<tr>' + headerCells.map((cell, i) => 
-                    `<th style="text-align: ${alignments[i] || 'left'}">${cell}</th>`
-                ).join('') + '</tr>';
-                
-                // Parse body rows
-                const bodyLines = body.trim().split(/[\r\n]+/).filter(line => line.trim().includes('|'));
-                
-                const bodyRows = bodyLines.map(line => {
-                    const cells = line
-                        .trim()
-                        .split('|')
-                        .slice(1, -1)
-                        .map(cell => cell.trim());
-                    
-                    // Pad cells if needed
-                    while (cells.length < headerCells.length) {
-                        cells.push('');
-                    }
-                    
-                    return '<tr>' + cells.slice(0, headerCells.length).map((cell, i) => 
-                        `<td style="text-align: ${alignments[i] || 'left'}">${cell}</td>`
-                    ).join('') + '</tr>';
-                }).join('');
-                
-                const table = `\n<div class="table-wrapper">\n<table class="markdown-table">\n<thead>${headerRow}</thead>\n<tbody>${bodyRows}</tbody>\n</table>\n</div>\n`;
-                
-                console.log(`✅ Table created: ${headerCells.length} columns × ${bodyLines.length} rows`);
-                return table;
-            });
-            
-            // Headers (must be before other inline formatting)
-            html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
-            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            
-            // Horizontal rules
-            html = html.replace(/^---+$/gm, '<hr>');
-            html = html.replace(/^\*\*\*+$/gm, '<hr>');
-            
-            // Blockquotes
-            html = html.replace(/^&gt; ?(.+)$/gm, '<blockquote>$1</blockquote>');
-            
-            // Lists - Ordered
-            html = html.replace(/^(\d+\.\s.+)(\r?\n\d+\.\s.+)*/gm, (match) => {
-                const items = match.split(/\r?\n/).map(line => {
-                    const content = line.replace(/^\d+\.\s/, '');
-                    return `<li>${content}</li>`;
-                }).join('');
-                return `<ol>${items}</ol>`;
-            });
-            
-            // Lists - Unordered
-            html = html.replace(/^([*+-]\s.+)(\r?\n[*+-]\s.+)*/gm, (match) => {
-                const items = match.split(/\r?\n/).map(line => {
-                    const content = line.replace(/^[*+-]\s/, '');
-                    return `<li>${content}</li>`;
-                }).join('');
-                return `<ul>${items}</ul>`;
-            });
-            
-            // Bold and italic (must be before inline code)
-            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-            html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-            
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Images
-            html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
-            
-            // Links
-            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-            
-            // Line breaks and paragraphs
-            html = html.split(/\r?\n\r?\n/).map(para => {
-                para = para.trim();
-                // Don't wrap if already has block-level tags
-                if (para.match(/^<(h[1-6]|table|ul|ol|blockquote|pre|hr)/)) {
-                    return para;
-                }
-                return para ? `<p>${para.replace(/\r?\n/g, '<br>')}</p>` : '';
-            }).join('\n');
-            
-            return html;
-        }
-
-        // Helper function to switch tabs - EXPOSED TO GLOBAL SCOPE for onclick
-        window.switchToTab = function switchToTab(tabName) {
-            console.log(`
-
-🔄 ========== SWITCHING TO: ${tabName} ==========`);
-            console.log('Called from:', new Error().stack);
-            
-            try {
-                // Update active tab button
-                const allTabBtns = document.querySelectorAll('.doc-tab[data-tab]');
-                console.log('  Found', allTabBtns.length, 'tab buttons');
-                
-                allTabBtns.forEach(t => {
-                    t.classList.remove('active');
-                    console.log('  Removed active from:', t.dataset.tab);
-                });
-                
-                const targetBtn = document.querySelector(`.doc-tab[data-tab="${tabName}"]`);
-                if (targetBtn) {
-                    targetBtn.classList.add('active');
-                    console.log('  ✅ Tab button activated:', tabName);
-                } else {
-                    console.error('  ❌ Tab button not found:', tabName);
-                }
-                
-                // Hide all content first
-                const allContent = document.querySelectorAll('.doc-content');
-                console.log('  Found', allContent.length, 'content divs');
-                allContent.forEach((c, i) => {
-                    c.classList.remove('active');
-                    c.style.display = 'none';
-                    c.style.visibility = 'hidden';
-                    console.log(`  Hidden content ${i}:`, c.id);
-                });
-                
-                // Show target content
-                const targetId = tabName + 'Tab';
-                const targetTab = document.getElementById(targetId);
-                console.log('  Looking for:', targetId);
-                
-                if (targetTab) {
-                    targetTab.classList.add('active');
-                    targetTab.style.display = 'block';
-                    targetTab.style.visibility = 'visible';
-                    targetTab.style.opacity = '1';
-                    console.log('  ✅ Content shown:', targetId);
-                    console.log('  Content computed display:', window.getComputedStyle(targetTab).display);
-                    console.log('  Content computed visibility:', window.getComputedStyle(targetTab).visibility);
-                    
-                    // Regenerate TOC after tab switch
-                    setTimeout(() => {
-                        generateTOC();
-                        console.log('  📋 TOC regenerated');
-                    }, 100);
-                    
-                    // Update fullscreen button state
-                    const fullscreenBtn = document.getElementById('fullscreenBtn');
-                    if (fullscreenBtn) {
-                        if (tabName === 'code') {
-                            fullscreenBtn.disabled = true;
-                            fullscreenBtn.style.opacity = '0.5';
-                            fullscreenBtn.style.cursor = 'not-allowed';
-                            fullscreenBtn.title = 'Fullscreen only available for README & Explanation';
-                        } else {
-                            fullscreenBtn.disabled = false;
-                            fullscreenBtn.style.opacity = '1';
-                            fullscreenBtn.style.cursor = 'pointer';
-                            fullscreenBtn.title = 'Toggle Fullscreen (F)';
-                        }
-                    }
-                } else {
-                    console.error('  ❌ Content element not found:', targetId);
-                }
-            } catch (error) {
-                console.error('❌ Error in switchToTab:', error);
-            }
-        }
-
-        // Global click tracker (DEBUG)
-        document.addEventListener('click', function(e) {
-            console.log('🖱️ CLICK DETECTED on:', e.target.tagName, e.target.id, e.target.className);
-            if (e.target.closest('button')) {
-                const btn = e.target.closest('button');
-                console.log('  ↳ Button:', btn.id, 'onclick:', btn.onclick, 'getAttribute:', btn.getAttribute('onclick'));
-            }
-        }, true); // Capture phase to catch it before any stopPropagation
-
-        // Event Listeners
         function setupEventListeners() {
-            console.log('🔧 Setting up event listeners...');
-            
-            // ===== TAB SWITCHING =====
-            // README Tab
-            const readmeTabBtn = document.getElementById('readmeTabBtn');
-            if (readmeTabBtn) {
-                console.log('📌 README button found, adding click listener...');
-                console.log('   Current onclick:', readmeTabBtn.onclick);
-                console.log('   getAttribute onclick:', readmeTabBtn.getAttribute('onclick'));
-                readmeTabBtn.addEventListener('click', () => {
-                    console.log('📄 README tab clicked (via addEventListener)');
-                    switchToTab('readme');
-                });
-                console.log('✅ README tab listener attached');
-            } else {
-                console.error('❌ readmeTabBtn not found');
-            }
-            
-            // Explanation Tab
-            const explanationTabBtn = document.getElementById('explanationTabBtn');
-            if (explanationTabBtn) {
-                explanationTabBtn.addEventListener('click', () => {
-                    console.log('📚 Explanation tab clicked');
-                    switchToTab('explanation');
-                });
-                console.log('✅ Explanation tab listener attached');
-            } else {
-                console.error('❌ explanationTabBtn not found');
-            }
-            
-            // Code Tab
-            const codeTabBtn = document.getElementById('codeTabBtn');
-            if (codeTabBtn) {
-                codeTabBtn.addEventListener('click', () => {
-                    console.log('💻 Code tab clicked');
-                    switchToTab('code');
-                });
-                console.log('✅ Code tab listener attached');
-            } else {
-                console.error('❌ codeTabBtn not found');
-            }
-            
-            // ===== READING MODE BUTTONS =====
-            // Default Mode
-            const defaultModeBtn = document.getElementById('defaultModeBtn');
-            if (defaultModeBtn) {
-                defaultModeBtn.addEventListener('click', () => {
-                    console.log('☀️ Default mode clicked');
-                    setDefaultMode();
-                });
-            }
-            
-            // Night Mode
-            const nightModeBtn = document.getElementById('nightModeBtn');
-            if (nightModeBtn) {
-                nightModeBtn.addEventListener('click', () => {
-                    console.log('🌙 Night mode clicked');
-                    toggleNightMode();
-                });
-            }
-            
-            // Sepia Mode
-            const sepiaModeBtn = document.getElementById('sepiaModeBtn');
-            if (sepiaModeBtn) {
-                sepiaModeBtn.addEventListener('click', () => {
-                    console.log('📜 Sepia mode clicked');
-                    toggleSepiaMode();
-                });
-            }
-            
-            // ===== FULLSCREEN BUTTON =====
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', () => {
-                    console.log('📺 Fullscreen clicked');
-                    toggleFullscreen();
-                });
-                console.log('✅ Fullscreen button listener attached');
-            } else {
-                console.error('❌ fullscreenBtn not found');
-            }
-            
-            // ===== PDF DOWNLOAD BUTTONS =====
-            const pdfExpBtn = document.getElementById('pdfExpBtn');
-            if (pdfExpBtn) {
-                pdfExpBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    console.log('📄 PDF Exp clicked');
-                    downloadExplanationPDF();
-                });
-            }
-            
-            const pdfReadBtn = document.getElementById('pdfReadBtn');
-            if (pdfReadBtn) {
-                pdfReadBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    console.log('📄 PDF Read clicked');
-                    downloadReadmePDF();
-                });
-            }
-            
-            console.log('✅ All event listeners attached');
-            
-            // ===== OTHER EVENT LISTENERS =====
-            
-            // Copy code
-            const copyCodeBtn = document.getElementById('copyCodeBtn');
-            if (copyCodeBtn) {
-                copyCodeBtn.addEventListener('click', () => {
-                    const code = document.getElementById('codeContent').textContent;
-                    navigator.clipboard.writeText(code).then(() => {
-                        alert('Code copied to clipboard!');
-                    });
-                });
-            }
-            
-            // Download code
-            const downloadCodeBtn = document.getElementById('downloadCodeBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            if (downloadCodeBtn) {
-                downloadCodeBtn.addEventListener('click', () => {
-                    const code = document.getElementById('codeContent').textContent;
-                    const blob = new Blob([code], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = currentProject.codeFile;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                });
-            }
-            
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', () => {
-                    const code = document.getElementById('codeContent').textContent;
-                    const blob = new Blob([code], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = currentProject.codeFile;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                });
-            }
-
             // Download circuit diagram
             const downloadCircuitBtn = document.getElementById('downloadCircuitBtn');
             if (downloadCircuitBtn) {
@@ -3825,157 +1335,70 @@
                     }
                 });
             }
-            
-            // Back button
-            const backBtn = document.querySelector('.back-btn');
-            if (backBtn) {
-                backBtn.addEventListener('click', (e) => {
-                    if (backBtn.tagName === 'A') {
-                        // Let the link work normally
-                        return;
+
+            // Download code (fetch directly from project folder)
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', async () => {
+                    const names = [currentProject.codeFile, 'Arduino C++ code.ino', `${currentProject.folder}.ino`];
+                    for (const name of names) {
+                        if (!name || name === '#') continue;
+                        try {
+                            const resp = await fetch(buildFilePath(currentProject.folder, name));
+                            if (resp.ok) {
+                                const code = await resp.text();
+                                const blob = new Blob([code], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url; a.download = name; a.click();
+                                URL.revokeObjectURL(url);
+                                return;
+                            }
+                        } catch (e) {}
                     }
-                    e.preventDefault();
-                    window.history.back();
+                    showToast('Code file not found!', 'error');
                 });
             }
             
-            // Fullscreen change listener
-            document.addEventListener('fullscreenchange', () => {
-                const fullscreenBtn = document.getElementById('fullscreenBtn');
-                
-                if (!document.fullscreenElement) {
-                    // Exited fullscreen
-                    const icon = fullscreenBtn?.querySelector('i');
-                    const text = fullscreenBtn?.querySelector('span');
-                    if (icon) {
-                        icon.className = 'fas fa-expand';
-                    }
-                    if (text) {
-                        text.textContent = 'Fullscreen';
-                    }
-                    if (fullscreenBtn) {
-                        fullscreenBtn.title = 'Toggle Fullscreen (F)';
-                    }
-                    console.log('📺 Fullscreen exited via ESC');
-                } else {
-                    // Entered fullscreen
-                    const icon = fullscreenBtn?.querySelector('i');
-                    const text = fullscreenBtn?.querySelector('span');
-                    if (icon) {
-                        icon.className = 'fas fa-compress';
-                    }
-                    if (text) {
-                        text.textContent = 'Exit';
-                    }
-                    if (fullscreenBtn) {
-                        fullscreenBtn.title = 'Exit Fullscreen (Esc)';
-                    }
-                    console.log('📺 Fullscreen entered');
-                }
-            });
-            
-            // Keyboard Navigation
+            // Keyboard Navigation (arrow keys)
             document.addEventListener('keydown', (e) => {
-                // Ignore if user is typing in an input field
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                
                 const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-                
-                // Left Arrow - Previous Project
-                if (e.key === 'ArrowLeft') {
+                if (e.key === 'ArrowLeft' && currentIndex > 0) {
                     e.preventDefault();
-                    if (currentIndex > 0) {
-                        const prevProject = projects[currentIndex - 1];
-                        console.log('⬅️ Keyboard: Navigating to', prevProject.title);
-                        window.location.href = `?id=${prevProject.id}`;
-                    }
+                    window.location.href = `?id=${projects[currentIndex - 1].id}`;
                 }
-                
-                // Right Arrow - Next Project
-                if (e.key === 'ArrowRight') {
+                if (e.key === 'ArrowRight' && currentIndex < projects.length - 1) {
                     e.preventDefault();
-                    if (currentIndex < projects.length - 1) {
-                        const nextProject = projects[currentIndex + 1];
-                        console.log('➡️ Keyboard: Navigating to', nextProject.title);
-                        window.location.href = `?id=${nextProject.id}`;
-                    }
+                    window.location.href = `?id=${projects[currentIndex + 1].id}`;
                 }
             });
-            
-            console.log('✅ Event listeners setup complete');
         }
 
-        // Initialize (safe for late script execution)
         async function initViewer() {
-            console.log('🚀 initViewer started');
-            
-            // Load projects data from JSON file first
             await loadProjectsData();
-            console.log('📊 Projects data loaded');
-            
-            // Then proceed with normal initialization
-            try {
-                console.log('📂 About to call loadProject()...');
-                loadProject();
-                console.log('✅ loadProject() completed');
-            } catch (error) {
-                console.error('❌ Error in loadProject():', error);
-            }
-            
-            try {
-                console.log('🔧 About to call setupEventListeners()...');
-                setupEventListeners();
-                console.log('✅ setupEventListeners() completed');
-            } catch (error) {
-                console.error('❌ Error in setupEventListeners():', error);
-            }
-            
-            console.log('🔄 About to call updateNavigationButtons()...');
-            updateNavigationButtons(); // Update navbar buttons
-            loadReadingPreferences(); // Load saved reading settings
-            setupReadingKeyboardShortcuts(); // Enable keyboard shortcuts for reading
-            
-            // Ensure README tab is visible on load
-            setTimeout(() => {
-                const readmeTab = document.getElementById('readmeTab');
-                if (readmeTab) {
-                    readmeTab.style.display = 'block';
-                    console.log('✅ README tab initialized as visible');
-                }
-                
-                // Test that buttons are clickable
-                console.log('🔍 Testing button availability:');
-                console.log('  readmeTabBtn:', !!document.getElementById('readmeTabBtn'));
-                console.log('  explanationTabBtn:', !!document.getElementById('explanationTabBtn'));
-                console.log('  codeTabBtn:', !!document.getElementById('codeTabBtn'));
-                console.log('  fullscreenBtn:', !!document.getElementById('fullscreenBtn'));
-                
-                // Test content divs
-                console.log('🔍 Testing content divs:');
-                console.log('  readmeTab:', !!document.getElementById('readmeTab'));
-                console.log('  explanationTab:', !!document.getElementById('explanationTab'));
-                console.log('  codeTab:', !!document.getElementById('codeTab'));
-                
-                // Test switchToTab function
-                console.log('\n🧪 Testing switchToTab function:');
-                console.log('  window.switchToTab exists:', typeof window.switchToTab);
-                console.log('  Manually calling switchToTab("readme")...');
-                if (typeof window.switchToTab === 'function') {
-                    // Don't actually call it yet, just log
-                    console.log('  ✅ Function is callable');
-                } else {
-                    console.error('  ❌ switchToTab not found on window!');
-                }
-                
-                // Check onclick attributes
-                const readmeBtn = document.getElementById('readmeTabBtn');
-                if (readmeBtn) {
-                    console.log('\n🔗 Checking onclick handlers:');
-                    console.log('  README button onclick:', readmeBtn.onclick);
-                    console.log('  README button getAttribute("onclick"):', readmeBtn.getAttribute('onclick'));
-                }
-            }, 100);
+            try { loadProject(); } catch(e) { console.error('loadProject error:', e); }
+            try { setupEventListeners(); } catch(e) { console.error('setupEventListeners error:', e); }
+            updateNavigationButtons();
+            setupKeyboardNavigation();
         }
+
+        // Open documentation reader page
+        function openDocViewer() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id') || '1';
+            window.location.href = `arduino-doc-reader.html?id=${encodeURIComponent(id)}`;
+        }
+
+        // Keyboard accessibility for doc card
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.getElementById('docEntryCard');
+            if (card) {
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDocViewer(); }
+                });
+            }
+        });
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initViewer);
@@ -4041,155 +1464,6 @@
         }
 
         /* ============================================
-           TABLE OF CONTENTS (TOC) FUNCTIONALITY
-           ============================================ */
-        function generateTOC() {
-            const tocNav = document.getElementById('tocNav');
-            if (!tocNav) return;
-
-            // Find which tab is currently active
-            const activeTabContent = document.querySelector('.doc-content.active');
-            
-            if (!activeTabContent) {
-                console.warn('⚠️ No active tab content found for TOC');
-                return;
-            }
-
-            // Get markdown content from active tab
-            const activeContent = activeTabContent.querySelector('.markdown-content');
-            
-            if (!activeContent) {
-                console.warn('⚠️ No markdown content found in active tab');
-                return;
-            }
-
-            // Get all headings (h1-h4) from active content
-            const headings = activeContent.querySelectorAll('h1, h2, h3, h4');
-            
-            if (headings.length === 0) {
-                tocNav.innerHTML = '<p style="color: var(--text-secondary); padding: 10px; text-align: center; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> No headings found</p>';
-                console.log('ℹ️ No headings found in current tab');
-                return;
-            }
-
-            // Generate TOC links
-            let tocHTML = '';
-            headings.forEach((heading, index) => {
-                const level = heading.tagName.toLowerCase();
-                const text = heading.textContent.trim();
-                const id = heading.id || `heading-${index}`;
-                
-                // Ensure heading has an ID
-                if (!heading.id) {
-                    heading.id = id;
-                }
-                
-                tocHTML += `
-                    <a href="#${id}" 
-                       class="toc-link toc-${level}" 
-                       data-target="${id}">
-                        ${text}
-                    </a>
-                `;
-            });
-            
-            tocNav.innerHTML = tocHTML;
-            
-            // Add click handlers for smooth scroll
-            tocNav.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = link.getAttribute('data-target');
-                    const targetElement = document.getElementById(targetId);
-                    
-                    if (targetElement) {
-                        // Scroll to element
-                        targetElement.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start',
-                            inline: 'nearest'
-                        });
-                        
-                        // Close sidebar on mobile after clicking
-                        if (window.innerWidth <= 768) {
-                            document.getElementById('tocSidebar')?.classList.remove('active');
-                        }
-                        
-                        console.log('📍 Scrolled to:', text);
-                    }
-                });
-            });
-            
-            console.log(`📋 TOC generated with ${headings.length} headings`);
-        }
-
-        // Update active TOC link based on scroll position
-        function updateActiveTOC() {
-            const tocLinks = document.querySelectorAll('.toc-link');
-            if (tocLinks.length === 0) return;
-
-            // Get all heading positions
-            const headings = Array.from(document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4'));
-            if (headings.length === 0) return;
-
-            const scrollPosition = window.scrollY + 150; // Offset for fixed header
-
-            // Find the current active heading
-            let activeHeading = headings[0];
-            for (const heading of headings) {
-                if (heading.offsetTop <= scrollPosition) {
-                    activeHeading = heading;
-                } else {
-                    break;
-                }
-            }
-
-            // Update TOC active state
-            tocLinks.forEach(link => {
-                const targetId = link.getAttribute('data-target');
-                if (targetId === activeHeading.id) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-        }
-
-        // TOC Toggle Button Event Listeners
-        document.getElementById('tocToggle')?.addEventListener('click', () => {
-            const sidebar = document.getElementById('tocSidebar');
-            sidebar?.classList.toggle('active');
-        });
-
-        document.getElementById('tocClose')?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent click from bubbling
-            const sidebar = document.getElementById('tocSidebar');
-            sidebar?.classList.remove('active');
-            console.log('✖️ TOC closed via close button');
-        });
-
-        // Close TOC on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.getElementById('tocSidebar')?.classList.remove('active');
-            }
-        });
-
-        // Close TOC when clicking outside
-        document.addEventListener('click', (e) => {
-            const sidebar = document.getElementById('tocSidebar');
-            const toggleBtn = document.getElementById('tocToggle');
-            
-            if (sidebar?.classList.contains('active') && 
-                !sidebar.contains(e.target) && 
-                !toggleBtn?.contains(e.target)) {
-                sidebar.classList.remove('active');
-            }
-        });
-
-        /* ============================================
-           READING PROGRESS BAR
-           ============================================ */
         function updateProgressBar() {
             const progressBar = document.getElementById('readingProgress');
             if (!progressBar) return;
@@ -4302,10 +1576,7 @@
         });
 
         // Scroll event listener for TOC and Progress Bar
-        window.addEventListener('scroll', () => {
-            updateProgressBar();
-            updateActiveTOC();
-        });
+        window.addEventListener('scroll', () => { updateProgressBar(); });
 
         // Initialize Progress Bar on page load
         updateProgressBar();

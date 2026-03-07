@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#0a0000">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Documentation Reader – A3KM Studio</title>
+
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../../Optimization/styles.css">
+    <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+
+    <!-- PDF Library -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <!-- Markdown & Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        /* ═══════════════════════════════════════════
+           ROOT VARIABLES
+        ═══════════════════════════════════════════ */
+        :root {
+            --primary-red: #8B0000;
+            --primary-red-dark: #5a0000;
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-card: rgba(26, 0, 0, 0.95);
+            --border-primary: rgba(139, 0, 0, 0.3);
+            --border-hover: rgba(139, 0, 0, 0.7);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --toolbar-h: 112px;  /* two toolbar rows */
+            --toc-w: 280px;
+        }
+
+        /* ═══════════════════════════════════════════
+           PAGE LAYOUT
+        ═══════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0; padding: 0;
+            height: 100%; overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-primary);
+        }
+
+        /* bg-system-container already handles background via linked CSS */
+        body.bg-system-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════
+           FIXED TOOLBAR
+        ═══════════════════════════════════════════ */
+        .reader-toolbar {
+            flex-shrink: 0;
+            background: rgba(8, 0, 0, 0.97);
+            border-bottom: 2px solid var(--border-primary);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            box-shadow: 0 2px 20px rgba(139, 0, 0, 0.25);
+        }
+
+        .toolbar-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 16px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .toolbar-row::-webkit-scrollbar { display: none; }
+
+        .toolbar-row-1 {
+            border-bottom: 1px solid rgba(139, 0, 0, 0.15);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 28px;
+            background: rgba(139, 0, 0, 0.3);
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+
+        .back-btn-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            background: rgba(139,0,0,0.15);
+            border: 1.5px solid var(--border-primary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .back-btn-sm:hover {
+            background: rgba(139,0,0,0.3);
+            border-color: var(--primary-red);
+            transform: translateX(-3px);
+        }
+
+        .project-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 260px;
+            flex-shrink: 1;
+        }
+
+        .spacer { flex: 1; }
+
+        /* ── Toolbar Buttons ── */
+        .tbtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            background: rgba(139,0,0,0.08);
+            border: 1.5px solid rgba(139,0,0,0.25);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .tbtn i { font-size: 0.85rem; transition: transform 0.25s; }
+        .tbtn:hover {
+            background: rgba(139,0,0,0.22);
+            border-color: var(--primary-red);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+        .tbtn.active {
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-color: var(--primary-red);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(139,0,0,0.4);
+        }
+        .tbtn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .tbtn.pdf-btn {
+            background: rgba(139,0,0,0.12);
+        }
+        .tbtn.pdf-btn i { color: var(--primary-red); }
+
+        .zoom-display {
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.4);
+            border: 1.5px solid rgba(139,0,0,0.25);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 700;
+            min-width: 52px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════════════════════════════════
+           READER BODY (content + TOC)
+        ═══════════════════════════════════════════ */
+        .reader-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Main scrollable content ── */
+        .reader-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 40px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139,0,0,0.4) transparent;
+            position: relative;
+            /* Premium dark reddish reading surface — no grid */
+            background:
+                radial-gradient(ellipse 900px 500px at 50% 0%,   rgba(100, 0, 0, 0.18), transparent 70%),
+                radial-gradient(ellipse 600px 400px at 90% 100%, rgba(80,  0, 0, 0.12), transparent 65%),
+                radial-gradient(ellipse 700px 300px at 10% 60%,  rgba(60,  0, 0, 0.08), transparent 60%),
+                #0a0101;
+        }
+        .reader-content::-webkit-scrollbar { width: 6px; }
+        .reader-content::-webkit-scrollbar-track { background: transparent; }
+        .reader-content::-webkit-scrollbar-thumb {
+            background: rgba(139,0,0,0.4);
+            border-radius: 3px;
+        }
+        .reader-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(139,0,0,0.7);
+        }
+
+        /* ── TOC Sidebar (fixed right) ── */
+        .reader-toc {
+            width: var(--toc-w);
+            flex-shrink: 0;
+            background: rgba(12, 0, 0, 0.97);
+            border-left: 2px solid var(--border-primary);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139,0,0,0.3) transparent;
+            transition: width 0.3s ease, opacity 0.3s ease;
+        }
+        .reader-toc::-webkit-scrollbar { width: 4px; }
+        .reader-toc::-webkit-scrollbar-thumb { background: rgba(139,0,0,0.3); border-radius: 2px; }
+        .reader-toc.collapsed { width: 0; opacity: 0; overflow: hidden; border: none; }
+
+        .toc-head {
+            padding: 16px 16px 10px;
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .toc-head h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-nav {
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .toc-link {
+            display: block;
+            padding: 7px 12px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            line-height: 1.4;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .toc-link:hover {
+            background: rgba(139,0,0,0.15);
+            color: var(--text-primary);
+        }
+        .toc-link.active {
+            background: rgba(139,0,0,0.2);
+            color: var(--primary-red);
+            border-left: 3px solid var(--primary-red);
+            padding-left: 9px;
+            font-weight: 700;
+        }
+        .toc-h1 { font-size: 0.88rem; font-weight: 700; }
+        .toc-h2 { padding-left: 20px; }
+        .toc-h3 { padding-left: 34px; font-size: 0.78rem; }
+        .toc-h4 { padding-left: 46px; font-size: 0.75rem; }
+
+        /* ═══════════════════════════════════════════
+           READING PROGRESS BAR
+        ═══════════════════════════════════════════ */
+        .reading-progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-red), #ff4444);
+            z-index: 9999;
+            width: 0%;
+            transition: width 0.1s;
+            box-shadow: 0 0 8px rgba(139,0,0,0.6);
+        }
+
+        /* ═══════════════════════════════════════════
+           CODE VIEWER
+        ═══════════════════════════════════════════ */
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(26,0,0,0.95);
+            border-bottom: 2px solid var(--border-primary);
+        }
+        .code-filename {
+            color: var(--primary-red);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .code-actions { display: flex; gap: 8px; }
+        .copy-btn {
+            padding: 6px 14px;
+            background: rgba(139,0,0,0.2);
+            border: 1.5px solid var(--border-primary);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .copy-btn:hover {
+            background: rgba(139,0,0,0.4);
+            border-color: var(--primary-red);
+        }
+        .code-content {
+            padding: 28px 32px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            /* Atom One Dark — editor-quality background */
+            background: #282c34;
+            color: #abb2bf;
+            white-space: pre;
+            tab-size: 2;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139,0,0,0.4) transparent;
+        }
+        .code-content::-webkit-scrollbar { width: 6px; height: 6px; }
+        .code-content::-webkit-scrollbar-track { background: #1e2227; }
+        .code-content::-webkit-scrollbar-thumb { background: rgba(139,0,0,0.45); border-radius: 3px; }
+        .code-container {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(139,0,0,0.35);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,0,0,0.1);
+        }
+
+        /* ═══════════════════════════════════════════
+           MARKDOWN CONTENT
+        ═══════════════════════════════════════════ */
+        .markdown-content {
+            max-width: 860px;
+            margin: 0 auto;
+            line-height: 1.75;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: font-size 0.2s;
+        }
+        .markdown-content h1 { color: var(--primary-red); font-size: 1.8rem; margin: 0 0 20px; border-bottom: 2px solid rgba(139,0,0,0.25); padding-bottom: 12px; }
+        .markdown-content h2 { color: var(--primary-red); font-size: 1.4rem; margin: 32px 0 14px; border-bottom: 1px solid rgba(139,0,0,0.15); padding-bottom: 8px; }
+        .markdown-content h3 { color: rgba(220,80,80,0.9); font-size: 1.15rem; margin: 24px 0 10px; }
+        .markdown-content h4 { color: var(--text-primary); font-size: 1rem; margin: 18px 0 8px; font-weight: 700; }
+        .markdown-content p { margin: 0 0 14px; }
+        .markdown-content ul, .markdown-content ol { margin: 10px 0 14px; padding-left: 24px; }
+        .markdown-content li { margin: 5px 0; }
+        .markdown-content strong { color: #fff; }
+        .markdown-content em { color: rgba(255,200,150,0.9); }
+        .markdown-content a { color: #e06060; text-decoration: underline; }
+        .markdown-content a:hover { color: #ff8080; }
+        .markdown-content blockquote {
+            border-left: 4px solid var(--primary-red);
+            margin: 14px 0;
+            padding: 12px 20px;
+            background: rgba(139,0,0,0.08);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+        .markdown-content pre {
+            background: rgba(10,10,10,0.9);
+            border: 1px solid rgba(139,0,0,0.2);
+            border-radius: 10px;
+            padding: 18px;
+            overflow-x: auto;
+            margin: 14px 0;
+            position: relative;
+        }
+        .markdown-content pre code { font-size: 0.87rem; line-height: 1.6; background: none; padding: 0; }
+        .markdown-content code {
+            background: rgba(139,0,0,0.12);
+            border: 1px solid rgba(139,0,0,0.2);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.88em;
+            color: rgba(255,180,180,0.9);
+        }
+        .markdown-content pre { position: relative; }
+        .markdown-content pre .copy-code-btn {
+            position: absolute; top: 10px; right: 10px;
+            padding: 4px 10px; font-size: 0.75rem;
+            background: rgba(139,0,0,0.3); border: 1px solid rgba(139,0,0,0.5);
+            border-radius: 5px; color: #fff; cursor: pointer; opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .markdown-content pre:hover .copy-code-btn { opacity: 1; }
+        .markdown-content img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 2px solid var(--border-primary);
+            margin: 12px 0;
+        }
+        .markdown-content hr {
+            border: none;
+            border-top: 2px solid rgba(139,0,0,0.25);
+            margin: 24px 0;
+        }
+        .markdown-content table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .markdown-content th {
+            background: rgba(139,0,0,0.2);
+            color: var(--primary-red);
+            padding: 10px 14px;
+            border: 1px solid rgba(139,0,0,0.3);
+            font-weight: 700;
+        }
+        .markdown-content td {
+            padding: 9px 14px;
+            border: 1px solid rgba(139,0,0,0.2);
+            color: var(--text-secondary);
+        }
+        .markdown-content tr:nth-child(even) td { background: rgba(139,0,0,0.05); }
+
+        /* ═══════════════════════════════════════════
+           READING MODES
+        ═══════════════════════════════════════════ */
+        body.night-mode .reader-content { background: #050505; }
+        body.night-mode .markdown-content { color: rgba(200,200,200,0.9); }
+        body.night-mode .markdown-content pre { background: #0a0a0a; }
+
+        body.sepia-mode .reader-content { background: #1c1208; }
+        body.sepia-mode .markdown-content { color: rgba(220,200,170,0.95); }
+        body.sepia-mode .markdown-content h1,
+        body.sepia-mode .markdown-content h2 { color: #c87040; }
+        body.sepia-mode .markdown-content h3 { color: rgba(200,140,80,0.9); }
+        body.sepia-mode .markdown-content pre { background: #110d06; }
+
+        /* ═══════════════════════════════════════════
+           ANIMATIONS
+        ═══════════════════════════════════════════ */
+        @keyframes bounceIn {
+            0% { transform: translateX(-50%) scale(0.7); opacity: 0; }
+            60% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        }
+
+        /* ═══════════════════════════════════════════
+           LOADING STATES
+        ═══════════════════════════════════════════ */
+        .loading-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+            gap: 16px;
+        }
+        .loading-placeholder i { font-size: 2.5rem; color: var(--border-primary); }
+        .loading-placeholder p { margin: 0; font-size: 1rem; }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 900px) {
+            .reader-toc { display: none; }
+            .reader-content { padding: 20px; }
+        }
+        @media (max-width: 600px) {
+            .tbtn span { display: none; }
+            .project-label { max-width: 120px; }
+        }
+    </style>
+</head>
+
+<body class="bg-system-container">
+    <!-- Reading Progress -->
+    <div class="reading-progress-bar" id="readingProgress"></div>
+
+    <!-- ── TOOLBAR ── -->
+    <div class="reader-toolbar">
+        <!-- Row 1: back + title + doc tabs + PDF buttons + TOC toggle -->
+        <div class="toolbar-row toolbar-row-1">
+            <a class="back-btn-sm" id="backBtn" href="arduino-project-viewer.html?id=1">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <div class="toolbar-divider"></div>
+            <span class="project-label" id="projectLabel">Arduino Project</span>
+            <div class="spacer"></div>
+
+            <!-- Doc Tab Buttons -->
+            <button class="tbtn active" id="readmeTabBtn" data-tab="readme">
+                <i class="fas fa-file-alt"></i><span>README</span>
+            </button>
+            <button class="tbtn" id="explanationTabBtn" data-tab="explanation">
+                <i class="fas fa-graduation-cap"></i><span>Explanation</span>
+            </button>
+            <button class="tbtn" id="codeTabBtn" data-tab="code">
+                <i class="fas fa-code"></i><span>Code</span>
+            </button>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- PDF Download Buttons -->
+            <button class="tbtn pdf-btn" id="pdfExpBtn" title="Download Explanation PDF">
+                <i class="fas fa-file-pdf"></i><span>PDF Exp</span>
+            </button>
+            <button class="tbtn pdf-btn" id="pdfReadBtn" title="Download README PDF">
+                <i class="fas fa-file-pdf"></i><span>PDF Read</span>
+            </button>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- TOC toggle -->
+            <button class="tbtn" id="tocToggleBtn" title="Toggle Table of Contents (T)">
+                <i class="fas fa-list-ul"></i><span>TOC</span>
+            </button>
+        </div>
+
+        <!-- Row 2: reading modes + zoom + fullscreen -->
+        <div class="toolbar-row">
+            <button class="tbtn active" id="defaultModeBtn" title="Default Mode (D)">
+                <i class="fas fa-sun"></i><span>Default</span>
+            </button>
+            <button class="tbtn" id="nightModeBtn" title="Night Mode (N)">
+                <i class="fas fa-moon"></i><span>Night</span>
+            </button>
+            <button class="tbtn" id="sepiaModeBtn" title="Sepia Mode (S)">
+                <i class="fas fa-book-open"></i><span>Sepia</span>
+            </button>
+
+            <div class="toolbar-divider"></div>
+
+            <button class="tbtn" id="zoomOutBtn" title="Zoom Out (Ctrl+-)"><i class="fas fa-search-minus"></i></button>
+            <span class="zoom-display" id="zoomDisplay">100%</span>
+            <button class="tbtn" id="zoomInBtn" title="Zoom In (Ctrl++)"><i class="fas fa-search-plus"></i></button>
+            <button class="tbtn" id="zoomResetBtn" title="Reset Zoom (Ctrl+0)"><i class="fas fa-undo-alt"></i></button>
+
+            <div class="spacer"></div>
+
+            <button class="tbtn" id="fullscreenBtn" title="Fullscreen (F)">
+                <i class="fas fa-expand"></i><span>Fullscreen</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── BODY (content + TOC) ── -->
+    <div class="reader-body">
+        <!-- Main scrollable content -->
+        <div class="reader-content" id="readerContent">
+            <!-- README tab -->
+            <div class="doc-pane active" id="readmePane">
+                <div class="markdown-content" id="readmeContent">
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading README...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation tab -->
+            <div class="doc-pane" id="explanationPane" style="display:none;">
+                <div class="markdown-content" id="explanationContent">
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading Explanation...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code tab -->
+            <div class="doc-pane" id="codePane" style="display:none;">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span class="code-filename" id="codeFileName">sketch.ino</span>
+                        <div class="code-actions">
+                            <button class="copy-btn" id="downloadCodeBtn"><i class="fas fa-download"></i> Download</button>
+                            <button class="copy-btn" id="copyCodeBtn"><i class="fas fa-copy"></i> Copy</button>
+                        </div>
+                    </div>
+                    <pre class="code-content" id="codeContent">// Loading code...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOC Sidebar -->
+        <aside class="reader-toc" id="tocSidebar">
+            <div class="toc-head">
+                <h3><i class="fas fa-list-ul"></i> Contents</h3>
+            </div>
+            <nav class="toc-nav" id="tocNav"></nav>
+        </aside>
+    </div>
+
+    <script src="../../Optimization/script.js"></script>
+    <script>
+    /* ══════════════════════════════════════════════════════════
+       CONFIGURATION
+    ══════════════════════════════════════════════════════════ */
+    const ARDUINO_BASE_PATH = ['..', '..', 'Projects Storage', 'Arduino UNO Projects with Tinkercad']
+        .map(p => encodeURIComponent(p)).join('/') + '/';
+
+    function buildFilePath(folder, fileName) {
+        return `${ARDUINO_BASE_PATH}${encodeURIComponent(folder)}/${encodeURIComponent(fileName)}`;
+    }
+
+    let projects = [];
+    let currentProject = null;
+    let activeTab = 'readme';
+    let zoomLevel = parseInt(localStorage.getItem('docZoomLevel') || '100');
+    const ZOOM_MIN = 60, ZOOM_MAX = 150, ZOOM_STEP = 10;
+
+    /* ══════════════════════════════════════════════════════════
+       DATA LOADING
+    ══════════════════════════════════════════════════════════ */
+    async function loadProjectsData() {
+        const resp = await fetch('arduino-data.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        projects = data.projects.map(p => {
+            let cat = p.category;
+            if (cat === 'led-basics') cat = 'led';
+            else if (cat === 'sensors-actuators') cat = 'sensors';
+            else if (cat === 'display-input') cat = 'display';
+            else if (cat === 'advanced-projects') cat = 'advanced';
+            return { ...p, category: cat };
+        });
+        return projects;
+    }
+
+    function selectProject() {
+        const params = new URLSearchParams(window.location.search);
+        const id = parseInt(params.get('id')) || 1;
+        currentProject = projects.find(p => p.id === id) || projects[0];
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════ */
+    async function initReader() {
+        try {
+            await loadProjectsData();
+        } catch (e) {
+            document.getElementById('readerContent').innerHTML =
+                `<div class="loading-placeholder"><i class="fas fa-exclamation-triangle"></i><p>Failed to load project data: ${e.message}</p></div>`;
+            return;
+        }
+
+        selectProject();
+
+        if (!currentProject) {
+            document.getElementById('readerContent').innerHTML =
+                `<div class="loading-placeholder"><i class="fas fa-exclamation-triangle"></i><p>Project not found. <a href="arduino-projects.html" style="color:var(--primary-red)">Go back</a></p></div>`;
+            return;
+        }
+
+        // Update back button
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('backBtn').href = `arduino-project-viewer.html?id=${params.get('id') || 1}`;
+
+        // Set title
+        document.getElementById('projectLabel').textContent = currentProject.title;
+        document.title = `${currentProject.title} – Docs – A3KM Studio`;
+        document.getElementById('codeFileName').textContent = currentProject.codeFile || 'sketch.ino';
+
+        // Restore saved reading mode
+        const savedMode = localStorage.getItem('arduinoReadingMode');
+        if (savedMode === 'night') setReadingMode('night');
+        else if (savedMode === 'sepia') setReadingMode('sepia');
+        else setReadingMode('default');
+
+        // Load README first (default tab)
+        await loadReadme();
+
+        // Setup everything
+        setupEventListeners();
+        setupKeyboardShortcuts();
+        applyZoom(zoomLevel);
+        setupProgressBar();
+
+        // Switch to tab specified in URL ?tab= param
+        const initialTab = params.get('tab');
+        if (initialTab && ['readme', 'explanation', 'code'].includes(initialTab) && initialTab !== 'readme') {
+            switchTab(initialTab);
+        }
+
+        // Auto fullscreen on load
+        setTimeout(() => {
+            requestFullscreenPage();
+        }, 400);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TAB SWITCHING
+    ══════════════════════════════════════════════════════════ */
+    function switchTab(tabName) {
+        if (activeTab === tabName) return;
+        activeTab = tabName;
+
+        // Update toolbar buttons
+        document.querySelectorAll('.tbtn[data-tab]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        // Show correct pane
+        document.querySelectorAll('.doc-pane').forEach(pane => {
+            pane.style.display = 'none';
+        });
+
+        const pane = document.getElementById(tabName + 'Pane');
+        if (pane) pane.style.display = 'block';
+
+        // Reset scroll position to top
+        document.getElementById('readerContent').scrollTop = 0;
+
+        // Auto-hide TOC when viewing code (no headings to navigate)
+        const toc = document.getElementById('tocSidebar');
+        const tocBtn = document.getElementById('tocToggleBtn');
+        if (tabName === 'code') {
+            toc?.classList.add('collapsed');
+            tocBtn?.classList.remove('active');
+        } else {
+            toc?.classList.remove('collapsed');
+            tocBtn?.classList.add('active');
+        }
+
+        // Lazy load content
+        if (tabName === 'explanation') loadExplanation();
+        if (tabName === 'code') loadCode();
+
+        // Regenerate TOC
+        setTimeout(generateTOC, 200);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       FILE LOADING
+    ══════════════════════════════════════════════════════════ */
+    async function loadReadme() {
+        const el = document.getElementById('readmeContent');
+        const filePath = buildFilePath(currentProject.folder, 'README.md');
+        try {
+            const resp = await fetch(filePath);
+            if (!resp.ok) throw new Error('Not found');
+            const text = await resp.text();
+            el.innerHTML = convertMarkdown(text, filePath);
+            addCopyButtons();
+            setTimeout(generateTOC, 300);
+        } catch (e) {
+            el.innerHTML = `<div class="loading-placeholder"><i class="fas fa-file-alt"></i><p>README not available</p></div>`;
+        }
+    }
+
+    async function loadExplanation() {
+        const el = document.getElementById('explanationContent');
+        if (!el.querySelector('.loading-placeholder')) return; // already loaded
+        const variants = [
+            'Code Explanation (for beginner).md',
+            'Code Explaination (for beginner).md',
+            'Code & Circuit Explanation(for beginner).md'
+        ];
+        for (const name of variants) {
+            try {
+                const fp = buildFilePath(currentProject.folder, name);
+                const resp = await fetch(fp);
+                if (resp.ok) {
+                    const text = await resp.text();
+                    el.innerHTML = convertMarkdown(text, fp);
+                    addCopyButtons();
+                    setTimeout(generateTOC, 300);
+                    return;
+                }
+            } catch (e) {}
+        }
+        el.innerHTML = `<div class="loading-placeholder"><i class="fas fa-graduation-cap"></i><p>Explanation not available</p></div>`;
+    }
+
+    async function loadCode() {
+        const el = document.getElementById('codeContent');
+        if (el.textContent.trim() !== '// Loading code...') return; // already loaded
+        const names = [
+            currentProject.codeFile,
+            'Arduino C++ code.ino',
+            `${currentProject.folder}.ino`
+        ];
+        for (const name of names) {
+            if (!name || name === '#') continue;
+            try {
+                const resp = await fetch(buildFilePath(currentProject.folder, name));
+                if (resp.ok) {
+                    const code = await resp.text();
+                    el.textContent = code;
+                    document.getElementById('codeFileName').textContent = name;
+                    if (typeof hljs !== 'undefined') {
+                        hljs.highlightElement(el);
+                    }
+                    return;
+                }
+            } catch (e) {}
+        }
+        el.textContent = '// Code not found\n// Check project folder';
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MARKDOWN CONVERTER
+    ══════════════════════════════════════════════════════════ */
+    function convertMarkdown(text, filePath = '') {
+        if (!text) return '';
+        if (typeof marked === 'undefined') return convertMarkdownFallback(text);
+
+        try {
+            marked.setOptions({ breaks: true, gfm: true, pedantic: false });
+            let html = marked.parse(text);
+
+            if (filePath) {
+                const base = filePath.substring(0, filePath.lastIndexOf('/') + 1);
+                html = html.replace(
+                    /(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi,
+                    (m, pre, src, suf) => pre + base + src + suf
+                );
+            }
+
+            setTimeout(() => {
+                if (typeof hljs !== 'undefined') {
+                    document.querySelectorAll('pre code:not(.hljs)').forEach(b => hljs.highlightElement(b));
+                }
+            }, 150);
+
+            return html;
+        } catch (e) {
+            return convertMarkdownFallback(text);
+        }
+    }
+
+    function convertMarkdownFallback(text) {
+        if (!text) return '';
+        let html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        html = html.replace(/```([\w]*)\r?\n([\s\S]*?)```/g, (_, lang, code) =>
+            `<pre><code class="language-${lang||'text'}">${code.trim()}</code></pre>`);
+        html = html.replace(/^#### (.+)$/gm,'<h4>$1</h4>');
+        html = html.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+        html = html.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+        html = html.replace(/^---+$/gm,'<hr>');
+        html = html.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+        html = html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        html = html.replace(/\*(.+?)\*/g,'<em>$1</em>');
+        html = html.replace(/`([^`]+)`/g,'<code>$1</code>');
+        html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">');
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+        html = html.split(/\r?\n\r?\n/).map(p => {
+            p = p.trim();
+            if (p.match(/^<(h[1-6]|ul|ol|pre|blockquote|hr)/)) return p;
+            return p ? `<p>${p.replace(/\r?\n/g,'<br>')}</p>` : '';
+        }).join('\n');
+        return html;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       COPY BUTTONS ON CODE BLOCKS
+    ══════════════════════════════════════════════════════════ */
+    function addCopyButtons() {
+        document.querySelectorAll('.markdown-content pre').forEach(pre => {
+            if (pre.querySelector('.copy-code-btn')) return;
+            const btn = document.createElement('button');
+            btn.className = 'copy-code-btn';
+            btn.innerHTML = '<i class="fas fa-copy"></i>';
+            btn.onclick = () => {
+                const code = pre.querySelector('code')?.textContent || pre.textContent;
+                navigator.clipboard.writeText(code).then(() => showToast('Copied!'));
+            };
+            pre.appendChild(btn);
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TABLE OF CONTENTS
+    ══════════════════════════════════════════════════════════ */
+    function generateTOC() {
+        const nav = document.getElementById('tocNav');
+        if (!nav) return;
+
+        // Find active markdown content
+        const paneId = activeTab + 'Pane';
+        const pane = document.getElementById(paneId);
+        if (!pane) return;
+
+        const md = pane.querySelector('.markdown-content');
+        if (!md) return;
+
+        const headings = md.querySelectorAll('h1, h2, h3, h4');
+        if (headings.length === 0) {
+            nav.innerHTML = '<p style="color:var(--text-secondary);padding:10px;font-size:0.82rem;text-align:center;">No headings found</p>';
+            return;
+        }
+
+        let html = '';
+        headings.forEach((h, i) => {
+            const level = h.tagName.toLowerCase(); // h1/h2/h3/h4
+            const text = h.textContent.trim();
+            const id = h.id || `dr-heading-${i}`;
+            if (!h.id) h.id = id;
+            html += `<a class="toc-link toc-${level}" data-target="${id}">${text}</a>`;
+        });
+        nav.innerHTML = html;
+
+        // Click: scroll content area to heading
+        const contentArea = document.getElementById('readerContent');
+        nav.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.getElementById(link.dataset.target);
+                if (target && contentArea) {
+                    const offset = target.offsetTop - 20;
+                    contentArea.scrollTo({ top: offset, behavior: 'smooth' });
+                }
+            });
+        });
+    }
+
+    function updateActiveTOC() {
+        const contentArea = document.getElementById('readerContent');
+        if (!contentArea) return;
+
+        const links = document.querySelectorAll('.toc-link');
+        if (links.length === 0) return;
+
+        const pane = document.getElementById(activeTab + 'Pane');
+        if (!pane) return;
+
+        const headings = Array.from(pane.querySelectorAll('h1, h2, h3, h4'));
+        if (headings.length === 0) return;
+
+        const scrollTop = contentArea.scrollTop + 60;
+        let active = headings[0];
+        for (const h of headings) {
+            if (h.offsetTop <= scrollTop) active = h;
+            else break;
+        }
+
+        links.forEach(link => {
+            link.classList.toggle('active', link.dataset.target === active.id);
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       READING MODES
+    ══════════════════════════════════════════════════════════ */
+    function setReadingMode(mode) {
+        document.body.classList.remove('night-mode', 'sepia-mode');
+        document.querySelectorAll('#defaultModeBtn, #nightModeBtn, #sepiaModeBtn').forEach(b => b.classList.remove('active'));
+
+        if (mode === 'night') {
+            document.body.classList.add('night-mode');
+            document.getElementById('nightModeBtn').classList.add('active');
+        } else if (mode === 'sepia') {
+            document.body.classList.add('sepia-mode');
+            document.getElementById('sepiaModeBtn').classList.add('active');
+        } else {
+            document.getElementById('defaultModeBtn').classList.add('active');
+        }
+        localStorage.setItem('arduinoReadingMode', mode);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       ZOOM
+    ══════════════════════════════════════════════════════════ */
+    function applyZoom(level) {
+        zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, level));
+        document.querySelectorAll('.markdown-content').forEach(el => {
+            el.style.fontSize = `${zoomLevel}%`;
+        });
+        const disp = document.getElementById('zoomDisplay');
+        if (disp) disp.textContent = `${zoomLevel}%`;
+        document.getElementById('zoomInBtn').disabled = zoomLevel >= ZOOM_MAX;
+        document.getElementById('zoomOutBtn').disabled = zoomLevel <= ZOOM_MIN;
+        localStorage.setItem('docZoomLevel', zoomLevel);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       FULLSCREEN
+    ══════════════════════════════════════════════════════════ */
+    function requestFullscreenPage() {
+        const el = document.documentElement;
+        const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (fn) fn.call(el).catch(() => {});
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            requestFullscreenPage();
+        } else {
+            (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen).call(document);
+        }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const btn = document.getElementById('fullscreenBtn');
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        const span = btn.querySelector('span');
+        if (document.fullscreenElement) {
+            if (icon) icon.className = 'fas fa-compress';
+            if (span) span.textContent = 'Exit';
+        } else {
+            if (icon) icon.className = 'fas fa-expand';
+            if (span) span.textContent = 'Fullscreen';
+        }
+    });
+
+    /* ══════════════════════════════════════════════════════════
+       TOC TOGGLE
+    ══════════════════════════════════════════════════════════ */
+    function toggleTOC() {
+        const toc = document.getElementById('tocSidebar');
+        toc.classList.toggle('collapsed');
+        const btn = document.getElementById('tocToggleBtn');
+        btn.classList.toggle('active', !toc.classList.contains('collapsed'));
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PROGRESS BAR
+    ══════════════════════════════════════════════════════════ */
+    function setupProgressBar() {
+        const content = document.getElementById('readerContent');
+        const bar = document.getElementById('readingProgress');
+        content.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = content;
+            const pct = scrollHeight > clientHeight ? (scrollTop / (scrollHeight - clientHeight)) * 100 : 0;
+            bar.style.width = Math.min(pct, 100) + '%';
+            updateActiveTOC();
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TOAST NOTIFICATION
+    ══════════════════════════════════════════════════════════ */
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        const isError = type === 'error';
+        toast.style.cssText = `
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: ${isError ? 'linear-gradient(135deg,#4a1a1a,#2d0d0d)' : 'linear-gradient(135deg,#1a4a1a,#0d2d0d)'};
+            color: white; padding: 12px 24px; border-radius: 25px; font-size: 0.9rem;
+            font-weight: 600; z-index: 10000;
+            border: 1px solid ${isError ? 'rgba(200,0,0,0.4)' : 'rgba(0,200,0,0.4)'};
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            animation: bounceIn 0.4s ease-out; pointer-events: none;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.4s ease-out';
+            setTimeout(() => toast.remove(), 400);
+        }, 2000);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PDF DOWNLOAD SYSTEM
+    ══════════════════════════════════════════════════════════ */
+    async function downloadPDF(type) {
+        const fileName = type === 'explanation' ? 'explanation.pdf' : 'readme.pdf';
+        const pdfUrl = buildFilePath(currentProject.folder, fileName);
+        const label = type === 'explanation' ? 'Explanation' : 'README';
+
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+            background:rgba(10,10,10,0.97);padding:30px 50px;border-radius:12px;
+            border:2px solid var(--primary-red);z-index:10000;text-align:center;`;
+        loadingMsg.innerHTML = `<i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary-red);margin-bottom:10px;display:block;"></i>
+            <p style="color:var(--text-primary);margin:0;">Processing PDF...</p>`;
+        document.body.appendChild(loadingMsg);
+
+        try {
+            const resp = await fetch(pdfUrl);
+            if (!resp.ok) throw new Error(`PDF not found`);
+            const bytes = await resp.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(bytes);
+            await addPDFWatermark(pdfDoc, `${currentProject.title} - ${label}`);
+            const out = await pdfDoc.save();
+            const blob = new Blob([out], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentProject.folder}_${label}_A3KM.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.body.removeChild(loadingMsg);
+        } catch (e) {
+            document.body.removeChild(loadingMsg);
+            alert(`Error: ${e.message}\n\nMake sure ${fileName} exists in the project folder.`);
+        }
+    }
+
+    async function addPDFWatermark(pdfDoc, docTitle) {
+        const pages = pdfDoc.getPages();
+        const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        const regFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const totalPages = pages.length;
+        const date = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+        for (let i = 0; i < totalPages; i++) {
+            const page = pages[i];
+            const { width, height } = page.getSize();
+
+            // Watermark
+            const wText = 'Noor Academy';
+            const wSize = 60;
+            page.drawText(wText, {
+                x: (width - boldFont.widthOfTextAtSize(wText, wSize)) / 2,
+                y: height / 2 - wSize / 2,
+                size: wSize, font: boldFont,
+                color: PDFLib.rgb(0.75, 0.86, 0.94), opacity: 0.12,
+                rotate: PDFLib.degrees(45)
+            });
+
+            // Header
+            page.drawText('A3KM Studio', { x: 40, y: height - 32, size: 12, font: boldFont, color: PDFLib.rgb(0.8, 0, 0) });
+            page.drawText(docTitle, { x: 40, y: height - 46, size: 9, font: regFont, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+            page.drawLine({ start:{x:40,y:height-52}, end:{x:width-40,y:height-52}, thickness:0.5, color: PDFLib.rgb(0.8,0,0), opacity:0.5 });
+
+            // Footer
+            page.drawLine({ start:{x:40,y:28}, end:{x:width-40,y:28}, thickness:0.5, color: PDFLib.rgb(0.8,0,0), opacity:0.5 });
+            page.drawText('A3KM Studio – Arduino Projects', { x:40, y:14, size:8, font:regFont, color:PDFLib.rgb(0.5,0.5,0.5) });
+            const pageLabel = `Page ${i+1} / ${totalPages}`;
+            page.drawText(pageLabel, { x: width - 40 - boldFont.widthOfTextAtSize(pageLabel, 8), y:14, size:8, font:regFont, color:PDFLib.rgb(0.5,0.5,0.5) });
+            page.drawText(date, { x: (width - regFont.widthOfTextAtSize(date, 8)) / 2, y:14, size:8, font:regFont, color:PDFLib.rgb(0.5,0.5,0.5) });
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       EVENT LISTENERS
+    ══════════════════════════════════════════════════════════ */
+    function setupEventListeners() {
+        // Tab buttons
+        document.getElementById('readmeTabBtn').addEventListener('click', () => switchTab('readme'));
+        document.getElementById('explanationTabBtn').addEventListener('click', () => switchTab('explanation'));
+        document.getElementById('codeTabBtn').addEventListener('click', () => switchTab('code'));
+
+        // Reading mode
+        document.getElementById('defaultModeBtn').addEventListener('click', () => setReadingMode('default'));
+        document.getElementById('nightModeBtn').addEventListener('click', () => setReadingMode('night'));
+        document.getElementById('sepiaModeBtn').addEventListener('click', () => setReadingMode('sepia'));
+
+        // Zoom
+        document.getElementById('zoomInBtn').addEventListener('click', () => applyZoom(zoomLevel + ZOOM_STEP));
+        document.getElementById('zoomOutBtn').addEventListener('click', () => applyZoom(zoomLevel - ZOOM_STEP));
+        document.getElementById('zoomResetBtn').addEventListener('click', () => applyZoom(100));
+
+        // Fullscreen
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
+        // TOC toggle
+        document.getElementById('tocToggleBtn').addEventListener('click', () => {
+            toggleTOC();
+        });
+
+        // PDF downloads
+        document.getElementById('pdfExpBtn').addEventListener('click', () => downloadPDF('explanation'));
+        document.getElementById('pdfReadBtn').addEventListener('click', () => downloadPDF('readme'));
+
+        // Code actions
+        document.getElementById('copyCodeBtn').addEventListener('click', () => {
+            const code = document.getElementById('codeContent').textContent;
+            navigator.clipboard.writeText(code).then(() => showToast('Code copied!'));
+        });
+        document.getElementById('downloadCodeBtn').addEventListener('click', async () => {
+            const names = [currentProject.codeFile, 'Arduino C++ code.ino', `${currentProject.folder}.ino`];
+            for (const name of names) {
+                if (!name || name === '#') continue;
+                try {
+                    const resp = await fetch(buildFilePath(currentProject.folder, name));
+                    if (resp.ok) {
+                        const code = await resp.text();
+                        const blob = new Blob([code], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = name; a.click();
+                        URL.revokeObjectURL(url);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            showToast('Code file not found!', 'error');
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       KEYBOARD SHORTCUTS
+    ══════════════════════════════════════════════════════════ */
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Zoom with Ctrl
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === '=' || e.key === '+') { e.preventDefault(); applyZoom(zoomLevel + ZOOM_STEP); }
+                if (e.key === '-') { e.preventDefault(); applyZoom(zoomLevel - ZOOM_STEP); }
+                if (e.key === '0') { e.preventDefault(); applyZoom(100); }
+                return;
+            }
+
+            if (e.key === 'd' || e.key === 'D') { e.preventDefault(); setReadingMode('default'); }
+            if (e.key === 'n' || e.key === 'N') { e.preventDefault(); setReadingMode('night'); }
+            if (e.key === 's' || e.key === 'S') { e.preventDefault(); setReadingMode('sepia'); }
+            if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleTOC(); }
+            if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+            if (e.key === '1') { e.preventDefault(); switchTab('readme'); }
+            if (e.key === '2') { e.preventDefault(); switchTab('explanation'); }
+            if (e.key === '3') { e.preventDefault(); switchTab('code'); }
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       BOOTSTRAP
+    ══════════════════════════════════════════════════════════ */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initReader);
+    } else {
+        initReader();
+    }
+    </script>
+</body>
+</html>

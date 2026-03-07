@@ -909,6 +909,43 @@
     body.note-mode .pg-canvas-wrap { cursor: crosshair !important; }
     body.note-mode .textLayer { pointer-events: none !important; }
 
+    /* Help Modal */
+    .help-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9); background: rgba(10,2,2,0.99); border: 1px solid rgba(204,0,0,0.45); border-radius: 18px; padding: 24px; width: 540px; max-height: 85vh; z-index: 4001; opacity: 0; transition: opacity 0.25s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; box-shadow: 0 24px 80px rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: flex; flex-direction: column; }
+    .help-modal.visible { opacity: 1; transform: translate(-50%,-50%) scale(1); pointer-events: all; }
+    .help-modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .help-modal-hd h3 { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .help-modal-hd h3 i { color: var(--primary-red); font-size: 18px; }
+    .help-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
+    .help-close:hover { background: rgba(204,0,0,0.25); color: #fff; border-color: rgba(204,0,0,0.4); }
+    .help-body { overflow-y: auto; flex: 1; padding-right: 8px; }
+    .help-body::-webkit-scrollbar { width: 4px; }
+    .help-body::-webkit-scrollbar-thumb { background: rgba(204,0,0,0.3); border-radius: 2px; }
+    .help-section { margin-bottom: 20px; }
+    .help-section-title { font-size: 12px; font-weight: 800; color: rgba(204,0,0,0.85); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .help-section-title i { font-size: 11px; }
+    .help-shortcut { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; margin-bottom: 5px; }
+    .help-shortcut-desc { font-size: 12px; color: rgba(255,255,255,0.7); }
+    .help-shortcut-keys { display: flex; gap: 4px; }
+    .help-key { padding: 3px 8px; background: rgba(204,0,0,0.15); border: 1px solid rgba(204,0,0,0.3); border-radius: 5px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); font-family: 'Courier New', monospace; min-width: 24px; text-align: center; }
+
+    /* First-time Tutorial Hint */
+    .tutorial-hint { position: fixed; bottom: 24px; right: 24px; background: linear-gradient(135deg, rgba(204,0,0,0.95), rgba(150,0,0,0.95)); border: 2px solid rgba(255,100,100,0.5); border-radius: 16px; padding: 18px 22px; width: 340px; z-index: 4000; box-shadow: 0 12px 40px rgba(204,0,0,0.6); animation: tutorialSlideIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes tutorialSlideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .tutorial-hint-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .tutorial-hint-hd h4 { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .tutorial-hint-hd h4 i { font-size: 16px; }
+    .tutorial-close { width: 26px; height: 26px; border-radius: 6px; background: rgba(0,0,0,0.3); color: rgba(255,255,255,0.7); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; border: 1px solid rgba(255,255,255,0.2); }
+    .tutorial-close:hover { background: rgba(0,0,0,0.5); color: #fff; }
+    .tutorial-hint p { font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 12px; }
+    .tutorial-hint-btn { padding: 8px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-block; margin-right: 8px; }
+    .tutorial-hint-btn:hover { background: rgba(255,255,255,0.3); }
+    .tutorial-hint-btn.primary { background: rgba(255,255,255,0.95); color: #900; border-color: transparent; }
+    .tutorial-hint-btn.primary:hover { background: #fff; }
+
+    /* Pulse animation for help button (attract attention) */
+    @keyframes helpPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(204,0,0,0.4); } 50% { box-shadow: 0 0 0 8px rgba(204,0,0,0); } }
+    .help-btn-pulse { animation: helpPulse 2s ease-in-out infinite; }
+
   </style>
 </head>
 <body>
@@ -978,11 +1015,17 @@
     <button class="ts-btn" onclick="toggleBookmarkCurrent()" title="Bookmark current page (B)">
       <i class="fas fa-bookmark"></i>
     </button>
+    <button class="ts-btn tool-active" id="hlModeBtn" onclick="toggleHlMode()" title="Highlight text — select text on page (H)">
+      <i class="fas fa-highlighter"></i>
+    </button>
     <button class="ts-btn" id="noteModeBtn" onclick="toggleNoteMode()" title="Add note (N)">
       <i class="fas fa-sticky-note"></i>
     </button>
     <button class="ts-btn" id="annotPanelBtn" onclick="toggleAnnotPanel()" title="Annotations (A)">
       <i class="fas fa-layer-group"></i>
+    </button>
+    <button class="ts-btn help-btn-pulse" id="helpBtn" onclick="toggleHelpModal()" title="Keyboard Shortcuts (?)">
+      <i class="fas fa-keyboard"></i>
     </button>
     <button class="ts-btn" onclick="toggleNight()">
       <i class="fas fa-moon"></i>
@@ -1045,6 +1088,7 @@
     <button class="hl-color" data-c="pink"   title="Pink"   onclick="applyHighlight('pink')"></button>
     <button class="hl-color" data-c="orange" title="Orange" onclick="applyHighlight('orange')"></button>
     <div class="hl-sep"></div>
+    <button class="hl-action" title="Keyboard shortcuts" onclick="toggleHelpModal()"><i class="fas fa-keyboard"></i></button>
     <button class="hl-action" title="Copy" onclick="copySelectedText()"><i class="fas fa-copy"></i></button>
     <button class="hl-action" title="Close" onclick="hideHlToolbar()"><i class="fas fa-times"></i></button>
   </div>
@@ -1056,7 +1100,108 @@
   <div class="note-tooltip" id="noteTooltip"></div>
 
   <!-- MODAL OVERLAY -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeNoteModal()"></div>
+  <div class="modal-overlay" id="modalOverlay" onclick="closeAllModals()"></div>
+
+  <!-- HELP MODAL -->
+  <div class="help-modal" id="helpModal">
+    <div class="help-modal-hd">
+      <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+      <button class="help-close" onclick="toggleHelpModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="help-body">
+      <div class="help-section">
+        <div class="help-section-title"><i class="fas fa-arrows-alt"></i> Navigation</div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Previous page</span>
+          <div class="help-shortcut-keys"><span class="help-key">←</span><span class="help-key">↑</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Next page</span>
+          <div class="help-shortcut-keys"><span class="help-key">→</span><span class="help-key">↓</span><span class="help-key">Space</span></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title"><i class="fas fa-highlighter"></i> Highlighting</div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Toggle highlight mode</span>
+          <div class="help-shortcut-keys"><span class="help-key">H</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Quick yellow highlight</span>
+          <div class="help-shortcut-keys"><span class="help-key">1</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Quick green highlight</span>
+          <div class="help-shortcut-keys"><span class="help-key">2</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Quick blue highlight</span>
+          <div class="help-shortcut-keys"><span class="help-key">3</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Quick pink highlight</span>
+          <div class="help-shortcut-keys"><span class="help-key">4</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Quick orange highlight</span>
+          <div class="help-shortcut-keys"><span class="help-key">5</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Extend selection up (when toolbar visible)</span>
+          <div class="help-shortcut-keys"><span class="help-key">↑</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Extend selection down (when toolbar visible)</span>
+          <div class="help-shortcut-keys"><span class="help-key">↓</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Adjust selection left/right (toolbar visible)</span>
+          <div class="help-shortcut-keys"><span class="help-key">←</span><span class="help-key">→</span></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title"><i class="fas fa-sticky-note"></i> Annotations</div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Toggle bookmark</span>
+          <div class="help-shortcut-keys"><span class="help-key">B</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Toggle note mode</span>
+          <div class="help-shortcut-keys"><span class="help-key">N</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Open annotations panel</span>
+          <div class="help-shortcut-keys"><span class="help-key">A</span></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title"><i class="fas fa-desktop"></i> View & Controls</div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Toggle fullscreen</span>
+          <div class="help-shortcut-keys"><span class="help-key">F</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Close panels / Back</span>
+          <div class="help-shortcut-keys"><span class="help-key">Esc</span></div>
+        </div>
+        <div class="help-shortcut">
+          <span class="help-shortcut-desc">Show keyboard shortcuts</span>
+          <div class="help-shortcut-keys"><span class="help-key">?</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIRST-TIME TUTORIAL -->
+  <div class="tutorial-hint" id="tutorialHint" style="display:none;">
+    <div class="tutorial-hint-hd">
+      <h4><i class="fas fa-lightbulb"></i> Welcome!</h4>
+      <button class="tutorial-close" onclick="closeTutorial()"><i class="fas fa-times"></i></button>
+    </div>
+    <p>This is your 3D book reader with powerful features. Use keyboard shortcuts for faster navigation and annotation.</p>
+    <button class="tutorial-hint-btn primary" onclick="openHelpFromTutorial()">Show All Shortcuts</button>
+    <button class="tutorial-hint-btn" onclick="closeTutorial()">Got It</button>
+  </div>
 
   <!-- NOTE MODAL -->
   <div class="note-modal" id="noteModal">
@@ -1113,6 +1258,7 @@
     let highlights = {};
     let notes = {};
     let noteModeActive = false;
+    let hlModeActive  = true;   // highlight mode on by default
     let annotTab = 'bookmarks';
     let hlSelection = null;
     let hlHideTimer = null;
@@ -1147,6 +1293,11 @@
         loadNotes();
         loadLastPage();
         showHint();
+        showTutorialIfFirstTime();
+        // Remove pulse after 10s
+        setTimeout(() => {
+          document.getElementById('helpBtn')?.classList.remove('help-btn-pulse');
+        }, 10000);
       } catch (e) {
         showErr('Load failed: ' + e.message);
       }
@@ -1329,7 +1480,12 @@
 
         // Apply width to .book-p and container
         const bookP = container.parentElement;
-        if (bookP) { bookP.style.width = pageW + 'px'; bookP.style.maxWidth = 'none'; }
+        if (bookP) {
+          bookP.style.width    = pageW + 'px';
+          bookP.style.maxWidth = 'none';
+          // Fit mode: don't let flex:1 override explicit width — fix centering
+          bookP.style.flex = (viewMode === 'fit') ? '0 0 ' + pageW + 'px' : '1 1 0';
+        }
         container.style.width = pageW + 'px';
 
         const scaled = page.getViewport({scale: baseScale});
@@ -1412,7 +1568,6 @@
         // Attach event handlers for annotations
         wrap.dataset.pageNum = pageNum;
         wrap.addEventListener('click', handleCanvasClick);
-        textDiv.addEventListener('mouseup', () => setTimeout(onTextSelectionEnd, 30));
 
         // Re-apply saved annotations after text renders
         setTimeout(() => {
@@ -1529,6 +1684,14 @@
       hideBarsAfter(2000);
     }
 
+    // Highlight: document-level mouseup so selection fires even if cursor leaves textLayer
+    document.addEventListener('mouseup', (e) => {
+      if (e.target.closest('#hlToolbar') || e.target.closest('.nav-bar') ||
+          e.target.closest('.annot-panel') || e.target.closest('.note-modal') ||
+          e.target.closest('.hl-del-tip') || e.target.closest('.note-tooltip')) return;
+      setTimeout(onTextSelectionEnd, 30);
+    });
+
     // Show bars when cursor is within top 10px of screen
     document.addEventListener('mousemove', (e) => {
       if (e.clientY < 10) {
@@ -1593,6 +1756,8 @@
       document.getElementById('vmStretchBtn').classList.toggle('tool-active', mode === 'stretch');
       document.getElementById('vmScrollBtn').classList.toggle('tool-active',  mode === 'scroll');
       document.getElementById('vmFitBtn').classList.toggle('tool-active',     mode === 'fit');
+      // Center pages inside open-book when fit mode (pages narrower than full width)
+      document.getElementById('openBook').style.justifyContent = (mode === 'fit') ? 'center' : '';
       // Re-render current pages in new mode
       if (isSinglePageMode) {
         renderBookPage(currentL, 'rightCanvas', 'rightRibbon');
@@ -1631,6 +1796,14 @@
         spread(currentL, false);
       }
     }
+    function reRenderCurrentPages() {
+      if (isSinglePageMode) {
+        renderBookPage(currentL, 'rightCanvas', 'rightRibbon');
+      } else {
+        spread(currentL, false);
+      }
+    }
+    }
     
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
@@ -1641,6 +1814,38 @@
     }
     function goBack() {
       window.location.href = `book-detail.html?id=${bookId}`;
+    }
+
+    // ── Help Modal & Tutorial ─────────────────────────────
+    function toggleHelpModal() {
+      const modal = document.getElementById('helpModal');
+      const overlay = document.getElementById('modalOverlay');
+      const isVisible = modal.classList.contains('visible');
+      if (isVisible) {
+        modal.classList.remove('visible');
+        overlay.classList.remove('visible');
+      } else {
+        modal.classList.add('visible');
+        overlay.classList.add('visible');
+      }
+    }
+    function closeTutorial() {
+      document.getElementById('tutorialHint').style.display = 'none';
+      try { localStorage.setItem('book3d_tutorial_seen', 'true'); } catch(e) {}
+    }
+    function openHelpFromTutorial() {
+      closeTutorial();
+      toggleHelpModal();
+    }
+    function showTutorialIfFirstTime() {
+      try {
+        const seen = localStorage.getItem('book3d_tutorial_seen');
+        if (!seen) {
+          setTimeout(() => {
+            document.getElementById('tutorialHint').style.display = 'block';
+          }, 1500);
+        }
+      } catch(e) {}
     }
 
     // ═══════════════════════════════════════════════════
@@ -1656,7 +1861,7 @@
         const n = parseInt(localStorage.getItem(SK.lastPage()));
         if (n >= 1 && n <= totalPg) {
           currentL = n % 2 === 0 ? n - 1 : n;
-          renderSpread(currentL);
+          reRenderCurrentPages();
         }
       } catch(e) {}
     }
@@ -1737,7 +1942,7 @@
     function jumpTo(p) {
       const leftPg = p % 2 === 0 ? p - 1 : p;
       currentL = leftPg;
-      renderSpread(currentL);
+      reRenderCurrentPages();
       document.getElementById('annotPanel').classList.remove('open');
     }
 
@@ -1749,6 +1954,7 @@
       try { localStorage.setItem(SK.highlights(), JSON.stringify(highlights)); } catch(e) {}
     }
     function onTextSelectionEnd() {
+      if (!hlModeActive) return;  // highlight mode must be on
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || sel.toString().trim().length < 2) {
         setTimeout(hideHlToolbar, 300); return;
@@ -1852,7 +2058,7 @@
       });
       saveHighlights();
       document.getElementById('hlDeleteTooltip').classList.remove('visible');
-      renderSpread(currentL);
+      reRenderCurrentPages();
       refreshAnnotPanel();
     }
 
@@ -1867,6 +2073,12 @@
       noteModeActive = !noteModeActive;
       document.body.classList.toggle('note-mode', noteModeActive);
       document.getElementById('noteModeBtn').classList.toggle('tool-active', noteModeActive);
+    }
+    function toggleHlMode() {
+      hlModeActive = !hlModeActive;
+      document.getElementById('hlModeBtn').classList.toggle('tool-active', hlModeActive);
+      showPageLabel(hlModeActive ? 'Highlight mode ON — select text to highlight' : 'Highlight mode OFF');
+      if (!hlModeActive) hideHlToolbar();
     }
     function setNoteColor(c) {
       noteColor = c;
@@ -1908,6 +2120,15 @@
     function closeNoteModal() {
       document.getElementById('noteModal').classList.remove('visible');
       document.getElementById('modalOverlay').classList.remove('visible');
+      pendingNote = null;
+    }
+    function closeAllModals() {
+      const noteModal = document.getElementById('noteModal');
+      const helpModal = document.getElementById('helpModal');
+      const overlay = document.getElementById('modalOverlay');
+      noteModal.classList.remove('visible');
+      helpModal.classList.remove('visible');
+      overlay.classList.remove('visible');
       pendingNote = null;
     }
     function renderNotesOnPage(pageNum, wrap) {
@@ -2057,23 +2278,83 @@
 
     // ── Keyboard ─────────────────────────────────────────
     document.addEventListener('keydown', e => {
+      const toolbarVisible = document.getElementById('hlToolbar').classList.contains('visible');
+      
+      // When highlight toolbar is visible: arrow keys adjust selection, numbers apply colors
+      if (toolbarVisible) {
+        const sel = window.getSelection();
+        const colors = ['yellow', 'green', 'blue', 'pink', 'orange'];
+        
+        switch (e.key) {
+          case 'ArrowUp':
+            e.preventDefault();
+            if (sel && sel.rangeCount) sel.modify('extend', 'backward', 'line');
+            setTimeout(onTextSelectionEnd, 50);
+            return;
+          case 'ArrowDown':
+            e.preventDefault();
+            if (sel && sel.rangeCount) sel.modify('extend', 'forward', 'line');
+            setTimeout(onTextSelectionEnd, 50);
+            return;
+          case 'ArrowLeft':
+            e.preventDefault();
+            if (sel && sel.rangeCount) sel.modify('extend', 'backward', 'character');
+            setTimeout(onTextSelectionEnd, 50);
+            return;
+          case 'ArrowRight':
+            e.preventDefault();
+            if (sel && sel.rangeCount) sel.modify('extend', 'forward', 'character');
+            setTimeout(onTextSelectionEnd, 50);
+            return;
+          case '1': case '2': case '3': case '4': case '5':
+            e.preventDefault();
+            const idx = parseInt(e.key) - 1;
+            if (colors[idx]) applyHighlight(colors[idx]);
+            return;
+          case 'Escape':
+            e.preventDefault();
+            hideHlToolbar();
+            return;
+        }
+      }
+      
+      // Normal keyboard shortcuts (when toolbar not visible)
       showCtrl(); showStrip();
       switch (e.key) {
         case 'ArrowLeft':  case 'ArrowUp':    prevPages(); break;
         case 'ArrowRight': case 'ArrowDown':  nextPages(); break;
         case ' ':   e.preventDefault(); nextPages(); break;
         case 'b': case 'B': toggleBookmarkCurrent(); break;
+        case 'h': case 'H': toggleHlMode(); break;
         case 'n': case 'N': toggleNoteMode(); break;
         case 'a': case 'A': toggleAnnotPanel(); break;
+        case '1': case '2': case '3': case '4': case '5':
+          // Quick color apply when text is selected (no toolbar)
+          const sel = window.getSelection();
+          if (sel && !sel.isCollapsed && sel.toString().trim().length >= 2) {
+            e.preventDefault();
+            const colors = ['yellow', 'green', 'blue', 'pink', 'orange'];
+            const idx = parseInt(e.key) - 1;
+            hlSelection = { text: sel.toString().trim() };
+            if (colors[idx]) applyHighlight(colors[idx]);
+          }
+          break;
         case 'Escape':
           document.getElementById('annotPanel').classList.remove('open');
           closeNoteModal();
           hideHlToolbar();
           hideNoteTooltip();
-          if (noteModeActive) toggleNoteMode();
-          else goBack();
+          const helpModal = document.getElementById('helpModal');
+          if (helpModal.classList.contains('visible')) {
+            toggleHelpModal();
+          } else if (noteModeActive) {
+            toggleNoteMode();
+          } else {
+            goBack();
+          }
           break;
         case 'f': case 'F': toggleFullscreen(); break;
+        case '?': case '/': toggleHelpModal(); break;
       }
     });
 

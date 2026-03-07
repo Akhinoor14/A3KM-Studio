@@ -136,8 +136,20 @@
             <button class="tab-btn" onclick="switchTab('checker')"><i class="fas fa-check-circle"></i> SEO Checker</button>
         </div>
 
+        <!-- Restore saved tab before page renders (prevents flash) -->
+        <script>
+          (function() {
+            const savedTab = localStorage.getItem('seoManager_activeTab') || 'meta';
+            // Activate the appropriate tab
+            const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+            const tabContent = document.getElementById(savedTab + '-tab');
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.style.display = 'block';
+          })();
+        </script>
+
         <!-- Meta Tags Tab -->
-        <div id="meta-tab" class="tab-content">
+        <div id="meta-tab" class="tab-content" style="display: none;">
             <div class="section">
                 <div class="section-title"><i class="fas fa-file-alt"></i> Meta Tags for Pages</div>
                 
@@ -1030,6 +1042,9 @@ ${canonical ? `<meta property="og:url" content="${canonical}">\n` : ''}`;
             // Update buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
+            
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('seoManager_activeTab', tabName);
         }
 
         function loadSEOData() {

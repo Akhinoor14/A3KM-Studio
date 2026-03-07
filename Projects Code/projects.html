@@ -368,6 +368,38 @@
             transform: translateY(-50%);
             color: var(--primary-red);
             font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(204, 0, 0, 0.12);
+            border: 1px solid rgba(204, 0, 0, 0.25);
+            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.6);
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .search-clear-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .search-clear-btn:hover {
+            background: rgba(204, 0, 0, 0.35);
+            color: #fff;
         }
 
         /* Search Suggestions */
@@ -482,6 +514,16 @@
         }
 
         /* Main Project Card - Enhanced Glassmorphism & 3D */
+        /* Hidden state for filter/search */
+        .main-project-card.hidden {
+            display: none !important;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .main-project-card {
             background: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(20, 10, 10, 0.9));
             border: 2px solid var(--border-primary);
@@ -493,6 +535,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;
+            animation: cardFadeIn 0.6s ease forwards;
         }
 
         .main-project-card::before {
@@ -821,35 +864,7 @@
             </h1>
             <p class="hero-subtitle">Engineering excellence through CAD design, embedded systems, electronics innovation, and modern web development</p>
             
-            <div class="hero-stats" id="heroStats" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-layer-group"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span class="stat-number" id="categoriesCount">-</span>
-                        <span class="stat-label">Categories</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-folder-open"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span class="stat-number" id="projectsCount">-</span>
-                        <span class="stat-label">Projects</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-code-branch"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span class="stat-number" id="totalItemsCount">-</span>
-                        <span class="stat-label">Total Items</span>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </section>
 
@@ -858,15 +873,15 @@
         <div class="search-bar">
             <i class="fas fa-search search-icon"></i>
             <input type="text" class="search-input" id="searchInput" placeholder="Search projects by name, tech, or category...">
+            <button id="searchClearBtn" class="search-clear-btn" type="button" aria-label="Clear search"><i class="fas fa-times"></i></button>
             <div class="search-suggestions" id="searchSuggestions"></div>
         </div>
 
         <div class="filter-tabs">
-            <button class="filter-btn active" data-filter="all">All Projects</button>
-            <button class="filter-btn" data-filter="cad">CAD/Design</button>
-            <button class="filter-btn" data-filter="electronics">Electronics</button>
-            <button class="filter-btn" data-filter="programming">Programming</button>
-            <button class="filter-btn" data-filter="learning">AI & Learning</button>
+            <button type="button" class="filter-btn active" data-filter="all">All Projects</button>
+            <button type="button" class="filter-btn" data-filter="cad">CAD/Design</button>
+            <button type="button" class="filter-btn" data-filter="electronics">Electronics</button>
+            <button type="button" class="filter-btn" data-filter="programming">Programming</button>
         </div>
     </section>
 
@@ -959,9 +974,6 @@
 
         <!-- MAIN CARD 2: Arduino Projects -->
         <div id="arduino" class="main-project-card" data-category="electronics">
-            <button class="favorite-btn" data-project="arduino" title="Add to favorites">
-                <i class="far fa-heart"></i>
-            </button>
             <div class="main-card-header">
                 <div class="main-card-icon">
                     <i class="fas fa-microchip"></i>
@@ -1038,175 +1050,8 @@
             </div>
         </div>
 
-        <!-- MAIN CARD 3: MATLAB Projects & Simulations -->
-        <div id="matlab" class="main-project-card" data-category="programming">
-            <button class="favorite-btn" data-project="matlab" title="Add to favorites">
-                <i class="far fa-heart"></i>
-            </button>
-            <div class="main-card-header">
-                <div class="main-card-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="main-card-title-area">
-                    <h2 class="main-card-title">MATLAB Projects & Simulations</h2>
-                    <p class="main-card-subtitle">Energy systems analysis, numerical methods, and control systems</p>
-                    <div class="main-card-tags">
-                        <span class="tag">MATLAB R2024</span>
-                        <span class="tag">Simulink</span>
-                        <span class="tag">Energy Systems</span>
-                        <span class="tag">Analysis</span>
-                    </div>
-                </div>
-                <div class="project-count-badge" id="matlab-count-badge">
-                    <i class="fas fa-code"></i> 1 Project
-                </div>
-            </div>
-
-            <div class="sub-cards-grid">
-                <!-- Sub-Card 3.1: Renewable Energy -->
-                <a href="MATLAB/matlab-projects.html#renewable" class="sub-card">
-                    <div class="sub-card-badge">☀️ Renewable Energy</div>
-                    <h3 class="sub-card-title">Solar, Wind & MPPT</h3>
-                    <p class="sub-card-description">PV analysis, wind turbine modeling, MPPT algorithms, energy storage optimization</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats" id="matlab-renewable-count">1 Project</span>
-                        <span class="sub-card-link">
-                            View Projects <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.2: Power Systems -->
-                <a href="MATLAB/matlab-projects.html#power" class="sub-card">
-                    <div class="sub-card-badge">⚡ Power Systems</div>
-                    <h3 class="sub-card-title">Electrical Analysis</h3>
-                    <p class="sub-card-description">Circuit analysis, load flow, fault detection, voltage stability, power quality</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats" id="matlab-power-count">0 Projects</span>
-                        <span class="sub-card-link">
-                            View Projects <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.3: Heat Transfer -->
-                <a href="MATLAB/matlab-projects.html#heat" class="sub-card">
-                    <div class="sub-card-badge">🔥 Thermodynamics</div>
-                    <h3 class="sub-card-title">Heat Transfer</h3>
-                    <p class="sub-card-description">Temperature distribution, heat conduction, convection, heat exchanger performance</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats" id="matlab-heat-count">0 Projects</span>
-                        <span class="sub-card-link">
-                            View Projects <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.4: Control Systems & Simulink -->
-                <a href="MATLAB/matlab-projects.html#simulink" class="sub-card">
-                    <div class="sub-card-badge">🎛️ Control & Simulink</div>
-                    <h3 class="sub-card-title">System Dynamics</h3>
-                    <p class="sub-card-description">Transfer functions, Bode plots, PID controllers, Simulink block diagrams</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats" id="matlab-simulink-count">0 Projects</span>
-                        <span class="sub-card-link">
-                            View Projects <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- MAIN CARD 4: Electronics Tools & Calculators -->
-        <div id="electronics-tools" class="main-project-card" data-category="electronics">
-            <div class="main-card-header">
-                <div class="main-card-icon">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <div class="main-card-title-area">
-                    <h2 class="main-card-title">Electronics Tools & Calculators</h2>
-                    <p class="main-card-subtitle">Professional-grade calculators and utilities for electronics engineers</p>
-                    <div class="main-card-tags">
-                        <span class="tag">JavaScript</span>
-                        <span class="tag">IEC Standards</span>
-                        <span class="tag">Calculators</span>
-                        <span class="tag">Free Tools</span>
-                    </div>
-                </div>
-                <div class="project-count-badge">
-                    <i class="fas fa-tools"></i> 5 Tools
-                </div>
-            </div>
-
-            <div class="sub-cards-grid">
-                <!-- Sub-Card 3.1: Resistor Calculator -->
-                <a href="Electronics/resistor-calculator/resistor-calculator.html" class="sub-card">
-                    <div class="sub-card-badge">
-                        <i class="fas fa-palette"></i> Color Codes
-                    </div>
-                    <h3 class="sub-card-title">Resistor Calculator</h3>
-                    <p class="sub-card-description">4/5/6 band color code decoder. Bidirectional calculation with tolerance and temperature coefficient support.</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats">IEC 60062:2016</span>
-                        <span class="sub-card-link">
-                            Open Tool <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.2: LED Calculator -->
-                <a href="Electronics/led-calculator/led-calculator.html" class="sub-card">
-                    <div class="sub-card-badge">
-                        <i class="fas fa-lightbulb"></i> Current Limiting
-                    </div>
-                    <h3 class="sub-card-title">LED Calculator</h3>
-                    <p class="sub-card-description">Calculate resistor values for LED circuits. Series/parallel configurations with power rating recommendations.</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats">Multi-LED Support</span>
-                        <span class="sub-card-link">
-                            Open Tool <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.3: Capacitor Decoder -->
-                <a href="Electronics/capacitor-decoder/capacitor-decoder.html" class="sub-card">
-                    <div class="sub-card-badge">
-                        <i class="fas fa-microchip"></i> 3-Digit Codes
-                    </div>
-                    <h3 class="sub-card-title">Capacitor Decoder</h3>
-                    <p class="sub-card-description">Decode capacitor markings instantly. 3-digit codes, letter suffixes, and voltage rating identification.</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats">Ceramic/Polyester</span>
-                        <span class="sub-card-link">
-                            Open Tool <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Sub-Card 3.4: Quick Reference -->
-                <a href="Electronics/quick-reference/quick-reference.html" class="sub-card">
-                    <div class="sub-card-badge">
-                        <i class="fas fa-book-open"></i> Formulas
-                    </div>
-                    <h3 class="sub-card-title">Quick Reference</h3>
-                    <p class="sub-card-description">33 essential electronics formulas. Ohm's Law, power calculations, frequency, impedance, RC/RL circuits, resonance, and more.</p>
-                    <div class="sub-card-footer">
-                        <span class="sub-card-stats">15 Formulas</span>
-                        <span class="sub-card-link">
-                            Open Guide <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-            </div>
-        </div>
-
-        <!-- MAIN CARD 5: Programming & DSA -->
+        <!-- MAIN CARD 3: Programming & DSA -->
         <div id="programming" class="main-project-card" data-category="programming">
-            <button class="favorite-btn" data-project="programming" title="Add to favorites">
-                <i class="far fa-heart"></i>
-            </button>
             <div class="main-card-header">
                 <div class="main-card-icon">
                     <i class="fas fa-code"></i>
@@ -1241,6 +1086,287 @@
                         </span>
                     </div>
                 </a>
+
+                <!-- Sub-Card: Python Scripts -->
+                <a href="programming/programming-listing.html#python" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fab fa-python"></i> Python
+                    </div>
+                    <h3 class="sub-card-title">Python Scripts</h3>
+                    <p class="sub-card-description">Automation scripts, data processing utilities, file operations, and general-purpose Python programs.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">2 Scripts</span>
+                        <span class="sub-card-link">
+                            View Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card: C++ & Competitive -->
+                <a href="programming/programming-listing.html#cpp" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-trophy"></i> Competitive
+                    </div>
+                    <h3 class="sub-card-title">C++ & Competitive</h3>
+                    <p class="sub-card-description">Competitive programming solutions in C++. Sorting, searching, graph algorithms, and optimization problems.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">Coming Soon</span>
+                        <span class="sub-card-link">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card: Mini Projects -->
+                <a href="programming/programming-listing.html#mini-projects" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-puzzle-piece"></i> Mini Projects
+                    </div>
+                    <h3 class="sub-card-title">Mini Projects</h3>
+                    <p class="sub-card-description">Small utility tools, CLI apps, automation bots, and experimental programs built for learning and fun.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">Coming Soon</span>
+                        <span class="sub-card-link">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CARD 4: Websites & Web Projects -->
+        <div id="websites" class="main-project-card" data-category="programming">
+            <div class="main-card-header">
+                <div class="main-card-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="main-card-title-area">
+                    <h2 class="main-card-title">Websites & Web Projects</h2>
+                    <p class="main-card-subtitle">Portfolio sites, tools and web applications</p>
+                    <div class="main-card-tags">
+                        <span class="tag">HTML/CSS</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">PWA</span>
+                        <span class="tag">Responsive</span>
+                    </div>
+                </div>
+                <div class="project-count-badge">
+                    <i class="fas fa-globe"></i> 1+ Sites
+                </div>
+            </div>
+
+            <div class="sub-cards-grid">
+                <a href="websites/websites-listing.html" class="sub-card">
+                    <div class="sub-card-badge">
+                        🌐 All Sites
+                    </div>
+                    <h3 class="sub-card-title">Portfolio & Studio</h3>
+                    <p class="sub-card-description">A3KM Studio — full-featured personal portfolio with content management, project showcase, PWA support, and GitHub-powered backend.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats" id="websitesCount">1+ Sites</span>
+                        <span class="sub-card-link">View All <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card: Tools & Calculators -->
+                <a href="websites/websites-listing.html#tools" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-tools"></i> Tools
+                    </div>
+                    <h3 class="sub-card-title">Tools & Calculators</h3>
+                    <p class="sub-card-description">Interactive browser-based engineering tools — resistor calculators, LED tools, capacitor decoders, and quick reference guides.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">5+ Tools</span>
+                        <span class="sub-card-link">Open Tools <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card: Educational Sites -->
+                <a href="websites/websites-listing.html#educational" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-graduation-cap"></i> Educational
+                    </div>
+                    <h3 class="sub-card-title">Educational Sites</h3>
+                    <p class="sub-card-description">Learning platforms, content hubs, and educational web pages covering engineering, programming, and science topics.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">Coming Soon</span>
+                        <span class="sub-card-link">Explore <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card: PWA & Web Apps -->
+                <a href="websites/websites-listing.html#apps" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-mobile-alt"></i> PWA
+                    </div>
+                    <h3 class="sub-card-title">PWA & Web Apps</h3>
+                    <p class="sub-card-description">Progressive Web Apps with offline support, installable on any device. Fast, responsive, and app-like experience in the browser.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">1+ Apps</span>
+                        <span class="sub-card-link">View Apps <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CARD 5: MATLAB Projects & Simulations -->
+        <div id="matlab" class="main-project-card" data-category="programming">
+            <div class="main-card-header">
+                <div class="main-card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="main-card-title-area">
+                    <h2 class="main-card-title">MATLAB Projects & Simulations</h2>
+                    <p class="main-card-subtitle">Energy systems analysis, numerical methods, and control systems</p>
+                    <div class="main-card-tags">
+                        <span class="tag">MATLAB R2024</span>
+                        <span class="tag">Simulink</span>
+                        <span class="tag">Energy Systems</span>
+                        <span class="tag">Analysis</span>
+                    </div>
+                </div>
+                <div class="project-count-badge" id="matlab-count-badge">
+                    <i class="fas fa-code"></i> 1 Project
+                </div>
+            </div>
+
+            <div class="sub-cards-grid">
+                <!-- Sub-Card 5.1: Renewable Energy -->
+                <a href="MATLAB/matlab-projects.html#renewable" class="sub-card">
+                    <div class="sub-card-badge">☀️ Renewable Energy</div>
+                    <h3 class="sub-card-title">Solar, Wind & MPPT</h3>
+                    <p class="sub-card-description">PV analysis, wind turbine modeling, MPPT algorithms, energy storage optimization</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats" id="matlab-renewable-count">1 Project</span>
+                        <span class="sub-card-link">
+                            View Projects <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 5.2: Power Systems -->
+                <a href="MATLAB/matlab-projects.html#power" class="sub-card">
+                    <div class="sub-card-badge">⚡ Power Systems</div>
+                    <h3 class="sub-card-title">Electrical Analysis</h3>
+                    <p class="sub-card-description">Circuit analysis, load flow, fault detection, voltage stability, power quality</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats" id="matlab-power-count">0 Projects</span>
+                        <span class="sub-card-link">
+                            View Projects <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 5.3: Heat Transfer -->
+                <a href="MATLAB/matlab-projects.html#heat" class="sub-card">
+                    <div class="sub-card-badge">🔥 Thermodynamics</div>
+                    <h3 class="sub-card-title">Heat Transfer</h3>
+                    <p class="sub-card-description">Temperature distribution, heat conduction, convection, heat exchanger performance</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats" id="matlab-heat-count">0 Projects</span>
+                        <span class="sub-card-link">
+                            View Projects <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 5.4: Control Systems & Simulink -->
+                <a href="MATLAB/matlab-projects.html#simulink" class="sub-card">
+                    <div class="sub-card-badge">🎛️ Control & Simulink</div>
+                    <h3 class="sub-card-title">System Dynamics</h3>
+                    <p class="sub-card-description">Transfer functions, Bode plots, PID controllers, Simulink block diagrams</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats" id="matlab-simulink-count">0 Projects</span>
+                        <span class="sub-card-link">
+                            View Projects <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CARD 6: Electronics Tools & Calculators -->
+        <div id="electronics-tools" class="main-project-card" data-category="electronics">
+            <div class="main-card-header">
+                <div class="main-card-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="main-card-title-area">
+                    <h2 class="main-card-title">Electronics Tools & Calculators</h2>
+                    <p class="main-card-subtitle">Professional-grade calculators and utilities for electronics engineers</p>
+                    <div class="main-card-tags">
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">IEC Standards</span>
+                        <span class="tag">Calculators</span>
+                        <span class="tag">Free Tools</span>
+                    </div>
+                </div>
+                <div class="project-count-badge">
+                    <i class="fas fa-tools"></i> 5 Tools
+                </div>
+            </div>
+
+            <div class="sub-cards-grid">
+                <!-- Sub-Card 6.1: Resistor Calculator -->
+                <a href="Electronics/resistor-calculator/resistor-calculator.html" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-palette"></i> Color Codes
+                    </div>
+                    <h3 class="sub-card-title">Resistor Calculator</h3>
+                    <p class="sub-card-description">4/5/6 band color code decoder. Bidirectional calculation with tolerance and temperature coefficient support.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">IEC 60062:2016</span>
+                        <span class="sub-card-link">
+                            Open Tool <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 6.2: LED Calculator -->
+                <a href="Electronics/led-calculator/led-calculator.html" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-lightbulb"></i> Current Limiting
+                    </div>
+                    <h3 class="sub-card-title">LED Calculator</h3>
+                    <p class="sub-card-description">Calculate resistor values for LED circuits. Series/parallel configurations with power rating recommendations.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">Multi-LED Support</span>
+                        <span class="sub-card-link">
+                            Open Tool <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 6.3: Capacitor Decoder -->
+                <a href="Electronics/capacitor-decoder/capacitor-decoder.html" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-microchip"></i> 3-Digit Codes
+                    </div>
+                    <h3 class="sub-card-title">Capacitor Decoder</h3>
+                    <p class="sub-card-description">Decode capacitor markings instantly. 3-digit codes, letter suffixes, and voltage rating identification.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">Ceramic/Polyester</span>
+                        <span class="sub-card-link">
+                            Open Tool <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Sub-Card 6.4: Quick Reference -->
+                <a href="Electronics/quick-reference/quick-reference.html" class="sub-card">
+                    <div class="sub-card-badge">
+                        <i class="fas fa-book-open"></i> Formulas
+                    </div>
+                    <h3 class="sub-card-title">Quick Reference</h3>
+                    <p class="sub-card-description">33 essential electronics formulas. Ohm's Law, power calculations, frequency, impedance, RC/RL circuits, resonance, and more.</p>
+                    <div class="sub-card-footer">
+                        <span class="sub-card-stats">15 Formulas</span>
+                        <span class="sub-card-link">
+                            Open Guide <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
             </div>
         </div>
 
@@ -1299,7 +1425,11 @@
                 reference: 1
             },
             programming: {
-                total: 2
+                total: 2,
+                python: 2
+            },
+            websites: {
+                total: 1
             }
         };
 
@@ -1350,18 +1480,12 @@
         // Function to fetch SOLIDWORKS counts from data file
         async function fetchSolidworksProjectCounts() {
             try {
-                const response = await fetch('solidworks/solidworks-models-data.js');
-                const scriptText = await response.text();
-                
-                // Extract array lengths from the data file using regex
-                const basicMatch = scriptText.match(/basic:\s*\[([\s\S]*?)\]/);
-                if (basicMatch) {
-                    // Count objects in the basic array
-                    const basicCount = (basicMatch[1].match(/\{/g) || []).length;
-                    projectCounts.solidworks.basic = basicCount;
-                    projectCounts.solidworks.total = basicCount; // For now, only basic models exist
+                const response = await fetch('solidworks/solidworks-data.json');
+                const data = await response.json();
+                if (data.statistics && data.statistics.totalProjects) {
+                    projectCounts.solidworks.basic = data.statistics.totalProjects;
+                    projectCounts.solidworks.total = data.statistics.totalProjects;
                 }
-
                 console.log('✅ SOLIDWORKS project counts fetched:', projectCounts.solidworks);
             } catch (error) {
                 console.warn('⚠️ Using default SOLIDWORKS counts:', error);
@@ -1386,6 +1510,35 @@
                 console.log('✅ MATLAB project counts fetched:', projectCounts.matlab);
             } catch (error) {
                 console.warn('⚠️ Using default MATLAB counts:', error);
+            }
+        }
+
+        // Function to fetch Programming counts from JSON data
+        async function fetchProgrammingCounts() {
+            try {
+                const response = await fetch('programming/programs.json');
+                const data = await response.json();
+                if (data.statistics) {
+                    projectCounts.programming.total = data.statistics.total || 0;
+                    projectCounts.programming.python = data.statistics.byLanguage?.python || 0;
+                }
+                console.log('✅ Programming counts fetched:', projectCounts.programming);
+            } catch (error) {
+                console.warn('⚠️ Using default programming counts:', error);
+            }
+        }
+
+        // Function to fetch Websites counts from JSON data
+        async function fetchWebsitesCounts() {
+            try {
+                const response = await fetch('websites/websites.json');
+                const data = await response.json();
+                if (data.statistics) {
+                    projectCounts.websites.total = data.statistics.totalProjects || 0;
+                }
+                console.log('✅ Websites counts fetched:', projectCounts.websites);
+            } catch (error) {
+                console.warn('⚠️ Using default websites counts:', error);
             }
         }
 
@@ -1462,53 +1615,34 @@
                 electronicsCard.innerHTML = `<i class="fas fa-tools"></i> ${projectCounts.electronics.total} Tools`;
             }
 
-            // ========== UPDATE HERO STATS WITH REAL COUNTS ==========
-            try {
-                // Calculate real statistics
-                const totalCategories = 5; // SOLIDWORKS, Arduino, MATLAB, Electronics, Programming
-                const totalProjects = projectCounts.solidworks.total + 
-                                     projectCounts.arduino.total + 
-                                     projectCounts.matlab.total + 
-                                     projectCounts.electronics.total +
-                                     projectCounts.programming.total;
-                
-                // Count all individual items (sub-projects)
-                const totalItems = projectCounts.solidworks.basic + 
-                                 projectCounts.solidworks.intermediate + 
-                                 projectCounts.solidworks.pro + 
-                                 projectCounts.solidworks.commercial +
-                                 projectCounts.arduino.categories['led-basics'] +
-                                 projectCounts.arduino.categories['sensors-actuators'] +
-                                 projectCounts.arduino.categories['display-input'] +
-                                 projectCounts.arduino.categories['advanced-projects'] +
-                                 projectCounts.matlab.categories.renewable +
-                                 projectCounts.matlab.categories.power +
-                                 projectCounts.matlab.categories.heat +
-                                 projectCounts.matlab.categories.simulink +
-                                 projectCounts.electronics.total +
-                                 projectCounts.programming.total;
-                
-                // Update hero stats UI
-                document.getElementById('categoriesCount').textContent = totalCategories;
-                document.getElementById('projectsCount').textContent = totalProjects;
-                document.getElementById('totalItemsCount').textContent = totalItems + '+';
-                
-                // Show stats section with fade-in animation
-                const heroStats = document.getElementById('heroStats');
-                heroStats.style.display = 'grid';
-                setTimeout(() => {
-                    heroStats.style.opacity = '1';
-                    heroStats.style.transform = 'translateY(0)';
-                }, 50);
-                
-                console.log('✅ Hero stats updated:', { 
-                    categories: totalCategories, 
-                    projects: totalProjects, 
-                    items: totalItems 
-                });
-            } catch (error) {
-                console.warn('⚠️ Could not update hero stats:', error);
-                // Stats remain hidden if calculation fails - no fake data shown
+            // Update Programming main count
+            const programmingCard = document.querySelector('#programming .project-count-badge');
+            if (programmingCard) {
+                const solutionText = projectCounts.programming.total === 1 ? 'Solution' : 'Solutions';
+                programmingCard.innerHTML = `<i class="fas fa-terminal"></i> ${projectCounts.programming.total} ${solutionText}`;
+            }
+
+            // Update Programming sub-card counts
+            const programmingSubCards = document.querySelectorAll('#programming .sub-card');
+            if (programmingSubCards[0]) { // Problem Solving
+                const solText = projectCounts.programming.total === 1 ? 'Solution' : 'Solutions';
+                programmingSubCards[0].querySelector('.sub-card-stats').textContent = `${projectCounts.programming.total} ${solText}`;
+            }
+            if (programmingSubCards[1]) { // Python Scripts
+                const pyText = projectCounts.programming.python === 1 ? 'Script' : 'Scripts';
+                programmingSubCards[1].querySelector('.sub-card-stats').textContent = `${projectCounts.programming.python} ${pyText}`;
+            }
+
+            // Update Websites main count
+            const websitesCard = document.querySelector('#websites .project-count-badge');
+            if (websitesCard) {
+                websitesCard.innerHTML = `<i class="fas fa-globe"></i> ${projectCounts.websites.total}+ Sites`;
+            }
+
+            // Update Websites Portfolio sub-card
+            const websitesCount = document.getElementById('websitesCount');
+            if (websitesCount) {
+                websitesCount.textContent = `${projectCounts.websites.total}+ Sites`;
             }
 
             console.log('✅ Project counts updated successfully');
@@ -1518,7 +1652,9 @@
         Promise.all([
             fetchArduinoProjectCounts(),
             fetchMatlabProjectCounts(),
-            fetchSolidworksProjectCounts()
+            fetchSolidworksProjectCounts(),
+            fetchProgrammingCounts(),
+            fetchWebsitesCounts()
         ]).then(() => {
             updateProjectCounts();
         }).catch(() => {
@@ -1526,76 +1662,208 @@
             updateProjectCounts();
         });
 
-        // Search Functionality
+        // ===== FUZZY SEARCH ENGINE =====
         const searchInput = document.getElementById('searchInput');
         const mainCards = document.querySelectorAll('.main-project-card');
         let currentFilter = 'all';
 
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            
-            mainCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                const category = card.getAttribute('data-category');
-                const matchesSearch = text.includes(searchTerm);
-                const matchesFilter = currentFilter === 'all' || category === currentFilter;
-                
-                if (matchesSearch && matchesFilter) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-
-        // Filter Functionality
-        const filterBtns = document.querySelectorAll('.filter-btn');
-
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active from all
-                filterBtns.forEach(b => b.classList.remove('active'));
-                // Add active to clicked
-                btn.classList.add('active');
-
-                currentFilter = btn.getAttribute('data-filter');
-                const searchTerm = searchInput.value.toLowerCase();
-
-                mainCards.forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    const category = card.getAttribute('data-category');
-                    const matchesSearch = searchTerm === '' || text.includes(searchTerm);
-                    const matchesFilter = currentFilter === 'all' || category === currentFilter;
-                    
-                    if (matchesSearch && matchesFilter) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
-
-        // Scroll Animation
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+        // Vocabulary map: common words → related search terms
+        const VOCAB_MAP = {
+            'robot': 'arduino', 'robotics': 'arduino', 'iot': 'arduino',
+            'microcontroller': 'arduino', 'embedded': 'arduino', 'uno': 'arduino',
+            'microprocessor': 'arduino', 'avr': 'arduino', 'atmega': 'arduino',
+            'breadboard': 'electronics', 'circuit': 'electronics', 'circuits': 'electronics',
+            'resistor': 'electronics', 'capacitor': 'electronics', 'transistor': 'electronics',
+            'diode': 'electronics', 'component': 'electronics', 'components': 'electronics',
+            'ic': 'electronics', 'pcb': 'electronics', 'wiring': 'electronics',
+            'sensor': 'sensors', 'sensors': 'sensors', 'led': 'led projects',
+            '3d': 'solidworks cad', 'cad': 'solidworks', 'modeling': 'solidworks',
+            'model': 'solidworks', 'mechanical': 'solidworks cad', 'design': 'solidworks cad',
+            'assembly': 'solidworks', 'sketch': 'solidworks', 'render': 'solidworks',
+            'drawing': 'solidworks', 'part': 'solidworks', 'simulate': 'solidworks',
+            'code': 'programming', 'coding': 'programming', 'script': 'programming',
+            'scripting': 'programming', 'develop': 'programming', 'development': 'programming',
+            'dev': 'programming', 'software': 'programming', 'app': 'programming',
+            'application': 'programming', 'algorithm': 'programming matlab',
+            'web': 'web development', 'website': 'websites', 'html': 'web development',
+            'css': 'web development', 'js': 'javascript', 'javascript': 'web development',
+            'frontend': 'web development', 'backend': 'programming',
+            'simulation': 'matlab', 'math': 'matlab', 'numerical': 'matlab',
+            'computation': 'matlab', 'analysis': 'matlab', 'plot': 'matlab',
+            'graph': 'matlab', 'matrix': 'matlab', 'signal': 'matlab',
+            'control': 'matlab', 'engineering': 'matlab solidworks'
         };
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+        // Common misspelling corrections dictionary
+        const CORRECTIONS = {
+            'ardino': 'arduino', 'ardunio': 'arduino', 'ardiuno': 'arduino',
+            'arudino': 'arduino', 'arduno': 'arduino', 'arduion': 'arduino',
+            'aurdino': 'arduino', 'ardrino': 'arduino', 'arduiino': 'arduino',
+            'solidwerk': 'solidworks', 'solidwrk': 'solidworks', 'solidwork': 'solidworks',
+            'solidwoks': 'solidworks', 'soliworks': 'solidworks', 'soldiworks': 'solidworks',
+            'soidworks': 'solidworks', 'solidwORKS': 'solidworks',
+            'matlb': 'matlab', 'matab': 'matlab', 'matla': 'matlab',
+            'matlap': 'matlab', 'maltab': 'matlab', 'matalb': 'matlab',
+            'electornic': 'electronics', 'electroincs': 'electronics',
+            'eletronics': 'electronics', 'electroncs': 'electronics',
+            'electonics': 'electronics', 'electrnics': 'electronics',
+            'elctronics': 'electronics', 'electroncis': 'electronics',
+            'programing': 'programming', 'proggraming': 'programming',
+            'progamming': 'programming', 'progrming': 'programming',
+            'programmin': 'programming', 'prgramming': 'programming',
+            'websit': 'website', 'webiste': 'website', 'webstie': 'website',
+            'sensro': 'sensor', 'snensor': 'sensor', 'senor': 'sensor',
+        };
+
+        // Levenshtein distance
+        function levenshtein(s1, s2) {
+            const m = s1.length, n = s2.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+            const dp = Array.from({ length: m + 1 }, (_, i) => [i]);
+            for (let j = 1; j <= n; j++) dp[0][j] = j;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    dp[i][j] = s1[i-1] === s2[j-1]
+                        ? dp[i-1][j-1]
+                        : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+                }
+            }
+            return dp[m][n];
+        }
+
+        // Expand a single word using corrections + vocabulary
+        function expandWord(word) {
+            const w = word.toLowerCase();
+            const corrected = CORRECTIONS[w];
+            if (corrected) return [corrected];
+            const vocab = VOCAB_MAP[w];
+            return vocab ? [w, ...vocab.split(' ')] : [w];
+        }
+
+        // Expand a full query to a flat list of resolved search terms
+        function expandQuery(query) {
+            const words = query.toLowerCase().trim().split(/\s+/);
+            const result = [];
+            const seen = new Set();
+            words.forEach(function(w) {
+                expandWord(w).forEach(function(t) {
+                    if (!seen.has(t)) { seen.add(t); result.push(t); }
+                });
+            });
+            return result;
+        }
+
+        // Score how well a single search word matches a text token
+        function wordTokenScore(word, token) {
+            if (!word || !token || word.length < 2 || token.length < 2) return 0;
+            if (token === word) return 100;
+            if (token.includes(word)) return 85;
+            if (token.startsWith(word)) return 75;
+            if (word.startsWith(token)) return 65;
+            // Levenshtein: allow more edits for longer words
+            const maxEdits = word.length <= 3 ? 1 : word.length <= 6 ? 2 : 3;
+            const dist = levenshtein(word, token);
+            if (dist <= maxEdits) return Math.max(30, 75 - dist * 15);
+            // Partial prefix — at least 70% of word prefix matches token
+            const prefixLen = Math.floor(word.length * 0.7);
+            if (prefixLen >= 3 && token.startsWith(word.slice(0, prefixLen))) return 40;
+            return 0;
+        }
+
+        // Score a query against a full card text block
+        function fuzzyScore(query, text) {
+            if (!query) return 1;
+            const textLow = text.toLowerCase();
+            const queryLow = query.toLowerCase().trim();
+            // Whole query exact match
+            if (textLow.includes(queryLow)) return 100;
+
+            const queryWords = expandQuery(query);
+            const textTokens = textLow.split(/[\s,.\-_/()|\[\]]+/).filter(function(t) { return t.length >= 2; });
+
+            let totalScore = 0;
+            queryWords.forEach(function(word) {
+                if (word.length < 2) return;
+                if (textLow.includes(word)) { totalScore += 80; return; }
+                let best = 0;
+                textTokens.forEach(function(token) {
+                    best = Math.max(best, wordTokenScore(word, token));
+                });
+                totalScore += best;
+            });
+
+            return queryWords.length > 0 ? Math.min(100, (totalScore / queryWords.length) * 1.4) : 0;
+        }
+
+        // Build a comprehensive searchable string for each card
+        function cardSearchText(card) {
+            const title = card.querySelector('.main-card-title')?.textContent || '';
+            const subtitle = card.querySelector('.main-card-subtitle')?.textContent || '';
+            const tags = Array.from(card.querySelectorAll('.tag')).map(function(t) { return t.textContent; }).join(' ');
+            const category = card.getAttribute('data-category') || '';
+            const desc = card.querySelector('p, .main-card-desc')?.textContent || '';
+            return [title, subtitle, tags, category, desc].join(' ');
+        }
+
+        const FUZZY_THRESHOLD = 30;
+
+        function applyFilterSearch() {
+            const rawQuery = searchInput ? searchInput.value.trim() : '';
+            mainCards.forEach(function(card) {
+                const category = card.getAttribute('data-category');
+                const matchesFilter = currentFilter === 'all' || category === currentFilter;
+                let matchesSearch = true;
+                if (rawQuery.length > 0) {
+                    const score = fuzzyScore(rawQuery, cardSearchText(card));
+                    matchesSearch = score >= FUZZY_THRESHOLD;
+                }
+                if (matchesSearch && matchesFilter) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
                 }
             });
-        }, observerOptions);
+        }
 
-        mainCards.forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'all 0.6s ease';
-            observer.observe(card);
+        const searchClearBtn = document.getElementById('searchClearBtn');
+
+        function updateClearBtn() {
+            if (!searchClearBtn) return;
+            if (searchInput && searchInput.value.trim().length > 0) {
+                searchClearBtn.classList.add('visible');
+            } else {
+                searchClearBtn.classList.remove('visible');
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                applyFilterSearch();
+                updateClearBtn();
+            });
+        }
+
+        if (searchClearBtn) {
+            searchClearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchClearBtn.classList.remove('visible');
+                if (searchSuggestions) searchSuggestions.classList.remove('active');
+                applyFilterSearch();
+                searchInput.focus();
+            });
+        }
+
+        // Filter Functionality
+        const filterBtnsProjects = document.querySelectorAll('.filter-btn');
+
+        filterBtnsProjects.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                filterBtnsProjects.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                currentFilter = btn.getAttribute('data-filter');
+                applyFilterSearch();
+            });
         });
 
         // ========== ENHANCED FEATURES ==========
@@ -1618,67 +1886,111 @@
         const popularSearches = ['Arduino', 'SOLIDWORKS', 'Electronics', 'LED Projects', 'Sensors', 'Web Development'];
         let recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
 
-        searchInput.addEventListener('focus', () => {
-            if (searchInput.value.trim() === '') {
-                showSuggestions([...new Set([...recentSearches, ...popularSearches])].slice(0, 6));
-            }
-        });
+        function getSuggestionCandidates() {
+            const cardTokens = Array.from(mainCards).flatMap(function(card) {
+                const title = card.querySelector('.main-card-title')?.textContent || '';
+                const tags = Array.from(card.querySelectorAll('.tag')).map(function(t) { return t.textContent; });
+                return [title, ...tags];
+            });
+            return [...new Set(cardTokens)];
+        }
 
-        searchInput.addEventListener('input', (e) => {
-            const value = e.target.value.toLowerCase();
-            if (value.length > 0) {
-                const allText = Array.from(mainCards).map(card => ({
-                    title: card.querySelector('.main-card-title')?.textContent || '',
-                    tags: Array.from(card.querySelectorAll('.tag')).map(t => t.textContent)
-                }));
-                
-                const matches = allText.flatMap(item => [item.title, ...item.tags])
-                    .filter(text => text.toLowerCase().includes(value))
-                    .slice(0, 5);
-                
-                showSuggestions([...new Set(matches)]);
-            } else {
-                searchSuggestions.classList.remove('active');
-            }
-        });
-
-        function showSuggestions(items) {
-            if (items.length === 0) {
-                searchSuggestions.classList.remove('active');
+        function updateSuggestions(query) {
+            if (!searchSuggestions || !query || query.length === 0) {
+                if (searchSuggestions) searchSuggestions.classList.remove('active');
                 return;
             }
+            const candidates = [...getSuggestionCandidates(), ...popularSearches];
+            const scored = [];
+            const seen = new Set();
+            candidates.forEach(function(text) {
+                if (!text || seen.has(text)) return;
+                seen.add(text);
+                const score = fuzzyScore(query, text);
+                if (score >= 30) {
+                    scored.push({ text: text, score: score, isRecent: recentSearches.includes(text) });
+                }
+            });
+            scored.sort(function(a, b) { return b.score - a.score || (b.isRecent ? 1 : -1); });
+            showSuggestions(scored.slice(0, 6), query);
+        }
 
-            searchSuggestions.innerHTML = items.map((item, idx) => {
-                const isRecent = recentSearches.includes(item);
-                return `
-                    <div class="suggestion-item" data-text="${item}">
-                        <i class="suggestion-icon fas ${isRecent ? 'fa-history' : 'fa-search'}"></i>
-                        <span class="suggestion-text">${item}</span>
-                        ${isRecent ? '<span class="recent-label">Recent</span>' : ''}
-                    </div>
-                `;
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                if (searchInput.value.trim() === '') {
+                    const defaults = [...new Set([...recentSearches, ...popularSearches])].slice(0, 6);
+                    showSuggestions(defaults.map(function(t) {
+                        return { text: t, score: 100, isRecent: recentSearches.includes(t) };
+                    }), '');
+                }
+            });
+
+            searchInput.addEventListener('input', function(e) {
+                const value = e.target.value.trim();
+                if (value.length > 0) {
+                    updateSuggestions(value);
+                } else {
+                    if (searchSuggestions) searchSuggestions.classList.remove('active');
+                }
+            });
+
+            // Enter key — commit search, close suggestions, save to recent
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    if (searchClearBtn) searchClearBtn.classList.remove('visible');
+                    if (searchSuggestions) searchSuggestions.classList.remove('active');
+                    applyFilterSearch();
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (searchSuggestions) searchSuggestions.classList.remove('active');
+                    applyFilterSearch();
+                    const val = searchInput.value.trim();
+                    if (val) {
+                        recentSearches = [val, ...recentSearches.filter(function(s) { return s !== val; })].slice(0, 5);
+                        localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+                    }
+                }
+            });
+        }
+
+        function showSuggestions(items, query) {
+            if (!searchSuggestions || !items || items.length === 0) {
+                if (searchSuggestions) searchSuggestions.classList.remove('active');
+                return;
+            }
+            searchSuggestions.innerHTML = items.map(function(item) {
+                const text = typeof item === 'string' ? item : item.text;
+                const isRecent = typeof item === 'object' ? item.isRecent : recentSearches.includes(text);
+                const isFuzzy = typeof item === 'object' && query && query.length > 0 && item.score < 80 && item.score >= 30;
+                const escapedText = text.replace(/"/g, '&quot;');
+                return `<div class="suggestion-item" data-text="${escapedText}">
+                    <i class="suggestion-icon fas ${isRecent ? 'fa-history' : isFuzzy ? 'fa-magic' : 'fa-search'}"></i>
+                    <span class="suggestion-text">${text}</span>
+                    ${isRecent ? '<span class="recent-label">Recent</span>' : ''}
+                    ${isFuzzy && !isRecent ? '<span class="recent-label" style="background:rgba(100,80,200,0.35);color:#c9b8ff;">~match</span>' : ''}
+                </div>`;
             }).join('');
-            
+
             searchSuggestions.classList.add('active');
-            
-            document.querySelectorAll('.suggestion-item').forEach(item => {
-                item.addEventListener('click', () => {
+
+            document.querySelectorAll('.suggestion-item').forEach(function(item) {
+                item.addEventListener('click', function() {
                     const text = item.getAttribute('data-text');
                     searchInput.value = text;
-                    
-                    // Add to recent searches
-                    recentSearches = [text, ...recentSearches.filter(s => s !== text)].slice(0, 5);
+                    recentSearches = [text, ...recentSearches.filter(function(s) { return s !== text; })].slice(0, 5);
                     localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
-                    
                     searchInput.dispatchEvent(new Event('input'));
                     searchSuggestions.classList.remove('active');
                 });
             });
         }
 
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', function(e) {
             if (!e.target.closest('.search-bar')) {
-                searchSuggestions.classList.remove('active');
+                if (searchSuggestions) searchSuggestions.classList.remove('active');
             }
         });
     </script>

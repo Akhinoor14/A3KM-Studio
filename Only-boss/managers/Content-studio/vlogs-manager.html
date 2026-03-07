@@ -334,6 +334,17 @@
 
     .breakdown-section { margin-top: 30px; padding: 25px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--border-red); }
 
+    #richVlogDesc:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.3); pointer-events: none; }
+    #richVlogDesc h2 { font-size:1.25em; font-weight:700; color:#FF5252; margin:10px 0 4px; }
+    #richVlogDesc h3 { font-size:1.05em; font-weight:600; color:#FF8A80; margin:8px 0 3px; }
+    #richVlogDesc blockquote { border-left:3px solid #CC0000; margin:8px 0; padding:6px 12px; background:rgba(204,0,0,0.08); color:rgba(255,255,255,0.7); font-style:italic; border-radius:0 4px 4px 0; }
+    #richVlogDesc hr { border:none; border-top:1px solid rgba(204,0,0,0.4); margin:10px 0; }
+    #editRichVlogDesc:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.3); pointer-events: none; }
+    #editRichVlogDesc h2 { font-size:1.25em; font-weight:700; color:#FF5252; margin:10px 0 4px; }
+    #editRichVlogDesc h3 { font-size:1.05em; font-weight:600; color:#FF8A80; margin:8px 0 3px; }
+    #editRichVlogDesc blockquote { border-left:3px solid #CC0000; margin:8px 0; padding:6px 12px; background:rgba(204,0,0,0.08); color:rgba(255,255,255,0.7); font-style:italic; border-radius:0 4px 4px 0; }
+    #editRichVlogDesc hr { border:none; border-top:1px solid rgba(204,0,0,0.4); margin:10px 0; }
+
     @media (max-width: 1024px) {
       .container { grid-template-columns: 1fr; }
       .sidebar { position: relative; top: 0; }
@@ -381,7 +392,7 @@
     <aside class="sidebar">
       <h2>?? Navigation</h2>
       <div class="tab-list">
-        <div class="tab-item active" onclick="switchTab('dashboard')">?? Dashboard</div>
+        <div class="tab-item" onclick="switchTab('dashboard')">📊 Dashboard</div>
         <div class="tab-item" onclick="switchTab('upload')">?? Upload Vlog</div>
         <div class="tab-item" onclick="switchTab('manage')">?? Manage Vlogs</div>
         <div class="tab-item" onclick="switchTab('statistics')">?? Statistics</div>
@@ -409,10 +420,22 @@
       </div>
     </aside>
 
+    <!-- Restore saved tab before page renders (prevents flash) -->
+    <script>
+      (function() {
+        const savedTab = localStorage.getItem('vlogsManager_activeTab') || 'dashboard';
+        // Activate the appropriate tab
+        const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+        const tabContent = document.getElementById(savedTab + 'Tab');
+        if (tabBtn) tabBtn.classList.add('active');
+        if (tabContent) tabContent.classList.add('active');
+      })();
+    </script>
+
     <!-- Main Content Area -->
     <main class="content-area">
       <!-- Dashboard Tab -->
-      <div id="dashboardTab" class="tab-content active">
+      <div id="dashboardTab" class="tab-content">
         <h2 style="color: #8B0000; font-size: 1.8rem; margin-bottom: 20px;">?? Video Blogs Dashboard</h2>
         <div class="stats-grid">
           <div class="stat-card"><h3 id="dashTotalVlogs">0</h3><p>Total Video Blogs</p></div>
@@ -431,11 +454,12 @@
             <label>?? Category *</label>
             <input type="text" id="categorySearch" placeholder="?? Type to search categories..." 
                    style="margin-bottom: 8px; border: 1px solid rgba(204,0,0,0.4); background: rgba(139,0,0, 0.05);" 
-                   oninput="filterCategorySelect()">
-            <select id="category" required size="5" style="height: 120px;">
+                   oninput="filterCategorySelect()"
+                   onfocus="expandVlogSelect()">
+            <select id="category" required size="8" style="height: 280px;" onchange="onVlogCategorySelected()">
               <option value="">Loading categories...</option>
             </select>
-            <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">?? Use search box above to filter categories</small>
+            <small id="vlogCategoryCounter" style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">💡 Search to filter · click to select</small>
           </div>
           
           <div class="form-group">
@@ -466,7 +490,66 @@
           
           <div class="form-group">
             <label>?? Description</label>
-            <textarea id="description" placeholder="Write a detailed description of your vlog content..." rows="4"></textarea>
+            <input type="hidden" id="description">
+            <!-- Template Buttons -->
+            <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" onclick="insertVlogTemplate('add', 'lifestyle')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(139,0,0,0.25)'" onmouseout="this.style.background='rgba(139,0,0,0.15)'" title="Personal/Lifestyle vlog template">🎉 Personal/Lifestyle</button>
+              <button type="button" onclick="insertVlogTemplate('add', 'travel')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(139,0,0,0.25)'" onmouseout="this.style.background='rgba(139,0,0,0.15)'" title="Travel vlog template">✈️ Travel Vlog</button>
+              <button type="button" onclick="insertVlogTemplate('add', 'tech')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(139,0,0,0.25)'" onmouseout="this.style.background='rgba(139,0,0,0.15)'" title="Tech/Review vlog template">📱 Tech/Review</button>
+            </div>
+            <!-- Toolbar -->
+            <div onmousedown="event.preventDefault()" style="background:rgba(139,0,0,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(204,0,0,0.3); border-bottom:2px solid #CC0000; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+              <button type="button" onclick="insertVlogHeading('H2')" style="padding:4px 9px; background:#8B0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+              <button type="button" onclick="insertVlogHeading('H3')" style="padding:4px 9px; background:#8B0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+              <button type="button" onclick="insertVlogHeading('P')" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:rgba(255,255,255,0.7); border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="document.execCommand('bold'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+              <button type="button" onclick="document.execCommand('italic'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+              <button type="button" onclick="document.execCommand('underline'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+              <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="document.execCommand('superscript'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+              <button type="button" onclick="document.execCommand('subscript'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+              <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+              <button type="button" onclick="document.execCommand('indent'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+              <button type="button" onclick="document.execCommand('outdent'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Align Left">≡L</button>
+              <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Align Center">≡C</button>
+              <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Align Right">≡R</button>
+              <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="insertVlogBlockquote()" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+              <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Horizontal Rule">── HR</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <button type="button" onclick="document.execCommand('undo'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+              <button type="button" onclick="document.execCommand('redo'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+              <div style="position:relative;">
+                <button type="button" id="vlogColorBtn" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+                <div id="vlogColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(10,0,0,0.97); border:2px solid rgba(204,0,0,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                  <div onclick="setVlogTextColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                  <div onclick="setVlogTextColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                  <div onclick="setVlogTextColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                  <div onclick="setVlogTextColor('#00BCD4')" style="width:26px;height:26px;background:#00BCD4;border-radius:3px;cursor:pointer;" title="Cyan"></div>
+                  <div onclick="setVlogTextColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                  <div onclick="setVlogTextColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                  <div onclick="setVlogTextColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                  <div onclick="setVlogTextColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                  <div onclick="setVlogTextColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                  <div onclick="setVlogTextColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+                </div>
+              </div>
+              <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('richVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear Formatting">✖</button>
+              <span id="vlogDescWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+            </div>
+            <!-- Rich Text Editor -->
+            <div id="richVlogDesc" contenteditable="true" data-placeholder="Write a detailed description of your vlog content..."
+              style="min-height:280px; padding:12px; border:1px solid rgba(204,0,0,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(8,0,0,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+              oninput="updateVlogDescWordCount();"
+              onclick="this.focus();"></div>
           </div>
           
           <div class="form-group">
@@ -647,7 +730,66 @@
         
         <div class="form-group">
           <label>?? Description</label>
-          <textarea id="editDescription" rows="4"></textarea>
+          <input type="hidden" id="editDescription">
+          <!-- Template Buttons -->
+          <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" onclick="insertVlogTemplate('edit', 'lifestyle')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Personal/Lifestyle template">🎉 Personal</button>
+            <button type="button" onclick="insertVlogTemplate('edit', 'travel')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Travel template">✈️ Travel</button>
+            <button type="button" onclick="insertVlogTemplate('edit', 'tech')" style="padding:6px 12px; background:rgba(139,0,0,0.15); color:#CC0000; border:1px solid rgba(204,0,0,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Tech template">📱 Tech</button>
+          </div>
+          <!-- Toolbar -->
+          <div onmousedown="event.preventDefault()" style="background:rgba(139,0,0,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(204,0,0,0.3); border-bottom:2px solid #CC0000; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+            <button type="button" onclick="insertEditVlogDescHeading('H2')" style="padding:4px 9px; background:#8B0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+            <button type="button" onclick="insertEditVlogDescHeading('H3')" style="padding:4px 9px; background:#8B0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+            <button type="button" onclick="insertEditVlogDescHeading('P')" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:rgba(255,255,255,0.7); border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="document.execCommand('bold'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="document.execCommand('italic'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+            <button type="button" onclick="document.execCommand('underline'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+            <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="document.execCommand('superscript'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+            <button type="button" onclick="document.execCommand('subscript'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+            <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+            <button type="button" onclick="document.execCommand('indent'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+            <button type="button" onclick="document.execCommand('outdent'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Left">≡L</button>
+            <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Center">≡C</button>
+            <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Right">≡R</button>
+            <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="insertEditVlogDescBlockquote()" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+            <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="HR">── HR</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <button type="button" onclick="document.execCommand('undo'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+            <button type="button" onclick="document.execCommand('redo'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+            <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+            <div style="position:relative;">
+              <button type="button" id="editVlogDescColorBtn" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+              <div id="editVlogDescColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(10,0,0,0.97); border:2px solid rgba(204,0,0,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                <div onclick="setEditVlogDescColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                <div onclick="setEditVlogDescColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                <div onclick="setEditVlogDescColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                <div onclick="setEditVlogDescColor('#00BCD4')" style="width:26px;height:26px;background:#00BCD4;border-radius:3px;cursor:pointer;" title="Cyan"></div>
+                <div onclick="setEditVlogDescColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                <div onclick="setEditVlogDescColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                <div onclick="setEditVlogDescColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                <div onclick="setEditVlogDescColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                <div onclick="setEditVlogDescColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                <div onclick="setEditVlogDescColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+              </div>
+            </div>
+            <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('editRichVlogDesc').focus();" style="padding:4px 9px; background:rgba(139,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear">✖</button>
+            <span id="editVlogDescWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+          </div>
+          <!-- Rich Text Editor -->
+          <div id="editRichVlogDesc" contenteditable="true" data-placeholder="Write a detailed description of your vlog content..."
+            style="min-height:200px; padding:12px; border:1px solid rgba(204,0,0,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(8,0,0,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+            oninput="updateEditVlogDescWordCount();"
+            onclick="this.focus();"></div>
         </div>
         
         <div class="form-group">
@@ -757,6 +899,9 @@
       document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
       document.getElementById(tabName + 'Tab').classList.add('active');
       event.target.classList.add('active');
+      
+      // Save current tab to localStorage for persistence
+      localStorage.setItem('vlogsManager_activeTab', tabName);
       
       if (tabName === 'dashboard') loadDashboard();
       if (tabName === 'manage') loadManageContent();
@@ -914,7 +1059,7 @@
           category: category,
           contentId: contentId,
           title: title,
-          description: document.getElementById('description').value,
+          description: document.getElementById('richVlogDesc')?.innerHTML || '',
           tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t),
           author: document.getElementById('author').value || 'Md Akhinoor Islam',
           thumbnailFile: document.getElementById('thumbnail').files[0],
@@ -1343,6 +1488,7 @@
       document.getElementById('editSeries').value = vlog.series || '';
       document.getElementById('editEpisode').value = vlog.episode || '';
       document.getElementById('editDescription').value = vlog.description || '';
+      document.getElementById('editRichVlogDesc').innerHTML = vlog.description || '';
       document.getElementById('editDuration').value = vlog.duration || '';
       document.getElementById('editLanguage').value = vlog.language || 'bn';
       document.getElementById('editTags').value = (vlog.tags || []).join(', ');
@@ -1382,7 +1528,7 @@
         youtubeUrl: document.getElementById('editYoutubeUrl').value,
         series: document.getElementById('editSeries').value || null,
         episode: parseInt(document.getElementById('editEpisode').value) || null,
-        description: document.getElementById('editDescription').value,
+        description: document.getElementById('editRichVlogDesc')?.innerHTML || '',
         duration: document.getElementById('editDuration').value,
         language: document.getElementById('editLanguage').value,
         tags: document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(t => t),
@@ -1566,71 +1712,78 @@
     // Load categories from JSON (video-blog + educational categories combined)
     // Update category counter helper
     function updateVlogCategoryCounter(message, color) {
-      const counter = document.querySelector('#categorySearch + select + small');
+      const counter = document.getElementById('vlogCategoryCounter');
       if (counter) {
-        counter.textContent = `?? ${message}`;
+        counter.textContent = `💡 ${message}`;
         counter.style.color = color;
       }
     }
     
+    // Called when a category is selected from the listbox
+    function onVlogCategorySelected() {
+      const select = document.getElementById('category');
+      const searchInput = document.getElementById('categorySearch');
+      if (select && searchInput && select.value) {
+        searchInput.value = select.value;
+        filterCategorySelect();
+        select.style.display = 'none';
+        updateVlogCategoryCounter('\u2705 ' + select.value + ' \u00b7 click search to change', '#4cff72');
+      }
+    }
+
+    // Expand the listbox when search input is focused
+    function expandVlogSelect() {
+      const select = document.getElementById('category');
+      const searchInput = document.getElementById('categorySearch');
+      if (select && select.style.display === 'none') {
+        select.style.display = '';
+        if (searchInput) searchInput.select();
+        filterCategorySelect();
+        updateVlogCategoryCounter('Search to filter \u00b7 click to select', 'rgba(255,255,255,0.6)');
+      }
+    }
+
     // Enhanced category search with grouping preservation
     function filterCategorySelect() {
       const searchInput = document.getElementById('categorySearch');
       const select = document.getElementById('category');
       if (!searchInput || !select) return;
-      
+
       const filter = searchInput.value.toLowerCase().trim();
-      
+
       if (!filter) {
-        // Show all - restore original view
-        loadCategories();
+        // Show all options
+        Array.from(select.options).forEach(opt => opt.style.display = '');
+        Array.from(select).forEach(item => { if (item.tagName === 'OPTGROUP') item.style.display = ''; });
+        updateVlogCategoryCounter('Use search to filter \u00b7 click to select', 'rgba(255,255,255,0.6)');
         return;
       }
-      
-      // Rebuild select with only matching categories, preserving groups
-      contentManager.loadContent(CONTENT_TYPE).then(data => {
-        select.innerHTML = '<option value="" style="font-weight: 600; color: #CC0000;">??? SELECT CATEGORY ???</option>';
-        
-        const videoBlogGroups = data.categoryGroups['video-blog'] || [];
-        const educationalGroups = data.categoryGroups['educational'] || [];
-        const allGroups = [...videoBlogGroups, ...educationalGroups].sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        let totalMatches = 0;
-        let groupsWithMatches = 0;
-        
-        allGroups.forEach(group => {
-          const matchingCategories = group.categories.filter(cat => 
-            cat.toLowerCase().includes(filter)
-          );
-          
-          if (matchingCategories.length > 0) {
-            groupsWithMatches++;
-            
-            // Group header
-            const groupHeader = document.createElement('option');
-            groupHeader.disabled = true;
-            groupHeader.style.cssText = 'font-weight: 700; color: #CC0000; background: rgba(139,0,0, 0.1); padding: 8px 5px;';
-            groupHeader.textContent = `${group.icon} ${group.name} (${matchingCategories.length})`;
-            select.appendChild(groupHeader);
-            
-            // Matching categories
-            matchingCategories.forEach(cat => {
-              const option = document.createElement('option');
-              option.value = cat;
-              option.textContent = `  ${cat}`;
-              option.style.paddingLeft = '15px';
-              select.appendChild(option);
-              totalMatches++;
-            });
-          }
-        });
-        
-        if (totalMatches === 0) {
-          updateVlogCategoryCounter('No matches found', 'red');
+
+      // Show/hide options in place
+      let totalMatches = 0;
+      Array.from(select.children).forEach(child => {
+        if (child.tagName === 'OPTGROUP') {
+          let groupHasMatch = false;
+          Array.from(child.children).forEach(opt => {
+            const matches = opt.value.toLowerCase().includes(filter);
+            opt.style.display = matches ? '' : 'none';
+            if (matches) { groupHasMatch = true; totalMatches++; }
+          });
+          child.style.display = groupHasMatch ? '' : 'none';
+        } else if (child.value === '') {
+          child.style.display = '';
         } else {
-          updateVlogCategoryCounter(`${totalMatches} matches in ${groupsWithMatches} groups`, 'green');
+          const matches = child.value.toLowerCase().includes(filter);
+          child.style.display = matches ? '' : 'none';
+          if (matches) totalMatches++;
         }
       });
+
+      if (totalMatches === 0) {
+        updateVlogCategoryCounter('No matches found', 'red');
+      } else {
+        updateVlogCategoryCounter(`${totalMatches} match${totalMatches > 1 ? 'es' : ''} found`, 'green');
+      }
     }
 
     // ?? MANUAL SYNC TO MOBILE CONTENT.JSON
@@ -1665,10 +1818,249 @@
     // Make sync function globally accessible
     window.syncToMobileContentJSON = syncToMobileContentJSON;
 
+    // Rich Text Editor for Vlog Description
+    function setVlogTextColor(color) {
+      document.execCommand('foreColor', false, color);
+      document.getElementById('richVlogDesc').focus();
+      document.getElementById('vlogColorPalette').style.display = 'none';
+    }
+    function insertVlogTemplate(modalType, type) {
+      const descField = modalType === 'add' ? document.getElementById('richVlogDesc') : document.getElementById('editRichVlogDesc');
+      const updateFunc = modalType === 'add' ? updateVlogDescWordCount : updateEditVlogDescWordCount;
+      
+      const templates = {
+        lifestyle: `<h2>🎉 Day in My Life</h2>
+<p>Join me for another day filled with <strong>[main activity or theme]</strong>!</p>
+
+<h3>Today's Highlights</h3>
+<ul>
+  <li><strong>Morning Routine:</strong> [Waking up, breakfast, getting ready]</li>
+  <li><strong>Main Activity:</strong> [Work, errands, hobbies, meetings]</li>
+  <li><strong>Afternoon:</strong> [Lunch, activities, behind-the-scenes]</li>
+  <li><strong>Evening:</strong> [Dinner, relaxation, wrap-up]</li>
+</ul>
+
+<h3>What I'm Doing</h3>
+<p>Today I'm <strong>[main focus or project]</strong>. I'll be sharing <em>[what viewers will see]</em> and showing you <em>[specific moments or insights]</em>.</p>
+
+<h3>My Thoughts & Feelings</h3>
+<p>Feeling <strong>[mood/emotion]</strong> about <em>[topic or event]</em>. It's been <em>[description of experience]</em> and I wanted to share this with you all!</p>
+
+<blockquote>💡 <em>Don't forget to like, subscribe, and let me know in the comments what you'd like to see next!</em></blockquote>`,
+
+        travel: `<h2>✈️ Exploring [Destination]</h2>
+<p>Welcome to <strong>[country/city/location]</strong>! In this vlog, I'm taking you on an adventure through <em>[key attractions or experiences]</em>.</p>
+
+<h3>What We're Visiting</h3>
+<ul>
+  <li><strong>Location 1:</strong> [Famous landmark, hidden gem, restaurant]</li>
+  <li><strong>Location 2:</strong> [Cultural site, natural wonder, market]</li>
+  <li><strong>Location 3:</strong> [Activity, experience, local spot]</li>
+  <li><strong>Location 4:</strong> [Optional: sunset spot, nightlife, accommodation]</li>
+</ul>
+
+<h3>Travel Highlights</h3>
+<p><strong>Best Experience:</strong> [Most memorable moment]</p>
+<p><strong>Local Food:</strong> Tried <em>[dishes or restaurants]</em> - absolutely delicious!</p>
+<p><strong>Cultural Insights:</strong> [Interesting facts, customs, language tips]</p>
+<p><strong>Weather & Vibes:</strong> [Climate, atmosphere, crowds]</p>
+
+<h3>Travel Tips</h3>
+<ul>
+  <li><strong>Getting There:</strong> [Transportation advice]</li>
+  <li><strong>Budget:</strong> [Cost estimate or money-saving tips]</li>
+  <li><strong>Best Time to Visit:</strong> [Season/month recommendations]</li>
+  <li><strong>Must-Know:</strong> [Important info for tourists]</li>
+</ul>
+
+<blockquote>💡 <em>If you're planning to visit [destination], let me know in the comments! I'll answer your questions.</em></blockquote>`,
+
+        tech: `<h2>📱 [Product Name] Review</h2>
+<p>Today I'm reviewing the <strong>[product/gadget/technology]</strong>. After <em>[time period]</em> of testing, here's everything you need to know!</p>
+
+<h3>Product Overview</h3>
+<p><strong>What it is:</strong> [Brief description of product]</p>
+<p><strong>Price:</strong> [Cost and value proposition]</p>
+<p><strong>Target Audience:</strong> [Who this is for]</p>
+
+<h3>Key Features</h3>
+<ul>
+  <li><strong>Feature 1:</strong> [Standout capability or spec]</li>
+  <li><strong>Feature 2:</strong> [Important functionality]</li>
+  <li><strong>Feature 3:</strong> [Unique selling point]</li>
+  <li><strong>Design & Build:</strong> [Look, feel, materials]</li>
+</ul>
+
+<h3>My Experience</h3>
+<p><strong>Performance:</strong> [How it performs in real-world use]</p>
+<p><strong>User Interface:</strong> [Ease of use, software, controls]</p>
+<p><strong>Battery/Durability:</strong> [Longevity, build quality]</p>
+
+<h3>Pros & Cons</h3>
+<p><strong>✅ Pros:</strong></p>
+<ul>
+  <li>[Positive aspect 1]</li>
+  <li>[Positive aspect 2]</li>
+  <li>[Positive aspect 3]</li>
+</ul>
+<p><strong>❌ Cons:</strong></p>
+<ul>
+  <li>[Drawback 1]</li>
+  <li>[Drawback 2]</li>
+</ul>
+
+<h3>Final Verdict</h3>
+<p><strong>Rating:</strong> [X/10 or star rating]</p>
+<p><strong>Recommendation:</strong> <em>[Who should buy this and why, or who should skip it]</em></p>
+
+<blockquote>💡 <em>What do you think about [product]? Let me know your thoughts in the comments! Links in description.</em></blockquote>`
+      };
+      
+      if (templates[type]) {
+        descField.innerHTML = templates[type];
+        updateFunc();
+        descField.focus();
+      }
+    }
+
+    function insertVlogHeading(tag) {
+      document.getElementById('richVlogDesc').focus();
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+    function insertVlogBlockquote() {
+      document.getElementById('richVlogDesc').focus();
+      document.execCommand('formatBlock', false, '<blockquote>');
+    }
+    function updateVlogDescWordCount() {
+      const el = document.getElementById('richVlogDesc');
+      const counter = document.getElementById('vlogDescWordCount');
+      if (!el || !counter) return;
+      const text = el.innerText.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      counter.textContent = words + ' words';
+      counter.style.color = words < 30 ? '#FF9800' : words > 200 ? '#f44336' : '#4CAF50';
+    }
+
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       loadCategories();
       loadDashboard();
+      // Vlog description color palette
+      document.getElementById('vlogColorBtn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const p = document.getElementById('vlogColorPalette');
+        p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.matches('#vlogColorBtn') && !e.target.closest('#vlogColorPalette')) {
+          const p = document.getElementById('vlogColorPalette');
+          if (p) p.style.display = 'none';
+        }
+      });
+      // Keydown for richVlogDesc (Tab=indent in list, Enter empty LI=exit)
+      document.getElementById('richVlogDesc')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          const sel = window.getSelection();
+          let node = sel?.anchorNode;
+          let inList = false;
+          while (node && node !== this) {
+            if (node.tagName === 'LI') { inList = true; break; }
+            node = node.parentElement;
+          }
+          if (inList) {
+            e.preventDefault();
+            document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+          }
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount) return;
+          let node = sel.anchorNode;
+          let li = (node.nodeType === 3) ? node.parentElement : node;
+          while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+          if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+            e.preventDefault();
+            const list = li.parentElement;
+            const parentLi = list?.parentElement?.closest('li');
+            if (parentLi) {
+              document.execCommand('outdent');
+            } else {
+              const newP = document.createElement('p');
+              newP.innerHTML = '<br>';
+              list.parentNode.insertBefore(newP, list.nextSibling);
+              li.remove();
+              if (!list.children.length) list.remove();
+              const range = document.createRange();
+              range.setStartBefore(newP.firstChild);
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }
+      });
+    });
+
+    // Edit vlog description rich text editor
+    function setEditVlogDescColor(color) {
+      document.execCommand('foreColor', false, color);
+      document.getElementById('editRichVlogDesc').focus();
+      document.getElementById('editVlogDescColorPalette').style.display = 'none';
+    }
+    function insertEditVlogDescHeading(tag) {
+      document.getElementById('editRichVlogDesc').focus();
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+    function insertEditVlogDescBlockquote() {
+      document.getElementById('editRichVlogDesc').focus();
+      document.execCommand('formatBlock', false, '<blockquote>');
+    }
+    function updateEditVlogDescWordCount() {
+      const el = document.getElementById('editRichVlogDesc');
+      const counter = document.getElementById('editVlogDescWordCount');
+      if (!el || !counter) return;
+      const text = el.innerText.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      counter.textContent = words + ' words';
+      counter.style.color = words < 30 ? '#FF9800' : words > 200 ? '#f44336' : '#4CAF50';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('editVlogDescColorBtn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const p = document.getElementById('editVlogDescColorPalette');
+        p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.matches('#editVlogDescColorBtn') && !e.target.closest('#editVlogDescColorPalette')) {
+          const p = document.getElementById('editVlogDescColorPalette');
+          if (p) p.style.display = 'none';
+        }
+      });
+      document.getElementById('editRichVlogDesc')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          const sel = window.getSelection();
+          let node = sel?.anchorNode; let inList = false;
+          while (node && node !== this) { if (node.tagName === 'LI') { inList = true; break; } node = node.parentElement; }
+          if (inList) { e.preventDefault(); document.execCommand(e.shiftKey ? 'outdent' : 'indent'); }
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount) return;
+          let node = sel.anchorNode;
+          let li = (node.nodeType === 3) ? node.parentElement : node;
+          while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+          if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+            e.preventDefault();
+            const list = li.parentElement;
+            const parentLi = list?.parentElement?.closest('li');
+            if (parentLi) { document.execCommand('outdent'); } else {
+              const newP = document.createElement('p'); newP.innerHTML = '<br>';
+              list.parentNode.insertBefore(newP, list.nextSibling);
+              li.remove(); if (!list.children.length) list.remove();
+              const range = document.createRange(); range.setStartBefore(newP.firstChild); range.collapse(true);
+              sel.removeAllRanges(); sel.addRange(range);
+            }
+          }
+        }
+      });
     });
   </script>
   <script src="../../../Optimization/navbar-autohide.js"></script>

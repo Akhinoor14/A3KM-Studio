@@ -54,6 +54,12 @@
             return;
         }
         
+        // Don't auto-hide when navbar is actively showing (user just brought it back)
+        if (navbar.classList.contains('show')) {
+            lastScroll = currentScroll;
+            return;
+        }
+        
         // Scrolling DOWN past top - Hide navbar
         // Scrolling UP - do nothing (only mouse controls showing)
         if (currentScroll > lastScroll && currentScroll > 100) {

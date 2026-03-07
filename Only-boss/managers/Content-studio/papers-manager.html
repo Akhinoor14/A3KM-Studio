@@ -780,14 +780,15 @@
     /* Pagination */
     .pagination-controls {
       display: none;
-      justify-content: center;
+      justify-content: flex-end;
       align-items: center;
-      gap: 20px;
+      gap: 15px;
       margin-top: 30px;
-      padding: 20px;
-      background: rgba(0,0,0,0.4);
+      padding: 20px 25px;
+      background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(40,0,0,0.85));
       border: 1px solid var(--border-red);
       border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(139,0,0,0.2);
     }
 
     .pagination-controls.active {
@@ -795,34 +796,78 @@
     }
 
     .pagination-controls button {
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid var(--border-mid);
-      color: rgba(255,100,100,0.85);
-      border-radius: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(75,0,0,0.4));
+      border: 1.5px solid var(--border-red);
+      color: var(--primary-red);
+      border-radius: 10px;
       font-weight: 700;
+      font-size: 14px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pagination-controls button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255,100,100,0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .pagination-controls button:hover::before {
+      width: 300px;
+      height: 300px;
     }
 
     .pagination-controls button:hover:not(:disabled) {
-      background: rgba(139,0,0,0.3);
+      background: linear-gradient(135deg, rgba(200,0,0,0.4), rgba(139,0,0,0.5));
       color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(139,0,0,0.3);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 25px rgba(255,100,100,0.4);
+      border-color: var(--primary-red);
+    }
+
+    .pagination-controls button:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
     }
 
     .pagination-controls button:disabled {
-      opacity: 0.3;
+      opacity: 0.25;
       cursor: not-allowed;
+      background: rgba(0,0,0,0.3);
+      border-color: rgba(100,100,100,0.3);
+      color: rgba(150,150,150,0.5);
+    }
+
+    .pagination-controls button i {
+      font-size: 12px;
+      position: relative;
+      z-index: 1;
     }
 
     .pagination-controls span {
       color: var(--primary-red);
       font-weight: 700;
+      font-size: 15px;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      border: 1px solid rgba(139,0,0,0.3);
+      min-width: 120px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
     }
 
     /* Progress & Messages */
@@ -1184,6 +1229,20 @@
         text-align: center;
       }
     }
+    #richAbstract:empty::before {
+      content: attr(data-placeholder);
+      color: rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+    #richAbstract h2 { font-size:1.25em; font-weight:700; color:#42A5F5; margin:10px 0 4px; }
+    #richAbstract h3 { font-size:1.05em; font-weight:600; color:#90CAF9; margin:8px 0 3px; }
+    #richAbstract blockquote { border-left:3px solid #1565C0; margin:8px 0; padding:6px 12px; background:rgba(21,101,192,0.1); color:rgba(255,255,255,0.7); font-style:italic; border-radius:0 4px 4px 0; }
+    #richAbstract hr { border:none; border-top:1px solid rgba(21,101,192,0.4); margin:10px 0; }
+    #editRichAbstract:empty::before { content: attr(data-placeholder); color: rgba(210,220,240,0.3); pointer-events: none; }
+    #editRichAbstract h2 { font-size:1.25em; font-weight:700; color:#64B5F6; margin:10px 0 4px; }
+    #editRichAbstract h3 { font-size:1.05em; font-weight:600; color:#90CAF9; margin:8px 0 3px; }
+    #editRichAbstract blockquote { border-left:3px solid #1565C0; margin:8px 0; padding:6px 12px; background:rgba(21,101,192,0.08); color:rgba(210,220,240,0.7); font-style:italic; border-radius:0 4px 4px 0; }
+    #editRichAbstract hr { border:none; border-top:1px solid rgba(21,101,192,0.4); margin:10px 0; }
   </style>
 </head>
 <body>
@@ -1213,7 +1272,7 @@
     <div class="sidebar">
       <h2>📋 Navigation</h2>
       <div class="tab-list">
-        <div class="tab-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <div class="tab-item" data-tab="dashboard" onclick="switchTab('dashboard')">
           <span>📊</span> Dashboard
         </div>
         <div class="tab-item" data-tab="upload" onclick="switchTab('upload')">
@@ -1250,10 +1309,22 @@
       </div>
     </div>
 
+    <!-- Restore saved tab before page renders (prevents flash) -->
+    <script>
+      (function() {
+        const savedTab = localStorage.getItem('papersManager_activeTab') || 'dashboard';
+        // Activate the appropriate tab
+        const tabBtn = document.querySelector(`[data-tab="${savedTab}"]`);
+        const tabContent = document.getElementById(savedTab + '-tab');
+        if (tabBtn) tabBtn.classList.add('active');
+        if (tabContent) tabContent.classList.add('active');
+      })();
+    </script>
+
     <!-- Main Content -->
     <div class="main-content">
       <!-- Dashboard Tab -->
-      <div id="dashboard-tab" class="tab-content active">
+      <div id="dashboard-tab" class="tab-content">
         <div class="content-header">
           <h2>📊 Dashboard Overview</h2>
           <p>Quick statistics and insights about your research papers collection</p>
@@ -1276,6 +1347,98 @@
             <p>⬇️ Total Downloads</p>
           </div>
         </div>
+
+        <!-- User Guidelines Section -->
+        <div style="margin-top: 40px; padding: 30px; background: rgba(21,101,192,0.08); border: 2px solid rgba(21,101,192,0.25); border-radius: 12px;">
+          <h3 style="color: #64B5F6; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-book-open"></i> 📘 User Guide - How to Use This Manager
+          </h3>
+          
+          <div style="display: grid; gap: 25px;">
+            <!-- Upload Papers -->
+            <div style="padding: 20px; background: rgba(0,0,0,0.3); border-left: 4px solid #42A5F5; border-radius: 8px;">
+              <h4 style="color: #90CAF9; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-upload"></i> 1. Upload Research Papers
+              </h4>
+              <ul style="color: rgba(255,255,255,0.8); line-height: 1.8; padding-left: 20px;">
+                <li>Click <strong>"📤 Upload Paper"</strong> tab from the sidebar</li>
+                <li>Fill in paper details: Title, Authors, Institution, Abstract</li>
+                <li>Select Category & Subcategory from hierarchical dropdown</li>
+                <li>Add keywords, publication year, journal name</li>
+                <li>Upload PDF file (optional: DOI link, citations count)</li>
+                <li>Use <strong>Rich Text Editor</strong> for formatting abstract with headings, lists, and quotes</li>
+                <li>Click <strong>Template Buttons</strong> (Research/Review/Survey) for pre-formatted abstract structures</li>
+              </ul>
+            </div>
+
+            <!-- Manage Papers -->
+            <div style="padding: 20px; background: rgba(0,0,0,0.3); border-left: 4px solid #66BB6A; border-radius: 8px;">
+              <h4 style="color: #A5D6A7; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-tasks"></i> 2. Manage Your Collection
+              </h4>
+              <ul style="color: rgba(255,255,255,0.8); line-height: 1.8; padding-left: 20px;">
+                <li>Go to <strong>"📚 Manage Papers"</strong> tab to view all papers</li>
+                <li><strong>Search & Filter:</strong> Use search bar, category, year, language, date range filters</li>
+                <li><strong>Sort Options:</strong> Sort by newest/oldest, title, most cited, most downloaded</li>
+                <li><strong>Bulk Operations:</strong> Select multiple papers using checkboxes</li>
+                <li>Click <strong>"✅ Select All"</strong> to select all visible papers</li>
+                <li>Use <strong>"🗑️ Delete Selected"</strong> to remove multiple papers at once</li>
+                <li><strong>Edit/View:</strong> Click on any paper card to edit details or view full information</li>
+                <li><strong>Download PDF:</strong> Click PDF icon on paper card to download</li>
+              </ul>
+            </div>
+
+            <!-- Statistics -->
+            <div style="padding: 20px; background: rgba(0,0,0,0.3); border-left: 4px solid #FFA726; border-radius: 8px;">
+              <h4 style="color: #FFCC80; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-chart-bar"></i> 3. View Statistics & Analytics
+              </h4>
+              <ul style="color: rgba(255,255,255,0.8); line-height: 1.8; padding-left: 20px;">
+                <li>Navigate to <strong>"📈 Statistics"</strong> tab for detailed analytics</li>
+                <li><strong>Papers by Category:</strong> See distribution across research fields</li>
+                <li><strong>Papers by Year:</strong> Track publications timeline</li>
+                <li><strong>Language Breakdown:</strong> View papers in English, বাংলা, हिंदी</li>
+                <li><strong>Top Authors:</strong> Most productive authors based on paper count</li>
+                <li><strong>Most Cited:</strong> Highest impact papers by citations</li>
+                <li>Statistics auto-update when you add/edit/delete papers</li>
+              </ul>
+            </div>
+
+            <!-- JSON Editor -->
+            <div style="padding: 20px; background: rgba(0,0,0,0.3); border-left: 4px solid #EF5350; border-radius: 8px;">
+              <h4 style="color: #EF9A9A; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-code"></i> 4. Advanced: JSON Editor
+              </h4>
+              <ul style="color: rgba(255,255,255,0.8); line-height: 1.8; padding-left: 20px;">
+                <li><strong>⚠️ Advanced Users Only:</strong> Direct editing of papers.json database</li>
+                <li>Click <strong>"🔧 JSON Editor"</strong> tab to access</li>
+                <li><strong>Validate:</strong> Check JSON syntax before saving (click ✓ Validate JSON)</li>
+                <li><strong>Format:</strong> Auto-format JSON with proper indentation</li>
+                <li><strong>Backup:</strong> Always create backup before manual edits</li>
+                <li>Edit category groups, subcategories, or paper metadata</li>
+                <li><strong>Reload:</strong> Discard changes and reload original data</li>
+                <li>Click <strong>"💾 Save Changes"</strong> when done (validates automatically)</li>
+              </ul>
+            </div>
+
+            <!-- Tips & Best Practices -->
+            <div style="padding: 20px; background: linear-gradient(135deg, rgba(156,39,176,0.15), rgba(233,30,99,0.15)); border: 1px solid rgba(156,39,176,0.3); border-radius: 8px;">
+              <h4 style="color: #CE93D8; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-lightbulb"></i> 💡 Pro Tips & Best Practices
+              </h4>
+              <ul style="color: rgba(255,255,255,0.85); line-height: 1.8; padding-left: 20px;">
+                <li><strong>Rich Abstracts:</strong> Use formatting (bold, italic, headings) for better readability</li>
+                <li><strong>Keywords:</strong> Add 3-7 relevant keywords for better searchability</li>
+                <li><strong>DOI Links:</strong> Include DOI for academic credibility and citation tracking</li>
+                <li><strong>PDF Organization:</strong> Store PDFs in <code style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 3px;">Content Storage/research-papers/</code> folder</li>
+                <li><strong>Consistent Naming:</strong> Use format: <code style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 3px;">Author_Year_Title.pdf</code></li>
+                <li><strong>Regular Updates:</strong> Keep citation counts and download stats current</li>
+                <li><strong>Backup:</strong> Periodically save papers.json file externally</li>
+                <li><strong>Categories:</strong> Choose most specific subcategory for accurate organization</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Upload Tab -->
@@ -1290,11 +1453,12 @@
               <label>📁 Category *</label>
               <input type="text" id="categorySearch" placeholder="🔍 Type to search categories..." 
                      style="margin-bottom: 8px; border: 2px solid #1565C0; background: rgba(21, 101, 192, 0.05);" 
-                     oninput="filterCategorySelect()">
-              <select id="category" required size="5" style="height: 120px;">
+                     oninput="filterCategorySelect()"
+                     onfocus="expandCategorySelect()">
+              <select id="category" required size="8" style="height: 280px;" onchange="onPaperCategorySelected()">
                 <option value="">Select category...</option>
               </select>
-              <small style="color: #444; display: block; margin-top: 5px;">💡 Use search box above to filter categories</small>
+              <small id="categoryCounter" style="color: #444; display: block; margin-top: 5px;">💡 Use search box to filter · click to select</small>
             </div>
             <div class="form-group">
               <label>📊 Research Field *</label>
@@ -1323,7 +1487,102 @@
 
           <div class="form-group">
             <label>📄 Abstract/Summary *</label>
-            <textarea id="abstract" placeholder="Brief abstract or summary of the research paper..." rows="5" required></textarea>
+            <input type="hidden" id="abstract">
+            <div style="display:grid; grid-template-columns:1fr 220px; gap:14px; align-items:start;">
+              <div>
+                <!-- Template Buttons -->
+                <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                  <button type="button" onclick="insertPaperTemplate('add', 'research')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(21,101,192,0.25)'" onmouseout="this.style.background='rgba(21,101,192,0.15)'" title="Research paper abstract template">🔬 Research Template</button>
+                  <button type="button" onclick="insertPaperTemplate('add', 'review')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(21,101,192,0.25)'" onmouseout="this.style.background='rgba(21,101,192,0.15)'" title="Review paper abstract template">📚 Review Template</button>
+                  <button type="button" onclick="insertPaperTemplate('add', 'survey')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(21,101,192,0.25)'" onmouseout="this.style.background='rgba(21,101,192,0.15)'" title="Survey paper abstract template">📋 Survey Template</button>
+                </div>
+                <!-- Abstract Toolbar -->
+                <div onmousedown="event.preventDefault()" style="background:rgba(21,101,192,0.10); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(21,101,192,0.3); border-bottom:2px solid #1565C0; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                  <!-- Row: Headings -->
+                  <button type="button" onclick="insertAbstractHeading('H2')" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+                  <button type="button" onclick="insertAbstractHeading('H3')" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+                  <button type="button" onclick="insertAbstractHeading('P')" style="padding:4px 9px; background:rgba(21,101,192,0.25); color:rgba(255,255,255,0.7); border:1px solid rgba(21,101,192,0.3); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Text style -->
+                  <button type="button" onclick="document.execCommand('bold'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:14px;" title="Bold"><strong>B</strong></button>
+                  <button type="button" onclick="document.execCommand('italic'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:14px;" title="Italic"><em>I</em></button>
+                  <button type="button" onclick="document.execCommand('underline'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:14px;" title="Underline">U</button>
+                  <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; text-decoration:line-through; font-size:13px;" title="Strikethrough">S̶</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Superscript / Subscript -->
+                  <button type="button" onclick="document.execCommand('superscript'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Superscript (x², citations)">x²</button>
+                  <button type="button" onclick="document.execCommand('subscript'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Subscript (CO₂, H₂O)">x₂</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Lists + Indent -->
+                  <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Bullet List">• List</button>
+                  <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+                  <button type="button" onclick="document.execCommand('indent'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent (→)">→</button>
+                  <button type="button" onclick="document.execCommand('outdent'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent (←)">←</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Alignment -->
+                  <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Align Left">≡L</button>
+                  <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Align Center">≡C</button>
+                  <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Align Right">≡R</button>
+                  <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Justify">≡J</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Blockquote + HR -->
+                  <button type="button" onclick="insertAbstractBlockquote()" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+                  <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.25); color:rgba(255,255,255,0.7); border:1px solid rgba(21,101,192,0.3); border-radius:4px; cursor:pointer; font-size:12px;" title="Horizontal Rule">── HR</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Undo / Redo -->
+                  <button type="button" onclick="document.execCommand('undo'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.25); color:rgba(255,255,255,0.7); border:1px solid rgba(21,101,192,0.3); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+                  <button type="button" onclick="document.execCommand('redo'); document.getElementById('richAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.25); color:rgba(255,255,255,0.7); border:1px solid rgba(21,101,192,0.3); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+                  <div style="width:1px; height:22px; background:rgba(21,101,192,0.3);"></div>
+                  <!-- Color palette -->
+                  <div style="position:relative;">
+                    <button type="button" id="abstractColorBtn" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Text Color">🎨 Color</button>
+                    <div id="abstractColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:36px; left:0; background:rgba(0,5,20,0.97); border:2px solid rgba(21,101,192,0.5); border-radius:6px; padding:8px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,28px); gap:5px;">
+                      <div onclick="setPaperTextColor('#1565C0')" style="width:28px;height:28px;background:#1565C0;border-radius:4px;cursor:pointer;" title="Blue"></div>
+                      <div onclick="setPaperTextColor('#42A5F5')" style="width:28px;height:28px;background:#42A5F5;border-radius:4px;cursor:pointer;" title="Light Blue"></div>
+                      <div onclick="setPaperTextColor('#4CAF50')" style="width:28px;height:28px;background:#4CAF50;border-radius:4px;cursor:pointer;" title="Green"></div>
+                      <div onclick="setPaperTextColor('#FF9800')" style="width:28px;height:28px;background:#FF9800;border-radius:4px;cursor:pointer;" title="Orange"></div>
+                      <div onclick="setPaperTextColor('#f44336')" style="width:28px;height:28px;background:#f44336;border-radius:4px;cursor:pointer;" title="Red"></div>
+                      <div onclick="setPaperTextColor('#9C27B0')" style="width:28px;height:28px;background:#9C27B0;border-radius:4px;cursor:pointer;" title="Purple"></div>
+                      <div onclick="setPaperTextColor('#00BCD4')" style="width:28px;height:28px;background:#00BCD4;border-radius:4px;cursor:pointer;" title="Cyan"></div>
+                      <div onclick="setPaperTextColor('#FFB74D')" style="width:28px;height:28px;background:#FFB74D;border-radius:4px;cursor:pointer;" title="Amber"></div>
+                      <div onclick="setPaperTextColor('#ffffff')" style="width:28px;height:28px;background:#fff;border-radius:4px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                      <div onclick="setPaperTextColor('#aaaaaa')" style="width:28px;height:28px;background:#aaa;border-radius:4px;cursor:pointer;" title="Gray"></div>
+                    </div>
+                  </div>
+                  <!-- Clear + word count -->
+                  <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('richAbstract').focus();" style="padding:4px 8px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear Formatting">✖ Clear</button>
+                  <span id="abstractWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+                </div>
+                <!-- Rich Text Area -->
+                <div id="richAbstract" contenteditable="true"
+                  data-placeholder="Write a concise abstract of the research paper..."
+                  style="min-height:280px; padding:12px; border:1px solid rgba(21,101,192,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(0,5,20,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word;"
+                  oninput="document.getElementById('abstract').value=this.innerHTML; updateAbstractWordCount();"
+                  onblur="document.getElementById('abstract').value=this.innerHTML;"
+                  onclick="this.focus();"></div>
+                <small style="color:rgba(255,255,255,0.35); display:block; margin-top:6px;">💡 150–300 words recommended for a research abstract.</small>
+              </div>
+              <div style="background:rgba(21,101,192,0.06); padding:12px; border-radius:8px; border-left:3px solid rgba(21,101,192,0.5); font-size:12px; color:rgba(255,255,255,0.45); line-height:1.8;">
+                <strong style="color:rgba(21,101,192,0.9);">✏️ Formatting Tips:</strong>
+                <ul style="margin:8px 0 0 14px; padding:0;">
+                  <li><strong style="color:#fff;">H2/H3</strong> – section headings</li>
+                  <li><strong style="color:#fff;">Bold</strong> – key findings</li>
+                  <li><em style="color:#fff;">Italic</em> – technical terms</li>
+                  <li><u style="color:#fff;">Underline</u> – highlight</li>
+                  <li><s style="color:#fff;">Strike</s> – removed info</li>
+                  <li>• List / 1. List – enumerate</li>
+                  <li>→ / ← – indent nested lists</li>
+                  <li>≡L/C/R/J – text alignment</li>
+                  <li>❝ Quote – cite sources</li>
+                  <li>── HR – section divider</li>
+                  <li>↩ / ↪ – undo / redo</li>
+                  <li>x² – m², citations¹</li>
+                  <li>x₂ – CO₂, H₂O</li>
+                  <li>🎨 Colors sparingly</li>
+                  <li>150–300 words ideal</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div class="form-row">
@@ -1385,9 +1644,21 @@
 
       <!-- Manage Tab -->
       <div id="manage-tab" class="tab-content">
-        <div class="content-header">
-          <h2>📚 Manage Research Papers</h2>
-          <p>View, edit, and delete research papers</p>
+        <div class="content-header" style="background: linear-gradient(135deg, rgba(21,101,192,0.1), rgba(66,165,245,0.05)); padding: 25px; border-radius: 12px; border: 2px solid rgba(21,101,192,0.2); margin-bottom: 25px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div>
+              <h2 style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <i class="fas fa-books" style="color: #42A5F5;"></i>
+                📚 Manage Research Papers
+              </h2>
+              <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem;">View, search, filter, edit, and organize your research papers collection</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span id="papers-count-display" style="padding: 8px 16px; background: rgba(21,101,192,0.2); border-radius: 6px; color: #90CAF9; font-weight: 600; font-size: 0.9rem;">
+                <i class="fas fa-file-alt"></i> 0 Papers
+              </span>
+            </div>
+          </div>
         </div>
         
         <!-- Bulk Operations Toolbar -->
@@ -1463,20 +1734,31 @@
         <!-- Papers Grid -->
         <div id="papers-grid" class="papers-grid"></div>
         
-        <div id="no-results" class="no-results">
-          <p>🔍 No research papers found</p>
-          <small>Try adjusting your filters or upload a new paper</small>
+        <div id="no-results" class="no-results" style="padding: 60px 30px; text-align: center; background: rgba(0,0,0,0.2); border-radius: 12px; margin: 30px 0;">
+          <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.4;">📚</div>
+          <h3 style="color: #64B5F6; font-size: 1.5rem; margin-bottom: 12px;">No Research Papers Found</h3>
+          <p style="color: rgba(255,255,255,0.6); margin-bottom: 25px; line-height: 1.6;">
+            Your collection is empty or no papers match the current filters.
+          </p>
+          <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="switchTab('upload-tab')" style="padding: 12px 24px; background: linear-gradient(135deg, #42A5F5, #1976D2); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+              <i class="fas fa-upload"></i> Upload First Paper
+            </button>
+            <button onclick="clearAllFilters()" style="padding: 12px 24px; background: rgba(255,255,255,0.1); color: #90CAF9; border: 1px solid rgba(144,202,249,0.3); border-radius: 8px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+              <i class="fas fa-filter-circle-xmark"></i> Clear All Filters
+            </button>
+          </div>
         </div>
 
         <!-- Pagination -->
-        <div id="pagination" class="pagination">
-          <button onclick="prevPage()" id="prev-btn">← Previous</button>
-          <span id="page-info" style="color: #333;">Page 1 of 1</span>
-          <button onclick="nextPage()" id="next-btn">Next →</button>
+        <div id="pagination" class="pagination-controls">
+          <button onclick="prevPage()" id="prev-btn"><i class="fas fa-chevron-left"></i> Previous</button>
+          <span id="page-info">Page 1 of 1</span>
+          <button onclick="nextPage()" id="next-btn">Next <i class="fas fa-chevron-right"></i></button>
         </div>
 
         <!-- Progress Bar for Bulk Delete -->
-        <div id="bulk-progress" class="progress-container">
+        <div id="bulk-progress" class="progress">
           <div class="progress-bar">
             <div id="bulk-progress-fill" class="progress-fill"></div>
           </div>
@@ -1491,29 +1773,85 @@
           <p>Comprehensive analysis of your research papers collection</p>
         </div>
 
+        <!-- Statistics Overview Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 35px;">
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(21,101,192,0.15), rgba(21,101,192,0.05));">
+            <h3 id="stats-total-papers" style="color: #64B5F6;">0</h3>
+            <p style="color: rgba(255,255,255,0.7);">📄 Total Papers</p>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.05));">
+            <h3 id="stats-total-categories" style="color: #81C784;">0</h3>
+            <p style="color: rgba(255,255,255,0.7);">📚 Categories</p>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(255,167,38,0.15), rgba(255,167,38,0.05));">
+            <h3 id="stats-total-authors" style="color: #FFB74D;">0</h3>
+            <p style="color: rgba(255,255,255,0.7);">👥 Authors</p>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(233,30,99,0.15), rgba(233,30,99,0.05));">
+            <h3 id="stats-avg-citations" style="color: #F48FB1;">0</h3>
+            <p style="color: rgba(255,255,255,0.7);">📊 Avg Citations</p>
+          </div>
+        </div>
+
+        <!-- Statistics Sections -->
         <div class="stats-section">
-          <h3>📊 Papers by Category</h3>
-          <div id="category-stats" class="stats-breakdown"></div>
+          <h3><i class="fas fa-folder-open"></i> 📊 Papers by Category</h3>
+          <div id="category-stats" class="stats-breakdown">
+            <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+              <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+              <p>No data available yet. Upload papers to see statistics.</p>
+            </div>
+          </div>
         </div>
 
         <div class="stats-section">
-          <h3>📅 Papers by Year</h3>
-          <div id="year-stats" class="stats-breakdown"></div>
+          <h3><i class="fas fa-calendar-alt"></i> 📅 Papers by Year</h3>
+          <div id="year-stats" class="stats-breakdown">
+            <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+              <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+              <p>No data available yet. Upload papers to see timeline.</p>
+            </div>
+          </div>
         </div>
 
         <div class="stats-section">
-          <h3>🌐 Papers by Language</h3>
-          <div id="language-stats" class="stats-breakdown"></div>
+          <h3><i class="fas fa-globe"></i> 🌐 Papers by Language</h3>
+          <div id="language-stats" class="stats-breakdown">
+            <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+              <i class="fas fa-language" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+              <p>No data available yet. Upload papers to see language distribution.</p>
+            </div>
+          </div>
         </div>
 
         <div class="stats-section">
-          <h3>👥 Top 10 Most Productive Authors</h3>
-          <div id="author-stats" class="stats-breakdown"></div>
+          <h3><i class="fas fa-users"></i> 👥 Top 10 Most Productive Authors</h3>
+          <div id="author-stats" class="stats-breakdown">
+            <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+              <i class="fas fa-user-graduate" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+              <p>No authors data yet. Upload papers with author information.</p>
+            </div>
+          </div>
         </div>
 
         <div class="stats-section">
-          <h3>📑 Top 10 Most Cited Papers</h3>
-          <div id="citations-stats" class="stats-breakdown"></div>
+          <h3><i class="fas fa-quote-right"></i> 📑 Top 10 Most Cited Papers</h3>
+          <div id="citations-stats" class="stats-breakdown">
+            <div style="padding: 40px; text-align: center; color: rgba(255,255,255,0.4);">
+              <i class="fas fa-trophy" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+              <p>No citation data yet. Add papers with citation counts to see top cited works.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Help -->
+        <div style="margin-top: 30px; padding: 20px; background: rgba(21,101,192,0.08); border: 1px solid rgba(21,101,192,0.2); border-radius: 8px;">
+          <h4 style="color: #64B5F6; margin-bottom: 12px;"><i class="fas fa-info-circle"></i> About Statistics</h4>
+          <p style="color: rgba(255,255,255,0.7); line-height: 1.7;">
+            Statistics automatically update when you add, edit, or delete papers. Data includes category distribution, publication timeline, 
+            language breakdown, author productivity rankings, and citation impact analysis. Use this section to identify research trends, 
+            track prolific authors, and measure collection growth over time.
+          </p>
         </div>
       </div>
 
@@ -1521,7 +1859,27 @@
       <div id="json-editor-tab" class="tab-content">
         <div class="content-header">
           <h2>🔧 JSON Editor</h2>
-          <p style="color: #444;">Advanced editing of papers.json file</p>
+          <p>Advanced editing of papers.json database file</p>
+        </div>
+        
+        <!-- JSON Editor Warning & Instructions -->
+        <div style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, rgba(255,152,0,0.12), rgba(255,87,34,0.08)); border: 2px solid rgba(255,152,0,0.3); border-radius: 10px;">
+          <h3 style="color: #FFB74D; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-exclamation-triangle"></i> ⚠️ Advanced Users Only
+          </h3>
+          <div style="color: rgba(255,255,255,0.85); line-height: 1.8;">
+            <p style="margin-bottom: 12px;"><strong>What is this?</strong> This editor provides direct access to the <code style="background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px;">papers.json</code> file that stores all your research papers data.</p>
+            <p style="margin-bottom: 15px;"><strong>⚠️ Warning:</strong> Manual editing can break your database if JSON syntax is incorrect. Always validate before saving!</p>
+            <ul style="padding-left: 20px; margin-bottom: 12px;">
+              <li><strong>✓ Validate JSON:</strong> Checks for syntax errors (commas, brackets, quotes)</li>
+              <li><strong>🎨 Format JSON:</strong> Auto-indents and beautifies code</li>
+              <li><strong>🔄 Reload Original:</strong> Discards all changes and reloads from file</li>
+              <li><strong>💾 Save Changes:</strong> Writes to file (validates automatically)</li>
+            </ul>
+            <p style="margin-top: 15px; padding: 12px; background: rgba(76,175,80,0.15); border-left: 3px solid #66BB6A; border-radius: 4px;">
+              <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Use the regular Upload/Manage tabs for safer editing. This editor is best for bulk operations, category structure changes, or database migrations.
+            </p>
+          </div>
         </div>
         
         <div class="json-editor-container">
@@ -1590,7 +1948,66 @@
 
         <div class="form-group">
           <label>📄 Abstract</label>
-          <textarea id="edit-abstract" rows="4" required></textarea>
+          <input type="hidden" id="edit-abstract">
+          <!-- Template Buttons -->
+          <div style="margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" onclick="insertPaperTemplate('edit', 'research')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Research template">🔬 Research</button>
+            <button type="button" onclick="insertPaperTemplate('edit', 'review')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Review template">📚 Review</button>
+            <button type="button" onclick="insertPaperTemplate('edit', 'survey')" style="padding:6px 12px; background:rgba(21,101,192,0.15); color:#1565C0; border:1px solid rgba(21,101,192,0.3); border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;" title="Survey template">📋 Survey</button>
+          </div>
+          <!-- Toolbar -->
+          <div onmousedown="event.preventDefault()" style="background:rgba(21,101,192,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(21,101,192,0.3); border-bottom:2px solid #1565C0; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+            <button type="button" onclick="insertEditAbstractHeading('H2')" style="padding:4px 9px; background:#1565C0; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+            <button type="button" onclick="insertEditAbstractHeading('H3')" style="padding:4px 9px; background:#1565C0; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+            <button type="button" onclick="insertEditAbstractHeading('P')" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:rgba(210,220,240,0.7); border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="document.execCommand('bold'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="document.execCommand('italic'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+            <button type="button" onclick="document.execCommand('underline'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+            <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="document.execCommand('superscript'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+            <button type="button" onclick="document.execCommand('subscript'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+            <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+            <button type="button" onclick="document.execCommand('indent'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+            <button type="button" onclick="document.execCommand('outdent'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Left">≡L</button>
+            <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Center">≡C</button>
+            <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Right">≡R</button>
+            <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="insertEditAbstractBlockquote()" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+            <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="HR">── HR</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <button type="button" onclick="document.execCommand('undo'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+            <button type="button" onclick="document.execCommand('redo'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+            <div style="width:1px; height:20px; background:rgba(21,101,192,0.3);"></div>
+            <div style="position:relative;">
+              <button type="button" id="editAbstractColorBtn" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+              <div id="editAbstractColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(0,4,12,0.97); border:2px solid rgba(21,101,192,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                <div onclick="setEditAbstractColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                <div onclick="setEditAbstractColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                <div onclick="setEditAbstractColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                <div onclick="setEditAbstractColor('#64B5F6')" style="width:26px;height:26px;background:#64B5F6;border-radius:3px;cursor:pointer;" title="Light Blue"></div>
+                <div onclick="setEditAbstractColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                <div onclick="setEditAbstractColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                <div onclick="setEditAbstractColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                <div onclick="setEditAbstractColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                <div onclick="setEditAbstractColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                <div onclick="setEditAbstractColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+              </div>
+            </div>
+            <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('editRichAbstract').focus();" style="padding:4px 9px; background:rgba(21,101,192,0.35); color:#fff; border:1px solid rgba(21,101,192,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear">✖</button>
+            <span id="editAbstractWordCount" style="margin-left:auto; font-size:11px; color:rgba(210,220,240,0.4);">0 words</span>
+          </div>
+          <!-- Rich Text Editor -->
+          <div id="editRichAbstract" contenteditable="true" data-placeholder="Enter the paper abstract..."
+            style="min-height:200px; padding:12px; border:1px solid rgba(21,101,192,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(0,4,12,0.95); color:rgba(210,220,240,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+            oninput="updateEditAbstractWordCount();"
+            onclick="this.focus();"></div>
         </div>
 
         <div class="form-row">
@@ -1759,10 +2176,34 @@
     
     // Update category counter helper
     function updateCategoryCounter(message, color) {
-      const counter = document.querySelector('#categorySearch + select + small');
+      const counter = document.getElementById('categoryCounter');
       if (counter) {
         counter.textContent = `💡 ${message}`;
         counter.style.color = color;
+      }
+    }
+
+    // Reflect selected category in search box and collapse the list
+    function onPaperCategorySelected() {
+      const select = document.getElementById('category');
+      const searchInput = document.getElementById('categorySearch');
+      if (select && searchInput && select.value) {
+        searchInput.value = select.value;
+        filterCategorySelect();
+        // Collapse the listbox after selection
+        select.style.display = 'none';
+        updateCategoryCounter('✅ ' + select.value + ' · click search box to change', 'green');
+      }
+    }
+
+    // Expand the listbox when user focuses the search input
+    function expandCategorySelect() {
+      const select = document.getElementById('category');
+      const searchInput = document.getElementById('categorySearch');
+      if (select && select.style.display === 'none') {
+        select.style.display = '';
+        if (searchInput) searchInput.select(); // select all text so user can type new search
+        filterCategorySelect();
       }
     }
     
@@ -1773,52 +2214,40 @@
       const filter = searchInput.value.toLowerCase().trim();
       
       if (!filter) {
-        // Show all - restore original view
-        loadCategories();
+        // Show all options
+        Array.from(select.options).forEach(opt => opt.style.display = '');
+        updateCategoryCounter('Use search box to filter \u00b7 click to select', '#444');
         return;
       }
       
-      // Rebuild select with only matching categories, preserving groups
-      contentManager.loadContent('research-papers').then(data => {
-        select.innerHTML = '<option value="" style="font-weight: 600; color: #1565C0;">━━━ SELECT CATEGORY ━━━</option>';
-        
-        let totalMatches = 0;
-        let sectorsWithMatches = 0;
-        const sortedGroups = data.categoryGroups.sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        sortedGroups.forEach(group => {
-          const matchingCategories = group.categories.filter(cat => 
-            cat.toLowerCase().includes(filter)
-          );
-          
-          if (matchingCategories.length > 0) {
-            sectorsWithMatches++;
-            
-            // Group header
-            const groupHeader = document.createElement('option');
-            groupHeader.disabled = true;
-            groupHeader.style.cssText = 'font-weight: 700; color: #1565C0; background: rgba(21, 101, 192, 0.1); padding: 8px 5px;';
-            groupHeader.textContent = `${group.icon} ${group.name} (${matchingCategories.length})`;
-            select.appendChild(groupHeader);
-            
-            // Matching categories
-            matchingCategories.forEach(cat => {
-              const option = document.createElement('option');
-              option.value = cat;
-              option.textContent = `  ${cat}`;
-              option.style.paddingLeft = '15px';
-              select.appendChild(option);
-              totalMatches++;
-            });
-          }
-        });
-        
-        if (totalMatches === 0) {
-          updateCategoryCounter('No matches found', 'red');
+      // Show/hide matching options in place (no reload)
+      let totalMatches = 0;
+      let lastGroupHeader = null;
+      let lastGroupHasMatch = false;
+      
+      Array.from(select.options).forEach(opt => {
+        if (opt.disabled) {
+          // Group header — decide visibility after scanning children
+          if (lastGroupHeader) lastGroupHeader.style.display = lastGroupHasMatch ? '' : 'none';
+          lastGroupHeader = opt;
+          lastGroupHasMatch = false;
+          opt.style.display = 'none'; // tentatively hide
+        } else if (opt.value === '') {
+          opt.style.display = '';
         } else {
-          updateCategoryCounter(`${totalMatches} matches in ${sectorsWithMatches} sectors`, 'green');
+          const matches = opt.value.toLowerCase().includes(filter);
+          opt.style.display = matches ? '' : 'none';
+          if (matches) { lastGroupHasMatch = true; totalMatches++; }
         }
       });
+      // Handle last group header
+      if (lastGroupHeader) lastGroupHeader.style.display = lastGroupHasMatch ? '' : 'none';
+      
+      if (totalMatches === 0) {
+        updateCategoryCounter('No matches found', 'red');
+      } else {
+        updateCategoryCounter(`${totalMatches} match${totalMatches > 1 ? 'es' : ''} found`, 'green');
+      }
     }
     
     // Initialize
@@ -1830,7 +2259,194 @@
       loadFieldSuggestions();
       updateDashboard();
       renderPapers();
+
+      // Abstract color palette toggle
+      document.getElementById('abstractColorBtn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const p = document.getElementById('abstractColorPalette');
+        p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+      });
+      document.addEventListener('click', () => {
+        const p = document.getElementById('abstractColorPalette');
+        if (p) p.style.display = 'none';
+      });
+
+      // Keyboard: Tab = indent/outdent, Enter on empty LI = exit list (Word-style)
+      const richAbstract = document.getElementById('richAbstract');
+      if (richAbstract) {
+        richAbstract.addEventListener('keydown', function(e) {
+          // Tab: indent/outdent ONLY when cursor is inside a list item
+          if (e.key === 'Tab') {
+            e.preventDefault();
+            const sel = window.getSelection();
+            let node = sel?.anchorNode;
+            let inList = false;
+            while (node && node !== this) {
+              if (node.tagName === 'LI') { inList = true; break; }
+              node = node.parentElement;
+            }
+            if (inList) document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+            return;
+          }
+
+          // Enter on an empty list item → exit list (Word-style)
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+            const sel = window.getSelection();
+            if (!sel || !sel.rangeCount) return;
+            let node = sel.anchorNode;
+            let li = (node.nodeType === 3) ? node.parentElement : node;
+            while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+
+            if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+              e.preventDefault();
+              const list = li.parentElement; // UL or OL
+              // Check if this list is itself nested inside another LI
+              const parentLi = list?.parentElement?.closest('li');
+
+              if (parentLi) {
+                // Nested list: one Enter = go up one level (like Word)
+                document.execCommand('outdent');
+              } else {
+                // Top-level list: exit list, place cursor in a new paragraph after list
+                // Use <br> inside <p> — contenteditable standard empty paragraph;
+                // browser replaces <br> with typed text automatically, no cleanup needed
+                const newP = document.createElement('p');
+                newP.innerHTML = '<br>';
+                list.parentNode.insertBefore(newP, list.nextSibling);
+                li.remove();
+                if (!list.children.length) list.remove();
+                // Move cursor before the <br> (= start of empty paragraph)
+                const range = document.createRange();
+                range.setStartBefore(newP.firstChild);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        });
+      }
     });
+
+    function setPaperTextColor(color) {
+      // onmousedown=preventDefault on palette keeps editor focused, so selection is intact
+      document.execCommand('foreColor', false, color);
+      document.getElementById('richAbstract').focus();
+      document.getElementById('abstractColorPalette').style.display = 'none';
+    }
+
+    function insertPaperTemplate(modalType, type) {
+      const abstractField = modalType === 'add' ? document.getElementById('richAbstract') : document.getElementById('editRichAbstract');
+      const updateFunc = modalType === 'add' ? updateAbstractWordCount : updateEditAbstractWordCount;
+      
+      const templates = {
+        research: `<h2>🔬 Original Research</h2>
+<p><strong>Background:</strong> This research investigates <em>[research problem or gap in knowledge]</em>. Previous studies have shown <em>[existing knowledge]</em>, however <em>[limitation or gap this study addresses]</em>.</p>
+
+<h3>Methodology</h3>
+<p><strong>Approach:</strong> We employed <em>[research methods: experimental, computational, analytical, etc.]</em> to examine <em>[specific aspect]</em>.</p>
+<ul>
+  <li><strong>Dataset/Sample:</strong> [Description of data or subjects]</li>
+  <li><strong>Tools/Techniques:</strong> [Instruments, algorithms, frameworks used]</li>
+  <li><strong>Experimental Design:</strong> [Study structure and procedure]</li>
+</ul>
+
+<h3>Key Findings</h3>
+<ul>
+  <li><strong>Finding 1:</strong> [Primary result with significance]</li>
+  <li><strong>Finding 2:</strong> [Secondary result]</li>
+  <li><strong>Finding 3:</strong> [Additional discovery]</li>
+</ul>
+
+<h3>Conclusions & Implications</h3>
+<p>Our results demonstrate <strong>[main conclusion]</strong>. These findings have significant implications for <em>[practical applications or theoretical understanding]</em>. Future work should explore <em>[recommended next steps]</em>.</p>
+
+<blockquote>💡 <em>Keywords: [keyword1], [keyword2], [keyword3], [methodology], [application domain]</em></blockquote>`,
+
+        review: `<h2>📚 Literature Review</h2>
+<p>This review systematically examines <strong>[field or topic]</strong>, synthesizing findings from <em>[number]</em> studies published between <em>[year range]</em>.</p>
+
+<h3>Scope & Objectives</h3>
+<p><strong>Focus Area:</strong> [Specific domain or problem]</p>
+<p><strong>Review Goals:</strong></p>
+<ul>
+  <li>Synthesize current state of knowledge in [area]</li>
+  <li>Identify trends, patterns, and contradictions</li>
+  <li>Highlight research gaps and future directions</li>
+</ul>
+
+<h3>Literature Synthesis</h3>
+<p><strong>Theoretical Foundations:</strong> Research in this area is grounded in <em>[key theories or frameworks]</em>.</p>
+<p><strong>Methodological Approaches:</strong> Studies primarily employ <em>[common methods]</em>, though recent work has introduced <em>[emerging techniques]</em>.</p>
+<p><strong>Key Themes:</strong></p>
+<ul>
+  <li><strong>Theme 1:</strong> [Major finding or consensus in literature]</li>
+  <li><strong>Theme 2:</strong> [Another pattern or debate]</li>
+  <li><strong>Theme 3:</strong> [Emerging area or controversy]</li>
+</ul>
+
+<h3>Research Gaps & Future Directions</h3>
+<p>Despite substantial progress, several gaps remain: <em>[gap 1]</em>, <em>[gap 2]</em>, and <em>[gap 3]</em>. We recommend future research focus on <strong>[specific areas needing investigation]</strong>.</p>
+
+<blockquote>💡 <em>Keywords: literature review, [field], [subtopic 1], [subtopic 2], research synthesis</em></blockquote>`,
+
+        survey: `<h2>📋 Comprehensive Survey</h2>
+<p>This survey provides a comprehensive overview of <strong>[field or technology]</strong>, covering fundamental concepts, current methodologies, and emerging trends.</p>
+
+<h3>Survey Scope</h3>
+<p><strong>Coverage:</strong> [Breadth and depth of survey]</p>
+<p><strong>Organization:</strong> We structure this survey around <em>[organizing principle: chronological, thematic, methodological]</em>, examining:</p>
+<ul>
+  <li>Historical development and foundational work</li>
+  <li>Core concepts and theoretical frameworks</li>
+  <li>Current state-of-the-art approaches</li>
+  <li>Comparative analysis of techniques</li>
+  <li>Applications and case studies</li>
+</ul>
+
+<h3>Taxonomy & Classification</h3>
+<p>We present a <strong>taxonomy</strong> organizing approaches into:</p>
+<ul>
+  <li><strong>Category A:</strong> [Type/approach 1 with characteristics]</li>
+  <li><strong>Category B:</strong> [Type/approach 2 with characteristics]</li>
+  <li><strong>Category C:</strong> [Type/approach 3 with characteristics]</li>
+</ul>
+
+<h3>Comparative Analysis</h3>
+<p>We critically compare techniques based on <em>[criteria: performance, scalability, complexity, applicability]</em>. Our analysis reveals <strong>[key insights from comparison]</strong>.</p>
+
+<h3>Trends & Future Outlook</h3>
+<p>Emerging trends include <em>[trend 1]</em>, <em>[trend 2]</em>, and <em>[trend 3]</em>. The field is moving toward <strong>[future direction]</strong> with promising applications in <em>[domains]</em>.</p>
+
+<blockquote>💡 <em>Keywords: survey, [field], [method/tool], taxonomy, comparative analysis, trends</em></blockquote>`
+      };
+      
+      if (templates[type]) {
+        abstractField.innerHTML = templates[type];
+        updateFunc();
+        abstractField.focus();
+      }
+    }
+
+    function insertAbstractHeading(tag) {
+      document.getElementById('richAbstract').focus();
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+
+    function insertAbstractBlockquote() {
+      document.getElementById('richAbstract').focus();
+      document.execCommand('formatBlock', false, '<blockquote>');
+    }
+
+    function updateAbstractWordCount() {
+      const el = document.getElementById('richAbstract');
+      const counter = document.getElementById('abstractWordCount');
+      if (!el || !counter) return;
+      const text = el.innerText.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      counter.textContent = words + ' words';
+      counter.style.color = words < 100 ? '#FF9800' : words > 400 ? '#f44336' : '#4CAF50';
+    }
 
     // Load papers from JSON
     async function loadPapers() {
@@ -2000,7 +2616,10 @@
       const title = document.getElementById('title').value.trim();
       const authorsInput = document.getElementById('authors').value.trim();
       const institution = document.getElementById('institution').value.trim();
-      const abstract = document.getElementById('abstract').value.trim();
+      const abstract = (document.getElementById('richAbstract')?.innerText || '').trim();
+      const abstractHTML = document.getElementById('richAbstract')?.innerHTML || '';
+      // Sync to hidden input
+      document.getElementById('abstract').value = abstractHTML;
       const downloadUrl = document.getElementById('downloadUrl').value.trim();
       const field = document.getElementById('field').value.trim();
       
@@ -2033,7 +2652,7 @@
         title: title,
         authors: authors,
         institution: institution,
-        abstract: abstract,
+        abstract: abstractHTML,
         year: parseInt(document.getElementById('year').value) || new Date().getFullYear(),
         journal: document.getElementById('journal').value.trim(),
         doi: document.getElementById('doi').value.trim() || '',
@@ -2133,6 +2752,25 @@
       renderPapers();
     }
     
+    // Clear all filters
+    function clearAllFilters() {
+      document.getElementById('search-input').value = '';
+      const categoryFilter = document.getElementById('filter-category');
+      if (categoryFilter) categoryFilter.value = '';
+      const subcategoryFilter = document.getElementById('filter-subcategory');
+      if (subcategoryFilter) subcategoryFilter.value = '';
+      const yearFilter = document.getElementById('filter-year');
+      if (yearFilter) yearFilter.value = '';
+      document.getElementById('filter-language').value = '';
+      const dateFrom = document.getElementById('filter-date-from');
+      if (dateFrom) dateFrom.value = '';
+      const dateTo = document.getElementById('filter-date-to');
+      if (dateTo) dateTo.value = '';
+      document.getElementById('sort-by').value = 'newest';
+      
+      applyFilters();
+    }
+    
     function updateSubcategoriesPapers() {
       const category = document.getElementById('filter-category')?.value || '';
       const subcategorySelect = document.getElementById('filter-subcategory');
@@ -2162,6 +2800,12 @@
     function renderPapers() {
       const grid = document.getElementById('papers-grid');
       const noResults = document.getElementById('no-results');
+      
+      // Update papers count display
+      const countDisplay = document.getElementById('papers-count-display');
+      if (countDisplay) {
+        countDisplay.innerHTML = `<i class="fas fa-file-alt"></i> ${filteredPapers.length} Paper${filteredPapers.length !== 1 ? 's' : ''}`;
+      }
       
       if (filteredPapers.length === 0) {
         grid.innerHTML = '';
@@ -2389,7 +3033,7 @@
       document.getElementById('edit-title').value = paper.title;
       document.getElementById('edit-authors').value = (paper.authors || []).join(', ');
       document.getElementById('edit-institution').value = paper.institution || '';
-      document.getElementById('edit-abstract').value = paper.abstract || '';
+      document.getElementById('editRichAbstract').innerHTML = paper.abstract || '';
       document.getElementById('edit-year').value = paper.year || '';
       document.getElementById('edit-journal').value = paper.journal || '';
       document.getElementById('edit-doi').value = paper.doi || '';
@@ -2529,7 +3173,7 @@
         title: document.getElementById('edit-title').value.trim(),
         authors: authorsInput.split(',').map(a => a.trim()).filter(a => a),
         institution: document.getElementById('edit-institution').value.trim(),
-        abstract: document.getElementById('edit-abstract').value.trim(),
+        abstract: document.getElementById('editRichAbstract')?.innerHTML || '',
         year: parseInt(document.getElementById('edit-year').value) || new Date().getFullYear(),
         journal: document.getElementById('edit-journal').value.trim(),
         doi: document.getElementById('edit-doi').value.trim(),
@@ -2557,6 +3201,32 @@
     
     // Update statistics
     function updateStatistics() {
+      // Populate overview statistics cards
+      const totalPapers = papersData.papers.length;
+      const uniqueCategories = new Set(papersData.papers.map(p => p.category)).size;
+      const uniqueAuthors = new Set();
+      let totalCitations = 0;
+      
+      papersData.papers.forEach(paper => {
+        if (paper.authors && Array.isArray(paper.authors)) {
+          paper.authors.forEach(author => uniqueAuthors.add(author));
+        }
+        totalCitations += (paper.citations || 0);
+      });
+      
+      const avgCitations = totalPapers > 0 ? (totalCitations / totalPapers).toFixed(1) : 0;
+      
+      // Update overview cards
+      const totalEl = document.getElementById('stats-total-papers');
+      const categoriesEl = document.getElementById('stats-total-categories');
+      const authorsEl = document.getElementById('stats-total-authors');
+      const avgEl = document.getElementById('stats-avg-citations');
+      
+      if (totalEl) totalEl.textContent = totalPapers;
+      if (categoriesEl) categoriesEl.textContent = uniqueCategories;
+      if (authorsEl) authorsEl.textContent = uniqueAuthors.size;
+      if (avgEl) avgEl.textContent = avgCitations;
+
       // Category stats
       const categoryStats = {};
       papersData.papers.forEach(paper => {
@@ -2564,15 +3234,17 @@
       });
       
       const categoryStatsDiv = document.getElementById('category-stats');
-      categoryStatsDiv.innerHTML = '';
-      Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
-        categoryStatsDiv.innerHTML += `
-          <div class="stats-item">
-            <span class="stats-item-label">${cat}</span>
-            <span class="stats-item-value">${count}</span>
-          </div>
-        `;
-      });
+      if (Object.keys(categoryStats).length > 0) {
+        categoryStatsDiv.innerHTML = '';
+        Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+          categoryStatsDiv.innerHTML += `
+            <div class="stats-item">
+              <span class="stats-item-label">${cat}</span>
+              <span class="stats-item-value">${count}</span>
+            </div>
+          `;
+        });
+      }
       
       // Year stats
       const yearStats = {};
@@ -2582,15 +3254,17 @@
       });
       
       const yearStatsDiv = document.getElementById('year-stats');
-      yearStatsDiv.innerHTML = '';
-      Object.entries(yearStats).sort((a, b) => b[0] - a[0]).forEach(([year, count]) => {
-        yearStatsDiv.innerHTML += `
-          <div class="stats-item">
-            <span class="stats-item-label">${year}</span>
-            <span class="stats-item-value">${count}</span>
-          </div>
-        `;
-      });
+      if (Object.keys(yearStats).length > 0) {
+        yearStatsDiv.innerHTML = '';
+        Object.entries(yearStats).sort((a, b) => b[0] - a[0]).forEach(([year, count]) => {
+          yearStatsDiv.innerHTML += `
+            <div class="stats-item">
+              <span class="stats-item-label">${year}</span>
+              <span class="stats-item-value">${count}</span>
+            </div>
+          `;
+        });
+      }
       
       // Language stats
       const languageStats = {};
@@ -2600,15 +3274,17 @@
       });
       
       const languageStatsDiv = document.getElementById('language-stats');
-      languageStatsDiv.innerHTML = '';
-      Object.entries(languageStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
-        languageStatsDiv.innerHTML += `
-          <div class="stats-item">
-            <span class="stats-item-label">${lang}</span>
-            <span class="stats-item-value">${count}</span>
-          </div>
-        `;
-      });
+      if (Object.keys(languageStats).length > 0) {
+        languageStatsDiv.innerHTML = '';
+        Object.entries(languageStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
+          languageStatsDiv.innerHTML += `
+            <div class="stats-item">
+              <span class="stats-item-label">${lang}</span>
+              <span class="stats-item-value">${count}</span>
+            </div>
+          `;
+        });
+      }
       
       // Top authors
       const authorPaperCount = {};
@@ -2621,27 +3297,31 @@
       });
       
       const authorStatsDiv = document.getElementById('author-stats');
-      authorStatsDiv.innerHTML = '';
-      Object.entries(authorPaperCount).sort((a, b) => b[1] - a[1]).slice(0, 10).forEach(([author, count]) => {
-        authorStatsDiv.innerHTML += `
-          <div class="stats-item">
-            <span class="stats-item-label">${author}</span>
-            <span class="stats-item-value">${count}</span>
-          </div>
-        `;
-      });
+      if (Object.keys(authorPaperCount).length > 0) {
+        authorStatsDiv.innerHTML = '';
+        Object.entries(authorPaperCount).sort((a, b) => b[1] - a[1]).slice(0, 10).forEach(([author, count]) => {
+          authorStatsDiv.innerHTML += `
+            <div class="stats-item">
+              <span class="stats-item-label">${author}</span>
+              <span class="stats-item-value">${count}</span>
+            </div>
+          `;
+        });
+      }
       
       // Top cited papers
       const citationsStatsDiv = document.getElementById('citations-stats');
-      citationsStatsDiv.innerHTML = '';
-      [...papersData.papers].sort((a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 10).forEach(paper => {
-        citationsStatsDiv.innerHTML += `
-          <div class="stats-item">
-            <span class="stats-item-label">${paper.title.substring(0, 40)}...</span>
-            <span class="stats-item-value">${paper.citations || 0}</span>
-          </div>
-        `;
-      });
+      if (papersData.papers.some(p => p.citations && p.citations > 0)) {
+        citationsStatsDiv.innerHTML = '';
+        [...papersData.papers].sort((a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 10).forEach(paper => {
+          citationsStatsDiv.innerHTML += `
+            <div class="stats-item">
+              <span class="stats-item-label">${paper.title.substring(0, 40)}...</span>
+              <span class="stats-item-value">${paper.citations || 0}</span>
+            </div>
+          `;
+        });
+      }
     }
     
     // JSON Editor functions
@@ -2696,6 +3376,9 @@
       document.getElementById(tabName + '-tab').classList.add('active');
       document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
       
+      // Save current tab to localStorage for persistence
+      localStorage.setItem('papersManager_activeTab', tabName);
+      
       if (tabName === 'statistics') {
         updateStatistics();
       } else if (tabName === 'json-editor') {
@@ -2738,6 +3421,69 @@
         }
       }
     }
+
+    // Edit modal rich text editor
+    function setEditAbstractColor(color) {
+      document.execCommand('foreColor', false, color);
+      document.getElementById('editRichAbstract').focus();
+      document.getElementById('editAbstractColorPalette').style.display = 'none';
+    }
+    function insertEditAbstractHeading(tag) {
+      document.getElementById('editRichAbstract').focus();
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+    function insertEditAbstractBlockquote() {
+      document.getElementById('editRichAbstract').focus();
+      document.execCommand('formatBlock', false, '<blockquote>');
+    }
+    function updateEditAbstractWordCount() {
+      const el = document.getElementById('editRichAbstract');
+      const counter = document.getElementById('editAbstractWordCount');
+      if (!el || !counter) return;
+      const text = el.innerText.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      counter.textContent = words + ' words';
+      counter.style.color = words < 30 ? '#FF9800' : words > 300 ? '#f44336' : '#4CAF50';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('editAbstractColorBtn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const p = document.getElementById('editAbstractColorPalette');
+        p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.matches('#editAbstractColorBtn') && !e.target.closest('#editAbstractColorPalette')) {
+          const p = document.getElementById('editAbstractColorPalette');
+          if (p) p.style.display = 'none';
+        }
+      });
+      document.getElementById('editRichAbstract')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          const sel = window.getSelection();
+          let node = sel?.anchorNode; let inList = false;
+          while (node && node !== this) { if (node.tagName === 'LI') { inList = true; break; } node = node.parentElement; }
+          if (inList) { e.preventDefault(); document.execCommand(e.shiftKey ? 'outdent' : 'indent'); }
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount) return;
+          let node = sel.anchorNode;
+          let li = (node.nodeType === 3) ? node.parentElement : node;
+          while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+          if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+            e.preventDefault();
+            const list = li.parentElement;
+            const parentLi = list?.parentElement?.closest('li');
+            if (parentLi) { document.execCommand('outdent'); } else {
+              const newP = document.createElement('p'); newP.innerHTML = '<br>';
+              list.parentNode.insertBefore(newP, list.nextSibling);
+              li.remove(); if (!list.children.length) list.remove();
+              const range = document.createRange(); range.setStartBefore(newP.firstChild); range.collapse(true);
+              sel.removeAllRanges(); sel.addRange(range);
+            }
+          }
+        }
+      });
+    });
   </script>
   <script src="content-hub-sync.js"></script>
   <script src="../../Optimization/navbar-autohide.js"></script>

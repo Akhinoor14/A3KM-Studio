@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- Universal Mobile Optimization System -->
-    <link rel="stylesheet" href="../../../../Optimization/mobile-universal.css">
-    <script src="../../../../Optimization/mobile-universal.js" defer></script>
-    
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="../../../../images/favicon.svg">
     
@@ -77,6 +73,32 @@
       transition: transform 0.04s ease;
       box-shadow: 0 0 8px rgba(255,23,68,0.8);
     }
+    #tokenMissingBanner {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: linear-gradient(135deg, #1a0000 0%, #2d0000 50%, #1a0000 100%);
+      border-bottom: 2px solid #CC0000; box-shadow: 0 4px 24px rgba(204,0,0,0.4);
+      padding: 14px 24px; align-items: center; gap: 16px;
+      animation: bannerSlideDown 0.4s ease;
+    }
+    @keyframes bannerSlideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    #tokenMissingBanner .banner-icon { font-size: 22px; }
+    #tokenMissingBanner .banner-text { flex: 1; color: #fff; font-size: 14px; font-weight: 700; }
+    #tokenMissingBanner .banner-text span { color: #ff6666; font-weight: 900; }
+    #tokenMissingBanner .banner-btn {
+      padding: 8px 18px; background: #CC0000; color: #fff; border: none;
+      border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
+      transition: background 0.2s; text-decoration: none; white-space: nowrap;
+    }
+    #tokenMissingBanner .banner-btn:hover { background: #ff1a1a; }
+    #tokenMissingBanner .banner-close {
+      background: none; border: none; color: #999; font-size: 20px;
+      cursor: pointer; padding: 0 6px; line-height: 1; transition: color 0.2s;
+    }
+    #tokenMissingBanner .banner-close:hover { color: #fff; }
     .header {
       position: relative; z-index: 100;
       background: linear-gradient(160deg, rgba(30,0,0,0.98) 0%, rgba(10,0,0,0.97) 100%);
@@ -296,6 +318,12 @@
     .json-editor-area textarea { width: 100%; min-height: 500px; background: #0d0000; color: #d4d4d4; border: none; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; resize: vertical; }
     .json-editor-area textarea:focus { outline: none; }
     .json-toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    /* Rich text editor styles */
+    #richProjectDesc h2, #richProjectDesc h3 { color: #CC0000; margin-top: 12px; margin-bottom: 8px; }
+    #richProjectDesc blockquote { border-left: 3px solid #CC0000; padding-left: 12px; margin: 12px 0; color: rgba(255,255,255,0.7); background: rgba(204,0,0,0.08); padding: 10px 12px; border-radius: 4px; }
+    #richProjectDesc hr { border: none; border-top: 2px solid rgba(204,0,0,0.4); margin: 16px 0; }
+    #richProjectDesc:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.3); }
     .json-toolbar button { padding: 12px 20px; border: 1px solid; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
     .json-toolbar .btn-validate { background: rgba(204,0,0,0.1); border-color: var(--border-mid); color: var(--primary-red); }
     .json-toolbar .btn-validate:hover { background: var(--primary-red); color: white; }
@@ -334,6 +362,16 @@
   <!-- Neural Cursor -->
   <div class="neural-cursor" id="neuralCursor"></div>
   <div class="neural-cursor-dot" id="neuralCursorDot"></div>
+
+  <div id="tokenMissingBanner">
+    <div class="banner-icon">🔒</div>
+    <div class="banner-text">
+      <span>GitHub Token Not Found!</span> — This manager requires a token to upload/manage projects.
+    </div>
+    <a class="banner-btn" href="../../shared/command-center.html?tab=api">⚙️ Set Token</a>
+    <button class="banner-close" onclick="document.getElementById('tokenMissingBanner').style.display='none'" title="Dismiss">&times;</button>
+  </div>
+
     <!-- Fixed Top Navbar -->
     <div class="top-navbar">
         <div class="navbar-content">
@@ -377,17 +415,19 @@
             </div>
 
             <nav class="sidebar-nav">
-                <div class="tab-item active" onclick="switchTab('dashboard')">
-                    <i class="fas fa-chart-bar"></i> Dashboard
-                </div>
-                <div class="tab-item" onclick="switchTab('upload')">
-                    <i class="fas fa-plus-circle"></i> Add Project
-                </div>
-                <div class="tab-item" onclick="switchTab('manage')">
-                    <i class="fas fa-list"></i> Manage All
-                </div>
-                <div class="tab-item" onclick="switchTab('export')">
-                    <i class="fas fa-file-export"></i> Export / GitHub
+                <div class="tab-list">
+                    <div class="tab-item" onclick="switchTab('dashboard')">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </div>
+                    <div class="tab-item" onclick="switchTab('upload')">
+                        <i class="fas fa-plus-circle"></i> Add Project
+                    </div>
+                    <div class="tab-item" onclick="switchTab('manage')">
+                        <i class="fas fa-list"></i> Manage All
+                    </div>
+                    <div class="tab-item" onclick="switchTab('export')">
+                        <i class="fas fa-file-export"></i> Export / GitHub
+                    </div>
                 </div>
             </nav>
 
@@ -413,10 +453,22 @@
             </div>
         </div>
 
+        <!-- Restore saved tab before page renders (prevents flash) -->
+        <script>
+          (function() {
+            const savedTab = localStorage.getItem('programmingManager_activeTab') || 'dashboard';
+            // Activate the appropriate tab
+            const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+            const tabContent = document.getElementById(savedTab + 'Tab');
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
+          })();
+        </script>
+
         <!-- Main Content -->
         <div class="main-content">
             <!-- Dashboard Tab -->
-            <div id="dashboardTab" class="tab-content active">
+            <div id="dashboardTab" class="tab-content">
                 <div class="header">
                     <h2><i class="fas fa-chart-bar"></i> Dashboard</h2>
                     <button class="btn btn-secondary" onclick="loadContent()">
@@ -523,7 +575,71 @@
                         <h3><i class="fas fa-align-left"></i> Description</h3>
                         <div class="form-group">
                             <label class="form-label required">Problem Description</label>
-                            <textarea class="form-textarea" id="projectDescription" rows="4" placeholder="Describe the problem..." required></textarea>
+                            <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <button type="button" onclick="insertProgrammingTemplate('array')" style="padding: 5px 12px; background: rgba(204, 0, 0, 0.1); border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 4px; color: #CC0000; cursor: pointer; font-size: 0.85rem;">
+                                    <i class="fas fa-list"></i> Array/String
+                                </button>
+                                <button type="button" onclick="insertProgrammingTemplate('dp')" style="padding: 5px 12px; background: rgba(204, 0, 0, 0.1); border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 4px; color: #CC0000; cursor: pointer; font-size: 0.85rem;">
+                                    <i class="fas fa-calculator"></i> Dynamic Programming
+                                </button>
+                                <button type="button" onclick="insertProgrammingTemplate('graph')" style="padding: 5px 12px; background: rgba(204, 0, 0, 0.1); border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 4px; color: #CC0000; cursor: pointer; font-size: 0.85rem;">
+                                    <i class="fas fa-project-diagram"></i> Graph/Tree
+                                </button>
+                            </div>
+                            <input type="hidden" id="projectDescription">
+                            <!-- Toolbar -->
+                            <div onmousedown="event.preventDefault()" style="background:rgba(204,0,0,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(204,0,0,0.3); border-bottom:2px solid #CC0000; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                              <button type="button" onclick="insertProjectDescHeading('H2')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+                              <button type="button" onclick="insertProjectDescHeading('H3')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+                              <button type="button" onclick="insertProjectDescHeading('P')" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:rgba(255,255,255,0.7); border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="document.execCommand('bold'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+                              <button type="button" onclick="document.execCommand('italic'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+                              <button type="button" onclick="document.execCommand('underline'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+                              <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="document.execCommand('superscript'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+                              <button type="button" onclick="document.execCommand('subscript'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+                              <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+                              <button type="button" onclick="document.execCommand('indent'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+                              <button type="button" onclick="document.execCommand('outdent'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Left">≡L</button>
+                              <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Center">≡C</button>
+                              <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Right">≡R</button>
+                              <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="insertProjectDescBlockquote()" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+                              <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="HR">── HR</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <button type="button" onclick="document.execCommand('undo'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+                              <button type="button" onclick="document.execCommand('redo'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+                              <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                              <div style="position:relative;">
+                                <button type="button" id="projectDescColorBtn" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+                                <div id="projectDescColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(10,0,0,0.97); border:2px solid rgba(204,0,0,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                                  <div onclick="setProjectDescColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                                  <div onclick="setProjectDescColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                                  <div onclick="setProjectDescColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                                  <div onclick="setProjectDescColor('#00BCD4')" style="width:26px;height:26px;background:#00BCD4;border-radius:3px;cursor:pointer;" title="Cyan"></div>
+                                  <div onclick="setProjectDescColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                                  <div onclick="setProjectDescColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                                  <div onclick="setProjectDescColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                                  <div onclick="setProjectDescColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                                  <div onclick="setProjectDescColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                                  <div onclick="setProjectDescColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+                                </div>
+                              </div>
+                              <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear">✖</button>
+                              <span id="projectDescWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+                            </div>
+                            <!-- Rich Text Editor -->
+                            <div id="richProjectDesc" contenteditable="true" data-placeholder="Describe the problem..."
+                              style="min-height:200px; padding:12px; border:1px solid rgba(204,0,0,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(8,0,0,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+                              oninput="updateProjectDescWordCount();"
+                              onclick="this.focus();"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Approach / Solution</label>
@@ -780,6 +896,116 @@
         const CONTENT_TYPE = 'programming';
         const JSON_PATH = '../../../../Projects Code/programming/programs.json';
 
+        // Template insertion for programming problems
+        function insertProgrammingTemplate(type) {
+            const descField = document.getElementById('richProjectDesc');
+            const templates = {
+                array: `<h2>Problem Statement</h2>
+<p>Given an array/string, perform <em>[operation]</em> to achieve <em>[goal]</em>.</p>
+
+<h3>Constraints:</h3>
+<ul>
+  <li><code>1 ≤ n ≤ 10<sup>5</sup></code></li>
+  <li><code>1 ≤ arr[i] ≤ 10<sup>9</sup></code></li>
+  <li>Time Limit: <em>1 second</em></li>
+</ul>
+
+<h3>Example:</h3>
+<p><strong>Input:</strong> <code>[sample input]</code></p>
+<p><strong>Output:</strong> <code>[expected output]</code></p>
+<p><strong>Explanation:</strong> <em>[Explain the logic]</em></p>
+
+<blockquote>
+  <strong>Tip:</strong> Consider using <em>two pointers</em>, <em>sliding window</em>, or <em>hash map</em> approach.
+</blockquote>`,
+
+                dp: `<h2>Problem Statement</h2>
+<p>Solve the optimization/counting problem using Dynamic Programming.</p>
+
+<h3>State Definition:</h3>
+<p><code>dp[i]</code> = <em>[Define what dp[i] represents]</em></p>
+
+<h3>Recurrence Relation:</h3>
+<p><code>dp[i] = f(dp[i-1], dp[i-2], ...)</code></p>
+
+<h3>Base Cases:</h3>
+<ul>
+  <li><code>dp[0] = [value]</code></li>
+  <li><code>dp[1] = [value]</code></li>
+</ul>
+
+<h3>Constraints:</h3>
+<ul>
+  <li><code>1 ≤ n ≤ 10<sup>3</sup></code></li>
+  <li>Time Complexity: <strong>O(n²)</strong> or <strong>O(n)</strong></li>
+  <li>Space Complexity: <strong>O(n)</strong></li>
+</ul>
+
+<blockquote>
+  <strong>Approach:</strong> Start with recursive solution, then optimize with <em>memoization</em> (top-down) or <em>tabulation</em> (bottom-up).
+</blockquote>`,
+
+                graph: `<h2>Problem Statement</h2>
+<p>Given a graph/tree with <em>n</em> nodes, find <em>[path/distance/connection]</em> between nodes.</p>
+
+<h3>Graph Structure:</h3>
+<ul>
+  <li><strong>Nodes:</strong> <em>n</em> vertices</li>
+  <li><strong>Edges:</strong> <em>m</em> connections (directed/undirected)</li>
+  <li><strong>Weighted:</strong> Yes/No</li>
+</ul>
+
+<h3>Algorithm Approach:</h3>
+<ol>
+  <li>Use <strong>DFS</strong> (Depth-First Search) for traversal</li>
+  <li>Use <strong>BFS</strong> (Breadth-First Search) for shortest path</li>
+  <li>Use <strong>Dijkstra</strong> for weighted shortest path</li>
+  <li>Use <strong>Union-Find</strong> for connectivity</li>
+</ol>
+
+<h3>Constraints:</h3>
+<ul>
+  <li><code>1 ≤ n ≤ 10<sup>5</sup></code> (nodes)</li>
+  <li><code>1 ≤ m ≤ 10<sup>5</sup></code> (edges)</li>
+  <li>Time Complexity: <strong>O(V + E)</strong></li>
+</ul>
+
+<blockquote>
+  <strong>Note:</strong> Consider edge cases like disconnected graphs, cycles, and self-loops.
+</blockquote>`
+            };
+            
+            if (templates[type]) {
+                descField.innerHTML = templates[type];
+                updateProjectDescWordCount();
+                descField.focus();
+            }
+        }
+
+        // Rich text editor functions for add modal
+        function setProjectDescColor(color) {
+            document.execCommand('foreColor', false, color);
+            document.getElementById('richProjectDesc').focus();
+            document.getElementById('projectDescColorPalette').style.display = 'none';
+        }
+        function insertProjectDescHeading(tag) {
+            document.getElementById('richProjectDesc').focus();
+            document.execCommand('formatBlock', false, '<' + tag + '>');
+        }
+        function insertProjectDescBlockquote() {
+            document.getElementById('richProjectDesc').focus();
+            document.execCommand('formatBlock', false, '<blockquote>');
+        }
+        function updateProjectDescWordCount() {
+            const el = document.getElementById('richProjectDesc');
+            const counter = document.getElementById('projectDescWordCount');
+            if (!el || !counter) return;
+            const text = el.innerText.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            counter.textContent = words + ' words';
+            counter.style.color = words < 20 ? '#FF9800' : words > 150 ? '#f44336' : '#4CAF50';
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             // Initialize central API system first
             tokenManager = new UnifiedTokenManager();
@@ -805,6 +1031,47 @@
 
             console.log('✅ Programming Manager initialized with Central API');
             console.log('🔗 Token system: Unified');
+
+            // Rich text editor event listeners
+            document.getElementById('projectDescColorBtn')?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const p = document.getElementById('projectDescColorPalette');
+                if (p) p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+            });
+            // Global click close palette
+            document.addEventListener('click', (e) => {
+                if (!e.target.matches('#projectDescColorBtn') && !e.target.closest('#projectDescColorPalette')) {
+                    const p = document.getElementById('projectDescColorPalette');
+                    if (p) p.style.display = 'none';
+                }
+            });
+            // Editor keydown handlers
+            document.getElementById('richProjectDesc')?.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    const sel = window.getSelection();
+                    let node = sel?.anchorNode; let inList = false;
+                    while (node && node !== this) { if (node.tagName === 'LI') { inList = true; break; } node = node.parentElement; }
+                    if (inList) { e.preventDefault(); document.execCommand(e.shiftKey ? 'outdent' : 'indent'); }
+                } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    const sel = window.getSelection();
+                    if (!sel || !sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    let li = (node.nodeType === 3) ? node.parentElement : node;
+                    while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+                    if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+                        e.preventDefault();
+                        const list = li.parentElement;
+                        const parentLi = list?.parentElement?.closest('li');
+                        if (parentLi) { document.execCommand('outdent'); } else {
+                            const newP = document.createElement('p'); newP.innerHTML = '<br>';
+                            list.parentNode.insertBefore(newP, list.nextSibling);
+                            li.remove(); if (!list.children.length) list.remove();
+                            const range = document.createRange(); range.setStartBefore(newP.firstChild); range.collapse(true);
+                            sel.removeAllRanges(); sel.addRange(range);
+                        }
+                    }
+                }
+            });
         });
 
         // ===== TOKEN MANAGEMENT (Books Manager Style with Central API) =====
@@ -880,6 +1147,9 @@
             
             document.getElementById(tabName + 'Tab').classList.add('active');
             event.target.classList.add('active');
+            
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('programmingManager_activeTab', tabName);
             
             if (tabName === 'manage') {
                 renderManageContent();
@@ -1010,7 +1280,7 @@
                     sourceNumber: document.getElementById('projectSourceNumber').value,
                     sourceUrl: document.getElementById('projectSourceUrl').value,
                     codeFile: `../../Projects Storage/Programming/${language}/${category}/${projectId}.${getFileExtension(language)}`,
-                    description: document.getElementById('projectDescription').value,
+                    description: document.getElementById('richProjectDesc')?.innerHTML || '',
                     examples: examples.length > 0 ? examples : undefined,
                     constraints: constraints.length > 0 ? constraints : undefined,
                     approach: document.getElementById('projectApproach').value,

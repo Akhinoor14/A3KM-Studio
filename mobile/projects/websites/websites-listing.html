@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0000">
+  <meta name="description" content="Websites & Web Projects by Md Akhinoor Islam">
+  <title>Websites - A3KM Studio</title>
+
+  <link rel="manifest" href="../../../mobile/manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../shared/mobile-common.css">
+  <link rel="stylesheet" href="../../shared/mobile-navbar.css">
+  <script src="../../shared/page-loading.js"></script>
+  <link rel="stylesheet" href="../shared-content-styles.css">
+
+  <style>
+    :root {
+      --accent: #CC0000;
+      --accent-dim: rgba(204, 0, 0, 0.3);
+      --accent-bg: rgba(204, 0, 0, 0.08);
+    }
+
+    .content-header { border-bottom: 2px solid rgba(204, 0, 0, 0.3) !important; }
+    .content-page-title i { color: var(--accent); }
+    .back-btn:hover, .back-btn:active { color: var(--accent); }
+
+    /* Filter chips */
+    .filter-chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 4px 6px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .filter-chips-row::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip.active {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .chip:active { transform: scale(0.96); }
+
+    .filter-section {
+      padding: 0 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .filter-row-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .results-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 16px 10px;
+    }
+    .results-count-text {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 600;
+    }
+    .results-count-text span { color: var(--accent); font-weight: 800; }
+
+    /* ===== WEBSITE CARD ===== */
+    .site-card {
+      background: linear-gradient(160deg, rgba(18,0,0,0.98) 0%, rgba(8,0,0,0.98) 100%);
+      border: 1px solid rgba(100,0,0,0.35);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+    .site-card:active { transform: scale(0.98); border-color: rgba(204,0,0,0.6); }
+
+    .site-thumbnail {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, rgba(25,3,3,0.92), rgba(5,0,0,0.85));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1.5px solid rgba(204,0,0,0.3);
+    }
+    .site-thumbnail img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .site-thumbnail-fallback {
+      font-size: 42px;
+      color: rgba(204,0,0,0.25);
+    }
+
+    /* Live badge over thumbnail */
+    .live-overlay {
+      position: absolute;
+      top: 8px; left: 8px;
+      background: rgba(0,140,0,0.85);
+      border: 1px solid rgba(0,220,0,0.4);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #aaffaa;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .live-dot {
+      width: 5px; height: 5px;
+      background: #44ff44;
+      border-radius: 50%;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    .card-body { padding: 12px 13px 10px; }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .card-badge.category { background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.2); color: rgba(255,120,120,0.85); }
+    .card-badge.status-live { background: rgba(0,180,50,0.12); border: 1px solid rgba(0,180,50,0.3); color: #44ff88; }
+    .card-badge.status-dev { background: rgba(255,160,0,0.12); border: 1px solid rgba(255,160,0,0.3); color: #ffcc44; }
+    .card-badge.status-archived { background: rgba(150,150,150,0.1); border: 1px solid rgba(180,180,180,0.2); color: #999; }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 5px;
+    }
+    .card-desc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .mini-tag {
+      padding: 2px 7px;
+      background: rgba(204,0,0,0.07);
+      border: 1px solid rgba(204,0,0,0.18);
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(204,0,0,0.12);
+    }
+    .btn-visit, .btn-github {
+      flex: 1;
+      padding: 9px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-visit {
+      background: linear-gradient(135deg, var(--accent), #8B0000);
+      color: #fff;
+    }
+    .btn-visit:active { filter: brightness(0.9); }
+    .btn-github {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(204,0,0,0.22) !important;
+      color: rgba(255,255,255,0.75);
+      flex: 0 0 auto;
+      padding: 9px 14px;
+    }
+    .btn-github:active { background: rgba(204,0,0,0.1); }
+
+    /* Sort row */
+    .sort-select {
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(204,0,0,0.25);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      font-weight: 600;
+      -webkit-appearance: none;
+      appearance: none;
+      color-scheme: dark;
+    }
+
+    /* Empty/loading */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: rgba(255,255,255,0.3);
+    }
+    .empty-state i { font-size: 40px; color: var(--accent-dim); margin-bottom: 12px; display: block; }
+    .empty-state p { font-size: 14px; }
+
+    /* Stats mini bar */
+    .mini-stats-bar {
+      background: linear-gradient(135deg, rgba(30,0,0,0.98), rgba(15,0,0,0.95));
+      border: 1px solid rgba(204,0,0,0.3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 0 16px 14px;
+    }
+    .mini-stats-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    .mini-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+    }
+    .mini-stat-item i { font-size: 12px; color: var(--accent); }
+    .mini-stat-item .value { color: #fff; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="content-header container">
+    <a href="../projects.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i>
+      <span>Projects</span>
+    </a>
+    <h1 class="content-page-title">
+      <i class="fas fa-globe"></i>
+      Websites
+    </h1>
+    <p class="content-page-subtitle">Portfolio, tools &amp; web applications</p>
+  </header>
+
+  <!-- Search -->
+  <section class="search-section container">
+    <div class="search-bar">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search sites, tech stack..." autocomplete="off">
+    </div>
+  </section>
+
+  <!-- Mini Stats -->
+  <div class="mini-stats-bar">
+    <div class="mini-stats-row">
+      <div class="mini-stat-item">
+        <i class="fas fa-globe"></i>
+        <span><span class="value" id="statTotal">0</span> Total</span>
+      </div>
+      <div class="mini-stat-item">
+        <i class="fas fa-circle" style="color:#44ff44;"></i>
+        <span><span class="value" id="statLive">0</span> Live</span>
+      </div>
+      <div class="mini-stat-item">
+        <i class="fas fa-tools" style="color:#FFA500;"></i>
+        <span><span class="value" id="statDev">0</span> In Dev</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section container">
+    <div class="filter-row-label">Category</div>
+    <div class="filter-chips-row" id="catChips">
+      <div class="chip active" data-cat="all">All</div>
+      <div class="chip" data-cat="portfolio">&#127981; Portfolio</div>
+      <div class="chip" data-cat="tools">&#128295; Tools</div>
+      <div class="chip" data-cat="educational">&#127979; Educational</div>
+      <div class="chip" data-cat="landing">&#127970; Landing</div>
+      <div class="chip" data-cat="utility">Utility</div>
+      <div class="chip" data-cat="game">&#127918; Game</div>
+    </div>
+
+    <div class="filter-row-label">Status</div>
+    <div class="filter-chips-row" id="statusChips">
+      <div class="chip active" data-status="all">All</div>
+      <div class="chip" data-status="live">&#9989; Live</div>
+      <div class="chip" data-status="development">&#128295; In Dev</div>
+      <div class="chip" data-status="archived">&#128230; Archived</div>
+    </div>
+  </div>
+
+  <!-- Results / Sort row -->
+  <div class="results-row container">
+    <span class="results-count-text">Showing <span id="resultsCount">0</span> of <span id="totalCount">0</span> sites</span>
+    <select class="sort-select" id="sortSelect">
+      <option value="id-asc">&#128290; Number</option>
+      <option value="newest">&#128336; Newest</option>
+      <option value="az">&#128289; A–Z</option>
+    </select>
+  </div>
+
+  <!-- Cards List -->
+  <section class="container" style="padding: 0 16px 80px;" id="cardsContainer">
+    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+  </section>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" role="navigation" aria-label="Main mobile navigation">
+    <div class="mobile-nav-container">
+      <a href="../../home/index.html" class="mobile-nav-item"><i class="fas fa-home"></i><span class="mobile-nav-label">Home</span></a>
+      <a href="../../about/about.html" class="mobile-nav-item"><i class="fas fa-user-circle"></i><span class="mobile-nav-label">About</span></a>
+      <a href="../projects.html" class="mobile-nav-item active"><i class="fas fa-folder-open"></i><span class="mobile-nav-label">Projects</span></a>
+      <a href="../../content-studio/hub.html" class="mobile-nav-item"><i class="fas fa-layer-group"></i><span class="mobile-nav-label">Studio</span></a>
+      <a href="../../contact/contact.html" class="mobile-nav-item"><i class="fas fa-envelope"></i><span class="mobile-nav-label">Contact</span></a>
+      <a href="../../../Documentation/index.html" class="mobile-nav-item"><i class="fas fa-book-open"></i><span class="mobile-nav-label">Guide</span></a>
+    </div>
+  </nav>
+
+  <script src="../../shared/mobile-navbar.js"></script>
+  <script>
+    const catDisplay = {
+      portfolio: '&#127981; Portfolio',
+      tools: '&#128295; Tools',
+      educational: '&#127979; Educational',
+      landing: '&#127970; Landing Page',
+      utility: 'Utility',
+      game: '&#127918; Game'
+    };
+
+    let allProjects = [];
+    let currentCat = 'all';
+    let currentStatus = 'all';
+    let currentSearch = '';
+    let currentSort = 'id-asc';
+
+    async function loadData() {
+      try {
+        const res = await fetch('../../../Projects%20Code/websites/websites.json');
+        const data = await res.json();
+        allProjects = data.projects || [];
+        document.getElementById('statTotal').textContent = allProjects.length;
+        document.getElementById('statLive').textContent = allProjects.filter(p => p.status === 'live').length;
+        document.getElementById('statDev').textContent = allProjects.filter(p => p.status === 'development').length;
+        document.getElementById('totalCount').textContent = allProjects.length;
+        render();
+      } catch (e) {
+        document.getElementById('cardsContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading data</p></div>';
+      }
+    }
+
+    function getFiltered() {
+      const term = currentSearch.toLowerCase();
+      let list = allProjects.filter(p => {
+        const catOk = currentCat === 'all' || p.category === currentCat;
+        const statusOk = currentStatus === 'all' || p.status === currentStatus;
+        const searchOk = !term
+          || p.title.toLowerCase().includes(term)
+          || (p.description || '').toLowerCase().includes(term)
+          || (p.techStack || []).some(t => t.toLowerCase().includes(term));
+        return catOk && statusOk && searchOk;
+      });
+      list.sort((a, b) => {
+        if (currentSort === 'newest') return new Date(b.dateAdded) - new Date(a.dateAdded);
+        if (currentSort === 'az') return a.title.localeCompare(b.title);
+        return a.id - b.id;
+      });
+      return list;
+    }
+
+    function render() {
+      const list = getFiltered();
+      document.getElementById('resultsCount').textContent = list.length;
+      const cont = document.getElementById('cardsContainer');
+      if (list.length === 0) {
+        cont.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No sites found</p></div>';
+        return;
+      }
+      cont.innerHTML = list.map(p => buildCard(p)).join('');
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function buildCard(p) {
+      const thumbHtml = p.thumbnail
+        ? '<img src="' + esc(p.thumbnail) + '" alt="' + esc(p.title) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        : '';
+      const fallbackStyle = p.thumbnail ? 'display:none;' : '';
+      const liveBadge = p.status === 'live'
+        ? '<div class="live-overlay"><span class="live-dot"></span> Live</div>'
+        : '';
+      const statusClass = p.status === 'live' ? 'status-live' : p.status === 'development' ? 'status-dev' : 'status-archived';
+      const statusLabel = p.status === 'live' ? 'Live' : p.status === 'development' ? 'In Dev' : 'Archived';
+      const tags = (p.techStack || []).slice(0, 4).map(t => '<span class="mini-tag">' + esc(t) + '</span>').join('');
+      const githubBtn = p.githubRepo
+        ? '<a href="' + esc(p.githubRepo) + '" target="_blank" rel="noopener noreferrer" class="btn-github" onclick="event.stopPropagation()"><i class="fab fa-github"></i></a>'
+        : '';
+      return '<a class="site-card" href="' + esc(p.url || '#') + '" target="_blank" rel="noopener noreferrer">' +
+        '<div class="site-thumbnail">' +
+          thumbHtml +
+          '<div class="site-thumbnail-fallback" style="' + fallbackStyle + '"><i class="fas fa-globe"></i></div>' +
+          liveBadge +
+        '</div>' +
+        '<div class="card-body">' +
+          '<div class="card-meta-row">' +
+            '<span class="card-badge category">' + (catDisplay[p.category] || p.category) + '</span>' +
+            '<span class="card-badge ' + statusClass + '">' + statusLabel + '</span>' +
+          '</div>' +
+          '<div class="card-title">' + esc(p.title) + '</div>' +
+          '<div class="card-desc">' + esc(p.description || '') + '</div>' +
+          '<div class="card-tags">' + tags + '</div>' +
+          '<div class="card-actions">' +
+            '<span class="btn-visit"><i class="fas fa-external-link-alt"></i> Visit Site</span>' +
+            githubBtn +
+          '</div>' +
+        '</div></a>';
+    }
+
+    // Category chips
+    document.getElementById('catChips').addEventListener('click', function(e) {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      document.querySelectorAll('#catChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentCat = chip.dataset.cat;
+      render();
+    });
+
+    // Status chips
+    document.getElementById('statusChips').addEventListener('click', function(e) {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      document.querySelectorAll('#statusChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentStatus = chip.dataset.status;
+      render();
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', function() {
+      currentSearch = this.value.trim();
+      render();
+    });
+
+    // Sort
+    document.getElementById('sortSelect').addEventListener('change', function() {
+      currentSort = this.value;
+      render();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

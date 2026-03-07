@@ -254,8 +254,20 @@
             <button class="tab-btn" onclick="switchTab('advanced')">⚙️ Advanced</button>
         </div>
 
+        <!-- Restore saved tab before page renders (prevents flash) -->
+        <script>
+          (function() {
+            const savedTab = localStorage.getItem('siteSettingsManager_activeTab') || 'general';
+            // Activate the appropriate tab
+            const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+            const tabContent = document.getElementById(savedTab);
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
+          })();
+        </script>
+
         <!-- Tab: General -->
-        <div id="general" class="tab-content active">
+        <div id="general" class="tab-content">
             <div class="settings-section">
                 <h3><i class="fas fa-info-circle"></i> Site Information</h3>
                 <div class="form-grid">
@@ -753,6 +765,9 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
+            
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('siteSettingsManager_activeTab', tabName);
         }
 
         // Color picker sync

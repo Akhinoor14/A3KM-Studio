@@ -1,12 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Universal Mobile Optimization System -->
-    <link rel="stylesheet" href="../../../../Optimization/mobile-universal.css">
-    <script src="../../../../Optimization/mobile-universal.js" defer></script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="../../../../images/favicon.svg">
@@ -80,6 +76,32 @@
       transition: transform 0.04s ease;
       box-shadow: 0 0 8px rgba(255,23,68,0.8);
     }
+    #tokenMissingBanner {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: linear-gradient(135deg, #1a0000 0%, #2d0000 50%, #1a0000 100%);
+      border-bottom: 2px solid #CC0000; box-shadow: 0 4px 24px rgba(204,0,0,0.4);
+      padding: 14px 24px; align-items: center; gap: 16px;
+      animation: bannerSlideDown 0.4s ease;
+    }
+    @keyframes bannerSlideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    #tokenMissingBanner .banner-icon { font-size: 22px; }
+    #tokenMissingBanner .banner-text { flex: 1; color: #fff; font-size: 14px; font-weight: 700; }
+    #tokenMissingBanner .banner-text span { color: #ff6666; font-weight: 900; }
+    #tokenMissingBanner .banner-btn {
+      padding: 8px 18px; background: #CC0000; color: #fff; border: none;
+      border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
+      transition: background 0.2s; text-decoration: none; white-space: nowrap;
+    }
+    #tokenMissingBanner .banner-btn:hover { background: #ff1a1a; }
+    #tokenMissingBanner .banner-close {
+      background: none; border: none; color: #999; font-size: 20px;
+      cursor: pointer; padding: 0 6px; line-height: 1; transition: color 0.2s;
+    }
+    #tokenMissingBanner .banner-close:hover { color: #fff; }
     .header {
       position: relative; z-index: 100;
       background: linear-gradient(160deg, rgba(30,0,0,0.98) 0%, rgba(10,0,0,0.97) 100%);
@@ -290,6 +312,13 @@
     .stat-card h3 { font-size: 2.5rem; margin-bottom: 5px; font-weight: 800; color: var(--primary-red); }
     .stat-card p { font-size: 0.95rem; color: var(--text-secondary); }
     .breakdown-section { margin-top: 30px; padding: 25px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--border-red); }
+
+    /* Rich text editor styles */
+    #richProjectDesc h2, #richProjectDesc h3, #editRichDesc h2, #editRichDesc h3 { color: #CC0000; margin-top: 12px; margin-bottom: 8px; }
+    #richProjectDesc blockquote, #editRichDesc blockquote { border-left: 3px solid #CC0000; padding-left: 12px; margin: 12px 0; color: rgba(255,255,255,0.7); background: rgba(204,0,0,0.08); padding: 10px 12px; border-radius: 4px; }
+    #richProjectDesc hr, #editRichDesc hr { border: none; border-top: 2px solid rgba(204,0,0,0.4); margin: 16px 0; }
+    #richProjectDesc:empty::before, #editRichDesc:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.3); }
+
     @media (max-width: 1024px) {
       .container { grid-template-columns: 1fr; }
       .sidebar { position: relative; top: 0; }
@@ -313,6 +342,16 @@
   <!-- Neural Cursor -->
   <div class="neural-cursor" id="neuralCursor"></div>
   <div class="neural-cursor-dot" id="neuralCursorDot"></div>
+
+  <div id="tokenMissingBanner">
+    <div class="banner-icon">🔒</div>
+    <div class="banner-text">
+      <span>GitHub Token Not Found!</span> — This manager requires a token to upload/manage projects.
+    </div>
+    <a class="banner-btn" href="../../shared/command-center.html?tab=api">⚙️ Set Token</a>
+    <button class="banner-close" onclick="document.getElementById('tokenMissingBanner').style.display='none'" title="Dismiss">&times;</button>
+  </div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -345,44 +384,46 @@
         <div class="main-layout">
             <!-- Sidebar Navigation -->
             <aside class="sidebar">
-                <ul class="nav-tabs">
-                    <li class="nav-tab">
-                        <button class="active" onclick="switchTab('dashboard')">
-                            <i class="fas fa-chart-line"></i>
-                            Dashboard
-                        </button>
-                    </li>
-                    <li class="nav-tab">
-                        <button onclick="switchTab('upload')">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            Upload New
-                        </button>
-                    </li>
-                    <li class="nav-tab">
-                        <button onclick="switchTab('manage')">
-                            <i class="fas fa-tasks"></i>
-                            Manage Projects
-                        </button>
-                    </li>
-                    <li class="nav-tab">
-                        <button onclick="switchTab('json')">
-                            <i class="fas fa-code"></i>
-                            JSON Editor
-                        </button>
-                    </li>
-                    <li class="nav-tab">
-                        <button onclick="switchTab('structure')">
-                            <i class="fas fa-folder-tree"></i>
-                            Folder Structure
-                        </button>
-                    </li>
-                </ul>
+                <div class="tab-list">
+                    <div class="tab-item" onclick="switchTab('dashboard')">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </div>
+                    <div class="tab-item" onclick="switchTab('upload')">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Upload New
+                    </div>
+                    <div class="tab-item" onclick="switchTab('manage')">
+                        <i class="fas fa-tasks"></i>
+                        Manage Projects
+                    </div>
+                    <div class="tab-item" onclick="switchTab('json')">
+                        <i class="fas fa-code"></i>
+                        JSON Editor
+                    </div>
+                    <div class="tab-item" onclick="switchTab('structure')">
+                        <i class="fas fa-folder-tree"></i>
+                        Folder Structure
+                    </div>
+                </div>
             </aside>
+
+            <!-- Restore saved tab before page renders (prevents flash) -->
+            <script>
+              (function() {
+                const savedTab = localStorage.getItem('solidworksManager_activeTab') || 'dashboard';
+                // Activate the appropriate tab
+                const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+                const tabContent = document.getElementById(savedTab);
+                if (tabBtn) tabBtn.closest('.tab-item').classList.add('active');
+                if (tabContent) tabContent.classList.add('active');
+              })();
+            </script>
 
             <!-- Content Area -->
             <main class="content-area">
                 <!-- Dashboard Tab -->
-                <div id="dashboard" class="tab-content active">
+                <div id="dashboard" class="tab-content">
                     <h2 style="color: #FF4500; margin-bottom: 20px;">
                         <i class="fas fa-chart-bar"></i> Projects Overview
                     </h2>
@@ -486,7 +527,60 @@
                                         <i class="fas fa-cube"></i> Single Part
                                     </button>
                                 </div>
-                                <textarea id="projectDescription" required placeholder="Detailed project description..."></textarea>
+                                <input type="hidden" id="projectDescription">
+                                <!-- Toolbar -->
+                                <div onmousedown="event.preventDefault()" style="background:rgba(204,0,0,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(204,0,0,0.3); border-bottom:2px solid #CC0000; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                                  <button type="button" onclick="insertProjectDescHeading('H2')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+                                  <button type="button" onclick="insertProjectDescHeading('H3')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+                                  <button type="button" onclick="insertProjectDescHeading('P')" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:rgba(255,255,255,0.7); border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="document.execCommand('bold'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+                                  <button type="button" onclick="document.execCommand('italic'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+                                  <button type="button" onclick="document.execCommand('underline'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+                                  <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="document.execCommand('superscript'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+                                  <button type="button" onclick="document.execCommand('subscript'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+                                  <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+                                  <button type="button" onclick="document.execCommand('indent'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+                                  <button type="button" onclick="document.execCommand('outdent'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Left">≡L</button>
+                                  <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Center">≡C</button>
+                                  <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Right">≡R</button>
+                                  <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="insertProjectDescBlockquote()" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+                                  <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="HR">── HR</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <button type="button" onclick="document.execCommand('undo'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+                                  <button type="button" onclick="document.execCommand('redo'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+                                  <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                                  <div style="position:relative;">
+                                    <button type="button" id="projectDescColorBtn" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+                                    <div id="projectDescColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(10,0,0,0.97); border:2px solid rgba(204,0,0,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                                      <div onclick="setProjectDescColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                                      <div onclick="setProjectDescColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                                      <div onclick="setProjectDescColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                                      <div onclick="setProjectDescColor('#00BCD4')" style="width:26px;height:26px;background:#00BCD4;border-radius:3px;cursor:pointer;" title="Cyan"></div>
+                                      <div onclick="setProjectDescColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                                      <div onclick="setProjectDescColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                                      <div onclick="setProjectDescColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                                      <div onclick="setProjectDescColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                                      <div onclick="setProjectDescColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                                      <div onclick="setProjectDescColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+                                    </div>
+                                  </div>
+                                  <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('richProjectDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear">✖</button>
+                                  <span id="projectDescWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+                                </div>
+                                <!-- Rich Text Editor -->
+                                <div id="richProjectDesc" contenteditable="true" data-placeholder="Detailed project description..."
+                                  style="min-height:200px; padding:12px; border:1px solid rgba(204,0,0,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(8,0,0,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+                                  oninput="updateProjectDescWordCount();"
+                                  onclick="this.focus();"></div>
                             </div>
 
                             <div class="form-group full-width">
@@ -705,6 +799,7 @@
                         <i class="fas fa-tasks"></i> Manage Projects
                     </h2>
 
+                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Search</label>
                     <div class="search-box">
                         <input type="text" id="searchInput" placeholder="Search projects by name, category, or features...">
                         <i class="fas fa-search"></i>
@@ -798,6 +893,10 @@
                             <i class="fas fa-broom"></i>
                             Clear Cache
                         </button>
+                        <button class="btn btn-secondary" onclick="reloadJSON()">
+                            <i class="fas fa-rotate-left"></i>
+                            Reload Original
+                        </button>
                         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
                     </div>
 
@@ -867,7 +966,7 @@
         function validateFileSize(file) {
             const MAX_SIZE = 100 * 1024 * 1024; // 100MB
             if (file.size > MAX_SIZE) {
-                alert(`?? File too large: ${(file.size/1024/1024).toFixed(2)}MB\nGitHub limit: 100MB\nPlease compress or split the file.`);
+                alert(`⚠️ File too large: ${(file.size/1024/1024).toFixed(2)}MB\nGitHub limit: 100MB\nPlease compress or split the file.`);
                 return false;
             }
             return true;
@@ -913,8 +1012,25 @@
         function clearCache() {
             if (confirm('Clear cached data?\n\nThis will reload fresh data from the server.')) {
                 localStorage.removeItem(CACHE_KEY);
-                alert('? Cache cleared! Reloading...');
+                alert('✅ Cache cleared! Reloading...');
                 location.reload();
+            }
+        }
+
+        async function reloadJSON() {
+            if (confirm('🔄 Reload original JSON from server? Unsaved changes will be lost.')) {
+                try {
+                    const response = await fetch('../../../../Projects Code/solidworks/solidworks-data.json?' + Date.now());
+                    if (response.ok) {
+                        projectsData = await response.json();
+                        document.getElementById('jsonEditor').value = JSON.stringify(projectsData, null, 2);
+                        alert('✅ JSON reloaded from server!');
+                    } else {
+                        alert('❌ Failed to reload JSON from server.');
+                    }
+                } catch (error) {
+                    alert('❌ Error reloading: ' + error.message);
+                }
             }
         }
 
@@ -968,7 +1084,7 @@
         function bulkMoveCategory() {
             const newCategory = document.getElementById('bulkCategory').value;
             if (!newCategory) {
-                alert('?? Please select a category');
+                alert('⚠️ Please select a category');
                 return;
             }
 
@@ -985,7 +1101,7 @@
                 renderProjectsList();
                 document.getElementById('jsonEditor').value = JSON.stringify(projectsData, null, 2);
                 clearSelection();
-                alert(`? ${selectedProjects.size} project(s) moved!\n\n?? Download updated JSON and update folder locations in GitHub.`);
+                alert(`✅ ${selectedProjects.size} project(s) moved!\n\n?? Download updated JSON and update folder locations in GitHub.`);
             }
         }
 
@@ -999,7 +1115,7 @@
                 renderProjectsList();
                 document.getElementById('jsonEditor').value = JSON.stringify(projectsData, null, 2);
                 clearSelection();
-                alert(`? ${count} project(s) deleted!\n\n?? Remember to delete folders from GitHub and download updated JSON.`);
+                alert(`✅ ${count} project(s) deleted!\n\n?? Remember to delete folders from GitHub and download updated JSON.`);
             }
         }
 
@@ -1023,10 +1139,10 @@
                         updateStats();
                         renderProjectsList();
                         document.getElementById('jsonEditor').value = JSON.stringify(projectsData, null, 2);
-                        alert('? Data imported successfully!');
+                        alert('✅ Data imported successfully!');
                     }
                 } catch (error) {
-                    alert('? Import failed: ' + error.message);
+                    alert('❌ Import failed: ' + error.message);
                 }
             };
             reader.readAsText(file);
@@ -1187,12 +1303,12 @@
             const title = sanitizeInput(document.getElementById('projectTitle').value.trim());
             const category = document.getElementById('projectCategory').value;
             const type = document.getElementById('projectType').value;
-            const description = sanitizeInput(document.getElementById('projectDescription').value.trim());
+            const description = document.getElementById('richProjectDesc')?.innerHTML || '';
             const subtitle = sanitizeInput(document.getElementById('projectSubtitle').value.trim());
             
             // Validation
             if (!title || !category || !type || !description) {
-                alert('?? Please fill in all required fields (Title, Category, Type, Description)!');
+                alert('⚠️ Please fill in all required fields (Title, Category, Type, Description)!');
                 return;
             }
             
@@ -1201,7 +1317,7 @@
                 p.title.toLowerCase() === title.toLowerCase()
             );
             if (duplicate) {
-                alert('?? A project with this title already exists!\n\nPlease use a different title.');
+                alert('⚠️ A project with this title already exists!\n\nPlease use a different title.');
                 return;
             }
             
@@ -1342,16 +1458,19 @@
                 tab.classList.remove('active');
             });
 
-            // Remove active from all buttons
-            document.querySelectorAll('.nav-tab button').forEach(btn => {
-                btn.classList.remove('active');
+            // Remove active from all tab items
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
             });
 
             // Show selected tab
             document.getElementById(tabName).classList.add('active');
 
-            // Set active button
-            event.target.classList.add('active');
+            // Set active tab item
+            event.target.closest('.tab-item').classList.add('active');
+
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('solidworksManager_activeTab', tabName);
         }
 
         // Upload form handler
@@ -1381,7 +1500,7 @@
 
             const category = document.getElementById('projectCategory').value;
             const subtitle = sanitizeInput(document.getElementById('projectSubtitle').value);
-            const description = sanitizeInput(document.getElementById('projectDescription').value);
+            const description = document.getElementById('richProjectDesc')?.innerHTML || '';
             const type = document.getElementById('projectType')?.value || 'parts';
 
             // Get selected features
@@ -1451,7 +1570,7 @@
             
             const detailsText = details.length > 0 ? '\n\n' + details.join('\n') : '';
             
-            alert(`? Project Created Successfully!\n\n?? Folder: "${folderName}"\n?? ID: ${nextId}\n?? Category: ${category}\n??? Type: ${type}${detailsText}\n\n?? Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder in Projects Storage\n3. Upload CAD files and images\n4. Push changes to GitHub`);
+            alert(`✅ Project Created Successfully!\n\n?? Folder: "${folderName}"\n?? ID: ${nextId}\n?? Category: ${category}\n??? Type: ${type}${detailsText}\n\n?? Next Steps:\n1. Download updated JSON from JSON Editor tab\n2. Create folder in Projects Storage\n3. Upload CAD files and images\n4. Push changes to GitHub`);
 
             // Reset form
             this.reset();
@@ -1585,7 +1704,7 @@
             );
             
             if (exactMatch) {
-                alert(`? Duplicate Found!\\n\\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\\n\\nPlease use a different name.`);
+                alert(`⚠️ Duplicate Found!\\n\\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\\n\\nPlease use a different name.`);
                 return false;
             }
             
@@ -1597,7 +1716,7 @@
             });
             
             if (similarProjects.length > 0) {
-                const names = similarProjects.map(p => `� ${p.title}`).join('\\n');
+                const names = similarProjects.map(p => `� ${p.title}`).join('\\n');
                 return confirm(`?? Similar projects found:\\n\\n${names}\\n\\nContinue anyway?`);
             }
             
@@ -1690,7 +1809,7 @@
             );
             
             if (exactMatch) {
-                alert(`? Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
+                alert(`⚠️ Duplicate Found!\n\nProject "${exactMatch.title}" already exists in "${exactMatch.category}".\n\nPlease use a different name.`);
                 return false;
             }
             
@@ -1702,7 +1821,7 @@
             });
             
             if (similarProjects.length > 0) {
-                const names = similarProjects.map(p => `� ${p.title}`).join('\n');
+                const names = similarProjects.map(p => `� ${p.title}`).join('\n');
                 return confirm(`?? Similar projects found:\n\n${names}\n\nContinue anyway?`);
             }
             
@@ -1785,7 +1904,7 @@
             document.getElementById('editSubtitle').value = project.subtitle || '';
             document.getElementById('editCategory').value = project.category;
             document.getElementById('editType').value = project.type || 'parts';
-            document.getElementById('editDescription').value = project.description || '';
+            document.getElementById('editRichDesc').innerHTML = project.description || '';
             document.getElementById('editPartsCount').value = project.partsCount || '';
             document.getElementById('editWeight').value = project.weight || '';
             
@@ -1971,7 +2090,7 @@
             project.subtitle = sanitizeInput(document.getElementById('editSubtitle').value.trim());
             project.category = document.getElementById('editCategory').value;
             project.type = document.getElementById('editType').value;
-            project.description = sanitizeInput(document.getElementById('editDescription').value.trim());
+            project.description = document.getElementById('editRichDesc')?.innerHTML || '';
             project.partsCount = document.getElementById('editPartsCount').value ? parseInt(document.getElementById('editPartsCount').value) : null;
             project.weight = document.getElementById('editWeight').value ? parseFloat(document.getElementById('editWeight').value) : null;
             
@@ -2065,11 +2184,11 @@
             if (project.weight) details.push(`?? Weight: ${project.weight}kg`);
             
             const filesInfo = replacedFiles.length > 0 
-                ? `\n\n?? Replaced Files:\n${replacedFiles.map(f => `  � ${f}`).join('\n')}` 
+                ? `\n\n?? Replaced Files:\n${replacedFiles.map(f => `  � ${f}`).join('\n')}` 
                 : '';
             
             const detailsText = details.length > 0 ? '\n\n' + details.join('\n') : '';
-            alert(`? Project updated successfully!\n\n?? Folder: "${project.folder}"${detailsText}${filesInfo}\n\n?? Remember to download JSON and upload new files to GitHub.`);
+            alert(`✅ Project updated successfully!\n\n?? Folder: "${project.folder}"${detailsText}${filesInfo}\n\n?? Remember to download JSON and upload new files to GitHub.`);
         }
 
         // Delete project
@@ -2083,7 +2202,7 @@
                 renderProjectsList();
                 updateJSONEditor();
                 updateFolderStructure();
-                alert('? Project deleted successfully!');
+                alert('✅ Project deleted successfully!');
             }
         }
 
@@ -2099,9 +2218,9 @@
             const editor = document.getElementById('jsonEditor');
             try {
                 JSON.parse(editor.value);
-                alert('? JSON is valid!');
+                alert('✅ JSON is valid!');
             } catch (error) {
-                alert('? Invalid JSON:\n\n' + error.message);
+                alert('❌ Invalid JSON:\n\n' + error.message);
             }
         }
 
@@ -2110,9 +2229,9 @@
             try {
                 const parsed = JSON.parse(editor.value);
                 editor.value = JSON.stringify(parsed, null, 2);
-                alert('? JSON formatted successfully!');
+                alert('✅ JSON formatted successfully!');
             } catch (error) {
-                alert('? Cannot format invalid JSON:\n\n' + error.message);
+                alert('❌ Cannot format invalid JSON:\n\n' + error.message);
             }
         }
 
@@ -2123,9 +2242,9 @@
                 updateStats();
                 renderProjectsList();
                 updateFolderStructure();
-                alert('? Changes saved successfully!');
+                alert('✅ Changes saved successfully!');
             } catch (error) {
-                alert('? Cannot save invalid JSON:\n\n' + error.message);
+                alert('❌ Cannot save invalid JSON:\n\n' + error.message);
             }
         }
 
@@ -2138,7 +2257,7 @@
             a.download = 'solidworks-data.json';
             a.click();
             URL.revokeObjectURL(url);
-            alert('? JSON downloaded!\n\n?? Upload to: Projects Code/solidworks/solidworks-data.json');
+            alert('✅ JSON downloaded!\n\n?? Upload to: Projects Code/solidworks/solidworks-data.json');
         }
 
         // Update folder structure
@@ -2179,67 +2298,86 @@
 
         // Templates
         function insertTemplate(type) {
-            const descField = document.getElementById('projectDescription');
+            const descField = document.getElementById('richProjectDesc');
             const templates = {
-                mechanical: `Professional mechanical design project using SolidWorks.
+                mechanical: `<h2>Professional mechanical design project using SolidWorks</h2>
 
-**Design Specifications:**
-- Material: [Steel/Aluminum/Plastic]
-- Dimensions: [Key measurements]
-- Tolerances: [�0.1mm / Custom]
-- Surface Finish: [As specified]
+<h3>Design Specifications:</h3>
+<ul>
+  <li><strong>Material:</strong> <em>[Steel/Aluminum/Plastic]</em></li>
+  <li><strong>Dimensions:</strong> <em>[Key measurements]</em></li>
+  <li><strong>Tolerances:</strong> <em>[±0.1mm / Custom]</em></li>
+  <li><strong>Surface Finish:</strong> <em>[As specified]</em></li>
+</ul>
 
-**Key Features:**
-- [Feature 1]
-- [Feature 2]
-- Designed for [application/purpose]
+<h3>Key Features:</h3>
+<ul>
+  <li><em>[Feature 1]</em></li>
+  <li><em>[Feature 2]</em></li>
+  <li>Designed for <em>[application/purpose]</em></li>
+</ul>
 
-**Manufacturing Considerations:**
-- CNC machining ready
-- Standard tooling compatibility
-- Cost-effective design`,
+<h3>Manufacturing Considerations:</h3>
+<ul>
+  <li>CNC machining ready</li>
+  <li>Standard tooling compatibility</li>
+  <li>Cost-effective design</li>
+</ul>`,
 
-                assembly: `Multi-component assembly project designed in SolidWorks.
+                assembly: `<h2>Multi-component assembly project designed in SolidWorks</h2>
 
-**Assembly Overview:**
-- Total Parts: [Number]
-- Main Components: [List key parts]
-- Fasteners: [Bolts, screws, etc.]
-- Motion Type: [Static/Kinematic/Dynamic]
+<h3>Assembly Overview:</h3>
+<ul>
+  <li><strong>Total Parts:</strong> <em>[Number]</em></li>
+  <li><strong>Main Components:</strong> <em>[List key parts]</em></li>
+  <li><strong>Fasteners:</strong> <em>[Bolts, screws, etc.]</em></li>
+  <li><strong>Motion Type:</strong> <em>[Static/Kinematic/Dynamic]</em></li>
+</ul>
 
-**Design Features:**
-- Mate relationships properly defined
-- Interference detection completed
-- Bill of Materials (BOM) included
-- Exploded view for assembly instructions
+<h3>Design Features:</h3>
+<ul>
+  <li>Mate relationships properly defined</li>
+  <li>Interference detection completed</li>
+  <li>Bill of Materials (BOM) included</li>
+  <li>Exploded view for assembly instructions</li>
+</ul>
 
-**Applications:**
-Perfect for [industry/application] requiring [key functionality].`,
+<blockquote>
+  <strong>Applications:</strong> Perfect for <em>[industry/application]</em> requiring <em>[key functionality]</em>.
+</blockquote>`,
 
-                part: `Individual SolidWorks part with detailed specifications.
+                part: `<h2>Individual SolidWorks part with detailed specifications</h2>
 
-**Part Information:**
-- Part Name: [Name]
-- Part Number: [PN-XXX]
-- Material: [Specify]
-- Weight: [kg/lbs]
+<h3>Part Information:</h3>
+<ul>
+  <li><strong>Part Name:</strong> <em>[Name]</em></li>
+  <li><strong>Part Number:</strong> <em>[PN-XXX]</em></li>
+  <li><strong>Material:</strong> <em>[Specify]</em></li>
+  <li><strong>Weight:</strong> <em>[kg/lbs]</em></li>
+</ul>
 
-**Design Features:**
-- [Primary feature 1]
-- [Primary feature 2]
-- [Surface treatments/finishing]
+<h3>Design Features:</h3>
+<ul>
+  <li><em>[Primary feature 1]</em></li>
+  <li><em>[Primary feature 2]</em></li>
+  <li><em>[Surface treatments/finishing]</em></li>
+</ul>
 
-**Technical Details:**
-- Created using: [Extrude/Revolve/Loft/etc.]
-- Critical dimensions: [Specify]
-- Tolerance requirements: [GD&T if applicable]
+<h3>Technical Details:</h3>
+<ul>
+  <li>Created using: <code>[Extrude/Revolve/Loft/etc.]</code></li>
+  <li>Critical dimensions: <em>[Specify]</em></li>
+  <li>Tolerance requirements: <em>[GD&T if applicable]</em></li>
+</ul>
 
-**Usage:**
-This part is designed for [specific application] in [industry/system].`
+<blockquote>
+  <strong>Usage:</strong> This part is designed for <em>[specific application]</em> in <em>[industry/system]</em>.
+</blockquote>`
             };
             
             if (templates[type]) {
-                descField.value = templates[type];
+                descField.innerHTML = templates[type];
+                updateProjectDescWordCount();
                 descField.focus();
             }
         }
@@ -2331,6 +2469,134 @@ This part is designed for [specific application] in [industry/system].`
             console.log('? SolidWorks Manager initialized with Central API');
         });
 
+        // Rich text editor functions for add modal
+        function setProjectDescColor(color) {
+            document.execCommand('foreColor', false, color);
+            document.getElementById('richProjectDesc').focus();
+            document.getElementById('projectDescColorPalette').style.display = 'none';
+        }
+        function insertProjectDescHeading(tag) {
+            document.getElementById('richProjectDesc').focus();
+            document.execCommand('formatBlock', false, '<' + tag + '>');
+        }
+        function insertProjectDescBlockquote() {
+            document.getElementById('richProjectDesc').focus();
+            document.execCommand('formatBlock', false, '<blockquote>');
+        }
+        function updateProjectDescWordCount() {
+            const el = document.getElementById('richProjectDesc');
+            const counter = document.getElementById('projectDescWordCount');
+            if (!el || !counter) return;
+            const text = el.innerText.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            counter.textContent = words + ' words';
+            counter.style.color = words < 20 ? '#FF9800' : words > 150 ? '#f44336' : '#4CAF50';
+        }
+
+        // Rich text editor functions for edit modal
+        function setEditDescColor(color) {
+            document.execCommand('foreColor', false, color);
+            document.getElementById('editRichDesc').focus();
+            document.getElementById('editDescColorPalette').style.display = 'none';
+        }
+        function insertEditDescHeading(tag) {
+            document.getElementById('editRichDesc').focus();
+            document.execCommand('formatBlock', false, '<' + tag + '>');
+        }
+        function insertEditDescBlockquote() {
+            document.getElementById('editRichDesc').focus();
+            document.execCommand('formatBlock', false, '<blockquote>');
+        }
+        function updateEditDescWordCount() {
+            const el = document.getElementById('editRichDesc');
+            const counter = document.getElementById('editDescWordCount');
+            if (!el || !counter) return;
+            const text = el.innerText.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            counter.textContent = words + ' words';
+            counter.style.color = words < 20 ? '#FF9800' : words > 150 ? '#f44336' : '#4CAF50';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add modal color palette
+            document.getElementById('projectDescColorBtn')?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const p = document.getElementById('projectDescColorPalette');
+                if (p) p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+            });
+            // Edit modal color palette
+            document.getElementById('editDescColorBtn')?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const p = document.getElementById('editDescColorPalette');
+                if (p) p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+            });
+            // Global click close palettes
+            document.addEventListener('click', (e) => {
+                if (!e.target.matches('#projectDescColorBtn') && !e.target.closest('#projectDescColorPalette')) {
+                    const p = document.getElementById('projectDescColorPalette');
+                    if (p) p.style.display = 'none';
+                }
+                if (!e.target.matches('#editDescColorBtn') && !e.target.closest('#editDescColorPalette')) {
+                    const p = document.getElementById('editDescColorPalette');
+                    if (p) p.style.display = 'none';
+                }
+            });
+            // Add modal editor keydown
+            document.getElementById('richProjectDesc')?.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    const sel = window.getSelection();
+                    let node = sel?.anchorNode; let inList = false;
+                    while (node && node !== this) { if (node.tagName === 'LI') { inList = true; break; } node = node.parentElement; }
+                    if (inList) { e.preventDefault(); document.execCommand(e.shiftKey ? 'outdent' : 'indent'); }
+                } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    const sel = window.getSelection();
+                    if (!sel || !sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    let li = (node.nodeType === 3) ? node.parentElement : node;
+                    while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+                    if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+                        e.preventDefault();
+                        const list = li.parentElement;
+                        const parentLi = list?.parentElement?.closest('li');
+                        if (parentLi) { document.execCommand('outdent'); } else {
+                            const newP = document.createElement('p'); newP.innerHTML = '<br>';
+                            list.parentNode.insertBefore(newP, list.nextSibling);
+                            li.remove(); if (!list.children.length) list.remove();
+                            const range = document.createRange(); range.setStartBefore(newP.firstChild); range.collapse(true);
+                            sel.removeAllRanges(); sel.addRange(range);
+                        }
+                    }
+                }
+            });
+            // Edit modal editor keydown
+            document.getElementById('editRichDesc')?.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    const sel = window.getSelection();
+                    let node = sel?.anchorNode; let inList = false;
+                    while (node && node !== this) { if (node.tagName === 'LI') { inList = true; break; } node = node.parentElement; }
+                    if (inList) { e.preventDefault(); document.execCommand(e.shiftKey ? 'outdent' : 'indent'); }
+                } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    const sel = window.getSelection();
+                    if (!sel || !sel.rangeCount) return;
+                    let node = sel.anchorNode;
+                    let li = (node.nodeType === 3) ? node.parentElement : node;
+                    while (li && li !== this && li.tagName !== 'LI') li = li.parentElement;
+                    if (li && li.tagName === 'LI' && li.innerText.trim() === '') {
+                        e.preventDefault();
+                        const list = li.parentElement;
+                        const parentLi = list?.parentElement?.closest('li');
+                        if (parentLi) { document.execCommand('outdent'); } else {
+                            const newP = document.createElement('p'); newP.innerHTML = '<br>';
+                            list.parentNode.insertBefore(newP, list.nextSibling);
+                            li.remove(); if (!list.children.length) list.remove();
+                            const range = document.createRange(); range.setStartBefore(newP.firstChild); range.collapse(true);
+                            sel.removeAllRanges(); sel.addRange(range);
+                        }
+                    }
+                }
+            });
+        });
+
         // ===== TOKEN MANAGEMENT (Books Manager Style) =====
         async function updateTokenStatus() {
             const tokenBadge = document.getElementById('tokenStatus');
@@ -2376,7 +2642,7 @@ This part is designed for [specific application] in [industry/system].`
                 key: 'github_token',
                 legacyKey: localStorage.getItem('githubToken') ? 'Found (synced)' : 'Not found'
             };
-            alert('?? GitHub Token Debug:\n\n' + JSON.stringify(tokenData, null, 2));
+            alert('[debug] GitHub Token Debug:\n\n' + JSON.stringify(tokenData, null, 2));
         });
 
         window.pushToGitHub = async function() {
@@ -2396,9 +2662,9 @@ This part is designed for [specific application] in [industry/system].`
                     updateProgress(100, 'Complete!');
                 });
                 
-                alert('? Pushed to GitHub successfully!');
+                alert('✅ Pushed to GitHub successfully!');
             } catch (error) {
-                alert('? GitHub push failed: ' + error.message);
+                alert('❌ GitHub push failed: ' + error.message);
             }
         };
 
@@ -2480,7 +2746,60 @@ This part is designed for [specific application] in [industry/system].`
                         <i class="fas fa-align-left"></i>
                         Description
                     </label>
-                    <textarea id="editDescription" class="form-input" rows="4"></textarea>
+                    <input type="hidden" id="editDescription">
+                    <!-- Toolbar -->
+                    <div onmousedown="event.preventDefault()" style="background:rgba(204,0,0,0.12); padding:8px 10px; border-radius:8px 8px 0 0; border:1px solid rgba(204,0,0,0.3); border-bottom:2px solid #CC0000; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                      <button type="button" onclick="insertEditDescHeading('H2')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 2">H2</button>
+                      <button type="button" onclick="insertEditDescHeading('H3')" style="padding:4px 9px; background:#CC0000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;" title="Heading 3">H3</button>
+                      <button type="button" onclick="insertEditDescHeading('P')" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:rgba(255,255,255,0.7); border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Normal Paragraph">¶ Para</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="document.execCommand('bold'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;" title="Bold"><strong>B</strong></button>
+                      <button type="button" onclick="document.execCommand('italic'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-style:italic; font-size:13px;" title="Italic"><em>I</em></button>
+                      <button type="button" onclick="document.execCommand('underline'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; text-decoration:underline; font-size:13px;" title="Underline">U</button>
+                      <button type="button" onclick="document.execCommand('strikeThrough'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Strikethrough"><s>S</s></button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="document.execCommand('superscript'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Superscript">x²</button>
+                      <button type="button" onclick="document.execCommand('subscript'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Subscript">x₂</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="document.execCommand('insertUnorderedList'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Bullet List">• List</button>
+                      <button type="button" onclick="document.execCommand('insertOrderedList'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Numbered List">1. List</button>
+                      <button type="button" onclick="document.execCommand('indent'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Indent">→</button>
+                      <button type="button" onclick="document.execCommand('outdent'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Outdent">←</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="document.execCommand('justifyLeft'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Left">≡L</button>
+                      <button type="button" onclick="document.execCommand('justifyCenter'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Center">≡C</button>
+                      <button type="button" onclick="document.execCommand('justifyRight'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Right">≡R</button>
+                      <button type="button" onclick="document.execCommand('justifyFull'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Justify">≡J</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="insertEditDescBlockquote()" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Blockquote">❝ Quote</button>
+                      <button type="button" onclick="document.execCommand('insertHorizontalRule'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="HR">── HR</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <button type="button" onclick="document.execCommand('undo'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Undo">↩</button>
+                      <button type="button" onclick="document.execCommand('redo'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:13px;" title="Redo">↪</button>
+                      <div style="width:1px; height:20px; background:rgba(204,0,0,0.3);"></div>
+                      <div style="position:relative;">
+                        <button type="button" id="editDescColorBtn" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:12px;" title="Text Color">🎨</button>
+                        <div id="editDescColorPalette" onmousedown="event.preventDefault()" style="display:none; position:absolute; top:34px; left:0; background:rgba(10,0,0,0.97); border:2px solid rgba(204,0,0,0.5); border-radius:6px; padding:6px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.6); grid-template-columns:repeat(5,26px); gap:4px;">
+                          <div onclick="setEditDescColor('#FF5252')" style="width:26px;height:26px;background:#FF5252;border-radius:3px;cursor:pointer;" title="Red"></div>
+                          <div onclick="setEditDescColor('#4CAF50')" style="width:26px;height:26px;background:#4CAF50;border-radius:3px;cursor:pointer;" title="Green"></div>
+                          <div onclick="setEditDescColor('#FFB74D')" style="width:26px;height:26px;background:#FFB74D;border-radius:3px;cursor:pointer;" title="Orange"></div>
+                          <div onclick="setEditDescColor('#00BCD4')" style="width:26px;height:26px;background:#00BCD4;border-radius:3px;cursor:pointer;" title="Cyan"></div>
+                          <div onclick="setEditDescColor('#9C27B0')" style="width:26px;height:26px;background:#9C27B0;border-radius:3px;cursor:pointer;" title="Purple"></div>
+                          <div onclick="setEditDescColor('#FF8A65')" style="width:26px;height:26px;background:#FF8A65;border-radius:3px;cursor:pointer;" title="Peach"></div>
+                          <div onclick="setEditDescColor('#42A5F5')" style="width:26px;height:26px;background:#42A5F5;border-radius:3px;cursor:pointer;" title="Blue"></div>
+                          <div onclick="setEditDescColor('#ffffff')" style="width:26px;height:26px;background:#fff;border-radius:3px;cursor:pointer;border:1px solid #333;" title="White"></div>
+                          <div onclick="setEditDescColor('#FFEB3B')" style="width:26px;height:26px;background:#FFEB3B;border-radius:3px;cursor:pointer;" title="Yellow"></div>
+                          <div onclick="setEditDescColor('#000000')" style="width:26px;height:26px;background:#000;border-radius:3px;cursor:pointer;" title="Black"></div>
+                        </div>
+                      </div>
+                      <button type="button" onclick="document.execCommand('removeFormat'); document.getElementById('editRichDesc').focus();" style="padding:4px 9px; background:rgba(204,0,0,0.4); color:#fff; border:1px solid rgba(204,0,0,0.4); border-radius:4px; cursor:pointer; font-size:11px;" title="Clear">✖</button>
+                      <span id="editDescWordCount" style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.4);">0 words</span>
+                    </div>
+                    <!-- Rich Text Editor -->
+                    <div id="editRichDesc" contenteditable="true" data-placeholder="Project description with methodology and results..."
+                      style="min-height:200px; padding:12px; border:1px solid rgba(204,0,0,0.3); border-top:none; border-radius:0 0 8px 8px; font-size:14px; line-height:1.7; background:rgba(8,0,0,0.95); color:rgba(255,255,255,0.88); outline:none; word-break:break-word; font-family:'Noto Sans Bengali','Segoe UI',sans-serif;"
+                      oninput="updateEditDescWordCount();"
+                      onclick="this.focus();"></div>
                 </div>
 
                 <!-- Features Selection -->
