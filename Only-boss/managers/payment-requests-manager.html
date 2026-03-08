@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+  <title>Payment Requests Manager - A3KM Studio</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Firebase CDN (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+  /* ══════════════════════════════════════════════════════
+     RESET & BASE
+  ══════════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans Bengali', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d1f1f 100%);
+    background-image:
+      linear-gradient(rgba(255,152,0,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,152,0,.03) 1px, transparent 1px);
+    background-size: 100px 100px;
+    min-height: 100vh;
+    color: #fff;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     TOP NAVBAR
+  ══════════════════════════════════════════════════════ */
+  .top-navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #ffb74d 0%, #ffc107 50%, #ffd54f 100%);
+    box-shadow: 0 4px 20px rgba(255,183,77,.25);
+    border-bottom: 3px solid rgba(255,213,79,.4);
+  }
+  .navbar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .navbar-brand { display: flex; align-items: center; gap: 12px; }
+  .navbar-brand .brand-icon { font-size: 28px; }
+  .navbar-brand h1 {
+    color: #000;
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0,0,0,.3);
+  }
+  .navbar-brand p { color: #000; font-size: 11px; margin: 0; font-weight: 700; }
+  .navbar-actions { display: flex; gap: 10px; align-items: center; }
+  .nav-btn {
+    background: rgba(0,0,0,.15);
+    border: 2px solid rgba(0,0,0,.2);
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: #000;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .2s;
+  }
+  .nav-btn:hover { background: rgba(0,0,0,.25); }
+
+  /* ══════════════════════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════════════════════ */
+  .container {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 76px;
+  }
+  .sidebar {
+    width: 270px;
+    background: linear-gradient(180deg, #1f1111 0%, #2d1414 100%);
+    padding: 0;
+    position: sticky;
+    top: 76px;
+    height: calc(100vh - 76px);
+    overflow-y: auto;
+    border-right: 3px solid rgba(255,204,128,.4);
+    box-shadow: 4px 0 20px rgba(0,0,0,.3);
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    background: linear-gradient(135deg, #ff8a65 0%, #ffb74d 50%, #ffd54f 100%);
+    padding: 25px 20px;
+    color: #000;
+  }
+  .sidebar-header h1 {
+    font-size: 18px; font-weight: 900; margin-bottom: 3px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,.4);
+  }
+  .sidebar-header p { font-size: 11px; font-weight: 700; }
+  .sidebar-nav { padding: 15px 0; }
+  .tab-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 22px;
+    color: #ddd;
+    cursor: pointer;
+    transition: all .25s;
+    border-left: 4px solid transparent;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .tab-item:hover { background: linear-gradient(90deg, rgba(255,204,128,.2), transparent); color: #ffe082; border-left-color: #ffcc80; }
+  .tab-item.active { background: linear-gradient(90deg, rgba(255,204,128,.3), transparent); color: #ffe082; border-left-color: #ffb74d; }
+  .tab-badge {
+    margin-left: auto;
+    background: #e53e3e;
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+  .tab-badge.green { background: #38a169; }
+  .tab-badge.gray  { background: #4a5568; }
+
+  .sidebar-stats {
+    margin: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(255,183,77,.15), rgba(255,204,128,.1));
+    border-radius: 10px;
+    border: 1px solid rgba(255,152,0,.2);
+  }
+  .sidebar-stats h3 {
+    color: #ffe082; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 900;
+    text-shadow: 1px 1px 3px rgba(0,0,0,.8);
+  }
+  .stat-row {
+    display: flex; justify-content: space-between;
+    padding: 5px 0; color: #ccc; font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-val { font-weight: 900; color: #ffe082; font-size: 17px; text-shadow: 1px 1px 3px rgba(0,0,0,.8); }
+
+  /* ══════════════════════════════════════════════════════
+     MAIN CONTENT
+  ══════════════════════════════════════════════════════ */
+  .main-content {
+    flex: 1;
+    background: #f0f0f0;
+    padding: 30px;
+    overflow-y: auto;
+    min-width: 0;
+  }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, rgba(255,107,0,.08), rgba(255,193,7,.04));
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,152,0,.15);
+  }
+  .page-header h2 { font-size: 20px; font-weight: 900; color: #333; }
+  .page-header p  { font-size: 12px; color: #666; margin-top: 3px; }
+  .btn-refresh {
+    background: linear-gradient(135deg, #ff8a65, #ffb74d);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity .2s;
+  }
+  .btn-refresh:hover { opacity: .85; }
+  .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Tab panels */
+  .tab-panel  { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ══════════════════════════════════════════════════════
+     FILTER BAR
+  ══════════════════════════════════════════════════════ */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .filter-bar input, .filter-bar select {
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: #333;
+    background: #fafafa;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: #ffb74d; }
+  .filter-bar input { flex: 1; min-width: 180px; }
+  .filter-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     REQUEST CARDS
+  ══════════════════════════════════════════════════════ */
+  .requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .request-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    border-left: 5px solid #e2e8f0;
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .request-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.12); }
+  .request-card.status-pending  { border-left-color: #ed8936; }
+  .request-card.status-approved { border-left-color: #38a169; }
+  .request-card.status-rejected { border-left-color: #e53e3e; }
+
+  .card-head {
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-head:hover { background: #fafafa; }
+  .card-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffb74d, #ff8a65);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; color: #000;
+    flex-shrink: 0;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name {
+    font-weight: 700; font-size: 14px; color: #222;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card-email { font-size: 12px; color: #666; }
+  .card-meta-row {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; margin-top: 4px;
+  }
+  .status-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .status-badge.pending  { background: #fef3c7; color: #92400e; }
+  .status-badge.approved { background: #d1fae5; color: #065f46; }
+  .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+  .card-amount {
+    font-size: 13px; font-weight: 700; color: #333;
+  }
+  .card-date { font-size: 11px; color: #999; }
+  .card-items-preview { font-size: 11px; color: #666; margin-top: 2px; }
+  .card-chevron {
+    font-size: 12px; color: #aaa;
+    transition: transform .25s;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .request-card.expanded .card-chevron { transform: rotate(180deg); }
+
+  /* Card expanded body */
+  .card-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .request-card.expanded .card-body { display: block; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .detail-cell { }
+  .detail-cell label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: #999;
+    display: block; margin-bottom: 3px;
+  }
+  .detail-cell .val {
+    font-size: 13px; font-weight: 600; color: #222;
+    background: #f8f8f8;
+    border-radius: 6px;
+    padding: 6px 10px;
+    word-break: break-all;
+  }
+  .detail-cell .val.tx-id {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    background: #1a1a1a;
+    color: #4ade80;
+    letter-spacing: .08em;
+  }
+  .detail-cell.full { grid-column: 1 / -1; }
+
+  /* Items table */
+  .items-table {
+    width: 100%; border-collapse: collapse;
+    margin-top: 14px; font-size: 12px;
+  }
+  .items-table th {
+    background: #f0f0f0;
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: #555;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .items-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+  }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table .price-td { font-weight: 700; text-align: right; }
+  .items-table tfoot td {
+    font-weight: 900; font-size: 13px;
+    border-top: 2px solid #ddd;
+    color: #222;
+  }
+
+  /* Action buttons */
+  .card-actions {
+    display: flex; gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .btn-approve {
+    background: linear-gradient(135deg, #38a169, #48bb78);
+    border: none; border-radius: 8px;
+    padding: 9px 20px;
+    color: #fff; font-weight: 700; font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: opacity .2s;
+  }
+  .btn-approve:hover { opacity: .85; }
+  .btn-approve:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-reject {
+    background: linear-gradient(135deg, #e53e3e, #fc8181);
+    border: none; border-radius: 8px;
+    padding: 9px 20px;
+    color: #fff; font-weight: 700; font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: opacity .2s;
+  }
+  .btn-reject:hover { opacity: .85; }
+  .btn-reject:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-copy-tx {
+    background: #1a1a1a; border: none; border-radius: 8px;
+    padding: 9px 16px; color: #4ade80;
+    font-weight: 700; font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-copy-tx:hover { opacity: .8; }
+  .action-note {
+    font-size: 11px; color: #888;
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 6px; width: 100%;
+  }
+  .action-note.success { color: #38a169; }
+  .action-note.error   { color: #e53e3e; }
+
+  /* Already approved/rejected label */
+  .done-label {
+    font-size: 12px; font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .done-label.approved { background: #d1fae5; color: #065f46; }
+  .done-label.rejected { background: #fee2e2; color: #991b1b; }
+
+  /* Spinner */
+  .spinner {
+    width: .9rem; height: .9rem;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══════════════════════════════════════════════════════
+     EMPTY / LOADING STATES
+  ══════════════════════════════════════════════════════ */
+  .state-box {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #aaa;
+    background: #fff;
+    border-radius: 12px;
+  }
+  .state-box i { font-size: 2.5rem; margin-bottom: .8rem; display: block; }
+  .state-box p { font-size: .95rem; }
+  .state-box .title { font-size: 1.1rem; font-weight: 700; color: #555; margin-bottom: .3rem; }
+
+  /* ══════════════════════════════════════════════════════
+     TOAST
+  ══════════════════════════════════════════════════════ */
+  .toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 8px;
+    padding: .7rem 1.1rem;
+    font-size: .85rem; color: #fff;
+    z-index: 3000;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none; max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: #4ade80; background: #052e16; }
+  .toast.error   { border-color: #f87171; background: #1c0000; }
+
+  /* ══════════════════════════════════════════════════════
+     CONFIRM MODAL (reject reason)
+  ══════════════════════════════════════════════════════ */
+  #confirmOverlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 2000;
+    align-items: center; justify-content: center;
+  }
+  #confirmOverlay.open { display: flex; }
+  .confirm-modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .confirm-modal h3 { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: .5rem; }
+  .confirm-modal p  { font-size: .85rem; color: #666; margin-bottom: 1rem; }
+  .confirm-modal textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    padding: .6rem .9rem;
+    font-size: .85rem;
+    color: #333;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    font-family: inherit;
+    margin-bottom: 1rem;
+  }
+  .confirm-modal textarea:focus { border-color: #e53e3e; }
+  .confirm-btns { display: flex; gap: .75rem; }
+  .confirm-btns button { flex: 1; padding: .75rem; border: none; border-radius: 8px; font-weight: 700; font-size: .9rem; cursor: pointer; }
+  .btn-cancel-reject { background: #f0f0f0; color: #333; }
+  .btn-confirm-reject { background: #e53e3e; color: #fff; }
+
+  /* Auth gate */
+  #authGate {
+    display: none;
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #1a1a1a, #2d1f1f);
+    z-index: 5000;
+    align-items: center; justify-content: center;
+  }
+  #authGate.open { display: flex; }
+  .auth-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 340px; width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .auth-box .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .auth-box h2 { font-size: 1.3rem; font-weight: 900; color: #333; margin-bottom: .3rem; }
+  .auth-box p  { font-size: .85rem; color: #666; margin-bottom: 1.5rem; }
+  .btn-google-auth {
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: .75rem 1.5rem;
+    cursor: pointer;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #333;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    transition: border-color .2s;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-google-auth:hover { border-color: #ffb74d; }
+  .auth-error { color: #e53e3e; font-size: .8rem; margin-top: .75rem; }
+  </style>
+</head>
+<body>
+
+<!-- Auth Gate (shown until admin verified) -->
+<div id="authGate" class="open" role="dialog" aria-modal="true" aria-label="Admin Authentication">
+  <div class="auth-box">
+    <div class="icon">🔐</div>
+    <h2>Admin Access Required</h2>
+    <p>Sign in with the admin Google account to access Payment Manager</p>
+    <button class="btn-google-auth" id="googleAuthBtn" onclick="adminLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div class="auth-error" id="authError" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TOP NAVBAR ═══════════════════ -->
+<nav class="top-navbar">
+  <div class="navbar-content">
+    <div class="navbar-brand">
+      <span class="brand-icon">💳</span>
+      <div>
+        <h1>Payment Manager</h1>
+        <p>A3KM Studio — Admin Only</p>
+      </div>
+    </div>
+    <div class="navbar-actions">
+      <a href="../../../Only-boss/dashboard/only-boss-dashboard-redesigned.html" class="nav-btn">
+        <i class="fas fa-arrow-left"></i> Dashboard
+      </a>
+      <button class="nav-btn" onclick="adminLogout()">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ MAIN LAYOUT ═══════════════════ -->
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>💳 Payments</h1>
+      <p>Review & grant access</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="tab-item active" onclick="switchTab('pending')" id="nav-pending">
+        <i class="fas fa-clock"></i> Pending
+        <span class="tab-badge" id="badge-pending">—</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('approved')" id="nav-approved">
+        <i class="fas fa-check-circle"></i> Approved
+        <span class="tab-badge green" id="badge-approved">—</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('rejected')" id="nav-rejected">
+        <i class="fas fa-times-circle"></i> Rejected
+        <span class="tab-badge gray" id="badge-rejected">—</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-stats">
+      <h3>📊 Stats</h3>
+      <div class="stat-row">
+        <span>Total requests</span>
+        <span class="stat-val" id="stat-total">—</span>
+      </div>
+      <div class="stat-row">
+        <span>Pending</span>
+        <span class="stat-val" id="stat-pending">—</span>
+      </div>
+      <div class="stat-row">
+        <span>Approved</span>
+        <span class="stat-val" id="stat-approved">—</span>
+      </div>
+      <div class="stat-row">
+        <span>Total revenue</span>
+        <span class="stat-val" id="stat-revenue">—</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h2 id="panelTitle">⏳ Pending Payment Requests</h2>
+        <p id="panelSub">Review bKash transactions and grant content access</p>
+      </div>
+      <button class="btn-refresh" id="refreshBtn" onclick="loadRequests()">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Pending Panel -->
+    <div class="tab-panel active" id="panel-pending">
+      <div class="filter-bar">
+        <input type="search" id="searchPending" placeholder="Search name, email, TX ID…" oninput="applyFilter('pending')">
+        <span class="filter-count" id="filterCount-pending"></span>
+      </div>
+      <div class="requests-list" id="list-pending">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+
+    <!-- Approved Panel -->
+    <div class="tab-panel" id="panel-approved">
+      <div class="filter-bar">
+        <input type="search" id="searchApproved" placeholder="Search name, email, TX ID…" oninput="applyFilter('approved')">
+        <span class="filter-count" id="filterCount-approved"></span>
+      </div>
+      <div class="requests-list" id="list-approved">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+
+    <!-- Rejected Panel -->
+    <div class="tab-panel" id="panel-rejected">
+      <div class="filter-bar">
+        <input type="search" id="searchRejected" placeholder="Search name, email, TX ID…" oninput="applyFilter('rejected')">
+        <span class="filter-count" id="filterCount-rejected"></span>
+      </div>
+      <div class="requests-list" id="list-rejected">
+        <div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Reject Reason Modal -->
+<div id="confirmOverlay" role="dialog" aria-modal="true">
+  <div class="confirm-modal">
+    <h3>❌ Reject Payment Request?</h3>
+    <p>Optionally enter a reason — it will be shown in the rejection record.</p>
+    <textarea id="rejectReason" placeholder="E.g. Invalid transaction ID, duplicate request…" maxlength="300"></textarea>
+    <div class="confirm-btns">
+      <button class="btn-cancel-reject" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn-confirm-reject" id="confirmRejectBtn" onclick="confirmReject()">
+        <i class="fas fa-times"></i> Reject
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Firebase Config + Auth -->
+<script src="../../Optimization/firebase-config.js"></script>
+<script src="../../Optimization/auth-module.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── State ─────────────────────────────────────────────
+  let allRequests  = [];   // all loaded docs
+  let filtered     = { pending: [], approved: [], rejected: [] };
+  let currentTab   = 'pending';
+  let rejectTarget = null; // doc ID being rejected
+  let isLoading    = false;
+
+  const ADMIN_EMAIL  = window.A3KM.ADMIN_EMAIL; // primary (for fallback)
+  const ADMIN_EMAILS = window.A3KM.ADMIN_EMAILS;
+  const db           = window.A3KM.db;
+  const auth        = window.A3KM.auth;
+
+  const TAB_LABELS = {
+    pending:  { title: '⏳ Pending Payment Requests', sub: 'Review bKash transactions and grant content access' },
+    approved: { title: '✅ Approved Payments', sub: 'Payments verified and access granted' },
+    rejected: { title: '❌ Rejected Payments', sub: 'Payments that were declined' },
+  };
+
+  // ══════════════════════════════════════════════════════
+  // AUTH
+  // ══════════════════════════════════════════════════════
+  auth.onAuthStateChanged(user => {
+    if (user && ADMIN_EMAILS.includes(user.email)) {
+      document.getElementById('authGate').classList.remove('open');
+      init();
+    } else if (user) {
+      // Signed in but not admin
+      auth.signOut();
+      showAuthError('This account does not have admin access.');
+    }
+    // else: gate stays open
+  });
+
+  window.adminLogin = async function () {
+    const btn = document.getElementById('googleAuthBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="border:2px solid #ddd;border-top-color:#ffb74d;border-radius:50%;width:16px;height:16px;display:inline-block;animation:spin .6s linear infinite;"></span> Signing in…';
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+      // onAuthStateChanged will handle the rest
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        showAuthError('Login failed: ' + err.message);
+      }
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign in with Google`;
+    }
+  };
+
+  window.adminLogout = function () {
+    auth.signOut();
+    document.getElementById('authGate').classList.add('open');
+  };
+
+  function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // ══════════════════════════════════════════════════════
+  // INIT
+  // ══════════════════════════════════════════════════════
+  function init() {
+    emailjs.init(window.A3KM.emailjsCfg.publicKey);
+    loadRequests();
+  }
+
+  // ══════════════════════════════════════════════════════
+  // LOAD REQUESTS
+  // ══════════════════════════════════════════════════════
+  window.loadRequests = async function () {
+    if (isLoading) return;
+    isLoading = true;
+
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;width:14px;height:14px;display:inline-block;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span>Loading…';
+
+    ['pending','approved','rejected'].forEach(s =>
+      document.getElementById('list-' + s).innerHTML =
+        '<div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>'
+    );
+
+    try {
+      const snap = await db.collection('paymentRequests')
+        .orderBy('submittedAt', 'desc')
+        .get();
+
+      allRequests = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+
+      filtered.pending  = allRequests.filter(r => r.status === 'pending');
+      filtered.approved = allRequests.filter(r => r.status === 'approved');
+      filtered.rejected = allRequests.filter(r => r.status === 'rejected');
+
+      updateStats();
+      renderAll();
+
+    } catch (err) {
+      console.error('[PayMgr] Load error:', err);
+      ['pending','approved','rejected'].forEach(s => {
+        document.getElementById('list-' + s).innerHTML =
+          `<div class="state-box"><i class="fas fa-exclamation-triangle"></i><div class="title">Load Failed</div><p>${_esc(err.message)}</p></div>`;
+      });
+      showToast('Failed to load requests: ' + err.message, 'error');
+    } finally {
+      isLoading = false;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+    }
+  };
+
+  function updateStats() {
+    const pending  = filtered.pending.length;
+    const approved = filtered.approved.length;
+    const total    = allRequests.length;
+    const revenue  = filtered.approved.reduce((s, r) => s + (r.totalAmount || 0), 0);
+
+    document.getElementById('stat-total').textContent    = total;
+    document.getElementById('stat-pending').textContent  = pending;
+    document.getElementById('stat-approved').textContent = approved;
+    document.getElementById('stat-revenue').textContent  = '৳' + revenue;
+
+    document.getElementById('badge-pending').textContent  = pending  || '0';
+    document.getElementById('badge-approved').textContent = approved || '0';
+    document.getElementById('badge-rejected').textContent = filtered.rejected.length || '0';
+  }
+
+  // ══════════════════════════════════════════════════════
+  // RENDER
+  // ══════════════════════════════════════════════════════
+  function renderAll() {
+    ['pending','approved','rejected'].forEach(status => {
+      renderList(status, filtered[status]);
+    });
+  }
+
+  function renderList(status, items) {
+    const container = document.getElementById('list-' + status);
+    const searchVal = (document.getElementById('search-' + status) || document.getElementById('search' + _cap(status)))?.value.toLowerCase() || '';
+
+    const toShow = searchVal
+      ? items.filter(r =>
+          (r.name   || '').toLowerCase().includes(searchVal) ||
+          (r.email  || '').toLowerCase().includes(searchVal) ||
+          (r.transactionId || '').toLowerCase().includes(searchVal) ||
+          (r.phone  || '').toLowerCase().includes(searchVal)
+        )
+      : items;
+
+    document.getElementById('filterCount-' + status).textContent =
+      `${toShow.length} request${toShow.length !== 1 ? 's' : ''}`;
+
+    if (toShow.length === 0) {
+      const empty = status === 'pending'
+        ? { icon: 'fa-check-circle', title: 'All clear!', msg: 'No pending payment requests.' }
+        : { icon: 'fa-inbox',        title: 'Empty',      msg: 'No ' + status + ' requests.' };
+      container.innerHTML = `<div class="state-box">
+        <i class="fas ${empty.icon}"></i>
+        <div class="title">${empty.title}</div>
+        <p>${empty.msg}</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = toShow.map(r => renderCard(r)).join('');
+  }
+
+  function renderCard(r) {
+    const initials = (r.name || '?').charAt(0).toUpperCase();
+    const dateStr  = r.submittedAt
+      ? new Date(r.submittedAt.toDate ? r.submittedAt.toDate() : r.submittedAt).toLocaleString('en-BD', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : 'Unknown date';
+
+    const itemsPreview = (r.items || []).map(i => i.title).join(', ');
+    const itemRows = (r.items || []).map(i =>
+      `<tr>
+        <td>${_esc(i.title || i.id)}</td>
+        <td style="color:#666;font-size:11px">${_esc(i.type||'')}</td>
+        <td class="price-td">৳${i.price || 0}</td>
+      </tr>`
+    ).join('');
+
+    const actionHTML = r.status === 'pending'
+      ? `<button class="btn-approve" onclick="approveRequest('${_esc(r._id)}', event)">
+           <i class="fas fa-check"></i> Approve & Grant Access
+         </button>
+         <button class="btn-reject" onclick="openRejectModal('${_esc(r._id)}', event)">
+           <i class="fas fa-times"></i> Reject
+         </button>
+         <button class="btn-copy-tx" onclick="copyTx('${_esc(r.transactionId||'')}', event)">
+           <i class="fas fa-copy"></i> Copy TX
+         </button>`
+      : r.status === 'approved'
+        ? `<span class="done-label approved"><i class="fas fa-check-circle"></i> Access Granted</span>
+           ${r.approvedAt ? `<span style="font-size:11px;color:#666;margin-left:8px;">${new Date(r.approvedAt.toDate ? r.approvedAt.toDate() : r.approvedAt).toLocaleString('en-BD')}</span>` : ''}`
+        : `<span class="done-label rejected"><i class="fas fa-times-circle"></i> Rejected</span>
+           ${r.rejectReason ? `<div style="font-size:11px;color:#666;margin-top:6px;">Reason: ${_esc(r.rejectReason)}</div>` : ''}`;
+
+    return `
+    <div class="request-card status-${_esc(r.status)}" id="reqcard-${_esc(r._id)}">
+      <div class="card-head" onclick="toggleCard('${_esc(r._id)}')">
+        <div class="card-avatar">${initials}</div>
+        <div class="card-info">
+          <div class="card-name">${_esc(r.name || 'Unknown')}</div>
+          <div class="card-email">${_esc(r.email || '')}</div>
+          <div class="card-meta-row">
+            <span class="status-badge ${r.status}">${r.status}</span>
+            <span class="card-amount">৳${r.totalAmount || 0}</span>
+            <span class="card-date">${dateStr}</span>
+          </div>
+          <div class="card-items-preview">${_esc(itemsPreview.length > 80 ? itemsPreview.slice(0,80)+'…' : itemsPreview)}</div>
+        </div>
+        <i class="fas fa-chevron-down card-chevron"></i>
+      </div>
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-cell">
+            <label>📱 Phone</label>
+            <div class="val">${_esc(r.phone || '—')}</div>
+          </div>
+          <div class="detail-cell">
+            <label>📲 bKash Sender</label>
+            <div class="val">${_esc(r.bkashSenderNum || '—')}</div>
+          </div>
+          <div class="detail-cell">
+            <label>💳 Transaction ID</label>
+            <div class="val tx-id">${_esc(r.transactionId || '—')}</div>
+          </div>
+          <div class="detail-cell">
+            <label>💰 Amount</label>
+            <div class="val">৳${r.totalAmount || 0} BDT</div>
+          </div>
+          <div class="detail-cell">
+            <label>🆔 User UID</label>
+            <div class="val" style="font-family:monospace;font-size:11px;">${_esc(r.uid || '—')}</div>
+          </div>
+          <div class="detail-cell">
+            <label>📋 Request ID</label>
+            <div class="val" style="font-family:monospace;font-size:11px;">${_esc(r._id)}</div>
+          </div>
+          ${r.note ? `<div class="detail-cell full">
+            <label>📝 User Note</label>
+            <div class="val">${_esc(r.note)}</div>
+          </div>` : ''}
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Content</th>
+              <th>Type</th>
+              <th style="text-align:right">Price</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">Total</td>
+              <td class="price-td">৳${r.totalAmount || 0}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="card-actions" id="actions-${_esc(r._id)}">
+          ${actionHTML}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ══════════════════════════════════════════════════════
+  // APPROVE
+  // ══════════════════════════════════════════════════════
+  window.approveRequest = async function (docId, evt) {
+    evt && evt.stopPropagation();
+    const r = allRequests.find(x => x._id === docId);
+    if (!r) return;
+
+    const actionsEl = document.getElementById('actions-' + docId);
+    actionsEl.innerHTML = '<div style="font-size:13px;color:#38a169;display:flex;align-items:center;gap:8px;"><span style="border:2px solid #c6f6d5;border-top-color:#38a169;border-radius:50%;width:14px;height:14px;display:inline-block;animation:spin .6s linear infinite;"></span>Granting access…</div>';
+
+    try {
+      const FS = firebase.firestore.FieldValue;
+
+      // Grant each item
+      for (const item of (r.items || [])) {
+        if (item.type === 'combo') {
+          await window.A3KM.grantComboAccess(r.uid, item.id);
+        } else {
+          await window.A3KM.grantAccess(r.uid, item.type, item.id);
+        }
+      }
+
+      // Update request doc
+      await db.collection('paymentRequests').doc(docId).update({
+        status:     'approved',
+        approvedAt: FS.serverTimestamp(),
+        approvedBy: auth.currentUser?.email || ADMIN_EMAIL
+      });
+
+      // Send access_granted email to user
+      const ejsCfg = window.A3KM.emailjsCfg;
+      const itemsStr = (r.items || []).map(i =>
+        `${i.type ? i.type.charAt(0).toUpperCase() + i.type.slice(1) : ''}: ${i.title} — ৳${i.price || 0}`
+      ).join('\n');
+
+      try {
+        await emailjs.send(ejsCfg.serviceId, ejsCfg.templates.accessGranted, {
+          to_email:       r.email,
+          to_name:        r.name,
+          items_list:     itemsStr,
+          total_amount:   '৳' + (r.totalAmount || 0),
+          transaction_id: r.transactionId,
+          status:         'Approved — Access Granted',
+          request_id:     docId,
+        });
+      } catch (mailErr) {
+        console.warn('[PayMgr] Email send warning:', mailErr);
+        // Non-fatal — access is already granted
+      }
+
+      // Update local state
+      r.status = 'approved';
+      r.approvedAt = { toDate: () => new Date() };
+      filtered.pending  = allRequests.filter(x => x.status === 'pending');
+      filtered.approved = allRequests.filter(x => x.status === 'approved');
+      updateStats();
+      renderAll();
+      showToast('✅ Access granted to ' + r.name, 'success');
+
+    } catch (err) {
+      console.error('[PayMgr] Approve error:', err);
+      actionsEl.innerHTML = `<span class="action-note error"><i class="fas fa-exclamation-triangle"></i>Failed: ${_esc(err.message)}</span>`;
+      showToast('Approve failed: ' + err.message, 'error');
+    }
+  };
+
+  // ══════════════════════════════════════════════════════
+  // REJECT
+  // ══════════════════════════════════════════════════════
+  window.openRejectModal = function (docId, evt) {
+    evt && evt.stopPropagation();
+    rejectTarget = docId;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('confirmOverlay').classList.add('open');
+  };
+
+  window.closeRejectModal = function () {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    rejectTarget = null;
+  };
+
+  window.confirmReject = async function () {
+    if (!rejectTarget) return;
+    const docId  = rejectTarget;
+    const reason = document.getElementById('rejectReason').value.trim();
+
+    const btn = document.getElementById('confirmRejectBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;width:12px;height:12px;display:inline-block;animation:spin .6s linear infinite;"></span>';
+
+    try {
+      const FS = firebase.firestore.FieldValue;
+      await db.collection('paymentRequests').doc(docId).update({
+        status:       'rejected',
+        rejectedAt:   FS.serverTimestamp(),
+        rejectedBy:   auth.currentUser?.email || ADMIN_EMAIL,
+        rejectReason: reason || ''
+      });
+
+      const r = allRequests.find(x => x._id === docId);
+      if (r) {
+        r.status = 'rejected';
+        r.rejectReason = reason;
+        r.rejectedAt = { toDate: () => new Date() };
+      }
+
+      filtered.pending  = allRequests.filter(x => x.status === 'pending');
+      filtered.rejected = allRequests.filter(x => x.status === 'rejected');
+      updateStats();
+      renderAll();
+      closeRejectModal();
+      showToast('Request rejected', '');
+
+    } catch (err) {
+      console.error('[PayMgr] Reject error:', err);
+      showToast('Reject failed: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-times"></i> Reject';
+    }
+  };
+
+  // ══════════════════════════════════════════════════════
+  // UI HELPERS
+  // ══════════════════════════════════════════════════════
+  window.toggleCard = function (docId) {
+    const card = document.getElementById('reqcard-' + docId);
+    if (card) card.classList.toggle('expanded');
+  };
+
+  window.switchTab = function (tab) {
+    currentTab = tab;
+    ['pending','approved','rejected'].forEach(t => {
+      document.getElementById('nav-'   + t).classList.toggle('active', t === tab);
+      document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+    });
+    document.getElementById('panelTitle').textContent = TAB_LABELS[tab].title;
+    document.getElementById('panelSub').textContent   = TAB_LABELS[tab].sub;
+  };
+
+  window.applyFilter = function (status) {
+    renderList(status, filtered[status]);
+  };
+
+  window.copyTx = function (txId, evt) {
+    evt && evt.stopPropagation();
+    if (!txId) return;
+    navigator.clipboard.writeText(txId).then(() => showToast('TX ID copied: ' + txId, 'success'));
+  };
+
+  // ══════════════════════════════════════════════════════
+  // TOAST
+  // ══════════════════════════════════════════════════════
+  let toastTimer;
+  function showToast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  // ══════════════════════════════════════════════════════
+  // UTILS
+  // ══════════════════════════════════════════════════════
+  function _esc(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function _cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+})();
+</script>
+
+</body>
+</html>

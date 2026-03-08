@@ -1,0 +1,1962 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0000">
+    <meta name="description" content="Purchase courses, books, research papers and project files from A3KM Studio">
+    <title>A3KM Store — Buy Content</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+
+    <!-- Navbar Styles -->
+    <link rel="stylesheet" href="Optimization/navbar/desktop-navbar.css">
+    <link rel="stylesheet" href="Optimization/access-gate.css">
+
+    <!-- Firebase CDN (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+    /* ══════════════════════════════════════════════════════════════
+       ROOT VARIABLES
+       ══════════════════════════════════════════════════════════════ */
+    :root {
+        --color-primary:       #8B0000;
+        --color-primary-light: #CC0000;
+        --color-primary-dark:  #5A0000;
+        --color-bg-dark:       #0d0000;
+        --color-bg-darker:     #000000;
+        --color-bg-card:       #1a0000;
+        --color-bg-card2:      #120000;
+        --color-text-primary:  #ffffff;
+        --color-text-secondary:rgba(255,255,255,0.7);
+        --color-text-muted:    rgba(255,255,255,0.45);
+        --color-border:        rgba(204,0,0,0.2);
+        --color-border-hover:  rgba(204,0,0,0.5);
+        --font-primary:        'Inter', -apple-system, sans-serif;
+        --font-display:        'Rajdhani', 'Inter', sans-serif;
+        --navbar-height:       70px;
+        --cart-width:          380px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        font-family: var(--font-primary);
+        background: var(--color-bg-darker);
+        color: var(--color-text-primary);
+        min-height: 100vh;
+        padding-top: var(--navbar-height);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ══════════════════════════════════════════════════════════════ */
+    .buy-header {
+        background: linear-gradient(135deg, #1a0000 0%, #0d0000 60%, #000 100%);
+        border-bottom: 1px solid var(--color-border);
+        padding: 2rem 2rem 1.5rem;
+        text-align: center;
+    }
+    .buy-header h1 {
+        font-family: var(--font-display);
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.03em;
+    }
+    .buy-header h1 span { color: var(--color-primary-light); }
+    .buy-header p {
+        color: var(--color-text-secondary);
+        font-size: 0.95rem;
+        margin-top: 0.4rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       MAIN LAYOUT — browse area + cart sidebar
+       ══════════════════════════════════════════════════════════════ */
+    .buy-layout {
+        display: flex;
+        gap: 0;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: calc(100vh - var(--navbar-height) - 130px);
+    }
+    .buy-main {
+        flex: 1;
+        padding: 1.5rem 1.5rem 4rem;
+        min-width: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       PAGE TABS (Browse / My Access)
+       ══════════════════════════════════════════════════════════════ */
+    .page-tabs {
+        display: flex;
+        gap: 0.25rem;
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 1.5rem;
+    }
+    .page-tab-btn {
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.7rem 1.4rem;
+        color: var(--color-text-secondary);
+        font-family: var(--font-primary);
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s, border-color 0.2s;
+        margin-bottom: -1px;
+    }
+    .page-tab-btn:hover { color: #fff; }
+    .page-tab-btn.active {
+        color: #fff;
+        border-bottom-color: var(--color-primary-light);
+    }
+    .page-tab-btn i { margin-right: 0.4rem; }
+
+    /* ══════════════════════════════════════════════════════════════
+       TAB PANELS
+       ══════════════════════════════════════════════════════════════ */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ══════════════════════════════════════════════════════════════
+       CATEGORY FILTER PILLS
+       ══════════════════════════════════════════════════════════════ */
+    .category-filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .cat-pill {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .cat-pill:hover { border-color: var(--color-border-hover); color: #fff; }
+    .cat-pill.active {
+        background: var(--color-primary-dark);
+        border-color: var(--color-primary);
+        color: #fff;
+    }
+    .cat-pill i { margin-right: 0.35rem; }
+
+    /* ══════════════════════════════════════════════════════════════
+       CONTENT GRID
+       ══════════════════════════════════════════════════════════════ */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       CONTENT CARD
+       ══════════════════════════════════════════════════════════════ */
+    .content-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s, transform 0.2s;
+    }
+    .content-card:hover {
+        border-color: var(--color-border-hover);
+        transform: translateY(-2px);
+    }
+    .card-thumb {
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+        background: var(--color-bg-card2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.15);
+        font-size: 2.5rem;
+    }
+    .card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .card-body {
+        padding: 0.9rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .card-type-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-primary-light);
+    }
+    .card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #fff;
+        line-height: 1.4;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .card-meta {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+    }
+    .card-footer {
+        padding: 0.7rem 0.9rem;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .card-price {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+    }
+    .price-slash {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+        text-decoration: line-through;
+    }
+    .price-main {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+    .price-discount {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #4ade80;
+        background: rgba(74,222,128,0.12);
+        border-radius: 4px;
+        padding: 1px 5px;
+    }
+    .price-free {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4ade80;
+    }
+    .btn-add-cart {
+        background: var(--color-primary);
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .btn-add-cart:hover { background: var(--color-primary-light); }
+    .btn-add-cart:disabled {
+        background: rgba(255,255,255,0.1);
+        cursor: not-allowed;
+        color: var(--color-text-muted);
+    }
+    .btn-add-cart.in-cart {
+        background: #166534;
+        pointer-events: none;
+    }
+    .btn-add-cart.in-cart::before { content: "✓ "; }
+
+    /* ══════════════════════════════════════════════════════════════
+       EMPTY / LOADING STATES
+       ══════════════════════════════════════════════════════════════ */
+    .state-box {
+        text-align: center;
+        padding: 4rem 1rem;
+        color: var(--color-text-muted);
+    }
+    .state-box i { font-size: 2.5rem; margin-bottom: 0.8rem; display: block; }
+    .state-box p { font-size: 0.95rem; }
+    .state-box .state-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        margin-bottom: 0.4rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FLOATING CART BUTTON
+       ══════════════════════════════════════════════════════════════ */
+    #cartFab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--color-primary);
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 1.3rem;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 20px rgba(139,0,0,0.5);
+        z-index: 900;
+        transition: background 0.2s, transform 0.2s;
+    }
+    #cartFab:hover { background: var(--color-primary-light); transform: scale(1.04); }
+    #cartFab.hidden { display: none; }
+    #cartCount {
+        background: #fff;
+        color: var(--color-primary-dark);
+        border-radius: 50%;
+        width: 1.3rem;
+        height: 1.3rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       CART PANEL (slide from right)
+       ══════════════════════════════════════════════════════════════ */
+    #cartOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 950;
+    }
+    #cartOverlay.open { display: block; }
+    #cartPanel {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: min(var(--cart-width), 100vw);
+        height: 100vh;
+        background: #160000;
+        border-left: 1px solid var(--color-border);
+        z-index: 960;
+        display: flex;
+        flex-direction: column;
+        transition: right 0.3s ease;
+    }
+    #cartPanel.open { right: 0; }
+    .cart-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .cart-header h2 {
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    .cart-close {
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.3rem;
+    }
+    .cart-close:hover { color: #fff; }
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .cart-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+    }
+    .cart-item-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--color-primary-dark);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cart-item-type {
+        font-size: 0.72rem;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .cart-item-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+    }
+    .cart-item-remove {
+        background: none;
+        border: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        padding: 0.2rem;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .cart-item-remove:hover { color: #f87171; }
+    .cart-footer {
+        border-top: 1px solid var(--color-border);
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    .cart-total-amount { color: #fff; font-size: 1.3rem; }
+    .btn-checkout {
+        background: var(--color-primary);
+        border: none;
+        border-radius: 8px;
+        padding: 0.9rem;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .btn-checkout:hover { background: var(--color-primary-light); }
+    .btn-checkout:disabled {
+        background: rgba(255,255,255,0.1);
+        cursor: not-allowed;
+    }
+    .cart-empty-msg {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--color-text-muted);
+    }
+    .cart-empty-msg i { font-size: 2.5rem; display: block; margin-bottom: 0.7rem; }
+
+    /* ══════════════════════════════════════════════════════════════
+       PAYMENT MODAL
+       ══════════════════════════════════════════════════════════════ */
+    #paymentOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #paymentOverlay.open { display: flex; }
+    .payment-modal {
+        background: #160000;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 2rem;
+        position: relative;
+    }
+    .payment-modal h2 {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .payment-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        font-size: 1.3rem;
+        cursor: pointer;
+    }
+    .payment-close:hover { color: #fff; }
+
+    /* Steps */
+    .payment-steps {
+        display: flex;
+        gap: 0;
+        margin-bottom: 1.5rem;
+    }
+    .payment-step-label {
+        flex: 1;
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.4rem 0.2rem;
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+        color: var(--color-text-muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .payment-step-label.active {
+        border-bottom-color: var(--color-primary-light);
+        color: var(--color-primary-light);
+    }
+    .payment-step-label.done {
+        border-bottom-color: #4ade80;
+        color: #4ade80;
+    }
+
+    /* Step panels */
+    .pay-step { display: none; }
+    .pay-step.active { display: block; }
+
+    /* bKash instruction box */
+    .bkash-box {
+        background: rgba(220,38,38,0.08);
+        border: 1px solid rgba(220,38,38,0.25);
+        border-radius: 10px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1.2rem;
+    }
+    .bkash-box h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fca5a5;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .bkash-number {
+        font-family: 'Courier New', monospace;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.05em;
+        background: var(--color-bg-card2);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+    }
+    .bkash-number button {
+        background: none;
+        border: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    .bkash-number button:hover { color: #fff; }
+    .bkash-steps-list {
+        list-style: none;
+        counter-reset: bk;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .bkash-steps-list li {
+        counter-increment: bk;
+        font-size: 0.83rem;
+        color: var(--color-text-secondary);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .bkash-steps-list li::before {
+        content: counter(bk);
+        background: var(--color-primary-dark);
+        color: #fff;
+        border-radius: 50%;
+        min-width: 1.3rem;
+        height: 1.3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-top: 0.05rem;
+    }
+
+    /* Order summary in payment */
+    .pay-summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+    .pay-summary-table td {
+        padding: 0.35rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        color: var(--color-text-secondary);
+        vertical-align: top;
+    }
+    .pay-summary-table td:last-child {
+        text-align: right;
+        color: #fff;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .pay-total-row td {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff !important;
+        border-bottom: none;
+        padding-top: 0.6rem;
+    }
+
+    /* Form */
+    .pay-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+    }
+    .form-group label .req { color: #f87171; margin-left: 2px; }
+    .form-group input, .form-group textarea {
+        background: var(--color-bg-card2);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 0.65rem 0.9rem;
+        color: #fff;
+        font-family: var(--font-primary);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+        width: 100%;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        border-color: var(--color-primary-light);
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder {
+        color: var(--color-text-muted);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-hint {
+        font-size: 0.76rem;
+        color: var(--color-text-muted);
+        margin-top: 0.1rem;
+    }
+    .pay-btn-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    .btn-back {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 0.8rem 1.2rem;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--color-border-hover); color: #fff; }
+    .btn-pay-submit {
+        flex: 1;
+        background: var(--color-primary);
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+    }
+    .btn-pay-submit:hover { background: var(--color-primary-light); }
+    .btn-pay-submit:disabled {
+        background: rgba(255,255,255,0.1);
+        cursor: not-allowed;
+    }
+
+    /* Spinner */
+    .spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success step */
+    .pay-success {
+        text-align: center;
+        padding: 1.5rem 0;
+    }
+    .pay-success-icon {
+        font-size: 3.5rem;
+        color: #4ade80;
+        margin-bottom: 1rem;
+    }
+    .pay-success h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #fff;
+    }
+    .pay-success p {
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       MY ACCESS TAB
+       ══════════════════════════════════════════════════════════════ */
+    .sign-in-prompt {
+        text-align: center;
+        padding: 4rem 1rem;
+    }
+    .sign-in-prompt i { font-size: 3rem; margin-bottom: 1rem; display: block; color: var(--color-text-muted); }
+    .sign-in-prompt h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .sign-in-prompt p { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .btn-google-sign-in {
+        background: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        color: #333;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: opacity 0.2s;
+    }
+    .btn-google-sign-in:hover { opacity: 0.9; }
+
+    /* Access cards */
+    .access-section-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        margin-bottom: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    .access-section-title:first-of-type { margin-top: 0; }
+
+    /* ══════════════════════════════════════════════════════════════
+       COMBOS SECTION
+       ══════════════════════════════════════════════════════════════ */
+    .combo-card {
+        background: linear-gradient(135deg, #1a0000, #0d0000);
+        border: 1px solid rgba(204,0,0,0.35);
+        border-radius: 14px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        transition: border-color 0.2s;
+    }
+    .combo-card:hover { border-color: rgba(204,0,0,0.7); }
+    .combo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(139,0,0,0.3);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #fca5a5;
+        width: fit-content;
+    }
+    .combo-title { font-size: 1.1rem; font-weight: 700; }
+    .combo-desc { font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; }
+    .combo-items-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .combo-items-list li {
+        font-size: 0.82rem;
+        color: var(--color-text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .combo-items-list li i { color: var(--color-primary-light); font-size: 0.7rem; }
+    .combo-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-border);
+    }
+    .combo-price-block { display: flex; flex-direction: column; gap: 0.1rem; }
+    .combo-original { font-size: 0.8rem; color: var(--color-text-muted); text-decoration: line-through; }
+    .combo-final { font-size: 1.3rem; font-weight: 700; }
+    .combo-save { font-size: 0.75rem; color: #4ade80; }
+
+    /* ══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATION
+       ══════════════════════════════════════════════════════════════ */
+    .toast {
+        position: fixed;
+        bottom: 5rem;
+        right: 2rem;
+        background: #1a1a1a;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 8px;
+        padding: 0.75rem 1.2rem;
+        font-size: 0.85rem;
+        color: #fff;
+        z-index: 2000;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.25s, transform 0.25s;
+        pointer-events: none;
+        max-width: 300px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.toast-success { border-color: #4ade80; background: #052e16; }
+    .toast.toast-error   { border-color: #f87171; background: #1c0000; }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+        .buy-header h1 { font-size: 1.6rem; }
+        .content-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; }
+        .payment-modal { padding: 1.5rem; }
+        .form-row { grid-template-columns: 1fr; }
+        #cartFab { bottom: 1.5rem; right: 1rem; }
+    }
+    @media (max-width: 480px) {
+        .buy-main { padding: 1rem 0.75rem 4rem; }
+        .content-grid { grid-template-columns: 1fr 1fr; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="index.html" class="desktop-nav-logo" title="A3KM Studio - Home" aria-label="A3KM Studio Home">
+            <img src="images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55" loading="lazy">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item">
+                <a href="Home/index.html" class="desktop-nav-link" aria-label="Home">
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="Content Studio/hub.html" class="desktop-nav-link" aria-label="Content Studio">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    <span>Content Studio</span>
+                </a>
+            </li>
+            <li class="desktop-nav-item">
+                <a href="buy.html" class="desktop-nav-link desktop-nav-link--active" aria-label="Store" aria-current="page">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    <span>Store</span>
+                </a>
+            </li>
+            
+            <!-- Auth Dropdown (Always Visible) -->
+            <li class="desktop-nav-item nav-auth-item" id="navAuthDropdown">
+                <div class="nav-auth-trigger" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" title="Account & Access">
+                    <img id="navAuthAvatar" class="nav-auth-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User Avatar" aria-hidden="true">
+                    <i class="fas fa-chevron-down nav-auth-chevron" aria-hidden="true"></i>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="nav-auth-menu" role="menu">
+                        <!-- Profile Name (only when logged in) -->
+                        <div class="nav-auth-profile" id="navAuthProfile" style="display:none;">
+                            <img id="navAuthProfilePic" class="nav-auth-profile-pic" src="" alt="">
+                            <div class="nav-auth-profile-info">
+                                <span class="nav-auth-profile-name" id="navAuthProfileName">Guest User</span>
+                                <span class="nav-auth-profile-email" id="navAuthProfileEmail"></span>
+                            </div>
+                        </div>
+                        <div class="nav-auth-divider" id="navAuthDivider1" style="display:none;"></div>
+                        
+                        <!-- Sign In Button (only when logged out) -->
+                        <button class="nav-auth-menu-item nav-auth-signin" id="navAuthSignInBtn" onclick="window.A3KM && window.A3KM.loginWithGoogle()" role="menuitem">
+                            <i class="fab fa-google"></i>
+                            <span>Sign In</span>
+                        </button>
+                        
+                        <!-- My Access (only when logged in) -->
+                        <a href="#" onclick="showTab('myaccess'); return false;" class="nav-auth-menu-item" id="navAuthMyAccess" style="display:none;" role="menuitem">
+                            <i class="fas fa-box-open"></i>
+                            <span>My Access</span>
+                        </a>
+                        
+                        <!-- Premium Store (only when logged in) -->
+                        <a href="/buy.html" class="nav-auth-menu-item active" id="navAuthStore" style="display:none;" role="menuitem">
+                            <i class="fas fa-store"></i>
+                            <span>Premium Store</span>
+                        </a>
+                        
+                        <!-- Contact (always visible) -->
+                        <a href="/Contact/contact.html" class="nav-auth-menu-item" role="menuitem">
+                            <i class="fas fa-envelope"></i>
+                            <span>Contact</span>
+                        </a>
+                        
+                        <!-- Guide (always visible) -->
+                        <a href="/Documentation/" class="nav-auth-menu-item" role="menuitem">
+                            <i class="fas fa-book"></i>
+                            <span>Guide</span>
+                        </a>
+                        
+                        <div class="nav-auth-divider" id="navAuthDivider2" style="display:none;"></div>
+                        
+                        <!-- Sign Out (only when logged in) -->
+                        <button class="nav-auth-menu-item nav-auth-signout" id="navAuthSignOutBtn" onclick="window.A3KM && window.A3KM.logout()" style="display:none;" role="menuitem">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE HEADER
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="buy-header">
+    <h1><i class="fas fa-shopping-bag" aria-hidden="true"></i> A3KM <span>Store</span></h1>
+    <p>Courses, Books, Research Papers & Project Files — Pay once, access forever</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN LAYOUT
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="buy-layout">
+    <main class="buy-main" id="buyMain">
+
+        <!-- Page Tabs -->
+        <div class="page-tabs" role="tablist">
+            <button class="page-tab-btn active" role="tab" aria-selected="true"
+                    onclick="showTab('browse')" id="tab-browse">
+                <i class="fas fa-th-large"></i>Browse Content
+            </button>
+            <button class="page-tab-btn" role="tab" aria-selected="false"
+                    onclick="showTab('myaccess')" id="tab-myaccess">
+                <i class="fas fa-box-open"></i>My Access
+            </button>
+        </div>
+
+        <!-- ── BROWSE TAB ─────────────────────────────────────────── -->
+        <div class="tab-panel active" id="panel-browse" role="tabpanel">
+
+            <!-- Category filters -->
+            <div class="category-filters" id="categoryFilters">
+                <button class="cat-pill active" onclick="filterCategory('all')" data-cat="all">
+                    <i class="fas fa-border-all"></i>All
+                </button>
+                <button class="cat-pill" onclick="filterCategory('course')" data-cat="course">
+                    <i class="fas fa-play-circle"></i>Courses
+                </button>
+                <button class="cat-pill" onclick="filterCategory('book')" data-cat="book">
+                    <i class="fas fa-book"></i>Books
+                </button>
+                <button class="cat-pill" onclick="filterCategory('paper')" data-cat="paper">
+                    <i class="fas fa-file-alt"></i>Papers
+                </button>
+                <button class="cat-pill" onclick="filterCategory('project')" data-cat="project">
+                    <i class="fas fa-microchip"></i>Projects
+                </button>
+                <button class="cat-pill" onclick="filterCategory('combo')" data-cat="combo">
+                    <i class="fas fa-box-open"></i>Combos
+                </button>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid" id="contentGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Combos section (hidden until "combo" filter active) -->
+            <div id="combosSection" style="display:none; margin-top:1.5rem;">
+                <div class="content-grid" id="combosGrid"></div>
+            </div>
+
+        </div>
+
+        <!-- ── MY ACCESS TAB ──────────────────────────────────────── -->
+        <div class="tab-panel" id="panel-myaccess" role="tabpanel">
+            <div id="myAccessContent"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOATING CART BUTTON
+     ═══════════════════════════════════════════════════════════════ -->
+<button id="cartFab" class="hidden" onclick="openCart()" aria-label="Open cart">
+    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+    <span>Cart</span>
+    <span id="cartCount">0</span>
+</button>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CART PANEL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="cartOverlay" onclick="closeCart()" aria-hidden="true"></div>
+<aside id="cartPanel" aria-label="Shopping cart" role="complementary">
+    <div class="cart-header">
+        <h2><i class="fas fa-shopping-cart"></i> Cart</h2>
+        <button class="cart-close" onclick="closeCart()" aria-label="Close cart">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="cart-items" id="cartItems">
+        <div class="cart-empty-msg">
+            <i class="fas fa-shopping-cart"></i>
+            <p>Your cart is empty</p>
+        </div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-total-row">
+            <span>Total</span>
+            <span class="cart-total-amount" id="cartTotal">৳0</span>
+        </div>
+        <button class="btn-checkout" id="checkoutBtn" disabled onclick="proceedToPayment()">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            Proceed to Payment
+        </button>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAYMENT MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="paymentOverlay" role="dialog" aria-modal="true" aria-label="Payment">
+<div class="payment-modal">
+    <button class="payment-close" onclick="closePayment()" aria-label="Close payment">
+        <i class="fas fa-times"></i>
+    </button>
+    <h2><i class="fas fa-money-bill-wave" style="color:var(--color-primary-light)"></i> Complete Payment</h2>
+
+    <!-- Steps indicator -->
+    <div class="payment-steps" role="list">
+        <div class="payment-step-label active" id="step-label-1" role="listitem">1. Instructions</div>
+        <div class="payment-step-label" id="step-label-2" role="listitem">2. Your Details</div>
+        <div class="payment-step-label" id="step-label-3" role="listitem">3. Confirmation</div>
+    </div>
+
+    <!-- Step 1: bKash instructions + order summary -->
+    <div class="pay-step active" id="pay-step-1">
+        <div class="bkash-box">
+            <h3><i class="fas fa-mobile-alt"></i> bKash Send Money</h3>
+            <div class="bkash-number" id="bkashNumberDisplay">
+                <span id="bkashNum">01724812042</span>
+                <button onclick="copyBkash()" title="Copy number" aria-label="Copy bKash number">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <ol class="bkash-steps-list">
+                <li>Open bKash app → "Send Money"</li>
+                <li>Enter number: <strong>01724812042</strong></li>
+                <li>Enter the exact amount shown below</li>
+                <li>Complete the payment &amp; note the Transaction ID</li>
+            </ol>
+        </div>
+
+        <h3 style="font-size:0.85rem;font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;">
+            Order Summary
+        </h3>
+        <table class="pay-summary-table" id="paySummaryTable">
+            <!-- Populated by JS -->
+        </table>
+
+        <div class="pay-btn-row">
+            <button class="btn-back" onclick="closePayment()">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button class="btn-pay-submit" onclick="goToStep(2)">
+                I've Paid — Enter Details <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Step 2: User details form -->
+    <div class="pay-step" id="pay-step-2">
+        <form class="pay-form" id="paymentForm" onsubmit="submitPayment(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="payName">Full Name <span class="req">*</span></label>
+                    <input type="text" id="payName" placeholder="Your full name" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="payEmail">Email <span class="req">*</span></label>
+                    <input type="email" id="payEmail" placeholder="your@email.com" required autocomplete="email">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="payPhone">Phone Number <span class="req">*</span></label>
+                    <input type="tel" id="payPhone" placeholder="01XXXXXXXXX" required pattern="01[0-9]{9}" autocomplete="tel">
+                    <span class="form-hint">Your contact number</span>
+                </div>
+                <div class="form-group">
+                    <label for="paySenderNum">bKash Sender Number <span class="req">*</span></label>
+                    <input type="tel" id="paySenderNum" placeholder="01XXXXXXXXX" required pattern="01[0-9]{9}">
+                    <span class="form-hint">Number you paid from</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="payTxId">Transaction ID <span class="req">*</span></label>
+                <input type="text" id="payTxId" placeholder="e.g. 8C2X3Y4Z5A" required
+                       minlength="8" maxlength="20" autocomplete="off"
+                       style="text-transform:uppercase"
+                       oninput="this.value = this.value.toUpperCase()">
+                <span class="form-hint">Found in bKash app → transaction history</span>
+            </div>
+            <div class="form-group">
+                <label for="payNote">Additional Note <span style="color:var(--color-text-muted)">(optional)</span></label>
+                <textarea id="payNote" rows="2" placeholder="Any message for the admin..." maxlength="300"></textarea>
+            </div>
+
+            <div class="pay-btn-row">
+                <button type="button" class="btn-back" onclick="goToStep(1)">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="submit" class="btn-pay-submit" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> Submit Payment Request
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="pay-step" id="pay-step-3">
+        <div class="pay-success">
+            <div class="pay-success-icon"><i class="fas fa-check-circle"></i></div>
+            <h3>Payment Request Submitted!</h3>
+            <p>
+                Your payment request has been recorded.<br>
+                We will review your transaction ID and grant access within <strong>24 hours</strong>.<br><br>
+                You'll receive a confirmation email once access is granted.
+            </p>
+            <div style="margin-top:1.5rem;">
+                <button class="btn-pay-submit" style="max-width:200px;margin:0 auto;"
+                        onclick="closePaymentAfterSuccess()">
+                    <i class="fas fa-check"></i> Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════════════ -->
+<script src="Optimization/firebase-config.js"></script>
+<script src="Optimization/auth-module.js"></script>
+<script src="Optimization/access-gate.js"></script>
+
+<script>
+(function () {
+    'use strict';
+
+    // ── State ──────────────────────────────────────────────────────
+    const cart      = [];   // { id, type, title, price, amount }
+    let allContent  = [];   // merged flat list of purchasable items
+    let allCombos   = [];   // combo packages from Firestore
+    let currentCat  = 'all';
+    let currentStep = 1;
+    let isSubmitting = false;
+
+    // ── Content JSON paths (relative to root) ─────────────────────
+    const JSON_SOURCES = [
+        { url: 'Content Studio/books-pdfs/books.json',         type: 'book',    arrayKey: 'books'   },
+        { url: 'Content Studio/educational-videos/courses.json',type: 'course',  arrayKey: 'courses' },
+        { url: 'Content Studio/research-papers/papers.json',   type: 'paper',   arrayKey: 'papers'  },
+        { url: 'Projects Code/projects.json',                  type: 'project', arrayKey: 'projects' },
+    ];
+
+    // ── Icon map ──────────────────────────────────────────────────
+    const TYPE_ICONS = {
+        book:    'fas fa-book',
+        course:  'fas fa-play-circle',
+        paper:   'fas fa-file-alt',
+        project: 'fas fa-microchip',
+        combo:   'fas fa-box-open',
+    };
+    const TYPE_LABELS = {
+        book: 'Book', course: 'Course', paper: 'Paper', project: 'Project', combo: 'Combo',
+    };
+
+    // ══════════════════════════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════════════════════════
+    async function init() {
+        // Wait for auth to stabilise
+        await new Promise(resolve => {
+            if (window.A3KM && window.A3KM.currentUser !== undefined) { resolve(); return; }
+            document.addEventListener('a3km:authReady', resolve, { once: true });
+        });
+
+        // Init EmailJS
+        const ejsCfg = window.A3KM.emailjsCfg;
+        emailjs.init(ejsCfg.publicKey);
+
+        // Check URL params
+        const params = new URLSearchParams(window.location.search);
+        const refTitle = params.get('ref');
+
+        // Load content
+        await loadContent();
+        await loadCombos();
+        renderGrid();
+
+        // If redirected from access gate with a ref, scroll to that item
+        if (refTitle) {
+            const match = allContent.find(c => c.title === refTitle);
+            if (match) highlightItem(match.id);
+        }
+
+        // Hash navigation
+        if (window.location.hash === '#my-access' || window.location.hash === '#packages') {
+            showTab(window.location.hash === '#packages' ? 'browse' : 'myaccess');
+            if (window.location.hash === '#packages') filterCategory('combo');
+        }
+
+        // Auth state changes → update My Access
+        document.addEventListener('a3km:authReady', () => {
+            if (document.getElementById('panel-myaccess').classList.contains('active')) {
+                renderMyAccess();
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // DATA LOADING
+    // ══════════════════════════════════════════════════════════════
+    async function loadContent() {
+        const grid = document.getElementById('contentGrid');
+        grid.innerHTML = '<div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading content…</p></div>';
+
+        const results = await Promise.allSettled(
+            JSON_SOURCES.map(src =>
+                fetch(src.url)
+                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                    .then(data => ({ ...src, items: data[src.arrayKey] || [] }))
+            )
+        );
+
+        allContent = [];
+        for (const res of results) {
+            if (res.status === 'fulfilled') {
+                const { type, items } = res.value;
+                for (const item of items) {
+                    allContent.push({
+                        id:          item.id,
+                        type,
+                        title:       item.title || '(Untitled)',
+                        accessType:  item.accessType || 'free',
+                        price:       item.price || null,
+                        cover:       item.cover || item.thumbnail || null,
+                        author:      item.author || item.instructor || null,
+                        category:    item.category || null,
+                    });
+                }
+            }
+        }
+    }
+
+    async function loadCombos() {
+        try {
+            const snap = await window.A3KM.db.collection('combos').where('active', '==', true).get();
+            allCombos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            allCombos = [];
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // RENDER
+    // ══════════════════════════════════════════════════════════════
+    function renderGrid() {
+        const grid    = document.getElementById('contentGrid');
+        const combos  = document.getElementById('combosSection');
+        const comGrid = document.getElementById('combosGrid');
+
+        const showCombos = currentCat === 'combo' || currentCat === 'all';
+        const showItems  = currentCat !== 'combo';
+
+        // Regular content
+        if (showItems) {
+            const filtered = currentCat === 'all'
+                ? allContent
+                : allContent.filter(c => c.type === currentCat);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="state-box" style="grid-column:1/-1">
+                    <i class="fas fa-box-open"></i>
+                    <div class="state-title">No content yet</div>
+                    <p>Check back soon — more content is being added!</p>
+                </div>`;
+            } else {
+                grid.innerHTML = filtered.map(renderCard).join('');
+            }
+            grid.style.display = '';
+        } else {
+            grid.style.display = 'none';
+        }
+
+        // Combos
+        if (showCombos && allCombos.length > 0) {
+            comGrid.innerHTML = allCombos.map(renderComboCard).join('');
+            combos.style.display = '';
+        } else if (showCombos && currentCat === 'combo') {
+            grid.style.display = 'none';
+            comGrid.innerHTML = `<div class="state-box" style="grid-column:1/-1">
+                <i class="fas fa-box-open"></i>
+                <div class="state-title">No combo packages yet</div>
+                <p>Bundle deals coming soon!</p>
+            </div>`;
+            combos.style.display = '';
+        } else {
+            combos.style.display = 'none';
+        }
+    }
+
+    function renderCard(item) {
+        const inCart    = cart.some(c => c.id === item.id);
+        const isPaid    = item.accessType === 'paid';
+        const isCombo   = item.accessType === 'combo';
+        const priceObj  = item.price;
+        const cartLabel = inCart ? 'In Cart' : '+ Cart';
+
+        const priceHTML = isPaid && priceObj
+            ? `<div class="card-price">
+                ${priceObj.originalPrice ? `<span class="price-slash">৳${priceObj.originalPrice}</span>` : ''}
+                <span class="price-main">৳${priceObj.amount}</span>
+                ${priceObj.discount ? `<span class="price-discount">-${priceObj.discount}%</span>` : ''}
+              </div>`
+            : isCombo
+            ? `<span class="price-free" style="color:#ffb74d;"><i class="fas fa-box-open"></i> Bundle Only</span>`
+            : `<span class="price-free"><i class="fas fa-unlock"></i> Free</span>`;
+
+        const addBtn = isPaid
+            ? `<button class="btn-add-cart ${inCart ? 'in-cart' : ''}"
+                       id="addbtn-${_esc(item.id)}"
+                       onclick="addToCart(${JSON.stringify(item).replace(/"/g, '&quot;')})"
+                       ${inCart ? 'disabled' : ''}>
+                   <i class="fas fa-${inCart ? 'check' : 'plus'}" aria-hidden="true"></i>${cartLabel}
+               </button>`
+            : isCombo
+            ? `<button class="btn-add-cart" onclick="filterCategory('combo')" title="Only available as part of a bundle">
+                   <i class="fas fa-box-open" aria-hidden="true"></i>View Bundles
+               </button>`
+            : `<button class="btn-add-cart" disabled title="Free content — no purchase needed">
+                   <i class="fas fa-unlock" aria-hidden="true"></i>Free
+               </button>`;
+
+        const thumbHTML = item.cover
+            ? `<img src="${_esc(item.cover)}" alt="${_esc(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-${TYPE_ICONS[item.type].split(' fa-')[1]}\\'></i>'">`
+            : `<i class="${_esc(TYPE_ICONS[item.type] || 'fas fa-file')}" aria-hidden="true"></i>`;
+
+        return `<article class="content-card" data-type="${_esc(item.type)}" data-id="${_esc(item.id)}" id="card-${_esc(item.id)}">
+            <div class="card-thumb">${thumbHTML}</div>
+            <div class="card-body">
+                <div class="card-type-badge">${_esc(TYPE_LABELS[item.type] || item.type)}</div>
+                <div class="card-title">${_esc(item.title)}</div>
+                ${item.author ? `<div class="card-meta"><i class="fas fa-user-circle" aria-hidden="true"></i> ${_esc(item.author)}</div>` : ''}
+                ${item.category ? `<div class="card-meta">${_esc(item.category)}</div>` : ''}
+            </div>
+            <div class="card-footer">
+                ${priceHTML}
+                ${addBtn}
+            </div>
+        </article>`;
+    }
+
+    function renderComboCard(combo) {
+        const inCart   = cart.some(c => c.id === combo.id);
+        const savings  = combo.originalPrice && combo.price
+            ? combo.originalPrice - combo.price
+            : null;
+        const itemsList = (combo.items || []).slice(0, 5).map(i =>
+            `<li><i class="fas fa-check-circle"></i>${_esc(i.title || i.id)}</li>`
+        ).join('');
+        const moreCount = (combo.items || []).length - 5;
+
+        return `<article class="combo-card" data-type="combo" data-id="${_esc(combo.id)}" id="card-${_esc(combo.id)}">
+            <div class="combo-badge"><i class="fas fa-box-open"></i> Bundle</div>
+            <div class="combo-title">${_esc(combo.name || 'Combo Pack')}</div>
+            ${combo.description ? `<div class="combo-desc">${_esc(combo.description)}</div>` : ''}
+            <ul class="combo-items-list">
+                ${itemsList}
+                ${moreCount > 0 ? `<li><i class="fas fa-plus-circle"></i>${moreCount} more items…</li>` : ''}
+            </ul>
+            <div class="combo-footer">
+                <div class="combo-price-block">
+                    ${combo.originalPrice ? `<div class="combo-original">৳${combo.originalPrice}</div>` : ''}
+                    <div class="combo-final">৳${combo.price || 0}</div>
+                    ${savings ? `<div class="combo-save">Save ৳${savings}</div>` : ''}
+                </div>
+                <button class="btn-add-cart ${inCart ? 'in-cart' : ''}"
+                        id="addbtn-${_esc(combo.id)}"
+                        onclick="addToCart(${JSON.stringify({id: combo.id, type: 'combo', title: combo.name || 'Combo Pack', price: {amount: combo.price || 0}}).replace(/"/g, '&quot;')})"
+                        ${inCart ? 'disabled' : ''}>
+                    <i class="fas fa-${inCart ? 'check' : 'plus'}"></i>${inCart ? 'In Cart' : '+ Cart'}
+                </button>
+            </div>
+        </article>`;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // CART
+    // ══════════════════════════════════════════════════════════════
+    window.addToCart = function (item) {
+        if (cart.some(c => c.id === item.id)) return;
+        cart.push(item);
+        updateCartUI();
+        showToast(`"${item.title}" added to cart`, 'success');
+        // Disable the button on the card
+        const btn = document.getElementById('addbtn-' + item.id);
+        if (btn) {
+            btn.classList.add('in-cart');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-check"></i>In Cart';
+        }
+    };
+
+    function removeFromCart(id) {
+        const idx = cart.findIndex(c => c.id === id);
+        if (idx === -1) return;
+        cart.splice(idx, 1);
+        updateCartUI();
+        // Re-enable the card button
+        const btn = document.getElementById('addbtn-' + id);
+        if (btn) {
+            const item = allContent.find(c => c.id === id) || allCombos.find(c => c.id === id);
+            btn.classList.remove('in-cart');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i>+ Cart';
+        }
+    }
+
+    function updateCartUI() {
+        const total = cart.reduce((s, c) => s + ((c.price && c.price.amount) || 0), 0);
+        const count = cart.length;
+
+        // FAB
+        const fab = document.getElementById('cartFab');
+        const countEl = document.getElementById('cartCount');
+        if (fab) fab.classList.toggle('hidden', count === 0);
+        if (countEl) countEl.textContent = count;
+
+        // Cart items area
+        const itemsEl = document.getElementById('cartItems');
+        const totalEl = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+
+        if (itemsEl) {
+            if (count === 0) {
+                itemsEl.innerHTML = `<div class="cart-empty-msg">
+                    <i class="fas fa-shopping-cart"></i><p>Your cart is empty</p>
+                </div>`;
+            } else {
+                itemsEl.innerHTML = cart.map(c => `
+                    <div class="cart-item" role="listitem">
+                        <div class="cart-item-icon">
+                            <i class="${_esc(TYPE_ICONS[c.type] || 'fas fa-file')}" aria-hidden="true"></i>
+                        </div>
+                        <div class="cart-item-info">
+                            <div class="cart-item-title">${_esc(c.title)}</div>
+                            <div class="cart-item-type">${_esc(TYPE_LABELS[c.type] || c.type)}</div>
+                        </div>
+                        <div class="cart-item-price">৳${(c.price && c.price.amount) || 0}</div>
+                        <button class="cart-item-remove" onclick="removeFromCart(${JSON.stringify(c.id)})" aria-label="Remove ${_esc(c.title)} from cart">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        if (totalEl) totalEl.textContent = '৳' + total;
+        if (checkoutBtn) checkoutBtn.disabled = count === 0;
+    }
+
+    window.openCart  = function () {
+        document.getElementById('cartOverlay').classList.add('open');
+        document.getElementById('cartPanel').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeCart = function () {
+        document.getElementById('cartOverlay').classList.remove('open');
+        document.getElementById('cartPanel').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+
+    // ══════════════════════════════════════════════════════════════
+    // PAYMENT FLOW
+    // ══════════════════════════════════════════════════════════════
+    window.proceedToPayment = function () {
+        const user = window.A3KM && window.A3KM.currentUser;
+        if (!user) {
+            // Require sign-in
+            closeCart();
+            showToast('Please sign in first to proceed to payment', 'error');
+            window.A3KM.loginWithGoogle().then(u => {
+                if (u) openCart();
+            });
+            return;
+        }
+        closeCart();
+        openPayment();
+    };
+
+    function openPayment() {
+        const user = window.A3KM && window.A3KM.currentUser;
+
+        // Pre-fill form
+        if (user) {
+            const nameEl  = document.getElementById('payName');
+            const emailEl = document.getElementById('payEmail');
+            if (nameEl  && !nameEl.value)  nameEl.value  = user.displayName || '';
+            if (emailEl && !emailEl.value) emailEl.value = user.email || '';
+        }
+
+        // Populate summary table
+        buildPaySummary();
+
+        goToStep(1);
+        document.getElementById('paymentOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.closePayment = function () {
+        document.getElementById('paymentOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+
+    window.closePaymentAfterSuccess = function () {
+        closePayment();
+        // Clear cart
+        cart.length = 0;
+        updateCartUI();
+        renderGrid();
+    };
+
+    function buildPaySummary() {
+        const total = cart.reduce((s, c) => s + ((c.price && c.price.amount) || 0), 0);
+        const rows  = cart.map(c =>
+            `<tr><td>${_esc(c.title)} <span style="color:var(--color-text-muted);font-size:0.75rem;">(${_esc(TYPE_LABELS[c.type] || c.type)})</span></td><td>৳${(c.price && c.price.amount) || 0}</td></tr>`
+        ).join('');
+        document.getElementById('paySummaryTable').innerHTML =
+            rows +
+            `<tr class="pay-total-row"><td>Total</td><td>৳${total}</td></tr>`;
+    }
+
+    window.goToStep = function (n) {
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById('pay-step-' + i).classList.toggle('active', i === n);
+            const label = document.getElementById('step-label-' + i);
+            label.classList.remove('active', 'done');
+            if (i === n) label.classList.add('active');
+            else if (i < n) label.classList.add('done');
+        }
+        currentStep = n;
+    };
+
+    window.submitPayment = async function (e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+
+        const user = window.A3KM && window.A3KM.currentUser;
+        if (!user) { showToast('You must be signed in', 'error'); return; }
+
+        const name       = document.getElementById('payName').value.trim();
+        const email      = document.getElementById('payEmail').value.trim();
+        const phone      = document.getElementById('payPhone').value.trim();
+        const senderNum  = document.getElementById('paySenderNum').value.trim();
+        const txId       = document.getElementById('payTxId').value.trim().toUpperCase();
+        const note       = document.getElementById('payNote').value.trim();
+
+        // Basic sanitization — prevent injection in stored data
+        if (!name || !email || !phone || !senderNum || !txId) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        if (!/^01[0-9]{9}$/.test(phone)) {
+            showToast('Invalid phone number format', 'error');
+            return;
+        }
+        if (!/^01[0-9]{9}$/.test(senderNum)) {
+            showToast('Invalid bKash sender number format', 'error');
+            return;
+        }
+
+        const totalAmount = cart.reduce((s, c) => s + ((c.price && c.price.amount) || 0), 0);
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
+        isSubmitting = true;
+
+        try {
+            const db = window.A3KM.db;
+            const FS = firebase.firestore.FieldValue;
+
+            // Write to Firestore paymentRequests collection
+            const docRef = await db.collection('paymentRequests').add({
+                uid:            user.uid,
+                name:           name,
+                email:          email,
+                phone:          phone,
+                bkashSenderNum: senderNum,
+                transactionId:  txId,
+                note:           note,
+                items:          cart.map(c => ({
+                    id:    c.id,
+                    type:  c.type,
+                    title: c.title,
+                    price: (c.price && c.price.amount) || 0
+                })),
+                totalAmount:    totalAmount,
+                currency:       'BDT',
+                paymentMethod:  'bkash',
+                status:         'pending',
+                submittedAt:    FS.serverTimestamp()
+            });
+
+            // Build item list string for emails
+            const itemsStr = cart.map(c =>
+                `${TYPE_LABELS[c.type] || c.type}: ${c.title} — ৳${(c.price && c.price.amount) || 0}`
+            ).join('\n');
+
+            const ejsCfg = window.A3KM.emailjsCfg;
+
+            // Email to admin (payment_received)
+            await emailjs.send(ejsCfg.serviceId, ejsCfg.templates.paymentReceived, {
+                admin_email:      window.A3KM.ADMIN_EMAIL,
+                from_name:        name,
+                from_email:       email,
+                phone:            phone,
+                bkash_sender:     senderNum,
+                transaction_id:   txId,
+                items_list:       itemsStr,
+                total_amount:     '৳' + totalAmount,
+                payment_method:   'bKash Send Money',
+                request_id:       docRef.id,
+                note:             note || '(none)',
+            });
+
+            // Email to user (access_granted confirmation pending)
+            await emailjs.send(ejsCfg.serviceId, ejsCfg.templates.accessGranted, {
+                to_email:         email,
+                to_name:          name,
+                items_list:       itemsStr,
+                total_amount:     '৳' + totalAmount,
+                transaction_id:   txId,
+                status:           'Pending Review',
+                request_id:       docRef.id,
+            });
+
+            // Success
+            goToStep(3);
+
+        } catch (err) {
+            console.error('[A3KM Buy] Payment submit error:', err);
+            showToast('Submission failed. Please try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Payment Request';
+        } finally {
+            isSubmitting = false;
+        }
+    };
+
+    window.copyBkash = function () {
+        const num = document.getElementById('bkashNum').textContent;
+        navigator.clipboard.writeText(num).then(() => {
+            showToast('bKash number copied!', 'success');
+        }).catch(() => {
+            showToast(num, '');
+        });
+    };
+
+    // ══════════════════════════════════════════════════════════════
+    // MY ACCESS TAB
+    // ══════════════════════════════════════════════════════════════
+    async function renderMyAccess() {
+        const el = document.getElementById('myAccessContent');
+        const user = window.A3KM && window.A3KM.currentUser;
+
+        if (!user) {
+            el.innerHTML = `<div class="sign-in-prompt">
+                <i class="fas fa-lock"></i>
+                <h2>Sign In to View Your Content</h2>
+                <p>Your purchased content will appear here after you sign in.</p>
+                <button class="btn-google-sign-in" onclick="window.A3KM.loginWithGoogle()">
+                    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59L2.56 17.8C.92 21.04 0 24.41 0 28c0 3.59.92 6.96 2.56 9.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6C29.96 37.81 27.18 38.64 24 38.64c-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    Sign in with Google
+                </button>
+            </div>`;
+            return;
+        }
+
+        el.innerHTML = '<div class="state-box"><i class="fas fa-spinner fa-spin"></i><p>Loading your access…</p></div>';
+
+        try {
+            const access = await window.A3KM.getUserAccess(user.uid);
+
+            // URL builders for each content type (relative to root buy.html)
+            const VIEW_ACTIONS = {
+                courses:  { label: 'Watch', url: id => `Content Studio/educational-videos/course-viewer-new.html?courseId=${encodeURIComponent(id)}` },
+                books:    { label: 'Read',  url: id => `Content Studio/books-pdfs/pdf-reader.html?id=${encodeURIComponent(id)}` },
+                papers:   { label: 'Read',  url: id => `Content Studio/research-papers/paper-viewer.html?id=${encodeURIComponent(id)}` },
+                projects: { label: 'View',  url: null },
+                combos:   { label: 'Browse', url: () => 'buy.html#packages' },
+            };
+
+            const sections = [
+                { key: 'courses',  label: 'Courses',  icon: TYPE_ICONS.course  },
+                { key: 'books',    label: 'Books',    icon: TYPE_ICONS.book    },
+                { key: 'papers',   label: 'Papers',   icon: TYPE_ICONS.paper   },
+                { key: 'projects', label: 'Projects', icon: TYPE_ICONS.project },
+                { key: 'combos',   label: 'Combos',   icon: TYPE_ICONS.combo   },
+            ];
+
+            let html = '';
+            let hasAny = false;
+
+            for (const sec of sections) {
+                const ids = access[sec.key] || [];
+                if (ids.length === 0) continue;
+                hasAny = true;
+                const action = VIEW_ACTIONS[sec.key];
+                html += `<div class="access-section-title">${sec.label} (${ids.length})</div>
+                <div class="content-grid" style="margin-bottom:1.5rem;">
+                    ${ids.map(id => {
+                        // Look up in allContent first; fall back to allCombos for combo IDs
+                        const item = allContent.find(c => c.id === id)
+                                  || allCombos.find(c => c.id === id);
+                        const itemTitle = item
+                            ? (item.title || item.name || id)
+                            : id;
+                        const viewUrl = action && action.url ? action.url(id) : null;
+                        return `<article class="content-card">
+                            <div class="card-thumb">
+                                ${item && item.cover
+                                    ? `<img src="${_esc(item.cover)}" alt="" loading="lazy">`
+                                    : `<i class="${_esc(sec.icon)}" aria-hidden="true"></i>`}
+                            </div>
+                            <div class="card-body">
+                                <div class="card-type-badge">${sec.label.slice(0,-1)}</div>
+                                <div class="card-title">${_esc(itemTitle)}</div>
+                            </div>
+                            <div class="card-footer" style="justify-content:space-between;align-items:center;">
+                                <span style="font-size:0.75rem;color:#4ade80;font-weight:600;">
+                                    <i class="fas fa-unlock"></i> Unlocked
+                                </span>
+                                ${viewUrl
+                                    ? `<a href="${_esc(viewUrl)}" class="btn-add-cart" style="padding:5px 12px;font-size:0.78rem;text-decoration:none;">
+                                        <i class="fas fa-arrow-right" aria-hidden="true"></i> ${action.label}
+                                       </a>`
+                                    : ''}
+                            </div>
+                        </article>`;
+                    }).join('')}
+                </div>`;
+            }
+
+            if (!hasAny) {
+                html = `<div class="state-box">
+                    <i class="fas fa-box-open"></i>
+                    <div class="state-title">No content purchased yet</div>
+                    <p>Browse the store and buy content to see it here.</p>
+                </div>`;
+            }
+
+            el.innerHTML = html;
+
+        } catch (err) {
+            console.error('[A3KM] My Access load error:', err);
+            el.innerHTML = `<div class="state-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load your access. Please refresh.</p>
+            </div>`;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // TABS & FILTERS
+    // ══════════════════════════════════════════════════════════════
+    window.showTab = function (tab) {
+        ['browse', 'myaccess'].forEach(t => {
+            const btn   = document.getElementById('tab-' + t);
+            const panel = document.getElementById('panel-' + t);
+            const isThis = t === tab;
+            btn.classList.toggle('active', isThis);
+            btn.setAttribute('aria-selected', isThis);
+            panel.classList.toggle('active', isThis);
+        });
+        if (tab === 'myaccess') renderMyAccess();
+    };
+
+    window.filterCategory = function (cat) {
+        currentCat = cat;
+        document.querySelectorAll('.cat-pill').forEach(p => {
+            p.classList.toggle('active', p.dataset.cat === cat);
+        });
+        renderGrid();
+    };
+
+    function highlightItem(id) {
+        setTimeout(() => {
+            const card = document.getElementById('card-' + id);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.style.boxShadow = '0 0 0 2px var(--color-primary-light)';
+                setTimeout(() => { card.style.boxShadow = ''; }, 3000);
+            }
+        }, 500);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // TOAST
+    // ══════════════════════════════════════════════════════════════
+    let toastTimer;
+    function showToast(msg, type) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast show' + (type ? ' toast-' + type : '');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3000);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // UTILS
+    // ══════════════════════════════════════════════════════════════
+    function _esc(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Expose for inline event handlers (used in renderCard)
+    window._buyRemove = removeFromCart;
+
+    // ══════════════════════════════════════════════════════════════
+    // BOOT
+    // ══════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', init);
+
+})();
+</script>
+
+    <!-- Neural Grid Cursor Effect -->
+    <script src="Optimization/cursor-effects.js" defer></script>
+</body>
+</html>
