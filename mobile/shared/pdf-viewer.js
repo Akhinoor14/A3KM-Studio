@@ -35,6 +35,9 @@ const UniversalPDFViewer = {
     isPanning: false,
     touches: [],
     
+    // Flip guard
+    isFlipping: false,
+    
     // Canvas & context
     canvas: null,
     ctx: null,
@@ -45,6 +48,9 @@ const UniversalPDFViewer = {
     
     // PDF password
     pdfPassword: null,
+    
+    // Blob URL (stored for memory cleanup on close)
+    blobUrl: null,
     
     // PDF.js CDN
     pdfjsLib: null,
@@ -100,7 +106,9 @@ async function openUniversalPDFViewer(options = {}) {
             showDownload: options.showDownload !== false,
             allowZoom: options.allowZoom !== false,
             downloadName: options.downloadName || 'document.pdf',
-            password: options.password !== undefined ? options.password : A3KM_PDF_PASSWORD
+            password: options.password !== undefined ? options.password : A3KM_PDF_PASSWORD,
+            onClose: options.onClose || null,
+            startPage: Math.max(1, parseInt(options.startPage) || 1)
         };
         
         // Store password for PDF loading
@@ -110,8 +118,28 @@ async function openUniversalPDFViewer(options = {}) {
         
         await initPDFJS();
         createViewerUI();
-        await loadPDF(options.filePath);
+        // Wire all buttons (especially ✕ close) BEFORE loading so the user can
+        // cancel a slow or hung PDF fetch. Guards in each handler protect against
+        // calling them before pdfDoc is ready.
         setupEventListeners();
+        
+        try {
+            await loadPDF(options.filePath);
+        } catch (loadError) {
+            // PDF failed to load — remove the skeleton viewer so the page isn't broken
+            if (UniversalPDFViewer.currentModal) {
+                UniversalPDFViewer.currentModal.remove();
+                UniversalPDFViewer.currentModal = null;
+            }
+            UniversalPDFViewer.isOpen = false;
+            showPDFError(loadError.message || 'Failed to load PDF.');
+            return;
+        }
+        
+        // Guard: user may have pressed ✕ while the PDF was still loading
+        if (!UniversalPDFViewer.currentModal) {
+            return;
+        }
         
         UniversalPDFViewer.isOpen = true;
         
@@ -379,6 +407,11 @@ function createViewerUI() {
                 to { transform: translateY(0); }
             }
             
+            @keyframes slideDown {
+                from { transform: translateY(0); opacity: 1; }
+                to { transform: translateY(100%); opacity: 0; }
+            }
+            
             @keyframes spin {
                 to { transform: rotate(360deg); }
             }
@@ -521,7 +554,7 @@ function createViewerUI() {
         </div>
         
         <!-- Canvas Container -->
-        <div class="pdf-canvas-wrapper" id="pdf-canvas-wrapper" style="overflow:hidden; perspective:900px;">
+        <div class="pdf-canvas-wrapper" id="pdf-canvas-wrapper" style="overflow:auto; perspective:900px;">
             <div class="pdf-page-inner" id="pdf-page-inner">
                 <canvas id="pdf-canvas"></canvas>
             </div>
@@ -600,6 +633,7 @@ async function loadPDF(url) {
         
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
+        UniversalPDFViewer.blobUrl = blobUrl; // stored so we can revoke on close
         
         console.log('✅ PDF fetched as blob, loading with PDF.js...');
         
@@ -614,29 +648,33 @@ async function loadPDF(url) {
         
         const loadingTask = UniversalPDFViewer.pdfjsLib.getDocument(loadingOptions);
         
-        // Handle password requirement
+        // Handle password requirement.
+        // PDF.js onPassword is a sync callback — throw inside it does NOT reject the
+        // task promise. Use Promise.race with a manually-controlled rejection instead.
+        let _rejectPassword;
+        const passwordFailPromise = new Promise((_, reject) => { _rejectPassword = reject; });
         loadingTask.onPassword = (updatePassword, reason) => {
             if (reason === 1) { // NEED_PASSWORD
-                console.log('🔐 PDF requires password, using default A3KM password...');
+                console.log('🔐 PDF requires password, using A3KM password...');
                 if (UniversalPDFViewer.pdfPassword) {
                     updatePassword(UniversalPDFViewer.pdfPassword);
                 } else {
-                    throw new Error('This PDF is password-protected');
+                    _rejectPassword(new Error('This PDF is password-protected. No password provided.'));
                 }
             } else if (reason === 2) { // INCORRECT_PASSWORD
-                console.error('❌ Incorrect password provided');
-                throw new Error('Incorrect PDF password');
+                console.error('❌ Incorrect PDF password');
+                _rejectPassword(new Error('Incorrect PDF password. Access denied.'));
             }
         };
         
-        UniversalPDFViewer.pdfDoc = await loadingTask.promise;
+        UniversalPDFViewer.pdfDoc = await Promise.race([loadingTask.promise, passwordFailPromise]);
         UniversalPDFViewer.totalPages = UniversalPDFViewer.pdfDoc.numPages;
         
         console.log(`✅ PDF loaded: ${UniversalPDFViewer.totalPages} pages`);
         
-        // Hide loading, render first page
+        // Hide loading, render from saved reading position (or page 1)
         document.getElementById('pdf-loading').style.display = 'none';
-        await renderPage(1);
+        await renderPage(UniversalPDFViewer.config.startPage || 1);
         updatePageInfo();
         
         // Show swipe hint briefly after first load
@@ -650,7 +688,15 @@ async function loadPDF(url) {
         
     } catch (error) {
         console.error('❌ Failed to load PDF:', error);
-        showPDFError(`Failed to load PDF: ${error.message || 'Unknown error'}`);
+        // Revoke blob URL so it doesn't leak if loading fails before viewer formally opens
+        if (UniversalPDFViewer.blobUrl) {
+            URL.revokeObjectURL(UniversalPDFViewer.blobUrl);
+            UniversalPDFViewer.blobUrl = null;
+        }
+        // Re-throw so openUniversalPDFViewer can remove the skeleton modal and show the
+        // error. If loadPDF silently swallows the error, the skeleton stays alive with
+        // isOpen=true — a permanently broken viewer the user can never close.
+        throw error;
     }
 }
 
@@ -663,12 +709,25 @@ async function renderPage(pageNum) {
         return;
     }
     
+    // Guard: viewer may have been closed while a render was queued
+    if (!UniversalPDFViewer.pdfDoc || !UniversalPDFViewer.canvas) {
+        return;
+    }
+    
     UniversalPDFViewer.pageRendering = true;
     UniversalPDFViewer.currentPage = pageNum;
     
     try {
         const page = await UniversalPDFViewer.pdfDoc.getPage(pageNum);
-        
+
+        // Re-check after async suspension: closeUniversalPDFViewer may have nulled
+        // canvas/ctx while getPage() was pending. Without this guard the next line
+        // (canvas.width = ...) throws TypeError: Cannot set property 'width' of null.
+        if (!UniversalPDFViewer.canvas || !UniversalPDFViewer.pdfDoc) {
+            UniversalPDFViewer.pageRendering = false;
+            return;
+        }
+
         // Auto fit-to-width on very first render
         if (!UniversalPDFViewer.scaleFitted) {
             const wrapper = document.getElementById('pdf-canvas-wrapper');
@@ -794,6 +853,10 @@ function goToNextPage() {
  * Animated page flip: direction 'left'=next page, 'right'=prev page
  */
 async function flipPage(direction) {
+    // Prevent overlapping flip animations
+    if (UniversalPDFViewer.isFlipping) return;
+    UniversalPDFViewer.isFlipping = true;
+
     // Hide swipe hint on first use
     const hint = document.getElementById('pdf-swipe-hint');
     if (hint) hint.classList.add('hidden');
@@ -801,29 +864,65 @@ async function flipPage(direction) {
     const inner = document.getElementById('pdf-page-inner');
     if (!inner) {
         // fallback
-        direction === 'left' ? renderPage(UniversalPDFViewer.currentPage + 1)
-                             : renderPage(UniversalPDFViewer.currentPage - 1);
+        const fallbackPage = direction === 'left'
+            ? UniversalPDFViewer.currentPage + 1
+            : UniversalPDFViewer.currentPage - 1;
+        await renderPage(fallbackPage);
+        UniversalPDFViewer.isFlipping = false;
         return;
     }
 
+    const wrapper    = document.getElementById('pdf-canvas-wrapper');
     const exitClass  = direction === 'left' ? 'exit-left'   : 'exit-right';
     const enterClass = direction === 'left' ? 'enter-right'  : 'enter-left';
     const nextPage   = direction === 'left'
         ? UniversalPDFViewer.currentPage + 1
         : UniversalPDFViewer.currentPage - 1;
 
+    // Lock overflow so the translation off-screen works without scrollbars
+    if (wrapper) wrapper.style.overflow = 'hidden';
+
     // Exit animation
     inner.classList.add(exitClass);
     await delay(200);
     inner.classList.remove(exitClass);
 
-    // Render new page (silent, no anim yet)
+    // Cancel any stale queued render, wait for in-progress render to fully settle,
+    // then render the correct target page before playing the enter animation.
+    // (Setting pageNumPending here would race: pageRendering briefly goes false
+    //  between renders and our old wait resolved too early on old content.)
+    UniversalPDFViewer.pageNumPending = null;
+    if (UniversalPDFViewer.pageRendering) {
+        await new Promise(resolve => {
+            const check = setInterval(() => {
+                if (!UniversalPDFViewer.pageRendering || !UniversalPDFViewer.isOpen) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 20);
+        });
+    }
+    // Guard against viewer being closed while we waited
+    if (!UniversalPDFViewer.isOpen) {
+        UniversalPDFViewer.isFlipping = false;
+        return;
+    }
     await renderPage(nextPage);
+
+    // Guard: viewer may have been closed while renderPage was awaited
+    if (!UniversalPDFViewer.isOpen) {
+        UniversalPDFViewer.isFlipping = false;
+        return;
+    }
 
     // Enter animation
     inner.classList.add(enterClass);
     await delay(280);
     inner.classList.remove(enterClass);
+
+    // Restore scrollability so zoomed-in pages can be panned
+    if (wrapper) wrapper.style.overflow = 'auto';
+    UniversalPDFViewer.isFlipping = false;
 }
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -832,6 +931,7 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
  * Zoom In
  */
 function zoomIn() {
+    if (UniversalPDFViewer.isFlipping) return;
     if (UniversalPDFViewer.scale < UniversalPDFViewer.maxScale) {
         UniversalPDFViewer.scale += 0.2;
         renderPage(UniversalPDFViewer.currentPage);
@@ -843,6 +943,7 @@ function zoomIn() {
  * Zoom Out
  */
 function zoomOut() {
+    if (UniversalPDFViewer.isFlipping) return;
     if (UniversalPDFViewer.scale > UniversalPDFViewer.minScale) {
         UniversalPDFViewer.scale -= 0.2;
         renderPage(UniversalPDFViewer.currentPage);
@@ -854,6 +955,9 @@ function zoomOut() {
  * Fit to Screen
  */
 async function fitToScreen() {
+    if (UniversalPDFViewer.isFlipping) return;
+    // Guard: don't crash if called after viewer is closed
+    if (!UniversalPDFViewer.canvasWrapper || !UniversalPDFViewer.pdfDoc || !UniversalPDFViewer.isOpen) return;
     const wrapper = UniversalPDFViewer.canvasWrapper;
     const wrapperWidth  = wrapper.clientWidth;
     const wrapperHeight = wrapper.clientHeight;
@@ -873,8 +977,11 @@ async function fitToScreen() {
  * Toggle Fullscreen Mode
  */
 function toggleFullscreen() {
+    // Guard: don't crash if called during close animation or before open
+    if (!UniversalPDFViewer.isOpen || !UniversalPDFViewer.currentModal) return;
     const modal = UniversalPDFViewer.currentModal;
     const btn = document.getElementById('pdf-fullscreen-btn');
+    if (!btn) return;
     const icon = btn.querySelector('i');
     
     UniversalPDFViewer.isFullscreen = !UniversalPDFViewer.isFullscreen;
@@ -932,14 +1039,21 @@ function setupEventListeners() {
     if (downloadBtn) {
         downloadBtn.onclick = () => {
             const link = document.createElement('a');
-            link.href = UniversalPDFViewer.config.filePath;
+            // Use the already-fetched blobUrl. It is same-origin so the `download`
+            // attribute is honoured (correct filename). config.filePath may be a
+            // CORS-proxy URL where `download` is ignored and the filename comes from
+            // the proxy's Content-Disposition header instead.
+            link.href = UniversalPDFViewer.blobUrl || UniversalPDFViewer.config.filePath;
             link.download = UniversalPDFViewer.config.downloadName;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
             if (navigator.vibrate) navigator.vibrate([10, 20, 10]);
         };
     }
     
-    // Keyboard shortcuts
+    // Keyboard shortcuts (remove first to prevent duplicate listeners on reopen)
+    document.removeEventListener('keydown', handleKeyPress);
     document.addEventListener('keydown', handleKeyPress);
     
     // Touch gestures
@@ -999,102 +1113,96 @@ function handleKeyPress(e) {
 
 /**
  * Setup Touch Gestures
+ * Single touchstart + touchmove + touchend to avoid handler conflicts.
+ * Swipe and double-tap are mutually exclusive: swipe resets tap timer so
+ * two fast swipes cannot accidentally trigger fullscreen toggle.
  */
 function setupTouchGestures() {
     const canvas = UniversalPDFViewer.canvas;
-    
-    // Double-tap to toggle fullscreen
-    let lastTapTime = 0;
-    const doubleTapDelay = 300; // milliseconds
-    
-    canvas.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length === 1) {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTapTime;
-            
-            if (tapLength < doubleTapDelay && tapLength > 0) {
-                // Double-tap detected
-                toggleFullscreen();
-                e.preventDefault();
-            }
-            
-            lastTapTime = currentTime;
-        }
-    });
-    
-    // Pinch to zoom
-    let initialDistance = 0;
-    let initialScale = 1.0;
-    
+
+    let lastTapTime   = 0;
+    const doubleTapDelay = 300;
+    let startX = 0, startY = 0;
+    let initialDistance = 0, initialScale = 1.0;
+
+    // Single touchstart: track single-finger origin and pinch init
     canvas.addEventListener('touchstart', (e) => {
         UniversalPDFViewer.touches = Array.from(e.touches);
-        
-        if (e.touches.length === 2) {
-            const touch1 = e.touches[0];
-            const touch2 = e.touches[1];
+
+        if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+            const t1 = e.touches[0], t2 = e.touches[1];
             initialDistance = Math.hypot(
-                touch2.clientX - touch1.clientX,
-                touch2.clientY - touch1.clientY
+                t2.clientX - t1.clientX,
+                t2.clientY - t1.clientY
             );
             initialScale = UniversalPDFViewer.scale;
         }
     });
-    
+
+    // Pinch-to-zoom (guarded during flip to avoid mid-animation re-render)
     canvas.addEventListener('touchmove', (e) => {
         if (e.touches.length === 2 && UniversalPDFViewer.config.allowZoom) {
             e.preventDefault();
-            
-            const touch1 = e.touches[0];
-            const touch2 = e.touches[1];
+            if (UniversalPDFViewer.isFlipping) return;
+
+            const t1 = e.touches[0], t2 = e.touches[1];
             const distance = Math.hypot(
-                touch2.clientX - touch1.clientX,
-                touch2.clientY - touch1.clientY
+                t2.clientX - t1.clientX,
+                t2.clientY - t1.clientY
             );
-            
+
             if (initialDistance > 0) {
                 const delta = distance / initialDistance;
-                let newScale = initialScale * delta;
-                newScale = Math.max(UniversalPDFViewer.minScale, Math.min(newScale, UniversalPDFViewer.maxScale));
-                
+                let newScale = Math.max(
+                    UniversalPDFViewer.minScale,
+                    Math.min(initialScale * delta, UniversalPDFViewer.maxScale)
+                );
                 if (Math.abs(newScale - UniversalPDFViewer.scale) > 0.05) {
                     UniversalPDFViewer.scale = newScale;
                     renderPage(UniversalPDFViewer.currentPage);
                 }
             }
         }
-    });
-    
-    canvas.addEventListener('touchend', () => {
-        initialDistance = 0;
-        UniversalPDFViewer.touches = [];
-    });
-    
-    // Swipe for page navigation
-    let startX = 0;
-    let startY = 0;
-    
-    canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        }
-    });
-    
+    }, { passive: false });
+
+    // Single touchend: handles pinch reset + swipe navigation + double-tap fullscreen.
+    // Swipe and double-tap are decided from the same touch so they can't conflict.
     canvas.addEventListener('touchend', (e) => {
+        // Reset pinch state when all fingers lifted
+        if (e.touches.length < 2) {
+            initialDistance = 0;
+            UniversalPDFViewer.touches = [];
+        }
+
         if (e.changedTouches.length === 1) {
-            const endX = e.changedTouches[0].clientX;
-            const endY = e.changedTouches[0].clientY;
+            const endX  = e.changedTouches[0].clientX;
+            const endY  = e.changedTouches[0].clientY;
             const diffX = endX - startX;
             const diffY = endY - startY;
-            
-            // Horizontal swipe detection
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            const isSwipe = Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50;
+
+            if (isSwipe) {
+                // Swipe: page navigation
                 if (diffX > 0) {
-                    // Swipe right - previous page
-                    goToPrevPage();
+                    goToPrevPage(); // swipe right → previous page
                 } else {
-                    // Swipe left - next page
-                    goToNextPage();
+                    goToNextPage(); // swipe left  → next page
+                }
+                // Reset tap timer: two fast swipes must NOT trigger double-tap
+                lastTapTime = 0;
+            } else {
+                // Tap: check for double-tap to toggle fullscreen
+                const now = Date.now();
+                const tapLength = now - lastTapTime;
+                if (tapLength < doubleTapDelay && tapLength > 0) {
+                    toggleFullscreen();
+                    e.preventDefault();
+                    lastTapTime = 0; // reset to prevent triple-tap chaining
+                } else {
+                    lastTapTime = now;
                 }
             }
         }
@@ -1125,22 +1233,45 @@ function setupMouseWheelZoom() {
  */
 function closeUniversalPDFViewer() {
     if (UniversalPDFViewer.currentModal) {
-        UniversalPDFViewer.currentModal.style.animation = 'slideDown 0.2s ease';
+        // Capture and clear currentModal IMMEDIATELY so any pending 200ms timeout
+        // from a previous close() cannot remove a newly-created viewer modal.
+        const modalToRemove = UniversalPDFViewer.currentModal;
+        UniversalPDFViewer.currentModal = null;
         
-        setTimeout(() => {
-            if (UniversalPDFViewer.currentModal) {
-                UniversalPDFViewer.currentModal.remove();
-                UniversalPDFViewer.currentModal = null;
-            }
-        }, 200);
+        modalToRemove.style.animation = 'slideDown 0.2s ease';
+        setTimeout(() => modalToRemove.remove(), 200);
         
-        // Cleanup
+        // Fire onClose callback before resetting state so caller can read currentPage
+        if (UniversalPDFViewer.config && UniversalPDFViewer.config.onClose) {
+            UniversalPDFViewer.config.onClose(UniversalPDFViewer.currentPage);
+        }
+        
+        // Revoke blob URL to prevent memory leak
+        if (UniversalPDFViewer.blobUrl) {
+            URL.revokeObjectURL(UniversalPDFViewer.blobUrl);
+            UniversalPDFViewer.blobUrl = null;
+        }
+        
+        // Remove keyboard listener
         document.removeEventListener('keydown', handleKeyPress);
-        UniversalPDFViewer.pdfDoc        = null;
-        UniversalPDFViewer.isOpen        = false;
-        UniversalPDFViewer.scaleFitted   = false;
-        UniversalPDFViewer.scale         = 1.0;
-        UniversalPDFViewer.defaultScale  = 1.0;
+        
+        // Full state reset — prevents stale state (especially isFlipping) on next open
+        UniversalPDFViewer.pdfDoc         = null;
+        UniversalPDFViewer.isOpen         = false;
+        UniversalPDFViewer.scaleFitted    = false;
+        UniversalPDFViewer.scale          = 1.0;
+        UniversalPDFViewer.defaultScale   = 1.0;
+        UniversalPDFViewer.currentPage    = 1;
+        UniversalPDFViewer.totalPages     = 0;
+        UniversalPDFViewer.pageRendering  = false;
+        UniversalPDFViewer.pageNumPending = null;
+        UniversalPDFViewer.isFlipping     = false;
+        UniversalPDFViewer.isFullscreen   = false;
+        UniversalPDFViewer.canvas         = null;
+        UniversalPDFViewer.ctx            = null;
+        UniversalPDFViewer.canvasWrapper  = null;
+        UniversalPDFViewer.pdfPassword    = null;
+        UniversalPDFViewer.config         = {};
         
         console.log('📱 PDF Viewer closed');
     }
@@ -1154,6 +1285,7 @@ window.closeMobilePDFViewer = closeUniversalPDFViewer;
  */
 function showPDFError(message) {
     const errorModal = document.createElement('div');
+    errorModal.id = 'pdf-error-modal';
     errorModal.style.cssText = `
         position: fixed;
         inset: 0;
@@ -1165,12 +1297,16 @@ function showPDFError(message) {
         animation: fadeIn 0.3s ease;
     `;
     
+    // Escape the message before injecting into innerHTML to prevent XSS.
+    // Error messages can originate from HTTP response text or PDF.js internals
+    // which could carry a payload if a server is malicious.
+    const safeMsg = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     errorModal.innerHTML = `
         <div style="text-align: center; padding: 40px 20px; max-width: 400px;">
             <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
             <div style="font-size: 20px; font-weight: 700; color: #CC0000; margin-bottom: 12px;">PDF Error</div>
-            <div style="font-size: 14px; color: rgba(200,200,200,0.8); margin-bottom: 30px; line-height: 1.5;">${message}</div>
-            <button onclick="this.closest('div').remove()" style="
+            <div style="font-size: 14px; color: rgba(200,200,200,0.8); margin-bottom: 30px; line-height: 1.5;">${safeMsg}</div>
+            <button onclick="document.getElementById('pdf-error-modal').remove()" style="
                 padding: 12px 32px;
                 background: linear-gradient(135deg, rgba(204,0,0,0.3), rgba(204,0,0,0.2));
                 border: 1px solid rgba(204,0,0,0.5);

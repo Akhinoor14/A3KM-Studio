@@ -110,7 +110,16 @@
                 downloadName: `${currentBook.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
                 showDownload: true,
                 allowZoom: true,
-                password: 'MOUnoor21014'  // Explicit A3KM password for all books
+                password: 'MOUnoor21014',  // Explicit A3KM password for all books
+                startPage: currentPage,    // Restore reading position in the viewer
+                onClose: (lastPage) => {
+                    // Sync real page number from PDF viewer back into book-reader state
+                    if (lastPage && lastPage > 0) {
+                        currentPage = lastPage;
+                        saveReadingProgress();
+                        updatePageInfo();
+                    }
+                }
             });
             
             // Activate Book Mode if requested
@@ -130,14 +139,14 @@
         // Add Book Mode class to body for styling
         document.body.classList.add('book-mode');
         
-        // Apply Book Mode styling to viewer overlay
-        const viewerOverlay = document.getElementById('universalPDFViewerOverlay');
+        // Apply Book Mode styling to viewer overlay (correct ID: universal-pdf-viewer)
+        const viewerOverlay = document.getElementById('universal-pdf-viewer');
         if (viewerOverlay) {
             viewerOverlay.style.background = 'linear-gradient(135deg, #1a0a00 0%, #0a0505 50%, #1a0a00 100%)';
         }
         
-        // Apply styling to PDF canvas
-        const pdfCanvas = document.getElementById('universalPDFCanvas');
+        // Apply styling to PDF canvas (correct ID: pdf-canvas)
+        const pdfCanvas = document.getElementById('pdf-canvas');
         if (pdfCanvas) {
             pdfCanvas.style.boxShadow = '0 0 60px rgba(0,0,0,0.9), inset 2px 0 20px rgba(139,0,0,0.3)';
             pdfCanvas.style.border = '1px solid rgba(139,0,0,0.2)';
@@ -297,7 +306,14 @@
         // Load reading progress
         const savedPage = localStorage.getItem(`book_${currentBook.id}_page`);
         if (savedPage) {
-            currentPage = parseInt(savedPage);
+            const parsed = parseInt(savedPage, 10);
+            // Validate: must be a real number within the book's range
+            if (!isNaN(parsed) && parsed >= 1 && parsed <= (currentBook.pages || Infinity)) {
+                currentPage = parsed;
+            } else {
+                // Corrupt value — reset and clean up
+                localStorage.removeItem(`book_${currentBook.id}_page`);
+            }
         }
     }
 
@@ -334,6 +350,9 @@
 
     // ========== KEYBOARD NAVIGATION ==========
     function handleKeyPress(e) {
+        // When the PDF viewer overlay is open, let it handle all keyboard events
+        if (document.getElementById('universal-pdf-viewer')) return;
+
         if (e.key === 'ArrowLeft') {
             goToPreviousPage();
         } else if (e.key === 'ArrowRight') {
@@ -371,11 +390,14 @@
         let touchEndX = 0;
 
         pdfViewerContainer.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
+            // clientX (CSS pixels) not screenX (physical pixels): on devices with
+            // accessibility zoom or browser zoom, screenX diverges from clientX and
+            // the 50px threshold no longer matches what the user actually swiped.
+            touchStartX = e.changedTouches[0].clientX;
         });
 
         pdfViewerContainer.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
+            touchEndX = e.changedTouches[0].clientX;
             handleSwipe();
         });
 
@@ -409,10 +431,18 @@
         const savedBookMode = localStorage.getItem('preferBookMode');
         
         if (bookModeParam === 'true' || savedBookMode === 'true') {
-            // Open in viewer with Book Mode activated
-            setTimeout(() => {
-                openBookInViewer(true);
-            }, 500);
+            // Wait until book is loaded before trying to open viewer
+            if (currentBook) {
+                setTimeout(() => openBookInViewer(true), 500);
+            } else {
+                // Poll until currentBook is ready (set by loadBook after JSON loads)
+                const waitForBook = setInterval(() => {
+                    if (currentBook) {
+                        clearInterval(waitForBook);
+                        openBookInViewer(true);
+                    }
+                }, 100);
+            }
         }
     }
 

@@ -11,6 +11,7 @@
     let currentCourse = null;
     let currentVideoIndex = 0;
     let durCache = {};  // videoId → real duration from YouTube API
+    let autoAdvanceTimer = null;  // cancellable auto-advance on episode end
 
     // ========== YOUTUBE API HELPERS ==========
     function getApiKey() {
@@ -99,7 +100,7 @@
         renderPlaylist();  // refresh watched ticks
         const next = currentVideoIndex + 1;
         if (currentCourse && next < currentCourse.playlist.length) {
-            setTimeout(() => loadVideo(next), 1800);
+            autoAdvanceTimer = setTimeout(() => loadVideo(next), 1800);
         }
     };
 
@@ -170,13 +171,18 @@
      */
     function loadVideo(index) {
         if (!currentCourse?.playlist?.length) { showNoVideos(); return; }
+        clearTimeout(autoAdvanceTimer);  // cancel any pending auto-advance
+        autoAdvanceTimer = null;
         currentVideoIndex = index;
         const video = currentCourse.playlist[index];
 
-        // Show placeholder while loading
+        // Show placeholder with thumbnail while loading
         if (vpPlaceholder) {
             vpPlaceholder.classList.remove('hidden');
-            vpPlaceholder.style.opacity = '1';
+            const thumbUrl = video.thumbnail ||
+                (video.videoId ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` : '');
+            if (thumbUrl) vpPlaceholder.style.background =
+                `linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.25)), url('${thumbUrl}') center/cover no-repeat`;
         }
 
         if (video.videoId) {
@@ -315,7 +321,7 @@
             const eps  = c.episodes || c.playlist?.length || 0;
             const lang = c.language === 'bn' ? 'BN' : 'EN';
             return `
-            <div class="rel-card" onclick="location.href='course-viewer.html?id=${c.id}'">
+            <div class="rel-card" data-course-id="${c.id}">
                 <div class="rel-thumb">
                     ${thumb ? `<img src="${thumb}" alt="${c.title}" loading="lazy">` : ''}
                     <span class="rel-diff ${diff}">${dLabel}</span>
@@ -446,13 +452,10 @@
         document.querySelectorAll('.playlist-item').forEach(item => {
             item.addEventListener('click', () => {
                 const index = parseInt(item.getAttribute('data-index'));
-                loadVideo(index);  // loadVideo already calls renderPlaylist internally
-                if (navigator.vibrate) navigator.vibrate(10);
+                if (navigator.vibrate) navigator.vibrate(8);
+                loadVideo(index);
             });
-
-            item.addEventListener('touchstart', () => {
-                if (navigator.vibrate) navigator.vibrate(10);
-            });
+            // touchstart handled by CSS :active for visual feedback only
         });
     }
 
@@ -490,6 +493,19 @@
      * Setup event listeners
      */
     function setupEventListeners() {
+        // Related course cards — delegated click with fade transition
+        if (relatedGrid) {
+            relatedGrid.addEventListener('click', function(e) {
+                const card = e.target.closest('.rel-card');
+                if (!card) return;
+                const id = card.getAttribute('data-course-id');
+                if (!id) return;
+                document.body.style.transition = 'opacity 0.18s ease';
+                document.body.style.opacity = '0';
+                setTimeout(function() { location.href = 'course-viewer.html?id=' + id; }, 190);
+            });
+        }
+
         // Share button
         if (shareBtn) {
             shareBtn.addEventListener('click', handleShare);

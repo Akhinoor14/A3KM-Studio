@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#8B0000">
     <meta name="description" content="Watch educational course playlists">
     <title>Course Viewer - A3KM Studio</title>
     
@@ -14,8 +15,6 @@
     <link rel="stylesheet" href="../../shared/mobile-common.css">
     <link rel="stylesheet" href="../../shared/mobile-navbar.css">
     
-    <!-- Page Loading Indicator -->
-    <script src="../../shared/page-loading.js"></script>
     <!-- YouTube IFrame Player API -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
@@ -226,14 +225,14 @@
         .vp-pip-fb-btn.disabled { opacity: 0.28; pointer-events: none; }
         .vp-wrapper.portrait-fs {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
-            z-index: 9000; background: #000; display: flex; align-items: center;
+            z-index: 10000; background: #000; display: flex; align-items: center;
         }
         .vp-wrapper.portrait-fs .vp-inner { padding-top: 0; height: 100dvh; }
-        .vp-wrapper.portrait-fs ~ * { display: none !important; }
+        .vp-wrapper.portrait-fs ~ *:not(.vp-pip-fallback) { display: none !important; }
         .vp-wrapper.portrait-fs .vp-controls { opacity: 1; pointer-events: auto; }
-        :fullscreen .vp-wrapper, :-webkit-full-screen .vp-wrapper { position: fixed; inset: 0; width: 100vw; height: 100vh; }
-        :fullscreen .vp-inner, :-webkit-full-screen .vp-inner { padding-top: 0; height: 100vh; }
-        :fullscreen .vp-controls, :-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
+        .vp-wrapper:fullscreen, .vp-wrapper:-webkit-full-screen { background: #000; }
+        .vp-wrapper:fullscreen .vp-inner, .vp-wrapper:-webkit-full-screen .vp-inner { padding-top: 0; height: 100%; }
+        .vp-wrapper:fullscreen .vp-controls, .vp-wrapper:-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
 
         /* ── Episode Info Panel ── */
         .ep-info-panel {
@@ -428,7 +427,7 @@
         </div>
         <div class="vp-hud" id="briHud" style="left:16px">
             <i class="fas fa-sun"></i>
-            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:50%"></div></div>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:100%"></div></div>
         </div>
         <div class="vp-hud" id="volHud" style="right:16px">
             <i class="fas fa-volume-up" id="volIcon"></i>
@@ -441,7 +440,7 @@
                 <i class="fas fa-step-backward"></i>
             </button>
             <button class="vp-mc-btn center" id="vpPlayPauseBtn" title="Play / Pause">
-                <i class="fas fa-pause" id="vpPlayPauseIcon"></i>
+                <i class="fas fa-play" id="vpPlayPauseIcon"></i>
             </button>
             <button class="vp-mc-btn disabled" id="vpNextBtn" title="Next episode">
                 <i class="fas fa-step-forward"></i>
@@ -462,7 +461,7 @@
         </div>
         <div class="vp-pip-fb-body">
             <button class="vp-pip-fb-btn disabled" id="vpPipFbPrev"><i class="fas fa-step-backward"></i></button>
-            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-pause" id="vpPipFbPlayIcon"></i></button>
+            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-play" id="vpPipFbPlayIcon"></i></button>
             <button class="vp-pip-fb-btn disabled" id="vpPipFbNext"><i class="fas fa-step-forward"></i></button>
         </div>
     </div>
@@ -570,23 +569,21 @@
         /* ── YT Player bridge ── */
         window._initYTPlayer = function(videoId) {
             if (ytPlayer) {
-                ytPlayer.loadVideoById(videoId);
                 placeholder.classList.remove('hidden');
-                placeholder.style.opacity = '0';
-                setTimeout(() => placeholder.classList.add('hidden'), 400);
+                ytPlayer.loadVideoById(videoId);
                 return;
             }
             ytPlayer = new YT.Player('ytPlayer', {
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1, rel: 0, modestbranding: 1,
-                    playsinline: 1, controls: 1, fs: 0,
+                    playsinline: 1, controls: 0, fs: 0,
                     iv_load_policy: 3, enablejsapi: 1
                 },
                 events: {
                     onReady: function(e) {
                         playerReady = true;
-                        placeholder.classList.add('hidden');
+                        currentVol = parseInt(localStorage.getItem('vp_vol') || '80', 10);
                         e.target.setVolume(currentVol);
                         syncVolHud();
                     },
@@ -596,6 +593,10 @@
                             mcPlayIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
                         }
                         if (typeof window._onPipStateChange === 'function') window._onPipStateChange();
+                        /* Hide placeholder thumbnail once buffering or playing starts */
+                        if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) {
+                            placeholder.classList.add('hidden');
+                        }
                         /* Notify course-viewer.js when episode ends */
                         if (e.data === YT.PlayerState.ENDED) {
                             if (typeof window._onEpEnded === 'function') window._onEpEnded();
@@ -751,6 +752,7 @@
                 };
             }
             async function openDocPiP(){
+                if(fbOpen) closeFbOverlay();
                 if(!playerReady||!ytPlayer) return;
                 const vd=ytPlayer.getVideoData?ytPlayer.getVideoData():{};
                 const vidId=vd.video_id||'', stT=ytPlayer.getCurrentTime?ytPlayer.getCurrentTime():0;
@@ -779,6 +781,8 @@
                 if (!pipWin || !pipPlayer) return;
                 pipCurrentVideoId = videoId;
                 if (pipPlayer.loadVideoById) pipPlayer.loadVideoById(videoId);
+                /* Keep main player paused — DocPiP is the active player */
+                if (ytPlayer && playerReady) ytPlayer.pauseVideo();
                 const ttlEl = pipWin.document.getElementById('pp-tt');
                 if (ttlEl && title) ttlEl.textContent = title;
                 if (pipFbTitle) pipFbTitle.textContent = title || 'Now Playing';
@@ -792,6 +796,7 @@
             function closeFbOverlay(){
                 if(!fbOpen||!pipFb) return;
                 fbOpen=false; pipFb.classList.remove('active'); setPipActive(false);
+                if(pipFb._dragAC){pipFb._dragAC.abort();pipFb._dragAC=null;pipFb._drag=false;}
             }
             function syncFbIcon(){ if(pipFbPlayIc) pipFbPlayIc.className=isPlaying?'fas fa-pause':'fas fa-play'; }
             function syncFbNav(){
@@ -813,7 +818,7 @@
             if(pipFbClose) pipFbClose.addEventListener('click',closeFbOverlay);
             if(pipFbPrev) pipFbPrev.addEventListener('click',function(e){e.stopPropagation();if(typeof window._prevVideo==='function')window._prevVideo();});
             if(pipFbNext) pipFbNext.addEventListener('click',function(e){e.stopPropagation();if(typeof window._nextVideo==='function')window._nextVideo();});
-            if(pipFbPlay) pipFbPlay.addEventListener('click',function(e){e.stopPropagation();playPause();syncFbIcon();});
+            if(pipFbPlay) pipFbPlay.addEventListener('click',function(e){e.stopPropagation();playPause();});
             document.addEventListener('visibilitychange',function(){
                 if(!pipToast) return;
                 if(document.hidden&&isPlaying&&!pipWin&&!fbOpen){
@@ -823,22 +828,26 @@
             });
             if(pipToast) pipToast.addEventListener('click',function(){pipToast.classList.remove('show');window._openPiP();});
             function makeDraggable(){
+                const ac=new AbortController();
+                const sig=ac.signal;
+                pipFb._dragAC=ac;
                 let ox=0,oy=0,sx=0,sy=0,drag=false;
                 function onStart(e){const t=e.touches?e.touches[0]:e;const r=pipFb.getBoundingClientRect();
                     ox=r.left;oy=r.top;sx=t.clientX;sy=t.clientY;drag=true;
                     pipFb.style.transition='none';pipFb.style.bottom='auto';pipFb.style.right='auto';
                     pipFb.style.left=ox+'px';pipFb.style.top=oy+'px';}
-                function onMove(e){if(!drag)return;const t=e.touches?e.touches[0]:e;
+                function onMove(e){if(!drag)return;e.preventDefault();const t=e.touches?e.touches[0]:e;
                     const nx=ox+(t.clientX-sx),ny=oy+(t.clientY-sy);
                     pipFb.style.left=clamp(nx,0,window.innerWidth-pipFb.offsetWidth)+'px';
                     pipFb.style.top=clamp(ny,0,window.innerHeight-pipFb.offsetHeight)+'px';}
                 function onEnd(){drag=false;}
-                pipFbHead.addEventListener('touchstart',onStart,{passive:true});
-                document.addEventListener('touchmove',onMove,{passive:true});
-                document.addEventListener('touchend',onEnd);
-                pipFbHead.addEventListener('mousedown',onStart);
-                document.addEventListener('mousemove',onMove);
-                document.addEventListener('mouseup',onEnd);
+                pipFbHead.addEventListener('touchstart',  onStart, {passive:true,signal:sig});
+                document.addEventListener('touchmove',   onMove,  {signal:sig});
+                document.addEventListener('touchend',    onEnd,   {signal:sig});
+                document.addEventListener('touchcancel', onEnd,   {signal:sig});
+                pipFbHead.addEventListener('mousedown',onStart,{signal:sig});
+                document.addEventListener('mousemove',onMove,{signal:sig});
+                document.addEventListener('mouseup',onEnd,{signal:sig});
             }
             console.log('[PiP] engine ready. DocPiP supported:',SUPPORTS_DOC_PIP);
         })();
@@ -868,7 +877,7 @@
                 inner.style.transform='';
             }
             state='landscapeFS';
-            const el=document.documentElement;
+            const el=wrapper;
             const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
             if(req) Promise.resolve(req.call(el)).catch(()=>{});
             if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{});
@@ -907,11 +916,14 @@
         const LOCK_THRESH=12;
         let touchStartX,touchStartY,touchStartTime;
         let gMode=null,gLocked=false,tapOK=true,lastTapTs=0,pendingSingleTap=null;
+        let lockedH=0;
 
         gesture.addEventListener('touchstart',function(e){
             const t=e.touches[0];
             touchStartX=t.clientX; touchStartY=t.clientY; touchStartTime=Date.now();
             gMode=null; gLocked=false; tapOK=true;
+            /* Cancel any pending single-tap so it doesn't fire mid-gesture */
+            clearTimeout(pendingSingleTap); pendingSingleTap=null;
             inner.style.transition=''; inner.style.transform='';
             showControls();
         },{passive:true});
@@ -920,15 +932,17 @@
             const t=e.touches[0];
             const dx=t.clientX-touchStartX, dy=t.clientY-touchStartY;
             const adx=Math.abs(dx), ady=Math.abs(dy);
-            if(adx>8||ady>8) tapOK=false;
+            if(adx>8||ady>8){ tapOK=false; lastTapTs=0; }
             if(!gLocked&&(adx>LOCK_THRESH||ady>LOCK_THRESH)){
                 gLocked=true;
                 if(ady>adx){
                     if(state==='normal'&&dy>0) gMode='swipe-enter';
                     else if(state==='portraitFS'&&dy<0) gMode='swipe-exit';
                     else{
-                        const mid=wrapper.getBoundingClientRect().left+wrapper.getBoundingClientRect().width/2;
-                        gMode=t.clientX>=mid?'vol':'bri';
+                        const wr=wrapper.getBoundingClientRect();
+                        gMode=t.clientX>=(wr.left+wr.width/2)?'vol':'bri';
+                        lockedH=wr.height||200;
+                        touchStartY=t.clientY;
                     }
                 }
             }
@@ -944,14 +958,13 @@
                 inner.style.transform=`translateY(${-prog*18}px) scale(${1-prog*0.03})`;
                 if(prog>=1){inner.style.transform=''; exitPortraitFS(); gMode=null;}
             } else if(gMode==='vol'){
-                const h=wrapper.getBoundingClientRect().height||200;
-                const delta=(touchStartY-t.clientY)/(h*0.75)*100;
+                const delta=(touchStartY-t.clientY)/(lockedH*0.75)*100;
                 currentVol=clamp(currentVol+delta,0,100); touchStartY=t.clientY;
                 if(ytPlayer&&playerReady) ytPlayer.setVolume(Math.round(currentVol));
+                localStorage.setItem('vp_vol', Math.round(currentVol));
                 syncVolHud(); showHud(volHud,1500);
             } else if(gMode==='bri'){
-                const h=wrapper.getBoundingClientRect().height||200;
-                const delta=(touchStartY-t.clientY)/(h*0.75)*0.70;
+                const delta=(touchStartY-t.clientY)/(lockedH*0.75)*0.70;
                 brightness=clamp(brightness+delta,0,0.70); touchStartY=t.clientY;
                 briOverlay.style.opacity=brightness;
                 briFill.style.height=((1-brightness/0.70)*100)+'%';
@@ -969,8 +982,9 @@
             if(!tapOK||(Date.now()-touchStartTime)>360) return;
             const now=Date.now(), sinceLast=now-lastTapTs;
             const t=e.changedTouches[0];
-            const rx=t.clientX-wrapper.getBoundingClientRect().left;
-            const ry=t.clientY-wrapper.getBoundingClientRect().top;
+            const wr=wrapper.getBoundingClientRect();
+            const rx=t.clientX-wr.left;
+            const ry=t.clientY-wr.top;
             if(sinceLast<300){
                 lastTapTs=0; clearTimeout(pendingSingleTap); pendingSingleTap=null;
                 if(state==='landscapeFS') exitLandscapeFS(); else enterLandscapeFS();

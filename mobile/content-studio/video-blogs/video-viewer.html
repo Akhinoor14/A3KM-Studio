@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#8B0000">
     <meta name="description" content="Watch technical video tutorials by Md Akhinoor Islam">
     <title>Video Player - A3KM Studio</title>
     
@@ -24,8 +25,6 @@
     <link rel="stylesheet" href="../../shared/mobile-common.css">
     <link rel="stylesheet" href="../../shared/mobile-navbar.css">
     
-    <!-- Page Loading Indicator -->
-    <script src="../../shared/page-loading.js"></script>
     
     <style>
         /* Video Viewer Styles */
@@ -210,7 +209,7 @@
             top: 0; left: 0;
             width: 100vw;
             height: 100dvh;
-            z-index: 9000;
+            z-index: 10000;
             background: #000;
             display: flex;
             align-items: center;
@@ -219,7 +218,7 @@
             padding-top: 0;
             height: 100dvh;
         }
-        .vp-wrapper.portrait-fs ~ * { display: none !important; }
+        .vp-wrapper.portrait-fs ~ *:not(.vp-pip-fallback) { display: none !important; }
         .vp-wrapper.portrait-fs .vp-controls { opacity: 1; pointer-events: auto; }
 
         /* Swipe-to-enter drag preview */
@@ -228,21 +227,20 @@
             transition: transform 0.05s;
         }
 
-        /* LANDSCAPE FULLSCREEN — whole wrapper goes fullscreen */
-        :fullscreen .vp-wrapper,
-        :-webkit-full-screen .vp-wrapper {
-            position: fixed; inset: 0;
-            width: 100vw; height: 100vh;
+        /* LANDSCAPE FULLSCREEN — vp-wrapper element itself goes fullscreen */
+        .vp-wrapper:fullscreen,
+        .vp-wrapper:-webkit-full-screen {
+            background: #000;
         }
-        :fullscreen .vp-inner,
-        :-webkit-full-screen .vp-inner {
+        .vp-wrapper:fullscreen .vp-inner,
+        .vp-wrapper:-webkit-full-screen .vp-inner {
             padding-top: 0;
-            height: 100vh;
+            height: 100%;
         }
-        :fullscreen .vp-controls,
-        :-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
+        .vp-wrapper:fullscreen .vp-controls,
+        .vp-wrapper:-webkit-full-screen .vp-controls { opacity:1; pointer-events:auto; }
 
-        /* Hide bottom navbar during fullscreen */
+        /* Hide bottom navbar during portrait fullscreen */
 
         /* ── Media Controls: Prev / Play-Pause / Next ── */
         .vp-media-controls {
@@ -646,6 +644,7 @@
             margin-bottom: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -673,6 +672,12 @@
         
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInOut {
+            0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+            18%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+            75%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
         }
     </style>
 </head>
@@ -707,7 +712,7 @@
         <!-- Brightness HUD (left side — left-swipe gesture) -->
         <div class="vp-hud" id="briHud" style="left:16px">
             <i class="fas fa-sun"></i>
-            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:50%"></div></div>
+            <div class="vp-hud-track"><div class="vp-hud-fill" id="briFill" style="height:100%"></div></div>
         </div>
         <!-- Volume HUD (right side — right-swipe gesture) -->
         <div class="vp-hud" id="volHud" style="right:16px">
@@ -720,7 +725,7 @@
                 <i class="fas fa-step-backward"></i>
             </button>
             <button class="vp-mc-btn center" id="vpPlayPauseBtn" title="Play / Pause">
-                <i class="fas fa-pause" id="vpPlayPauseIcon"></i>
+                <i class="fas fa-play" id="vpPlayPauseIcon"></i>
             </button>
             <button class="vp-mc-btn disabled" id="vpNextBtn" title="Next video">
                 <i class="fas fa-step-forward"></i>
@@ -743,7 +748,7 @@
         </div>
         <div class="vp-pip-fb-body">
             <button class="vp-pip-fb-btn disabled" id="vpPipFbPrev"><i class="fas fa-step-backward"></i></button>
-            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-pause" id="vpPipFbPlayIcon"></i></button>
+            <button class="vp-pip-fb-btn play" id="vpPipFbPlay"><i class="fas fa-play" id="vpPipFbPlayIcon"></i></button>
             <button class="vp-pip-fb-btn disabled" id="vpPipFbNext"><i class="fas fa-step-forward"></i></button>
         </div>
     </div>
@@ -872,6 +877,7 @@
         ───────────────────────────────────────────────────────── */
         window._initYTPlayer = function(videoId) {
             if (ytPlayer) {
+                placeholder.classList.remove('hidden');
                 ytPlayer.loadVideoById(videoId);
                 return;
             }
@@ -879,13 +885,13 @@
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1, rel: 0, modestbranding: 1,
-                    playsinline: 1, controls: 1, fs: 0,
+                    playsinline: 1, controls: 0, fs: 0,
                     iv_load_policy: 3, enablejsapi: 1
                 },
                 events: {
                     onReady: function(e) {
                         playerReady = true;
-                        placeholder.classList.add('hidden');
+                        currentVol = parseInt(localStorage.getItem('vp_vol') || '80', 10);
                         e.target.setVolume(currentVol);
                         syncVolHud();
                         /* Restore FS state after same-category prev/next navigation */
@@ -904,6 +910,10 @@
                             mcPlayIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
                         }
                         if (typeof window._onPipStateChange === 'function') window._onPipStateChange();
+                        /* Hide placeholder thumbnail once video starts buffering or playing */
+                        if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) {
+                            placeholder.classList.add('hidden');
+                        }
                     }
                 }
             });
@@ -1098,6 +1108,7 @@
 
             /* ── Open Document PiP ── */
             async function openDocPiP() {
+                if (fbOpen) closeFbOverlay();
                 if (!playerReady || !ytPlayer) return;
                 const vd = ytPlayer.getVideoData ? ytPlayer.getVideoData() : {};
                 const vidId = vd.video_id || '';
@@ -1143,6 +1154,8 @@
                 fbOpen = false;
                 pipFb.classList.remove('active');
                 setPipActive(false);
+                /* Remove drag listeners and allow re-arming on next open */
+                if (pipFb._dragAC) { pipFb._dragAC.abort(); pipFb._dragAC = null; pipFb._drag = false; }
             }
             function syncFbIcon() {
                 if (pipFbPlayIc) pipFbPlayIc.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
@@ -1176,7 +1189,7 @@
             if (pipFbClose) pipFbClose.addEventListener('click', closeFbOverlay);
             if (pipFbPrev) pipFbPrev.addEventListener('click', function(e) { e.stopPropagation(); if (typeof window._prevVideo === 'function') window._prevVideo(); });
             if (pipFbNext) pipFbNext.addEventListener('click', function(e) { e.stopPropagation(); if (typeof window._nextVideo === 'function') window._nextVideo(); });
-            if (pipFbPlay) pipFbPlay.addEventListener('click', function(e) { e.stopPropagation(); playPause(); syncFbIcon(); });
+            if (pipFbPlay) pipFbPlay.addEventListener('click', function(e) { e.stopPropagation(); playPause(); });
 
             /* ── visibilitychange → toast hint ── */
             document.addEventListener('visibilitychange', function() {
@@ -1194,6 +1207,9 @@
 
             /* ── Draggable fallback ── */
             function makeDraggable() {
+                const ac = new AbortController();
+                const sig = ac.signal;
+                pipFb._dragAC = ac;
                 let ox=0, oy=0, sx=0, sy=0, drag=false;
                 function onStart(e) {
                     const t = e.touches ? e.touches[0] : e;
@@ -1205,6 +1221,7 @@
                 }
                 function onMove(e) {
                     if (!drag) return;
+                    e.preventDefault();
                     const t = e.touches ? e.touches[0] : e;
                     const nx = ox + (t.clientX - sx);
                     const ny = oy + (t.clientY - sy);
@@ -1212,12 +1229,13 @@
                     pipFb.style.top  = clamp(ny, 0, window.innerHeight - pipFb.offsetHeight) + 'px';
                 }
                 function onEnd() { drag = false; }
-                pipFbHead.addEventListener('touchstart', onStart, {passive:true});
-                document.addEventListener('touchmove',  onMove,  {passive:true});
-                document.addEventListener('touchend',   onEnd);
-                pipFbHead.addEventListener('mousedown', onStart);
-                document.addEventListener('mousemove',  onMove);
-                document.addEventListener('mouseup',    onEnd);
+                pipFbHead.addEventListener('touchstart',  onStart, {passive:true, signal:sig});
+                document.addEventListener('touchmove',   onMove,  {signal:sig});
+                document.addEventListener('touchend',    onEnd,   {signal:sig});
+                document.addEventListener('touchcancel', onEnd,   {signal:sig});
+                pipFbHead.addEventListener('mousedown', onStart, {signal:sig});
+                document.addEventListener('mousemove',  onMove,  {signal:sig});
+                document.addEventListener('mouseup',    onEnd,   {signal:sig});
             }
             console.log('[PiP] engine ready. DocPiP supported:', SUPPORTS_DOC_PIP);
         })();
@@ -1257,8 +1275,8 @@
             }
             state = 'landscapeFS';
 
-            /* Request browser fullscreen on the whole document */
-            const el  = document.documentElement;
+            /* Request browser fullscreen on the player wrapper (hides rest of page) */
+            const el  = wrapper;
             const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
             if (req) {
                 Promise.resolve(req.call(el)).catch(() => {});
@@ -1324,6 +1342,7 @@
 
         let touchStartX, touchStartY, touchStartTime;
         let gMode            = null;   // 'vol' | 'bri' | 'swipe-enter' | 'swipe-exit'
+        let lockedH          = 0;      // cached wrapper height at gesture lock time
         let gLocked          = false;
         let tapOK            = true;
         let lastTapTs        = 0;
@@ -1337,6 +1356,9 @@
             gMode          = null;
             gLocked        = false;
             tapOK          = true;
+            /* Cancel any pending single-tap so it doesn't fire mid-gesture */
+            clearTimeout(pendingSingleTap);
+            pendingSingleTap = null;
             /* Reset drag preview */
             inner.style.transition = '';
             inner.style.transform  = '';
@@ -1350,7 +1372,7 @@
             const adx = Math.abs(dx);
             const ady = Math.abs(dy);
 
-            if (adx > 8 || ady > 8) tapOK = false;
+            if (adx > 8 || ady > 8) { tapOK = false; lastTapTs = 0; }
 
             /* Lock gesture mode once threshold crossed */
             if (!gLocked && (adx > LOCK_THRESH || ady > LOCK_THRESH)) {
@@ -1363,8 +1385,10 @@
                         gMode = 'swipe-exit';      // swipe up → exit portrait FS
                     } else {
                         /* Volume (right half) or Brightness (left half) */
-                        const mid = wrapper.getBoundingClientRect().left + wrapper.getBoundingClientRect().width / 2;
-                        gMode = t.clientX >= mid ? 'vol' : 'bri';
+                        const wr  = wrapper.getBoundingClientRect();
+                        gMode     = t.clientX >= (wr.left + wr.width / 2) ? 'vol' : 'bri';
+                        lockedH   = wr.height || 200;
+                        touchStartY = t.clientY;   // reset so first delta starts from lock point
                     }
                 }
                 /* Horizontal swipe — ignore (reserved for future use) */
@@ -1395,17 +1419,16 @@
                 }
 
             } else if (gMode === 'vol') {
-                const h      = wrapper.getBoundingClientRect().height || 200;
-                const delta  = (touchStartY - t.clientY) / (h * 0.75) * 100;
+                const delta  = (touchStartY - t.clientY) / (lockedH * 0.75) * 100;
                 currentVol   = clamp(currentVol + delta, 0, 100);
                 touchStartY  = t.clientY;
                 if (ytPlayer && playerReady) ytPlayer.setVolume(Math.round(currentVol));
+                localStorage.setItem('vp_vol', Math.round(currentVol));
                 syncVolHud();
                 showHud(volHud, 1500);
 
             } else if (gMode === 'bri') {
-                const h      = wrapper.getBoundingClientRect().height || 200;
-                const delta  = (touchStartY - t.clientY) / (h * 0.75) * 0.70;
+                const delta  = (touchStartY - t.clientY) / (lockedH * 0.75) * 0.70;
                 brightness   = clamp(brightness + delta, 0, 0.70);
                 touchStartY  = t.clientY;
                 briOverlay.style.opacity = brightness;
@@ -1429,8 +1452,9 @@
             const now      = Date.now();
             const sinceLast= now - lastTapTs;
             const t        = e.changedTouches[0];
-            const rx       = t.clientX - wrapper.getBoundingClientRect().left;
-            const ry       = t.clientY - wrapper.getBoundingClientRect().top;
+            const wr       = wrapper.getBoundingClientRect();
+            const rx       = t.clientX - wr.left;
+            const ry       = t.clientY - wr.top;
 
             if (sinceLast < 300) {
                 /* ── Double tap ── toggle landscape FS */

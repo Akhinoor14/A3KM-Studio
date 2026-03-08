@@ -90,6 +90,16 @@
             console.log('✅ Video enhanced with YouTube data', currentVideo);
         }
 
+        // Show video thumbnail in placeholder while player loads
+        const vpPlaceholder = document.getElementById('vpPlaceholder');
+        if (vpPlaceholder) {
+            const thumbUrl = currentVideo.thumbnail ||
+                (currentVideo.videoId ? `https://i.ytimg.com/vi/${currentVideo.videoId}/hqdefault.jpg` : '');
+            if (thumbUrl) vpPlaceholder.style.background =
+                `linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.25)), url('${thumbUrl}') center/cover no-repeat`;
+            vpPlaceholder.classList.remove('hidden');
+        }
+
         // Load YouTube player
         loadYouTubePlayer(currentVideo.videoId);
 
@@ -192,7 +202,7 @@
         videoInfo.innerHTML = `
             <h1 class="video-title">${currentVideo.title}</h1>
             <div class="video-meta">
-                <span><i class="fas fa-folder"></i> ${currentVideo.subcategory}</span>
+                <span><i class="fas fa-folder"></i> ${currentVideo.subcategory || 'General'}</span>
                 <span><i class="fas fa-calendar"></i> ${formatDate(currentVideo.publishDate)}</span>
                 <span><i class="fas fa-clock"></i> ${currentVideo.duration || 'N/A'}</span>
             </div>
@@ -205,10 +215,9 @@
                     <i class="fas fa-thumbs-up" style="color: #CC0000;"></i> ${likesText}
                 </span>
             </div>
-            </div>
             ` : ''}
             <div class="video-tags">
-                ${currentVideo.tags.map(tag => `<span class="video-tag">${tag}</span>`).join('')}
+                ${(currentVideo.tags || []).map(tag => `<span class="video-tag">${tag}</span>`).join('')}
             </div>
         `;
 
@@ -328,7 +337,9 @@
 
     // ========== HELPER FUNCTIONS ==========
     function formatDate(dateString) {
+        if (!dateString) return 'Unknown date';
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Unknown date';
         const now = new Date();
         const diffTime = Math.abs(now - date);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -348,21 +359,24 @@
     }
 
     function copyToClipboard(text) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            showToast('Link copied to clipboard!');
-        } catch (err) {
-            console.error('Copy failed:', err);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(() => showToast('Link copied to clipboard!'))
+                .catch(() => legacyCopy(text));
+            return;
         }
-        
-        document.body.removeChild(textarea);
+        legacyCopy(text);
+    }
+
+    function legacyCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast('Link copied to clipboard!'); }
+        catch(e) { showToast('Could not copy link'); }
+        document.body.removeChild(ta);
     }
 
     function showToast(message) {
@@ -434,6 +448,20 @@
 
         // Haptic feedback
         addActionButtonHaptics();
+
+        // Related video navigation — delegated listener for consistent fade transition
+        if (relatedList) {
+            relatedList.addEventListener('click', function(e) {
+                const item = e.target.closest('.related-item');
+                if (!item) return;
+                e.preventDefault();
+                const href = item.getAttribute('href');
+                if (!href) return;
+                document.body.style.transition = 'opacity 0.18s ease';
+                document.body.style.opacity = '0';
+                setTimeout(function() { location.href = href; }, 190);
+            });
+        }
 
         // Back button haptic
         const backBtn = document.querySelector('.back-btn');
