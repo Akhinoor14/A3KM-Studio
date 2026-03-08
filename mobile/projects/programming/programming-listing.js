@@ -85,7 +85,7 @@
 
   /* ─── Filter & Sort ─── */
   function applyFilters() {
-    sortMode = document.getElementById('sortSelect')?.value || 'newest';
+    sortMode = (typeof window.getSortValue === 'function' ? window.getSortValue() : null) || 'newest';
 
     let result = allPrograms.slice();
 
@@ -301,7 +301,7 @@
   };
 
   /* Call updateMobileStats after programs load */
-  const originalLoadPrograms = loadPrograms;
+  /* Override loadPrograms to also update stats after load */
   loadPrograms = function () {
     fetch(GITHUB_RAW_URL + '?t=' + Date.now())
       .then((r) => {
@@ -318,7 +318,6 @@
         document.getElementById('programsList').innerHTML =
           '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i>' +
           '<p>Failed to load programs.<br>Please refresh.</p></div>';
-      });
       });
   };
 
