@@ -253,6 +253,13 @@
         hljs.highlightElement(block);
       }
     });
+    
+    // Add copy buttons to code blocks (new feature!)
+    setTimeout(() => {
+      addCopyButtonsToCodeBlocks();
+      styleCalloutBoxes();
+      enhanceCollapsible();
+    }, 200);
 
     // Generate TOC
     generateTOC();
@@ -801,45 +808,254 @@
   /* ============================================
      MARKDOWN TO HTML CONVERTER
      ============================================ */
-  function convertMarkdownToHTML(markdown) {
+  /* ══════════════════════════════════════════════════════════
+     PROFESSIONAL MARKDOWN CONVERTER (inspired by Arduino Projects)
+     Uses marked.js library with fallback
+  ══════════════════════════════════════════════════════════ */
+  function convertMarkdownToHTML(markdown, contentPath = '') {
     if (!markdown) return '';
     
-    let html = markdown
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      // Bold
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/__(.+?)__/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/_(.+?)_/g, '<em>$1</em>')
-      // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      // Images
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0;">')
-      // Code blocks
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
-      // Inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Blockquotes
-      .replace(/^> (.+)$/gim, '<blockquote>$1</blockquote>')
-      // Lists
-      .replace(/^\* (.+)$/gim, '<li>$1</li>')
-      .replace(/^- (.+)$/gim, '<li>$1</li>')
-      .replace(/^\d+\. (.+)$/gim, '<li>$1</li>')
-      // Line breaks
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
+    // Use marked.js if available (professional library)
+    if (typeof marked !== 'undefined') {
+      try {
+        marked.setOptions({
+          breaks: true,
+          gfm: true,
+          pedantic: false,
+          highlight: function(code, lang) {
+            if (typeof hljs !== 'undefined' && lang) {
+              try {
+                return hljs.highlight(code, { language: lang }).value;
+              } catch (e) {}
+            }
+            return code;
+          }
+        });
+        
+        // Add custom extensions for highlighting
+        marked.use({
+          extensions: [{
+            name: 'highlight',
+            level: 'inline',
+            start(src) { return src.indexOf('=='); },
+            tokenizer(src) {
+              const match = src.match(/^==([^=]+)==/);
+              if (match) {
+                return {
+                  type: 'highlight',
+                  raw: match[0],
+                  text: match[1]
+                };
+              }
+            },
+            renderer(token) {
+              return `<mark style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px; color: #000;">${token.text}</mark>`;
+            }
+          }]
+        });
+        
+        let html = marked.parse(markdown);
+        
+        // Resolve relative image paths if contentPath provided
+        if (contentPath) {
+          const base = contentPath.substring(0, contentPath.lastIndexOf('/') + 1);
+          html = html.replace(
+            /(<img[^>]+src=["'])(?!https?:\/\/|\/|data:)([^"']+)(["'][^>]*>)/gi,
+            (m, pre, src, suf) => pre + base + src + suf
+          );
+        }
+        
+        // Apply syntax highlighting to any unprocessed code blocks
+        setTimeout(() => {
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
+              hljs.highlightElement(block);
+            });
+          }
+        }, 100);
+        
+        return html;
+      } catch (error) {
+        console.error('Marked.js error, using fallback:', error);
+        return convertMarkdownFallback(markdown);
+      }
+    }
     
-    // Wrap in paragraphs
-    html = '<p>' + html + '</p>';
+    // Fallback if marked.js not loaded
+    return convertMarkdownFallback(markdown);
+  }
+  
+  /* ══════════════════════════════════════════════════════════
+     FALLBACK MARKDOWN CONVERTER (Enhanced)
+  ══════════════════════════════════════════════════════════ */
+  function convertMarkdownFallback(markdown) {
+    if (!markdown) return '';
     
-    // Wrap consecutive list items in ul
-    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    let html = markdown;
+    
+    // Escape HTML
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Code blocks (must be first)
+    html = html.replace(/```([\w]*)\r?\n([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`
+    );
+    
+    // Tables
+    html = html.replace(/\n(\|.+\|\n)+/g, function(match) {
+      const lines = match.trim().split('\n');
+      if (lines.length < 2 || !lines[1].match(/^\|[\s\-\|:]+\|$/)) return match;
+      
+      let table = '<table class="markdown-table">';
+      const headers = lines[0].split('|').filter(cell => cell.trim());
+      
+      table += '<thead><tr>';
+      headers.forEach(h => table += `<th>${h.trim()}</th>`);
+      table += '</tr></thead><tbody>';
+      
+      for (let i = 2; i < lines.length; i++) {
+        const cells = lines[i].split('|').filter(cell => cell.trim());
+        if (cells.length === 0) continue;
+        table += '<tr>';
+        cells.forEach(c => table += `<td>${c.trim()}</td>`);
+        table += '</tr>';
+      }
+      
+      table += '</tbody></table>';
+      return '\n' + table + '\n';
+    });
+    
+    // Headers
+    html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    
+    // Horizontal rules
+    html = html.replace(/^---+$/gm, '<hr>');
+    
+    // Bold & Italic
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Images & Links
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Blockquotes
+    html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+    
+    // Lists (simplified)
+    html = html.replace(/^[\*\-] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
+    
+    // Paragraphs
+    html = html.split(/\r?\n\r?\n/).map(p => {
+      p = p.trim();
+      if (p.match(/^<(h[1-6]|ul|ol|pre|blockquote|table|hr)/)) return p;
+      return p ? `<p>${p.replace(/\r?\n/g, '<br>')}</p>` : '';
+    }).join('\n');
     
     return html;
+  }
+  
+  /* ══════════════════════════════════════════════════════════
+     ADD COPY BUTTONS TO CODE BLOCKS
+  ══════════════════════════════════════════════════════════ */
+  function addCopyButtonsToCodeBlocks() {
+    document.querySelectorAll('#postContent pre').forEach(pre => {
+      if (pre.querySelector('.copy-code-btn')) return; // Already has button
+      
+      const btn = document.createElement('button');
+      btn.className = 'copy-code-btn';
+      btn.innerHTML = '<i class="fas fa-copy"></i>';
+      btn.title = 'Copy code';
+      
+      btn.onclick = () => {
+        const code = pre.querySelector('code')?.textContent || pre.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          btn.innerHTML = '<i class="fas fa-check"></i>';
+          btn.style.background = 'rgba(0, 200, 100, 0.3)';
+          
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-copy"></i>';
+            btn.style.background = '';
+          }, 2000);
+        }).catch(err => {
+          console.error('Copy failed:', err);
+          btn.innerHTML = '<i class="fas fa-times"></i>';
+        });
+      };
+      
+      pre.appendChild(btn);
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     STYLE CALLOUT BOXES (INFO/WARNING/SUCCESS)
+  ══════════════════════════════════════════════════════════ */
+  function styleCalloutBoxes() {
+    document.querySelectorAll('#postContent blockquote').forEach(quote => {
+      const firstStrong = quote.querySelector('strong:first-child');
+      if (!firstStrong) return;
+      
+      const text = firstStrong.textContent.toUpperCase();
+      
+      if (text === 'INFO') {
+        quote.style.borderLeftColor = '#2196F3';
+        quote.style.background = 'rgba(33, 150, 243, 0.1)';
+        quote.style.borderLeftWidth = '4px';
+      } else if (text === 'WARNING') {
+        quote.style.borderLeftColor = '#FF9800';
+        quote.style.background = 'rgba(255, 152, 0, 0.1)';
+        quote.style.borderLeftWidth = '4px';
+      } else if (text === 'SUCCESS') {
+        quote.style.borderLeftColor = '#4CAF50';
+        quote.style.background = 'rgba(76, 175, 80, 0.1)';
+        quote.style.borderLeftWidth = '4px';
+      } else if (text === 'ERROR') {
+        quote.style.borderLeftColor = '#F44336';
+        quote.style.background = 'rgba(244, 67, 54, 0.1)';
+        quote.style.borderLeftWidth = '4px';
+      }
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ENHANCE COLLAPSIBLE SECTIONS
+  ══════════════════════════════════════════════════════════ */
+  function enhanceCollapsible() {
+    document.querySelectorAll('#postContent details').forEach(details => {
+      const summary = details.querySelector('summary');
+      if (summary) {
+        summary.style.cursor = 'pointer';
+        summary.style.fontWeight = '600';
+        summary.style.color = 'var(--primary-red, #CC0000)';
+        summary.style.padding = '10px';
+        summary.style.background = 'rgba(139,0,0,0.1)';
+        summary.style.borderRadius = '6px';
+        summary.style.userSelect = 'none';
+        
+        // Add hover effect
+        summary.addEventListener('mouseenter', () => {
+          summary.style.background = 'rgba(139,0,0,0.2)';
+        });
+        summary.addEventListener('mouseleave', () => {
+          summary.style.background = 'rgba(139,0,0,0.1)';
+        });
+      }
+      
+      details.style.margin = '20px 0';
+      details.style.padding = '15px';
+      details.style.background = 'rgba(255,255,255,0.05)';
+      details.style.border = '1px solid rgba(139,0,0,0.3)';
+      details.style.borderRadius = '8px';
+    });
   }
 
   // Event Listeners for Reading Features

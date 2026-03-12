@@ -6,7 +6,7 @@
 
 class UpdateNotifier {
     constructor() {
-        this.currentVersion = 'v3.2.0-2026-03-12-hybrid-storage';
+        this.currentVersion = 'v3.2.3-2026-03-13-dark-depth';
         this.versionURL = '/version.json';
         this.checkInterval = 6 * 60 * 60 * 1000; // Check every 6 hours
         this.lastCheckTime = null;

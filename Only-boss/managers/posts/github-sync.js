@@ -257,6 +257,19 @@ class GitHubPostSync {
 
             const result = await this.pushPostsToGitHub(localPosts, sha);
 
+            // 📝 Upload markdown files for each post
+            console.log('📝 Uploading markdown files...');
+            for (const post of localPosts) {
+                try {
+                    if (post.markdownFile || post.contentPath) {
+                        await this.uploadMarkdownFile(post);
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ Failed to upload markdown for ${post.title}:`, error.message);
+                    // Continue with other posts even if one fails
+                }
+            }
+
             console.log(`✅ Pushed ${localPosts.length} posts to GitHub`);
             
             return {
@@ -269,6 +282,103 @@ class GitHubPostSync {
             throw error;
         }
     }
+
+    /**
+     * Upload markdown file for a post
+     */
+    async uploadMarkdownFile(post) {
+        if (!this.token) {
+            throw new Error('No GitHub token');
+        }
+
+        try {
+            const filePath = post.markdownFile || post.contentPath;
+            if (!filePath) {
+                console.warn(`⚠️ No markdown path for post: ${post.title}`);
+                return { success: false, reason: 'no_path' };
+            }
+
+            // Create markdown content from post object
+            const markdownContent = this.generateMarkdownFromPost(post);
+
+            const url = `${this.apiBase}/repos/${this.owner}/${this.repo}/contents/${encodeURIComponent(filePath)}`;
+
+            // Check if file exists to get its SHA
+            let sha = null;
+            try {
+                const getResponse = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    sha = data.sha;
+                }
+            } catch (error) {
+                // File doesn't exist, that's OK
+            }
+
+            // Upload file
+            const body = {
+                message: `📝 Add/update post: ${post.title}`,
+                content: btoa(markdownContent), // Base64 encode
+                branch: this.branch
+            };
+
+            if (sha) {
+                body.sha = sha; // For updates
+            }
+
+            const uploadResponse = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json();
+                throw new Error(`Upload failed: ${errorData.message}`);
+            }
+
+            console.log(`✅ Uploaded: ${filePath}`);
+            return { success: true, path: filePath };
+
+        } catch (error) {
+            console.error(`❌ Markdown upload failed for ${post.title}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate markdown content from post object
+     */
+    generateMarkdownFromPost(post) {
+        const frontmatter = `---
+title: ${post.title}
+author: ${post.author || 'Md Akhinoor Islam'}
+date: ${post.date}
+category: ${post.category}
+tags: [${post.tags?.map(t => `"${t}"`).join(', ') || ''}]
+slug: ${post.slug}
+readTime: ${post.readTime}
+---
+
+# ${post.title}
+
+${post.summary}
+
+${post.content || ''}
+`;
+        return frontmatter;
+    }
+
 
     /**
      * Auto-sync on publish (called after creating new post)

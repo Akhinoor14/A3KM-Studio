@@ -728,6 +728,57 @@
             alert(`Preview:\n\nTitle: ${title}\n\nContent: ${content.substring(0, 100)}...\n\nImages: ${uploadedImages.length}\nVideos: ${youtubeVideos.length}\nGallery: ${galleryImages.length}\nTags: ${tags.join(', ')}`);
         }
 
+        // ========================================
+        // HELPER: Generate slug from title
+        // ========================================
+        function slugify(text) {
+            return text
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .substring(0, 50);
+        }
+
+        // Helper: Get category group (matches github-content-uploader logic)
+        function getCategoryGroup(category) {
+            const groupMap = {
+                'arduino': 'Engineering-Technology',
+                'embedded': 'Engineering-Technology',
+                'systems': 'Engineering-Technology',
+                'robotics': 'Engineering-Technology',
+                'electronics': 'Engineering-Technology',
+                'solidworks': 'Engineering-Technology',
+                'cad': 'Engineering-Technology',
+                'programming': 'Engineering-Technology',
+                '3d': 'Engineering-Technology',
+                'python': 'Engineering-Technology',
+                'matlab': 'Engineering-Technology',
+                'tutorial': 'Engineering-Technology',
+                'ai': 'Tech & Innovation',
+                'machine': 'Tech & Innovation',
+                'deep': 'Tech & Innovation',
+                'nlp': 'Tech & Innovation',
+                'startup': 'Tech & Innovation',
+                'innovation': 'Tech & Innovation',
+                'web': 'Tech & Innovation',
+                'personal': 'General & Personal',
+                'opinion': 'General & Personal',
+                'life': 'General & Personal',
+                'experience': 'General & Personal',
+                'reflection': 'General & Personal',
+                'general': 'General & Personal',
+                'news': 'News & Events',
+                'event': 'News & Events',
+                'achievement': 'News & Events'
+            };
+            
+            const normalized = category.toLowerCase().trim();
+            for (const [key, group] of Object.entries(groupMap)) {
+                if (normalized.includes(key)) return group;
+            }
+            return 'General & Personal';
+        }
+
         // Publish Post
         async function publishPost() {
             // Validate
@@ -754,16 +805,25 @@
             // Show loading
             document.getElementById('loadingOverlay').classList.add('show');
 
-            // Generate unique post ID
+            // Generate unique post ID & slug
             const existingPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
             const postNumber = String(existingPosts.length + 1).padStart(3, '0');
             const postId = `post-${postNumber}`;
+            const slug = slugify(title);
+            const categoryGroup = getCategoryGroup(category);
+            const categorySlug = slugify(category);
+
+            // Generate file paths (matching github-content-uploader structure)
+            const markdownPath = `Content Storage/written-posts/${categoryGroup}/${categorySlug}/${slug}.md`;
 
             // Create post object (compatible with posts.json format!)
             const post = {
                 id: postId,
                 type: 'blog',
+                slug: slug,
                 category: category,
+                categoryGroup: categoryGroup,
+                categorySlug: categorySlug,
                 title: title,
                 summary: summary || content.substring(0, 200) + '...',
                 content: formatContentForBlog(content), // This will be HTML content
@@ -775,6 +835,8 @@
                 views: 0,
                 likes: 0,
                 language: detectLanguage(content),
+                markdownFile: markdownPath,
+                contentPath: markdownPath,
                 media: {
                     hasImages: uploadedImages.length > 0,
                     hasVideo: youtubeVideos.length > 0,

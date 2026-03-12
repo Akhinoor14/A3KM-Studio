@@ -93,11 +93,6 @@
         { title: 'Listing Templates', desc: 'Content Listing & Manager Templates', icon: 'fas fa-list-ul', url: '../Documentation/LISTING-PAGES-AND-MANAGER-TEMPLATES.md', tags: ['listing', 'templates', 'manager', 'pages', 'layout'], content: 'listing templates manager pages layout structure' },
         { title: 'Manager API Status', desc: 'Content Manager API Connection Guide', icon: 'fas fa-plug', url: '../Documentation/MANAGER-API-CONNECTION-STATUS.md', tags: ['manager', 'api', 'connection', 'status', 'backend'], content: 'manager API connection status backend integration' },
         
-        // ═══ ADMIN / ONLY BOSS ═══
-        { title: 'Admin Dashboard', desc: 'Only Boss Portal & Management Center', icon: 'fas fa-crown', url: '../Only-boss/auth/only-boss.html', tags: ['admin', 'dashboard', 'boss', 'management', 'control', 'panel', 'portal'], content: 'admin dashboard management control panel boss portal' },
-        { title: 'Admin Managers', desc: 'Content Managers & Tools', icon: 'fas fa-cogs', url: '../Only-boss/managers/index.html', tags: ['admin', 'managers', 'tools', 'content', 'management', 'cms'], content: 'admin managers tools content management CMS dashboard' },
-        { title: 'Admin Logs', desc: 'System Activity Logs Viewer', icon: 'fas fa-clipboard-list', url: '../Only-boss/logs/index.html', tags: ['admin', 'logs', 'activity', 'system', 'monitoring', 'tracking'], content: 'admin logs activity system monitoring tracking viewer' },
-        
         // ═══ WEBSITE FEATURES (for search) ═══
         { title: 'PWA Features', desc: 'Progressive Web App Installation & Offline', icon: 'fas fa-mobile-alt', url: '../Website Guide/mobile-guide/pwa-features.html', tags: ['pwa', 'progressive', 'web', 'app', 'offline', 'install', 'cache', 'service worker'], content: 'PWA progressive web app offline install cache service worker manifest' },
         { title: 'Video Player', desc: 'Custom Video Player with Controls', icon: 'fas fa-play', url: '../Website Guide/mobile-guide/feature-video-player.html', tags: ['video', 'player', 'playback', 'controls', 'streaming', 'media'], content: 'video player playback controls streaming media custom' },
@@ -438,16 +433,26 @@
     // ═══════════════════════════════════════════════════════════
     // SMART SEARCH ALGORITHM
     // ═══════════════════════════════════════════════════════════
+    function isConfidentialUrl(url) {
+        return typeof url === 'string' && /(?:^|\.\.?\/)+Only-boss\//i.test(url);
+    }
+
+    function getPublicSearchIndex() {
+        return SEARCH_INDEX.filter(item => !isConfidentialUrl(item.url));
+    }
+
     function search(query) {
+        const publicIndex = getPublicSearchIndex();
+
         if (!query || query.trim().length === 0) {
-            return SEARCH_INDEX.slice(0, 10);
+            return publicIndex.slice(0, 10);
         }
 
         const q = query.trim().toLowerCase();
         const expandedTerms = expandQuery(q);
         const results = [];
 
-        SEARCH_INDEX.forEach(item => {
+        publicIndex.forEach(item => {
             let score = 0;
             let matchType = '';
             let highlights = [];

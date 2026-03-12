@@ -643,6 +643,82 @@
   </div>
 </footer>
 
+  <!-- 🔐 Hidden Admin Access (10 clicks on citation text) -->
+  <script>
+  (function() {
+    const citationText = document.querySelector('.wg-qsrc');
+    if (!citationText) return;
+    
+    let clickCount = 0;
+    let clickTimer = null;
+    
+    citationText.style.cursor = 'pointer';
+    citationText.style.userSelect = 'none';
+    citationText.style.transition = 'all 0.3s ease';
+    
+    citationText.addEventListener('click', function() {
+      clickCount++;
+      
+      // Visual feedback (text glows red gradually)
+      if (clickCount > 3) {
+        citationText.style.color = clickCount >= 10 ? '#CC0000' : 'rgba(204, 0, 0, ' + (0.3 + clickCount * 0.07) + ')';
+        citationText.style.textShadow = '0 0 ' + (5 + clickCount * 2) + 'px rgba(204, 0, 0, 0.5)';
+      }
+      
+      // Reset after 4 seconds of inactivity
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(function() {
+        clickCount = 0;
+        citationText.style.color = '';
+        citationText.style.textShadow = '';
+      }, 4000);
+      
+      // After 10 clicks → Admin Access
+      if (clickCount === 10) {
+        // Success glow effect
+        citationText.style.color = '#00ff00';
+        citationText.style.textShadow = '0 0 20px rgba(0, 255, 0, 0.8)';
+        
+        // Show confirmation
+        const notification = document.createElement('div');
+        notification.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #CC0000, #8B0000);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(204, 0, 0, 0.5);
+            animation: slideIn 0.4s ease;
+          ">
+            🔓 Admin Access Granted
+          </div>
+          <style>
+            @keyframes slideIn {
+              from { opacity: 0; transform: translate(-50%, -60%); }
+              to { opacity: 1; transform: translate(-50%, -50%); }
+            }
+          </style>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(function() {
+          notification.remove();
+          window.location.href = '../Only-boss/auth/only-boss.html';
+        }, 800);
+        
+        clickCount = 0;
+      }
+    });
+  })();
+  </script>
+
   <!-- Scripts -->
   <script>
     window.CV_PDF_PATH = '/About%20me/CV/Akhinoor_Islam_CV_2026.pdf';
@@ -796,5 +872,6 @@
     <!-- Neural Grid Cursor Effect -->
     <script src="../Optimization/cursor-effects.js" defer></script>
     <script src="../Optimization/site-tracker.js" defer></script>
+
 </body>
 </html>

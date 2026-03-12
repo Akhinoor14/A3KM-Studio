@@ -1,0 +1,913 @@
+<!-- ========================================
+     ADVANCED POST EDITOR ENHANCEMENTS V2.0
+     Table Builder, Image Insert, Emoji Picker,
+     Callouts, Video Embed, Help Modal
+     
+     Usage: Include this file BEFORE </body> in posts-manager.html
+     <script src="advanced-post-editor.html"></script>
+     ======================================== -->
+
+<!-- 📊 TABLE BUILDER MODAL -->
+<div id="tableBuilderModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 550px;">
+    <div class="modal-header" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(0, 100, 200, 0.15));">
+      <h3><i class="fas fa-table"></i> Table Builder</h3>
+      <button class="close-modal" onclick="closeTableBuilder()">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 25px;">
+      <div class="form-group">
+        <label><i class="fas fa-arrows-alt-v"></i> Number of Rows</label>
+        <input type="number" id="tableRows" min="1" max="20" value="3" 
+               onchange="updateTablePreview()"
+               style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(139,0,0,0.3); border-radius: 6px; color: #fff; font-size: 14px;">
+      </div>
+      
+      <div class="form-group">
+        <label><i class="fas fa-arrows-alt-h"></i> Number of Columns</label>
+        <input type="number" id="tableColumns" min="1" max="10" value="3" 
+               onchange="updateTablePreview()"
+               style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(139,0,0,0.3); border-radius: 6px; color: #fff; font-size: 14px;">
+      </div>
+      
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="tableHeaders" checked onchange="updateTablePreview()" style="margin-right: 8px;">
+          <i class="fas fa-heading"></i> Include Header Row
+        </label>
+      </div>
+      
+      <div style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 6px; padding: 12px; margin-top: 15px;">
+        <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 8px;">
+          <i class="fas fa-info-circle"></i> Preview:
+        </div>
+        <div id="tablePreview" style="font-family: monospace; font-size: 11px; color: rgba(255,255,255,0.5); white-space: pre-wrap; line-height: 1.4;">
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn-primary" onclick="insertTable()" style="flex: 1;">
+          <i class="fas fa-check"></i> Insert Table
+        </button>
+        <button type="button" class="btn" onclick="closeTableBuilder()" style="flex: 1;">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🖼️ IMAGE INSERT MODAL -->
+<div id="imageInsertModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(0, 150, 100, 0.15));">
+      <h3><i class="fas fa-image"></i> Insert Image</h3>
+      <button class="close-modal" onclick="closeImageInsertModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 25px;">
+      <!-- Tab Switcher -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button type="button" id="uploadTabBtn" class="tab-btn active" onclick="switchImageTab('upload')" 
+                style="flex: 1; padding: 10px; background: rgba(76, 175, 80, 0.2); border: 2px solid rgba(76, 175, 80, 0.4); border-radius: 6px; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-upload"></i> Upload from Device
+        </button>
+        <button type="button" id="urlTabBtn" class="tab-btn" onclick="switchImageTab('url')" 
+                style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 2px solid rgba(139,0,0,0.2); border-radius: 6px; color: rgba(255,255,255,0.6); font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-link"></i> Insert from URL
+        </button>
+      </div>
+      
+      <!-- Upload Tab Content -->
+      <div id="uploadTabContent" style="display: block;">
+        <div style="border: 2px dashed rgba(76, 175, 80, 0.4); border-radius: 8px; padding: 30px; text-align: center; background: rgba(76, 175, 80, 0.05); cursor: pointer;" 
+             onclick="document.getElementById('modalImageInput').click();">
+          <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: rgba(76, 175, 80, 0.6); margin-bottom: 15px;"></i>
+          <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin: 10px 0;">Click to select images or drag & drop</p>
+          <p style="color: rgba(255,255,255,0.5); font-size: 12px;">Supports: JPG, PNG, GIF, WebP (Max 5MB each)</p>
+        </div>
+        <input type="file" id="modalImageInput" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+        
+        <div id="uploadedImagesPreview" style="margin-top: 15px; display: none;">
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 10px;">
+            <i class="fas fa-check-circle" style="color: #4CAF50;"></i> Images ready to insert:
+          </div>
+          <div id="imagePreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; max-height: 200px; overflow-y: auto;">
+            <!-- Preview images will be inserted here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- URL Tab Content -->
+      <div id="urlTabContent" style="display: none;">
+        <div class="form-group">
+          <label><i class="fas fa-link"></i> Image URL</label>
+          <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg" 
+                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(139,0,0,0.3); border-radius: 6px; color: #fff; font-size: 14px;">
+        </div>
+        
+        <div class="form-group">
+          <label><i class="fas fa-file-signature"></i> Alt Text (Optional)</label>
+          <input type="text" id="imageAltText" placeholder="Image description" 
+                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(139,0,0,0.3); border-radius: 6px; color: #fff; font-size: 14px;">
+        </div>
+        
+        <div id="urlImagePreview" style="margin-top: 15px; display: none;">
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 10px;">Preview:</div>
+          <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 2px solid rgba(76, 175, 80, 0.3);">
+        </div>
+        
+        <button type="button" onclick="previewUrlImage()" 
+                style="margin-top: 10px; padding: 8px 16px; background: rgba(76, 175, 80, 0.2); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 6px; color: #fff; cursor: pointer;">
+          <i class="fas fa-eye"></i> Preview URL
+        </button>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 25px;">
+        <button type="button" class="btn-primary" onclick="insertImageFromModal()" style="flex: 1;">
+          <i class="fas fa-check"></i> Insert Image(s)
+        </button>
+        <button type="button" class="btn" onclick="closeImageInsertModal()" style="flex: 1;">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Additional CSS for Mini Buttons -->
+<style>
+.format-btn-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(139,0,0,0.25);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.75);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.format-btn-mini:hover {
+  background: rgba(139,0,0,0.25);
+  color: white;
+  border-color: rgba(139,0,0,0.5);
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(139,0,0,0.2);
+}
+
+.format-btn-mini:active {
+  transform: scale(0.98);
+}
+
+.format-btn-mini i {
+  font-size: 12px;
+}
+
+.tab-btn.active {
+  background: rgba(76, 175, 80, 0.2) !important;
+  border-color: rgba(76, 175, 80, 0.4) !important;
+  color: #fff !important;
+}
+</style>
+
+<!-- JavaScript Functions -->
+<script>
+// ==================== TABLE BUILDER ====================
+
+let uploadedImagesBase64 = []; // Store uploaded images
+
+function openTableBuilder() {
+  document.getElementById('tableBuilderModal').style.display = 'flex';
+  updateTablePreview();
+}
+
+function closeTableBuilder() {
+  document.getElementById('tableBuilderModal').style.display = 'none';
+}
+
+function updateTablePreview() {
+  const rows = parseInt(document.getElementById('tableRows').value) || 3;
+  const cols = parseInt(document.getElementById('tableColumns').value) || 3;
+  const hasHeaders = document.getElementById('tableHeaders').checked;
+  
+  let preview = '';
+  
+  // Header row
+  if (hasHeaders) {
+    preview += '|';
+    for (let c = 1; c <= cols; c++) {
+      preview += ` Header ${c} |`;
+    }
+    preview += '\\n';
+    
+    // Separator
+    preview += '|';
+    for (let c = 1; c <= cols; c++) {
+      preview += '----------|';
+    }
+    preview += '\\n';
+  }
+  
+  // Data rows
+  const startRow = hasHeaders ? 1 : 0;
+  for (let r = startRow; r < rows + startRow; r++) {
+    preview += '|';
+    for (let c = 1; c <= cols; c++) {
+      preview += ` Cell ${r * cols + c} |`;
+    }
+    preview += '\\n';
+  }
+  
+  document.getElementById('tablePreview').textContent = preview;
+} 
+
+function insertTable() {
+  const rows = parseInt(document.getElementById('tableRows').value) || 3;
+  const cols = parseInt(document.getElementById('tableColumns').value) || 3;
+  const hasHeaders = document.getElementById('tableHeaders').checked;
+  
+  let table = '\\n\\n';
+  
+  // Header row
+  if (hasHeaders) {
+    table += '|';
+    for (let c = 1; c <= cols; c++) {
+      table += ` Header ${c} |`;
+    }
+    table += '\\n';
+    
+    // Separator
+    table += '|';
+    for (let c = 1; c <= cols; c++) {
+      table += '----------|';
+    }
+    table += '\\n';
+  }
+  
+  // Data rows
+  const startRow = hasHeaders ? 0 : 1;
+  for (let r = startRow; r < rows; r++) {
+    table += '|';
+    for (let c = 1; c <= cols; c++) {
+      table += ` Cell    |`;
+    }
+    table += '\\n';
+  }
+  
+  table += '\\n';
+  
+  // Insert into textarea
+  const textarea = document.getElementById('content');
+  const pos = textarea.selectionStart;
+  textarea.value = textarea.value.substring(0, pos) + table + textarea.value.substring(pos);
+  textarea.focus();
+  textarea.setSelectionRange(pos + table.length, pos + table.length);
+  textarea.dispatchEvent(new Event('input'));
+  
+  // Show success
+  showNotification('<i class="fas fa-table"></i> Table inserted!', '#2196F3');
+  
+  closeTableBuilder();
+}
+
+// ==================== IMAGE INSERT ====================
+
+function openImageInsertModal() {
+  document.getElementById('imageInsertModal').style.display = 'flex';
+  uploadedImagesBase64 = [];
+  document.getElementById('uploadedImagesPreview').style.display = 'none';
+  document.getElementById('imagePreviewGrid').innerHTML = '';
+}
+
+function closeImageInsertModal() {
+  document.getElementById('imageInsertModal').style.display = 'none';
+  uploadedImagesBase64 = [];
+}
+
+function switchImageTab(tab) {
+  if (tab === 'upload') {
+    document.getElementById('uploadTabContent').style.display = 'block';
+    document.getElementById('urlTabContent').style.display = 'none';
+    document.getElementById('uploadTabBtn').classList.add('active');
+    document.getElementById('urlTabBtn').classList.remove('active');
+  } else {
+    document.getElementById('uploadTabContent').style.display = 'none';
+    document.getElementById('urlTabContent').style.display = 'block';
+    document.getElementById('uploadTabBtn').classList.remove('active');
+    document.getElementById('urlTabBtn').classList.add('active');
+  }
+}
+
+function handleImageUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  
+  uploadedImagesBase64 = [];
+  const grid = document.getElementById('imagePreviewGrid');
+  grid.innerHTML = '';
+  
+  Array.from(files).forEach((file, index) => {
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`⚠️ ${file.name} is too large (max 5MB)`);
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedImagesBase64.push({
+        base64: e.target.result,
+        name: file.name
+      });
+      
+      // Add preview
+      const preview = document.createElement('div');
+      preview.style.cssText = 'position: relative; border-radius: 6px; overflow: hidden; border: 2px solid rgba(76, 175, 80, 0.3);';
+      preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 80px; object-fit: cover;">`;
+      grid.appendChild(preview);
+      
+      document.getElementById('uploadedImagesPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function previewUrlImage() {
+  const url = document.getElementById('imageUrl').value;
+  if (!url) {
+    alert('⚠️ Please enter an image URL');
+    return;
+  }
+  
+  const preview = document.getElementById('urlImagePreview');
+  const img = document.getElementById('previewImg');
+  img.src = url;
+  img.onerror = () => {
+    alert('❌ Failed to load image. Please check the URL.');
+    preview.style.display = 'none';
+  };
+  img.onload = () => {
+    preview.style.display = 'block';
+  };
+}
+
+function insertImageFromModal() {
+  const textarea = document.getElementById('content');
+  const pos = textarea.selectionStart;
+  let imageMd = '';
+  
+  // Check which tab is active
+  if (document.getElementById('uploadTabContent').style.display !== 'none') {
+    // Upload tab - insert base64 images
+    if (uploadedImagesBase64.length === 0) {
+      alert('⚠️ Please upload at least one image');
+      return;
+    }
+    
+    uploadedImagesBase64.forEach((img, i) => {
+      imageMd += `\\n![${img.name}](${img.base64})\\n`;
+    });
+  } else {
+    // URL tab - insert from URL
+    const url = document.getElementById('imageUrl').value;
+    const alt = document.getElementById('imageAltText').value || 'Image';
+    
+    if (!url) {
+      alert('⚠️ Please enter an image URL');
+      return;
+    }
+    
+    imageMd = `\\n![${alt}](${url})\\n`;
+  }
+  
+  textarea.value = textarea.value.substring(0, pos) + imageMd + textarea.value.substring(pos);
+  textarea.focus();
+  textarea.setSelectionRange(pos + imageMd.length, pos + imageMd.length);
+  textarea.dispatchEvent(new Event('input'));
+  
+  showNotification(`<i class="fas fa-image"></i> Image(s) inserted!`, '#4CAF50');
+  
+  closeImageInsertModal();
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+function insertLink() {
+  const url = prompt('🔗 Enter URL:', 'https://');
+  if (!url) return;
+  
+  const text = prompt('📝 Link text:', 'Click here');
+  if (!text) return;
+  
+  insertMarkdown('[', `](${url})`, text);
+}
+
+function insertCodeBlock() {
+  const lang = prompt('💻 Programming language (optional):', 'javascript');
+  insertMarkdown(`\`\`\`${lang || ''}\\n`, '\\n\`\`\`', 'Your code here');
+}
+
+function showNotification(message, color = '#4CAF50') {
+  const indicator = document.getElementById('autoSaveIndicator');
+  if (indicator) {
+    indicator.innerHTML = message;
+    indicator.style.display = 'inline';
+    indicator.style.color = color;
+    setTimeout(() => {
+      indicator.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// Initialize: Update table preview on modal open
+document.addEventListener('DOMContentLoaded', () => {
+  // Add keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      const textarea = document.getElementById('content');
+      if (document.activeElement !== textarea) return;
+      
+      switch(e.key.toLowerCase()) {
+        case 'b':
+          e.preventDefault();
+          insertMarkdown('**', '**', 'bold text');
+          break;
+        case 'i':
+          e.preventDefault();
+          insertMarkdown('*', '*', 'italic text');
+          break;
+        case 'k':
+          e.preventDefault();
+          insertLink();
+          break;
+      }
+    }
+  });
+});
+</script>
+
+<!-- 😊 EMOJI PICKER MODAL -->
+<div id="emojiPickerModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 450px;">
+    <div class="modal-header" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.15));">
+      <h3><i class="fas fa-smile"></i> Emoji Picker</h3>
+      <button class="close-modal" onclick="closeEmojiPicker()">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 20px;">
+      <!-- Emoji Categories -->
+      <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+        <button class="emoji-cat-btn active" data-category="smileys" onclick="filterEmojis('smileys')">
+          😊 Faces
+        </button>
+        <button class="emoji-cat-btn" data-category="symbols" onclick="filterEmojis('symbols')">
+          ⭐ Symbols
+        </button>
+        <button class="emoji-cat-btn" data-category="objects" onclick="filterEmojis('objects')">
+          💡 Objects
+        </button>
+        <button class="emoji-cat-btn" data-category="flags" onclick="filterEmojis('flags')">
+          🚩 Flags
+        </button>
+      </div>
+      
+      <!-- Emoji Grid -->
+      <div id="emojiGrid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+        <!-- Emojis dynamically inserted -->
+      </div>
+      
+      <div style="margin-top: 15px; font-size: 11px; color: rgba(255,255,255,0.5); text-align: center;">
+        Click any emoji to insert at cursor
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📚 HELP MODAL -->
+<div id="helpModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-header" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(0, 100, 200, 0.15));">
+      <h3><i class="fas fa-question-circle"></i> Manager Features Guide</h3>
+      <button class="close-modal" onclick="closeHelpModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="padding: 30px;">
+      <div style="background: rgba(33, 150, 243, 0.1); border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 6px;">
+        <strong style="color: #2196F3;">📖 Quick Start Guide</strong><br>
+        <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Learn how to use all formatting features in the Posts Manager</span>
+      </div>
+      
+      <!-- Toolbar Guide -->
+      <h4 style="color: #FF1744; margin-top: 25px; border-bottom: 2px solid rgba(139,0,0,0.3); padding-bottom: 8px;">
+        <i class="fas fa-tools"></i> Toolbar Features
+      </h4>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #FF1744; margin-bottom: 5px;"><i class="fas fa-heading"></i> Headings</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">H1, H2, H3 - Structure your post</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">## Heading 2</code>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #FF1744; margin-bottom: 5px;"><i class="fas fa-bold"></i> Text Format</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Bold, Italic, Code</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">**bold** *italic*</code>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #FF1744; margin-bottom: 5px;"><i class="fas fa-list"></i> Lists</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Bullet, Numbered, Tasks</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">- [ ] Task item</code>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #4CAF50; margin-bottom: 5px;"><i class="fas fa-image"></i> Media</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Images, Videos, Emojis</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">![alt](url)</code>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #2196F3; margin-bottom: 5px;"><i class="fas fa-table"></i> Tables</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Visual table builder</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">Click Table button</code>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(139,0,0,0.2);">
+          <div style="font-weight: 600; color: #FF9800; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Callouts</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Info, Warning, Success</div>
+          <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px; display: block; margin-top: 5px;">> 💡 **INFO**</code>
+        </div>
+      </div>
+      
+      <!-- Keyboard Shortcuts -->
+      <h4 style="color: #FF1744; margin-top: 30px; border-bottom: 2px solid rgba(139,0,0,0.3); padding-bottom: 8px;">
+        <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+      </h4>
+      
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px;">
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px;">
+          <kbd style="background: rgba(139,0,0,0.3); padding: 3px 8px; border-radius: 4px; font-size: 11px;">Ctrl+B</kbd>
+          <span style="margin-left: 10px; color: rgba(255,255,255,0.7); font-size: 13px;">Bold text</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px;">
+          <kbd style="background: rgba(139,0,0,0.3); padding: 3px 8px; border-radius: 4px; font-size: 11px;">Ctrl+I</kbd>
+          <span style="margin-left: 10px; color: rgba(255,255,255,0.7); font-size: 13px;">Italic text</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px;">
+          <kbd style="background: rgba(139,0,0,0.3); padding: 3px 8px; border-radius: 4px; font-size: 11px;">Ctrl+K</kbd>
+          <span style="margin-left: 10px; color: rgba(255,255,255,0.7); font-size: 13px;">Insert link</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px;">
+          <kbd style="background: rgba(139,0,0,0.3); padding: 3px 8px; border-radius: 4px; font-size: 11px;">Ctrl+P</kbd>
+          <span style="margin-left: 10px; color: rgba(255,255,255,0.7); font-size: 13px;">Toggle preview</span>
+        </div>
+      </div>
+      
+      <!-- Step-by-Step Examples -->
+      <h4 style="color: #FF1744; margin-top: 30px; border-bottom: 2px solid rgba(139,0,0,0.3); padding-bottom: 8px;">
+        <i class="fas fa-tasks"></i> How To Use
+      </h4>
+      
+      <div style="margin-top: 15px;">
+        <!-- Table Builder -->
+        <div style="background: rgba(33, 150, 243, 0.08); padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; margin-bottom: 15px;">
+          <div style="font-weight: 600; color: #2196F3; margin-bottom: 8px;"><i class="fas fa-table"></i> Creating Tables</div>
+          <ol style="margin: 8px 0 0 20px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
+            <li>Click the <strong>Table</strong> button (blue icon)</li>
+            <li>Set number of <strong>rows</strong> (1-20) and <strong>columns</strong> (1-10)</li>
+            <li>Check "Include Header Row" if needed</li>
+            <li>Watch the live preview</li>
+            <li>Click <strong>"Insert Table"</strong></li>
+            <li>Fill in your data manually in the markdown</li>
+          </ol>
+        </div>
+        
+        <!-- Image Insert -->
+        <div style="background: rgba(76, 175, 80, 0.08); padding: 15px; border-radius: 8px; border-left: 4px solid #4CAF50; margin-bottom: 15px;">
+          <div style="font-weight: 600; color: #4CAF50; margin-bottom: 8px;"><i class="fas fa-image"></i> Adding Images</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8; margin-bottom: 8px;">
+            <strong>Method 1: Upload</strong>
+          </div>
+          <ol style="margin: 0 0 12px 20px; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6;">
+            <li>Click <strong>Image</strong> button → <strong>Upload from Device</strong> tab</li>
+            <li>Click to select or drag & drop images</li>
+            <li>Preview shows, click <strong>"Insert Image(s)"</strong></li>
+            <li>Images embedded as Base64 (no external hosting needed)</li>
+          </ol>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8; margin-top: 12px;">
+            <strong>Method 2: URL</strong>
+          </div>
+          <ol style="margin: 0 0 0 20px; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6;">
+            <li>Switch to <strong>Insert from URL</strong> tab</li>
+            <li>Paste image URL</li>
+            <li>Add alt text (optional)</li>
+            <li>Click <strong>"Preview URL"</strong> to verify</li>
+            <li>Click <strong>"Insert Image"</strong></li>
+          </ol>
+        </div>
+        
+        <!-- Video Embed -->
+        <div style="background: rgba(255, 152, 0, 0.08); padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800; margin-bottom: 15px;">
+          <div style="font-weight: 600; color: #FF9800; margin-bottom: 8px;"><i class="fas fa-video"></i> Embedding Videos</div>
+          <ol style="margin: 8px 0 0 20px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
+            <li>Click the <strong>Video</strong> button</li>
+            <li>Paste YouTube or Vimeo URL</li>
+            <li>Iframe code auto-generated and inserted</li>
+            <li>Video will render in preview and published post</li>
+          </ol>
+        </div>
+        
+        <!-- Emoji Picker -->
+        <div style="background: rgba(255, 193, 7, 0.08); padding: 15px; border-radius: 8px; border-left: 4px solid #FFC107; margin-bottom: 15px;">
+          <div style="font-weight: 600; color: #FFC107; margin-bottom: 8px;"><i class="fas fa-smile"></i> Using Emojis</div>
+          <ol style="margin: 8px 0 0 20px; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.8;">
+            <li>Click the <strong>Emoji</strong> button</li>
+            <li>Select category: Faces, Symbols, Objects, Flags</li>
+            <li>Click any emoji to insert at cursor position</li>
+            <li>Modal closes automatically</li>
+          </ol>
+        </div>
+      </div>
+      
+      <!-- Best Practices -->
+      <h4 style="color: #FF1744; margin-top: 30px; border-bottom: 2px solid rgba(139,0,0,0.3); padding-bottom: 8px;">
+        <i class="fas fa-star"></i> Best Practices
+      </h4>
+      
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px;">
+        <div style="background: rgba(76, 175, 80, 0.08); padding: 12px; border-radius: 6px; border-left: 3px solid #4CAF50;">
+          <div style="color: #4CAF50; font-weight: 600; margin-bottom: 5px;">✅ DO</div>
+          <ul style="margin: 5px 0 0 18px; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.7;">
+            <li>Use H1 only for title</li>
+            <li>Preview before publishing</li>
+            <li>Add alt text to images</li>
+            <li>Keep tables under 10 rows</li>
+            <li>Use callouts for important notes</li>
+          </ul>
+        </div>
+        
+        <div style="background: rgba(244, 67, 54, 0.08); padding: 12px; border-radius: 6px; border-left: 3px solid #F44336;">
+          <div style="color: #F44336; font-weight: 600; margin-bottom: 5px;">❌ DON'T</div>
+          <ul style="margin: 5px 0 0 18px; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.7;">
+            <li>Upload images over 5MB</li>
+            <li>Use multiple H1 headings</li>
+            <li>Leave empty headings</li>
+            <li>Nest tables inside tables</li>
+            <li>Write very long paragraphs</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Markdown Quick Reference -->
+      <h4 style="color: #FF1744; margin-top: 30px; border-bottom: 2px solid rgba(139,0,0,0.3); padding-bottom: 8px;">
+        <i class="fas fa-code"></i> Markdown Quick Reference
+      </h4>
+      
+      <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 15px; font-family: monospace; font-size: 11px; line-height: 2; color: rgba(255,255,255,0.7);">
+        # H1 Heading<br>
+        ## H2 Heading<br>
+        **bold text**<br>
+        *italic text*<br>
+        `inline code`<br>
+        ~~strikethrough~~<br>
+        ==highlighted==<br>
+        - bullet list<br>
+        1. numbered list<br>
+        - [ ] task list<br>
+        > blockquote<br>
+        [link text](url)<br>
+        ![image alt](url)<br>
+        ```code block```
+      </div>
+      
+      <div style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
+        <div style="color: #2196F3; font-weight: 600; margin-bottom: 8px;">
+          <i class="fas fa-lightbulb"></i> Need More Help?
+        </div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.7);">
+          Check the <strong>Documentation</strong> folder for detailed guides and examples
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Additional CSS -->
+<style>
+.emoji-cat-btn {
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.emoji-cat-btn.active {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.5);
+  color: white;
+}
+
+.emoji-item {
+  font-size: 28px;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.emoji-item:hover {
+  background: rgba(255, 193, 7, 0.2);
+  transform: scale(1.2);
+}
+</style>
+
+<!-- Additional JavaScript Functions -->
+<script>
+// ==================== EMOJI PICKER ====================
+
+const emojiDatabase = {
+  smileys: [
+    '😊', '😂', '🤣', '😍', '😘', '😎', '🤔', '😢',
+    '😭', '😡', '😱', '😴', '🤗', '🤐', '😇', '🥳',
+    '🤩', '😏', '😳', '🥺', '😤', '🤯', '😬', '🙄',
+    '😮', '😲', '😵', '🤪', '😜', '😝', '😛', '🤑'
+  ],
+  
+  symbols: [
+    '❤️', '💔', '💕', '💖', '💗', '💙', '💚', '💛',
+    '🧡', '💜', '🖤', '🤍', '🤎', '💯', '💢', '💥',
+    '💫', '💦', '💨', '🕳️', '💬', '💭', '🗨️', '🗯️',
+    '💤', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌'
+  ],
+  
+  objects: [
+    '💡', '🔦', '🕯️', '🪔', '🔥', '💧', '🌊',    '🎯',
+    '🎪', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🎺',
+    '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '⏰', '📡',
+    '🔋', '🔌', '💾', '💿', '📀', '🎮', '🕹️', '🎲'
+  ],
+  
+  flags: [
+    '🚩', '🎌', '🏁', '🏳️', '🏴', '🏴\u200d☠️', '🇧🇩', '🇺🇸',
+    '🇬🇧', '🇨🇦', '🇦🇺', '🇮🇳', '🇵🇰', '🇨🇳', '🇯🇵', '🇰🇷',
+    '⚠️', '🚸', '⛔', '🚫', '🚳', '🚭', '🚯', '🚱',
+    '✅', '❌', '❎', '✔️', '☑️', '⭐', '🌟', '⚡'
+  ]
+};
+
+function openEmojiPicker() {
+  document.getElementById('emojiPickerModal').style.display = 'flex';
+  filterEmojis('smileys');
+}
+
+function closeEmojiPicker() {
+  document.getElementById('emojiPickerModal').style.display = 'none';
+}
+
+function filterEmojis(category) {
+  document.querySelectorAll('.emoji-cat-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.category === category) {
+      btn.classList.add('active');
+    }
+  });
+  
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  
+  emojiDatabase[category].forEach(emoji => {
+    const emojiEl = document.createElement('div');
+    emojiEl.className = 'emoji-item';
+    emojiEl.textContent = emoji;
+    emojiEl.onclick = () => insertEmoji(emoji);
+    grid.appendChild(emojiEl);
+  });
+}
+
+function insertEmoji(emoji) {
+  const textarea = document.getElementById('content');
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  
+  textarea.value = text.substring(0, start) + emoji + text.substring(end);
+  textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+  textarea.focus();
+  textarea.dispatchEvent(new Event('input'));
+  
+  closeEmojiPicker();
+}
+
+// ==================== CALLOUT BOXES ====================
+
+function insertCallout(type) {
+  const callouts = {
+    info: { icon: '💡', text: 'INFO' },
+    warning: { icon: '⚠️', text: 'WARNING' },
+    success: { icon: '✅', text: 'SUCCESS' }
+  };
+  
+  const current = callouts[type];
+  const markdown = `\n> ${current.icon} **${current.text}**\n> Your message here\n\n`;
+  
+  const textarea = document.getElementById('content');
+  const pos = textarea.selectionStart;
+  textarea.value = textarea.value.substring(0, pos) + markdown + textarea.value.substring(pos);
+  textarea.focus();
+  textarea.setSelectionRange(pos + markdown.length, pos + markdown.length);
+  textarea.dispatchEvent(new Event('input'));
+  
+  showNotification(`<i class="fas fa-info-circle"></i> ${current.text} callout inserted!`, '#2196F3');
+}
+
+// ==================== VIDEO EMBED ====================
+
+function insertVideoEmbed() {
+  const url = prompt('🎬 Paste YouTube or Vimeo URL:', '');
+  if (!url) return;
+  
+  let embedCode = '';
+  
+  // YouTube
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    const videoId = extractYouTubeID(url);
+    if (videoId) {
+      embedCode = `\n<iframe width="100%" height="400" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n\n`;
+    }
+  }
+  // Vimeo
+  else if (url.includes('vimeo.com')) {
+    const videoId = url.split('/').pop().split('?')[0];
+    embedCode = `\n<iframe src="https://player.vimeo.com/video/${videoId}" width="100%" height="400" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>\n\n`;
+  }
+  else {
+    alert('⚠️ Please provide a valid YouTube or Vimeo URL');
+    return;
+  }
+  
+  const textarea = document.getElementById('content');
+  const pos = textarea.selectionStart;
+  textarea.value = textarea.value.substring(0, pos) + embedCode + textarea.value.substring(pos);
+  textarea.focus();
+  textarea.setSelectionRange(pos + embedCode.length, pos + embedCode.length);
+  textarea.dispatchEvent(new Event('input'));
+  
+  showNotification('<i class="fas fa-video"></i> Video embedded!', '#4CAF50');
+}
+
+function extractYouTubeID(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&]+)/,
+    /(?:youtu\.be\/)([^?]+)/,
+    /(?:youtube\.com\/embed\/)([^?]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return '';
+}
+
+// ==================== COLLAPSIBLE SECTION ====================
+
+function insertCollapsible() {
+  const markdown = `\n<details>\n<summary>Click to expand</summary>\n\nHidden content here\n\n</details>\n\n`;
+  
+  const textarea = document.getElementById('content');
+  const pos = textarea.selectionStart;
+  textarea.value = textarea.value.substring(0, pos) + markdown + textarea.value.substring(pos);
+  textarea.focus();
+  textarea.setSelectionRange(pos + markdown.length, pos + markdown.length);
+  textarea.dispatchEvent(new Event('input'));
+  
+  showNotification('<i class="fas fa-caret-square-down"></i> Collapsible section inserted!', '#9C27B0');
+}
+
+// ==================== HELP MODAL ====================
+
+function openHelpModal() {
+  document.getElementById('helpModal').style.display = 'flex';
+}
+
+function closeHelpModal() {
+  document.getElementById('helpModal').style.display = 'none';
+}
+</script>

@@ -647,6 +647,93 @@
 <script src="../../Optimization/update-notifier.js" defer></script>
 <script src="../../Optimization/hybrid-storage-manager.js" defer></script>
 <script src="../../Optimization/offline-content-manager.js" defer></script>
+
+    <!-- 🔐 Hidden Admin Access (10 clicks on citation text) -->
+    <script>
+    (function() {
+      const citationText = document.querySelector('.wg-qsrc');
+      if (!citationText) return;
+      
+      let clickCount = 0;
+      let clickTimer = null;
+      
+      citationText.style.cursor = 'pointer';
+      citationText.style.userSelect = 'none';
+      citationText.style.transition = 'all 0.3s ease';
+      
+      citationText.addEventListener('click', function(e) {
+        e.preventDefault();
+        clickCount++;
+        
+        // Haptic feedback for mobile
+        if (navigator.vibrate && clickCount <= 10) {
+          navigator.vibrate(15);
+        }
+        
+        // Visual feedback (text glows red gradually)
+        if (clickCount > 3) {
+          citationText.style.color = clickCount >= 10 ? '#CC0000' : 'rgba(204, 0, 0, ' + (0.3 + clickCount * 0.07) + ')';
+          citationText.style.textShadow = '0 0 ' + (5 + clickCount * 2) + 'px rgba(204, 0, 0, 0.5)';
+        }
+        
+        // Reset after 4 seconds of inactivity
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(function() {
+          clickCount = 0;
+          citationText.style.color = '';
+          citationText.style.textShadow = '';
+        }, 4000);
+        
+        // After 10 clicks → Admin Access
+        if (clickCount === 10) {
+          // Success vibration
+          if (navigator.vibrate) {
+            navigator.vibrate([50, 100, 50, 100, 50]);
+          }
+          
+          // Success glow effect
+          citationText.style.color = '#00ff00';
+          citationText.style.textShadow = '0 0 20px rgba(0, 255, 0, 0.8)';
+          
+          // Show mobile-optimized confirmation
+          const notification = document.createElement('div');
+          notification.innerHTML = `
+            <div style="
+              position: fixed;
+              bottom: 120px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: linear-gradient(135deg, #CC0000, #8B0000);
+              color: white;
+              padding: 16px 28px;
+              border-radius: 12px;
+              font-size: 15px;
+              font-weight: 700;
+              z-index: 10000;
+              box-shadow: 0 8px 25px rgba(204, 0, 0, 0.5);
+              animation: slideUp 0.4s ease;
+            ">
+              🔓 Admin Access Granted
+            </div>
+            <style>
+              @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+              }
+            </style>
+          `;
+          document.body.appendChild(notification);
+          
+          setTimeout(function() {
+            notification.remove();
+            window.location.href = '../../Only-boss/auth/only-boss.html';
+          }, 800);
+          
+          clickCount = 0;
+        }
+      });
+    })();
+    </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../Optimization/cursor-effects.js" defer></script>
 </body>
