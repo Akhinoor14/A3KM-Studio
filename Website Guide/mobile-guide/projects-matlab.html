@@ -1,0 +1,575 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MATLAB Projects Guide — A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{
+  --red:#CC0000;--blue:#2196F3;
+  --red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);
+  --bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);
+  --txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;
+  --shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);
+  --radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);
+}
+.pg-topbar{position:sticky;top:85px;z-index:100;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}
+.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}
+.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}
+.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge-mob{font-size:0.7rem;font-weight:600;color:rgba(100,200,255,0.85);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-blue{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,220,50,0.9);background:rgba(200,160,0,0.08);border-color:rgba(200,160,0,0.25);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}
+.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+/* Phone mockup */
+.bp{width:280px;min-height:500px;background:rgba(6,0,0,0.92);border:2px solid rgba(80,40,40,0.7);border-radius:36px;padding:16px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.06);flex-shrink:0;}
+.bp-notch{width:80px;height:12px;background:rgba(0,0,0,0.9);border-radius:8px;margin:0 auto 12px;border:1px solid rgba(80,40,40,0.5);}
+.bp-screen{background:rgba(0,0,0,0.95);border-radius:24px;overflow:hidden;border:1px solid rgba(60,20,20,0.6);}
+.bp-hdr{padding:10px 12px;background:rgba(0,0,0,0.98);border-bottom:1px solid rgba(80,0,0,0.3);display:flex;align-items:center;justify-content:space-between;}
+.bp-hdr-back{font-size:0.6rem;color:rgba(204,0,0,0.8);display:flex;align-items:center;gap:4px;}
+.bp-hdr-title{font-size:0.62rem;font-weight:700;color:var(--txt-bright);}
+.bp-hdr-btn{width:22px;height:22px;background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:rgba(204,0,0,0.8);}
+.bp-hero{padding:14px 12px 10px;background:linear-gradient(135deg,rgba(20,5,0,0.9),rgba(0,0,0,0.95));}
+.bp-hero-icon{width:36px;height:36px;background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.35);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.bp-hero-title{font-size:0.75rem;font-weight:800;color:var(--txt-white);margin-bottom:2px;}
+.bp-hero-sub{font-size:0.55rem;color:var(--txt-dim);margin-bottom:6px;}
+.bp-hero-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.55rem;font-weight:700;color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.35);padding:2px 8px;border-radius:10px;}
+.bp-searchbar{margin:6px 12px;padding:7px 10px;background:rgba(204,0,0,0.07);border:1px solid rgba(204,0,0,0.25);border-radius:8px;display:flex;align-items:center;gap:6px;font-size:0.55rem;color:var(--txt-dim);}
+.bp-filters{padding:8px 12px;display:flex;gap:5px;overflow:hidden;}
+.bp-chip{padding:4px 8px;border-radius:12px;font-size:0.5rem;font-weight:600;border:1px solid rgba(204,0,0,0.25);color:var(--txt-dim);background:rgba(204,0,0,0.05);white-space:nowrap;}
+.bp-chip.active{background:rgba(204,0,0,0.7);border-color:rgba(204,0,0,0.8);color:#fff;}
+.bp-chip .cnt{font-size:0.45rem;opacity:0.7;margin-left:2px;}
+/* MATLAB card with image carousel */
+.bp-mat-card{margin:0 10px 8px;background:rgba(204,0,0,0.05);border:1px solid rgba(204,0,0,0.2);border-radius:10px;overflow:hidden;}
+.bp-mat-img{height:62px;background:linear-gradient(135deg,rgba(204,0,0,0.12),rgba(0,0,0,0.9));position:relative;display:flex;align-items:center;justify-content:center;}
+.bp-mat-img-graph{width:90%;height:50px;background:linear-gradient(135deg,rgba(204,0,0,0.08),rgba(0,0,0,0.7));border-radius:4px;overflow:hidden;position:relative;}
+.bp-mat-curve{position:absolute;bottom:8px;left:8px;right:8px;height:30px;}
+.bp-carousel-dots{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:flex;gap:3px;background:rgba(0,0,0,0.7);padding:2px 5px;border-radius:6px;}
+.bp-dot{width:5px;height:5px;border-radius:50%;background:rgba(200,200,200,0.3);}
+.bp-dot.active{width:14px;background:var(--red);border-radius:3px;}
+.bp-mat-glb{position:absolute;top:4px;right:5px;font-size:0.38rem;font-weight:700;color:rgba(100,180,255,0.9);background:rgba(0,0,0,0.85);border:1px solid rgba(100,180,255,0.3);padding:1px 5px;border-radius:4px;}
+.bp-mat-badge-result{position:absolute;top:4px;left:5px;font-size:0.38rem;font-weight:700;color:rgba(255,100,100,0.9);background:rgba(0,0,0,0.85);border:1px solid rgba(204,0,0,0.3);padding:1px 5px;border-radius:4px;}
+.bp-mat-body{padding:7px 9px;}
+.bp-mat-title{font-size:0.6rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.bp-mat-desc{font-size:0.5rem;color:var(--txt-dim);line-height:1.4;margin-bottom:4px;}
+.bp-mat-tags{display:flex;gap:3px;flex-wrap:wrap;}
+.bp-mat-tag{font-size:0.42rem;padding:1px 5px;border-radius:4px;background:rgba(204,0,0,0.12);border:1px solid rgba(204,0,0,0.25);color:rgba(204,0,0,0.8);}
+.bp-cs-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.5rem;font-weight:700;color:rgba(204,0,0,0.9);background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);padding:3px 10px;border-radius:12px;margin:6px 12px;text-transform:uppercase;letter-spacing:.05em;}
+.bp-bnav{padding:6px 12px;background:rgba(0,0,0,0.98);border-top:1px solid rgba(80,0,0,0.3);display:flex;justify-content:space-around;}
+.bp-bnav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.44rem;color:var(--txt-ghost);}
+.bp-bnav-item.active{color:var(--red);}
+/* Viewer mockup */
+.bp-view-code{margin:0 10px 6px;background:rgba(0,0,0,0.9);border:1px solid rgba(204,0,0,0.3);border-radius:8px;padding:8px;font-family:'Fira Code',monospace;font-size:0.42rem;color:rgba(100,220,120,0.85);line-height:1.6;}
+.bp-view-code .kw{color:rgba(100,180,255,0.9);}
+.bp-view-code .cm{color:rgba(150,150,150,0.7);}
+.bp-view-code .fn{color:rgba(255,200,80,0.9);}
+.bp-copy-btn{display:flex;align-items:center;gap:4px;padding:4px 10px;font-size:0.44rem;font-weight:700;border:1px solid rgba(204,0,0,0.4);background:rgba(204,0,0,0.12);color:var(--red);border-radius:5px;margin:3px 0 6px 0;cursor:pointer;}
+.bp-result-gallery{margin:0 10px 6px;display:flex;gap:5px;}
+.bp-result-thumb{flex:1;height:40px;background:linear-gradient(135deg,rgba(204,0,0,0.1),rgba(0,0,0,0.8));border:1px solid rgba(204,0,0,0.2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:rgba(204,0,0,0.4);}
+.bp-dl-row{margin:0 10px 6px;display:flex;gap:5px;}
+.bp-dl-btn-sm{flex:1;padding:6px 4px;background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.4);border-radius:6px;font-size:0.44rem;color:var(--txt-mid);display:flex;align-items:center;justify-content:center;gap:3px;}
+.bp-dl-btn-sm.primary{background:rgba(204,0,0,0.4);border-color:rgba(204,0,0,0.7);color:#fff;}
+/* Anatomy */
+.anatomy-wrap{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start;margin-bottom:40px;}
+.anatomy-labels{display:flex;flex-direction:column;gap:12px;padding-top:8px;}
+.al-item{display:flex;align-items:flex-start;gap:10px;}
+.al-num{width:22px;height:22px;background:rgba(204,0,0,0.18);border:1px solid var(--red-border-md);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--red);flex-shrink:0;margin-top:1px;}
+.al-title{font-size:0.82rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.al-desc{font-size:0.74rem;color:var(--txt-mid);line-height:1.5;}
+.al-desc-bn{font-size:0.7rem;color:var(--txt-dim);line-height:1.45;margin-top:2px;}
+/* Feature grid */
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px;}
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:20px;transition:all .3s;}
+.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-3px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:1rem;}
+.feat-icon-red{background:rgba(204,0,0,0.12);border:1px solid var(--red-border);color:var(--red);}
+.feat-icon-blue{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);color:rgba(100,180,255,0.9);}
+.feat-icon-green{background:rgba(0,160,0,0.08);border:1px solid rgba(0,160,0,0.25);color:rgba(100,220,120,0.9);}
+.feat-icon-yellow{background:rgba(200,150,0,0.1);border:1px solid rgba(200,150,0,0.3);color:rgba(255,210,50,0.9);}
+.feat-title{font-size:0.9rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.76rem;color:var(--txt-mid);line-height:1.55;}
+.feat-desc-bn{font-size:0.72rem;color:var(--txt-dim);line-height:1.5;margin-top:3px;}
+code.ic{font-family:'Fira Code',monospace;font-size:0.68rem;color:rgba(255,130,130,0.85);background:rgba(204,0,0,0.09);padding:1px 5px;border-radius:3px;}
+/* Flow */
+.flow-row{display:flex;align-items:center;gap:0;margin:0 0 36px;flex-wrap:wrap;}
+.flow-node{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:16px 20px;flex:1;min-width:140px;text-align:center;}
+.flow-node-num{font-size:0.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-ghost);margin-bottom:3px;}
+.flow-node-title{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.flow-node-file{font-family:'Fira Code',monospace;font-size:0.62rem;color:rgba(255,130,130,0.7);}
+.flow-arrow{color:rgba(204,0,0,0.5);font-size:1rem;margin:0 6px;flex-shrink:0;}
+/* Cat grid */
+.cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:36px;}
+.cat-card{background:var(--bg-card);border:1px solid rgba(204,0,0,0.18);border-radius:var(--radius-lg);padding:14px;text-align:center;}
+.cat-icon{font-size:1.1rem;margin-bottom:6px;}
+.cat-name{font-size:0.72rem;font-weight:700;color:var(--txt-bright);margin-bottom:3px;}
+.cat-desc{font-size:0.6rem;color:var(--txt-dim);margin-top:3px;line-height:1.4;}
+/* Callout */
+.callout{background:rgba(33,150,243,0.05);border:1px solid rgba(33,150,243,0.2);border-left:3px solid rgba(100,180,255,0.7);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin:0 0 32px;font-size:0.8rem;color:var(--txt-mid);line-height:1.6;}
+.callout.red{background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2);border-left-color:rgba(204,0,0,0.7);}
+.callout strong{color:var(--txt-bright);}
+/* Table */
+.guide-table-wrap{overflow-x:auto;margin:16px 0 36px;}
+.guide-table{width:100%;border-collapse:collapse;font-size:0.77rem;}
+.guide-table th{padding:10px 14px;text-align:left;font-size:0.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-dim);border-bottom:1px solid var(--red-border);}
+.guide-table td{padding:10px 14px;color:var(--txt-mid);border-bottom:1px solid rgba(204,0,0,0.08);vertical-align:top;}
+.guide-table tr:last-child td{border-bottom:none;}
+.guide-table td code{font-family:'Fira Code',monospace;font-size:0.7rem;color:rgba(255,130,130,0.85);background:rgba(204,0,0,0.09);padding:1px 5px;border-radius:3px;}
+[data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .5s var(--ease),transform .5s var(--ease);}
+[data-reveal].visible{opacity:1;transform:none;}
+@media(max-width:900px){.pg-topbar{padding:0 16px;}.pg-hero,.pg-main{padding-left:20px;padding-right:20px;}.feat-grid{grid-template-columns:1fr 1fr;}.cat-grid{grid-template-columns:1fr 1fr;}.anatomy-wrap{grid-template-columns:1fr;}.bp{margin:0 auto;}}
+</style>
+</head>
+<body>
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio">
+            <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>
+            <li class="desktop-nav-item"><a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF"><i class="fas fa-download" aria-hidden="true"></i><span>CV</span></a></li>
+        </ul>
+    </div>
+</nav>
+<div class="scan-line"></div>
+
+<!-- ─── TOPBAR ─── -->
+<nav class="pg-topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="projects.html" class="pg-back"><i class="fas fa-arrow-left"></i> Mobile Projects</a>
+    <div class="pg-bc"><span class="sep">/</span><span class="cur">MATLAB Guide</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="pg-badge-mob"><i class="fas fa-mobile-alt"></i> Mobile Guide</div>
+    <a href="../features.html" class="pg-back" style="border-color:rgba(204,0,0,0.35);color:rgba(255,130,130,0.85);"><i class="fas fa-search"></i> Feature Search</a>
+    <a href="index.html" class="pg-back"><i class="fas fa-th"></i> All Guides</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="pg-hero" data-reveal>
+  <div class="hero-label"><i class="fas fa-chart-line"></i> Mobile Projects — MATLAB</div>
+  <h1 class="hero-title">MATLAB Projects<br><span>Complete Guide</span></h1>
+  <p class="hero-desc">MATLAB simulation section-এর সম্পূর্ণ guide — listing থেকে শুরু করে .m code viewer এবং result image gallery পর্যন্ত।</p>
+  <p class="hero-desc-bn">Simulations, algorithms, data analysis। Cards-এ নিজেই carousel image দেখায়। Coming Soon categories আছে future content-এর জন্য।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-chart-line"></i> 5 Category Filters</span>
+    <span class="badge badge-blue"><i class="fas fa-images"></i> Image Carousel in Cards</span>
+    <span class="badge badge-green"><i class="fas fa-file-code"></i> .m Code Viewer</span>
+    <span class="badge badge-yellow"><i class="fas fa-clock"></i> Coming Soon States</span>
+  </div>
+</section>
+
+<main class="pg-main">
+
+  <!-- ═══ FLOW ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-route"></i> Page Flow</div>
+    <h2 class="sec-title">2-Page <span>Navigation</span></h2>
+  </div>
+  <div class="flow-row" data-reveal>
+    <div class="flow-node">
+      <div class="flow-node-num">Page 01</div>
+      <div class="flow-node-title">MATLAB Listing</div>
+      <div class="flow-node-file">matlab-projects.html</div>
+    </div>
+    <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+    <div class="flow-node">
+      <div class="flow-node-num">Page 02</div>
+      <div class="flow-node-title">MATLAB Project Viewer</div>
+      <div class="flow-node-file">project-viewer.html?id=X&amp;category=matlab</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 1 ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-list"></i> Page 1</div>
+    <h2 class="sec-title">MATLAB <span>Listing Page</span></h2>
+    <p class="sec-sub"><code class="ic">matlab-projects.html</code> — Same structure as Arduino কিন্তু unique feature হলো card-এর thumbnail section-এ image carousel।</p>
+  </div>
+
+  <div class="anatomy-wrap" data-reveal>
+    <div class="bp">
+      <div class="bp-notch"></div>
+      <div class="bp-screen">
+        <div class="bp-hdr">
+          <div class="bp-hdr-back"><i class="fas fa-arrow-left"></i> Projects</div>
+          <div style="display:flex;gap:5px;">
+            <div class="bp-hdr-btn"><i class="fas fa-search"></i></div>
+          </div>
+        </div>
+        <div class="bp-hero">
+          <div class="bp-hero-icon"><i class="fas fa-chart-line" style="color:var(--red);"></i></div>
+          <div class="bp-hero-title">All MATLAB Projects</div>
+          <div class="bp-hero-sub">Simulations, Algorithms &amp; Data Analysis</div>
+          <div class="bp-hero-badge"><i class="fas fa-database"></i> 1 Project</div>
+        </div>
+        <div class="bp-searchbar">
+          <i class="fas fa-search" style="color:var(--red);font-size:.55rem;"></i>
+          <span>Search MATLAB projects...</span>
+        </div>
+        <div class="bp-filters">
+          <div class="bp-chip active">All <span class="cnt">1</span></div>
+          <div class="bp-chip"><i class="fas fa-solar-panel" style="font-size:.44rem;"></i></div>
+          <div class="bp-chip"><i class="fas fa-bolt" style="font-size:.44rem;"></i></div>
+          <div class="bp-chip"><i class="fas fa-fire" style="font-size:.44rem;"></i></div>
+          <div class="bp-chip"><i class="fas fa-sliders-h" style="font-size:.44rem;"></i></div>
+        </div>
+        <!-- Card with carousel -->
+        <div class="bp-mat-card">
+          <div class="bp-mat-img">
+            <div class="bp-mat-img-graph">
+              <svg class="bp-mat-curve" viewBox="0 0 120 30" fill="none">
+                <polyline points="0,28 20,22 40,18 55,10 65,6 75,8 90,14 110,20 120,22" stroke="rgba(204,0,0,0.8)" stroke-width="1.5" fill="none"/>
+                <polyline points="0,28 20,24 40,20 55,16 65,20 75,26 90,28" stroke="rgba(100,180,255,0.6)" stroke-width="1.2" fill="none" stroke-dasharray="2,2"/>
+              </svg>
+            </div>
+            <div class="bp-mat-glb">GLB 3D</div>
+            <div class="bp-mat-badge-result"><i class="fas fa-chart-line"></i> RESULT</div>
+            <div class="bp-carousel-dots">
+              <div class="bp-dot active"></div>
+              <div class="bp-dot"></div>
+              <div class="bp-dot"></div>
+            </div>
+          </div>
+          <div class="bp-mat-body">
+            <div class="bp-mat-title">Solar PV I-V &amp; P-V Curve Analysis</div>
+            <div class="bp-mat-desc">I-V and P-V curves with irradiance/temp variation</div>
+            <div class="bp-mat-tags">
+              <span class="bp-mat-tag">Solar</span>
+              <span class="bp-mat-tag">PV</span>
+              <span class="bp-mat-tag">MPPT</span>
+            </div>
+          </div>
+        </div>
+        <!-- Coming soon -->
+        <div class="bp-cs-badge"><i class="fas fa-clock"></i> More Projects Coming Soon</div>
+        <div class="bp-bnav">
+          <div class="bp-bnav-item"><i class="fas fa-home"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-user-circle"></i></div>
+          <div class="bp-bnav-item active"><i class="fas fa-folder-open"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-layer-group"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-envelope"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="anatomy-labels">
+      <div class="al-item">
+        <div class="al-num">1</div>
+        <div class="al-content">
+          <div class="al-title">Hero Section</div>
+          <div class="al-desc">Chart-line icon, "All MATLAB Projects", "Simulations, Algorithms & Data Analysis", live count badge. Heading updates with active filter.</div>
+          <div class="al-desc-bn">Filter চাপলে heading "Renewable Energy Projects" হয়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">2</div>
+        <div class="al-content">
+          <div class="al-title">5 Filter Categories</div>
+          <div class="al-desc">All · Renewable Energy · Power Systems · Heat Transfer · Control Systems. Currently only "Renewable Energy" has content (1 project). Others show 0.</div>
+          <div class="al-desc-bn">৫টা category — এখন Renewable Energy-তে 1টা project।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">3</div>
+        <div class="al-content">
+          <div class="al-title">Image Carousel in Cards</div>
+          <div class="al-desc">Unique to MATLAB — thumbnail area shows multiple result images as a <strong>sliding carousel</strong> with dot indicators (active dot elongates to pill shape). Images cycle automatically or on swipe.</div>
+          <div class="al-desc-bn">Arduino-র একটা image-এর জায়গায় MATLAB-এ carousel — একাধিক result image।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">4</div>
+        <div class="al-content">
+          <div class="al-title">RESULT Badge + GLB Badge</div>
+          <div class="al-desc">Red "RESULT" badge (top-left) — marks result images. If model has GLB, "GLB 3D" badge (top-right) appears.</div>
+          <div class="al-desc-bn">Result image-এ "RESULT" badge, 3D model থাকলে "GLB 3D" badge।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">5</div>
+        <div class="al-content">
+          <div class="al-title">"Coming Soon" Badge</div>
+          <div class="al-desc">Red bordered badge — "More Projects Coming Soon" — shown when a category has 0 projects. The page continues to be functional, just empty state.</div>
+          <div class="al-desc-bn">Future content-এর জন্য Coming Soon badge দেখায়।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="sec-label" data-reveal><i class="fas fa-filter"></i> 5 Filter Categories</div>
+  <div class="cat-grid" data-reveal>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-solar-panel" style="color:rgba(255,220,50,0.8);"></i></div>
+      <div class="cat-name">Renewable Energy</div>
+      <div class="cat-desc">Solar PV, wind, biomass, energy optimization.</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-bolt" style="color:rgba(100,180,255,0.8);"></i></div>
+      <div class="cat-name">Power Systems</div>
+      <div class="cat-desc">Circuit analysis, load flow, fault detection.</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-fire" style="color:rgba(255,130,60,0.8);"></i></div>
+      <div class="cat-name">Heat Transfer</div>
+      <div class="cat-desc">Temperature distribution, conduction, convection.</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-sliders-h" style="color:rgba(100,220,120,0.8);"></i></div>
+      <div class="cat-name">Control Systems</div>
+      <div class="cat-desc">Transfer functions, PID, stability analysis.</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-project-diagram" style="color:rgba(180,100,255,0.8);"></i></div>
+      <div class="cat-name">Simulink Models</div>
+      <div class="cat-desc">Block diagrams, system dynamics, control loops.</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 2 ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-file-code"></i> Page 2</div>
+    <h2 class="sec-title">MATLAB <span>Project Viewer</span></h2>
+    <p class="sec-sub"><code class="ic">project-viewer.html?category=matlab</code> — .m code viewer, result image gallery, overview।</p>
+  </div>
+
+  <div class="callout" data-reveal>
+    <strong>Shared Viewer</strong> — <code class="ic">project-viewer.js</code> detects <code class="ic">?category=matlab</code> from URL and switches to MATLAB mode: loads <code class="ic">matlab-data.json</code>, shows .m MATLAB code instead of Arduino sketch, result image gallery instead of circuit diagram. Back button routes back to <code class="ic">matlab-projects.html</code>.
+  </div>
+
+  <div class="anatomy-wrap" data-reveal>
+    <div class="bp">
+      <div class="bp-notch"></div>
+      <div class="bp-screen">
+        <div class="bp-hdr">
+          <div class="bp-hdr-back"><i class="fas fa-arrow-left"></i> MATLAB</div>
+          <div style="display:flex;gap:5px;">
+            <div class="bp-hdr-btn"><i class="fas fa-share-alt"></i></div>
+            <div class="bp-hdr-btn" style="color:#ffc107;"><i class="fas fa-bookmark"></i></div>
+          </div>
+        </div>
+        <!-- Code section -->
+        <div style="padding:8px 10px 4px;font-size:0.52rem;font-weight:700;color:var(--txt-dim);">Solar PV Analysis · <span style="color:var(--red);">Intermediate</span></div>
+        <div class="bp-view-code">
+          <span class="cm">% Solar PV I-V Curve Analysis</span><br>
+          <span class="kw">clear</span>; <span class="kw">clc</span>; <span class="kw">close all</span>;<br>
+          <span class="cm">% Parameters</span><br>
+          G = 1000; T = 25; <span class="cm">% irradiance</span><br>
+          Voc = 42.1; Isc = 8.21;<br>
+          <span class="fn">plot</span>(V, I, <span style="color:#9cdcfe;">'r-'</span>, <span style="color:#9cdcfe;">'LineWidth'</span>, 2);
+        </div>
+        <div style="margin:0 10px;"><div class="bp-copy-btn"><i class="fas fa-copy"></i> Copy Code</div></div>
+        <!-- Result images -->
+        <div style="padding:0 10px 4px;font-size:0.5rem;font-weight:700;color:var(--txt-dim);">Result Images</div>
+        <div class="bp-result-gallery">
+          <div class="bp-result-thumb"><i class="fas fa-chart-line"></i></div>
+          <div class="bp-result-thumb"><i class="fas fa-chart-area"></i></div>
+          <div class="bp-result-thumb"><i class="fas fa-th"></i></div>
+        </div>
+        <!-- Download -->
+        <div class="bp-dl-row">
+          <div class="bp-dl-btn-sm primary"><i class="fas fa-file-code"></i> .m Code</div>
+          <div class="bp-dl-btn-sm"><i class="fas fa-file-archive"></i> ZIP</div>
+        </div>
+        <div class="bp-bnav">
+          <div class="bp-bnav-item"><i class="fas fa-home"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-user-circle"></i></div>
+          <div class="bp-bnav-item active"><i class="fas fa-folder-open"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-layer-group"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-envelope"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="anatomy-labels">
+      <div class="al-item">
+        <div class="al-num">1</div>
+        <div class="al-content">
+          <div class="al-title">Project Header + Difficulty</div>
+          <div class="al-desc">Title and difficulty badge (Beginner/Intermediate/Advanced). Share (Web Share API) and Bookmark (localStorage) buttons in header — same as Arduino.</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">2</div>
+        <div class="al-content">
+          <div class="al-title">.m Code Viewer</div>
+          <div class="al-desc">Syntax-highlighted MATLAB code block (<code class="ic">.m</code> file). Red background code section with mono font. Copy button triggers clipboard API.</div>
+          <div class="al-desc-bn">MATLAB code syntax highlight সহ — Copy করা যায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">3</div>
+        <div class="al-content">
+          <div class="al-title">Result Image Gallery</div>
+          <div class="al-desc">Horizontal scrollable row of result images (I-V curve, P-V curve, table, etc.). Tap to view full-size.</div>
+          <div class="al-desc-bn">Result graph গুলো thumbnail row-এ — tap করে full দেখা যায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">4</div>
+        <div class="al-content">
+          <div class="al-title">Download Buttons</div>
+          <div class="al-desc"><strong>.m Code</strong> (primary) + <strong>ZIP</strong> (full package). ZIP includes .m file, result images, and documentation.</div>
+          <div class="al-desc-bn">.m file বা full ZIP (images সহ) download করো।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Grid -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-star"></i> All Features</div>
+    <h2 class="sec-title">MATLAB Unique <span>Features</span></h2>
+  </div>
+  <div class="feat-grid" data-reveal>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-blue"><i class="fas fa-images"></i></div>
+      <div class="feat-title">Result Image Carousel</div>
+      <div class="feat-desc">Cards show a cycling carousel of result images. Active dot becomes an elongated pill shape. Auto-cycles or swipe-navigable.</div>
+      <div class="feat-desc-bn">Card-এ multiple result image carousel — dot indicator active হলে pill shape।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-red"><i class="fas fa-tags"></i></div>
+      <div class="feat-title">RESULT + GLB Badges</div>
+      <div class="feat-desc">"RESULT" badge (red, top-left) marks simulation output screenshots. "GLB 3D" badge (blue, top-right) if a 3D model exists for the project.</div>
+      <div class="feat-desc-bn">Result image আর 3D model আলাদা badge দিয়ে mark করা।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-green"><i class="fas fa-file-code"></i></div>
+      <div class="feat-title">.m MATLAB Code Viewer</div>
+      <div class="feat-desc">Syntax-highlighted MATLAB code viewer. Keywords, functions, comments colored. One-click Copy button uses Clipboard API. Download raw .m file.</div>
+      <div class="feat-desc-bn">MATLAB code syntax-highlighted দেখে copy বা download করো।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-yellow"><i class="fas fa-clock"></i></div>
+      <div class="feat-title">Coming Soon States</div>
+      <div class="feat-desc">Categories with 0 projects → red bordered "Coming Soon" badge instead of empty state error. Graceful placeholder for future content.</div>
+      <div class="feat-desc-bn">Empty category-তে error নয় — "Coming Soon" badge দেখায়।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-red"><i class="fas fa-bookmark"></i></div>
+      <div class="feat-title">Bookmark + Share</div>
+      <div class="feat-desc"><code class="ic">localStorage</code> bookmark persists across sessions. Web Share API for native sharing. Both identical to Arduino/SolidWorks.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-blue"><i class="fas fa-tags"></i></div>
+      <div class="feat-title">Rich Tags</div>
+      <div class="feat-desc">Each project has searchable tags: Solar, PV, MPPT, Renewable Energy etc. Tags show on card and are included in search index.</div>
+      <div class="feat-desc-bn">Tags search-এ include — full text search করা যায়।</div>
+    </div>
+  </div>
+
+  <!-- Data Schema -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-database"></i> Data Schema</div>
+    <h2 class="sec-title">matlab-data.json — <span>Fields</span></h2>
+  </div>
+  <div class="guide-table-wrap" data-reveal>
+    <table class="guide-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>e.g. <code>matlab-demo-01</code></td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Project name — appears on card and viewer header</td></tr>
+        <tr><td><code>category</code></td><td>String</td><td>Filter key: <code>Renewable Energy</code> | <code>Power Systems</code> | <code>Heat Transfer</code> | <code>Control Systems</code> | <code>Simulink</code></td></tr>
+        <tr><td><code>difficulty</code></td><td>String</td><td>Beginner / Intermediate / Advanced — shown in viewer</td></tr>
+        <tr><td><code>tags[]</code></td><td>Array</td><td>Searchable tags (Solar, PV, MPPT, etc.)</td></tr>
+        <tr><td><code>topics[]</code></td><td>Array</td><td>Key analysis topics — shown as bullet list in viewer</td></tr>
+        <tr><td><code>files.code</code></td><td>String</td><td>.m file name — code viewer content</td></tr>
+        <tr><td><code>files.images[]</code></td><td>Array</td><td>Result image filenames — carousel in listing, gallery in viewer</td></tr>
+        <tr><td><code>files.zip</code></td><td>String</td><td>ZIP download filename</td></tr>
+        <tr><td><code>files.youtubeVideo</code></td><td>String</td><td>Optional YouTube video URL for tutorial</td></tr>
+        <tr><td><code>files.liveScript</code></td><td>String</td><td>Optional MATLAB Live Script (.mlx) file</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- File Map -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-folder-open"></i> File Map</div>
+    <h2 class="sec-title">All <span>Files</span></h2>
+  </div>
+  <div class="guide-table-wrap" data-reveal>
+    <table class="guide-table">
+      <thead><tr><th>File</th><th>Location</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>matlab-projects.html</code></td><td>mobile/projects/</td><td>Category listing — filter chips, carousel cards</td></tr>
+        <tr><td><code>matlab-projects.js</code></td><td>mobile/projects/</td><td>Loads JSON, renders cards with image carousel logic</td></tr>
+        <tr><td><code>project-viewer.html</code></td><td>mobile/projects/</td><td>Shared viewer, switches to MATLAB mode via URL param</td></tr>
+        <tr><td><code>project-viewer.js</code></td><td>mobile/projects/</td><td>Code display, result gallery, download, share, bookmark</td></tr>
+        <tr><td><code>matlab-data.json</code></td><td>Projects Code/MATLAB/</td><td>All MATLAB project objects</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;" data-reveal>
+    <a href="projects-solidworks.html" style="display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;color:rgba(255,180,50,0.9);background:rgba(255,140,0,0.08);border:1px solid rgba(255,140,0,0.25);border-radius:8px;padding:8px 14px;text-decoration:none;"><i class="fas fa-arrow-left"></i> SolidWorks Guide</a>
+    <a href="projects-electronics.html" style="display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.07);border:1px solid rgba(139,0,255,0.22);border-radius:8px;padding:8px 14px;text-decoration:none;">Electronics Guide <i class="fas fa-arrow-right"></i></a>
+  </div>
+
+</main>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">আল-বাত্তানি (৮৫৮–৯২৯ খ্রি.) সূর্যের বিষুব বিন্দু পরিবর্তনের মান নির্ণয় করেন এবং Sine ও Cosine ফাংশনকে পরিশোধিত করেন।</p>
+      <cite class="wg-qsrc">&#8212; মুসলিম বিজ্ঞানীদের অবদান</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/guide.js"></script>
+<script>
+const obs = new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')}),{threshold:0.08});
+document.querySelectorAll('[data-reveal]').forEach(el=>obs.observe(el));
+</script>
+<script src="../../Optimization/navbar-autohide.js"></script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

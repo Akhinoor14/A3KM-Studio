@@ -120,6 +120,7 @@
         .vp-gesture {
             position: absolute; inset: 0;
             z-index: 10;
+            touch-action: none; /* prevent page scroll during vol/bri gestures */
         }
 
         /* Custom controls bar at bottom of player */
@@ -247,7 +248,7 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            display: flex; align-items: center; gap: 20px;
+            display: flex; align-items: center; gap: 36px;
             z-index: 14;
             opacity: 0; transition: opacity 0.28s ease;
             pointer-events: none;
@@ -256,17 +257,17 @@
             opacity: 1; pointer-events: auto;
         }
         .vp-mc-btn {
-            width: 46px; height: 46px;
+            width: 54px; height: 54px;
             display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.62);
             border: 1.5px solid rgba(255,255,255,0.22);
-            border-radius: 50%; color: #fff; font-size: 17px;
+            border-radius: 50%; color: #fff; font-size: 20px;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
             transition: transform 0.14s cubic-bezier(0.4,0,0.2,1), background 0.14s;
             backdrop-filter: blur(6px);
         }
         .vp-mc-btn.center {
-            width: 56px; height: 56px; font-size: 21px;
+            width: 66px; height: 66px; font-size: 24px;
             background: rgba(204,0,0,0.62);
             border-color: rgba(255,255,255,0.3);
         }
@@ -679,6 +680,10 @@
             75%  { opacity: 1; transform: translateX(-50%) translateY(0); }
             100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
         }
+        /* Hide page content during landscape fullscreen */
+        body.vp-landscape-fs > *:not(#vpWrapper):not(.vp-pip-fallback) {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -818,10 +823,6 @@
             <a href="../../contact/contact.html" class="mobile-nav-item" aria-label="Contact">
                 <i class="fas fa-envelope" aria-hidden="true"></i>
                 <span class="mobile-nav-label">Contact</span>
-            </a>
-            <a href="../../../Documentation/index.html" class="mobile-nav-item" aria-label="Website Guide">
-                <i class="fas fa-book-open" aria-hidden="true"></i>
-                <span class="mobile-nav-label">Guide</span>
             </a>
         </div>
     </nav>
@@ -1109,7 +1110,7 @@
             /* ── Open Document PiP ── */
             async function openDocPiP() {
                 if (fbOpen) closeFbOverlay();
-                if (!playerReady || !ytPlayer) return;
+                if (!playerReady || !ytPlayer) { openFbOverlay(); return; }
                 const vd = ytPlayer.getVideoData ? ytPlayer.getVideoData() : {};
                 const vidId = vd.video_id || '';
                 const stT   = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
@@ -1274,6 +1275,7 @@
                 inner.style.transform = '';
             }
             state = 'landscapeFS';
+            document.body.classList.add('vp-landscape-fs');
 
             /* Request browser fullscreen on the player wrapper (hides rest of page) */
             const el  = wrapper;
@@ -1293,6 +1295,7 @@
         function exitLandscapeFS() {
             if (state !== 'landscapeFS') return;
             state = 'normal';
+            document.body.classList.remove('vp-landscape-fs');
 
             /* Only call exitFullscreen when the browser is actually in fullscreen */
             if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -1328,6 +1331,7 @@
             if (!inFS && state === 'landscapeFS') {
                 /* Browser exited fullscreen externally — sync our state */
                 state = 'normal';
+                document.body.classList.remove('vp-landscape-fs');
                 try { screen.orientation.unlock(); } catch(e) {}
                 updateFsIcon();
             }
@@ -1347,6 +1351,7 @@
         let tapOK            = true;
         let lastTapTs        = 0;
         let pendingSingleTap = null;
+        let volRaf = null, pendingVol = null; // RAF batching for setVolume
 
         gesture.addEventListener('touchstart', function(e) {
             const t   = e.touches[0];
@@ -1378,20 +1383,27 @@
             if (!gLocked && (adx > LOCK_THRESH || ady > LOCK_THRESH)) {
                 gLocked = true;
                 if (ady > adx) {
-                    /* Vertical swipe */
-                    if (state === 'normal' && dy > 0) {
-                        gMode = 'swipe-enter';     // swipe down → portrait FS
+                    /* Zone-based vertical gesture detection */
+                    const wr = wrapper.getBoundingClientRect();
+                    const inLeftZone  = t.clientX < (wr.left + wr.width / 3);
+                    const inRightZone = t.clientX > (wr.left + wr.width * 2 / 3);
+                    if (inRightZone) {
+                        /* Right zone → Volume (any direction) */
+                        gMode = 'vol'; lockedH = wr.height || 200; touchStartY = t.clientY;
+                    } else if (inLeftZone) {
+                        /* Left zone → Brightness (any direction) */
+                        gMode = 'bri'; lockedH = wr.height || 200; touchStartY = t.clientY;
+                    } else if (state === 'normal' && dy > 0) {
+                        gMode = 'swipe-enter';     // center swipe down → portrait FS
                     } else if (state === 'portraitFS' && dy < 0) {
-                        gMode = 'swipe-exit';      // swipe up → exit portrait FS
+                        gMode = 'swipe-exit';      // center swipe up → exit portrait FS
                     } else {
-                        /* Volume (right half) or Brightness (left half) */
-                        const wr  = wrapper.getBoundingClientRect();
-                        gMode     = t.clientX >= (wr.left + wr.width / 2) ? 'vol' : 'bri';
-                        lockedH   = wr.height || 200;
-                        touchStartY = t.clientY;   // reset so first delta starts from lock point
+                        /* Center zone, non-enter/exit → vol/bri by side */
+                        gMode = t.clientX >= (wr.left + wr.width / 2) ? 'vol' : 'bri';
+                        lockedH = wr.height || 200; touchStartY = t.clientY;
                     }
                 }
-                /* Horizontal swipe — ignore (reserved for future use) */
+                /* Horizontal swipe — ignore */
             }
 
             if (!gMode) return;
@@ -1422,10 +1434,17 @@
                 const delta  = (touchStartY - t.clientY) / (lockedH * 0.75) * 100;
                 currentVol   = clamp(currentVol + delta, 0, 100);
                 touchStartY  = t.clientY;
-                if (ytPlayer && playerReady) ytPlayer.setVolume(Math.round(currentVol));
-                localStorage.setItem('vp_vol', Math.round(currentVol));
                 syncVolHud();
-                showHud(volHud, 1500);
+                showHud(volHud, 2000);
+                pendingVol = Math.round(currentVol);
+                if (!volRaf) volRaf = requestAnimationFrame(() => {
+                    volRaf = null;
+                    if (ytPlayer && playerReady && pendingVol !== null) {
+                        ytPlayer.setVolume(pendingVol);
+                        localStorage.setItem('vp_vol', pendingVol);
+                        pendingVol = null;
+                    }
+                });
 
             } else if (gMode === 'bri') {
                 const delta  = (touchStartY - t.clientY) / (lockedH * 0.75) * 0.70;
@@ -1433,7 +1452,7 @@
                 touchStartY  = t.clientY;
                 briOverlay.style.opacity = brightness;
                 briFill.style.height     = ((1 - brightness / 0.70) * 100) + '%';
-                showHud(briHud, 1500);
+                showHud(briHud, 2000);
             }
         }, { passive: true });
 
@@ -1468,11 +1487,10 @@
                 }
                 showTapRing(rx, ry);
             } else {
-                /* ── Single tap (wait to rule out double tap) ── */
+                /* ── Single tap — show controls only, use play button to play/pause ── */
                 lastTapTs = now;
                 pendingSingleTap = setTimeout(() => {
                     pendingSingleTap = null;
-                    playPause();
                     showTapRing(rx, ry);
                 }, 240);
             }
@@ -1483,5 +1501,19 @@
     </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../Optimization/cursor-effects.js" defer></script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">একটি ছবি হাজার শব্দের কথা বলে।</p>
+      <cite class="wg-qsrc">&#8212; প্রবাদ</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

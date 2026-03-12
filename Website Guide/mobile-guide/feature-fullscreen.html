@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep guide to A3KM Studio fullscreen system — first-click fullscreen, session storage persist, nav-click exclusion logic.">
+  <meta name="author" content="Md Akhinoor Islam">
+  <meta name="theme-color" content="#000000">
+
+  <title>Fullscreen System – A3KM Studio Guide</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{--red:#CC0000;--red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);--bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);--txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;--shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);--radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);}
+.pg-topbar{position:sticky;top:70px;z-index:190;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge{font-size:0.7rem;font-weight:600;color:rgba(255,100,100,0.85);background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,220,50,0.9);background:rgba(200,160,0,0.08);border-color:rgba(200,160,0,0.25);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+/* flow steps */
+.flow-steps{display:flex;flex-direction:column;gap:0;margin-bottom:32px;}
+.flow-step{display:flex;gap:16px;position:relative;}
+.flow-step::before{content:'';position:absolute;left:18px;top:38px;bottom:-2px;width:1px;background:var(--red-border);}
+.flow-step:last-child::before{display:none;}
+.fs-num{width:36px;height:36px;border-radius:50%;background:rgba(204,0,0,0.12);border:1px solid var(--red-border-md);color:var(--red);font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.fs-body{flex:1;padding-bottom:20px;}
+.fs-name{font-size:0.86rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.fs-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.55;}
+.fs-code{font-family:'Fira Code',monospace;font-size:0.7rem;color:rgba(255,160,160,0.85);background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;}
+/* code block */
+.code-block{background:rgba(0,0,0,0.7);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:24px;overflow-x:auto;}
+.code-block pre{font-family:'Fira Code',monospace;font-size:0.72rem;color:rgba(220,200,200,0.85);line-height:1.7;margin:0;white-space:pre;}
+.code-block .c-comment{color:rgba(255,255,255,0.22);}
+.code-block .c-key{color:rgba(150,200,255,0.9);}
+.code-block .c-str{color:rgba(160,255,160,0.85);}
+.code-block .c-fn{color:rgba(255,200,100,0.9);}
+.code-block .c-kw{color:rgba(200,120,255,0.85);}
+/* browser compat table */
+.compat-table{width:100%;border-collapse:collapse;font-size:0.77rem;margin-bottom:24px;}
+.compat-table th{text-align:left;padding:8px 12px;font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--red-border);font-weight:700;}
+.compat-table td{padding:9px 12px;color:var(--txt-dim);border-bottom:1px solid rgba(204,0,0,0.06);}
+.compat-table td:first-child{color:var(--txt-mid);font-weight:600;}
+.compat-table td:nth-child(2){font-family:'Fira Code',monospace;font-size:0.7rem;color:rgba(255,180,180,0.85);}
+.compat-table .ok{color:rgba(100,220,120,0.9);}
+/* feat cards */
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;transition:all .25s var(--ease);}.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--red);margin-bottom:12px;}
+.feat-name{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+.features-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+/* callout */
+.callout{border-left:3px solid var(--red);background:rgba(204,0,0,0.06);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin-bottom:24px;}
+.callout-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:0.78rem;color:var(--txt-dim);line-height:1.6;}
+/* tech box */
+.tech-box{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;}
+.tech-box-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.tech-kv{display:flex;flex-direction:column;gap:6px;}
+.tech-row{display:flex;gap:12px;font-size:0.77rem;}
+.tech-key{color:var(--txt-dim);min-width:200px;flex-shrink:0;}
+.tech-val{color:var(--txt-bright);font-family:'Fira Code',monospace;font-size:0.71rem;}
+@media(max-width:900px){.features-grid-2{grid-template-columns:1fr}}
+
+/* ── RELATED GUIDES ── */
+.rg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.rg-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:0;transition:all .25s var(--ease);}
+.rg-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.rg-icon{width:36px;height:36px;border-radius:9px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--red);margin-bottom:10px;}
+.rg-name{font-size:0.84rem;font-weight:700;color:var(--txt-bright);margin-bottom:6px;}
+.rg-desc{font-size:0.72rem;color:var(--txt-dim);line-height:1.45;flex:1;}
+.rg-badges{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0 10px;}
+.rg-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid;letter-spacing:.05em;text-transform:uppercase;}
+.rgb-desktop{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.rgb-mobile{color:rgba(80,220,120,0.9);background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.25);}
+.rgb-admin{color:rgba(255,210,40,0.9);background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.28);}
+.rgb-pwa{color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.08);border-color:rgba(139,0,255,0.25);}
+.rgb-content{color:rgba(255,155,55,0.9);background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.25);}
+.rgb-shared{color:rgba(180,180,180,0.7);background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);}
+.rg-explore{font-size:0.7rem;color:var(--red);display:flex;align-items:center;gap:5px;transition:gap .2s;}
+.rg-card:hover .rg-explore{gap:8px;}
+.dir-cta{text-align:center;padding:8px 0 0;}
+.dir-cta a{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--red);text-decoration:none;border:1px solid var(--red-border);padding:10px 24px;border-radius:20px;background:rgba(204,0,0,0.06);transition:all .22s;}
+.dir-cta a:hover{background:rgba(204,0,0,0.14);border-color:rgba(204,0,0,0.45);}
+/* ── BACK TO TOP ── */
+.btt{position:fixed;bottom:28px;right:28px;z-index:999;width:44px;height:44px;background:#CC0000;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 20px rgba(204,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(12px);transition:all .28s;}
+.btt.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.btt:hover{background:#8B0000;transform:translateY(-2px);}
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .pg-topbar{top:52px !important;}
+  .pg-main{padding:0 16px 80px !important;}
+  .features-grid-2,.features-grid-3{grid-template-columns:1fr !important;}
+  .compare-wrap,.anatomy-wrap{grid-template-columns:1fr !important;}
+  .pg-hero{padding:32px 16px 28px !important;}
+  .shortcut-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .shortcut-table{min-width:460px;}
+  .tech-row{flex-direction:column;gap:3px;}
+  .tech-key{min-width:unset !important;}
+  .rg-grid{grid-template-columns:1fr !important;}
+  body{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px));}
+}</style>
+</head>
+<body>
+<!-- MOBILE NAV (shown ≤768px, replaces hidden g-nav) -->
+<nav class="m-nav" id="mobileNav">
+  <a href="../features.html" class="m-nav-back" title="Feature Directory"><i class="fas fa-arrow-left"></i></a>
+  <a href="../../Home/index.html" class="m-nav-logo">
+    <img src="../../images/logo.svg" class="m-nav-logo-img" width="30" height="30" alt="A3KM">
+    <div class="m-nav-brand">
+      <span class="m-nav-brand-name">Fullscreen Mode</span>
+      <span class="m-nav-brand-sub">Feature Guide</span>
+    </div>
+  </a>
+  <div class="m-nav-menu">
+    <button class="m-nav-btn" id="mNavMenuBtn" title="Navigation" aria-label="Open navigation menu" aria-expanded="false">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+<div class="m-drawer-overlay" id="mDrawerOverlay"></div>
+<div class="m-drawer" id="mDrawer">
+  <div class="m-drawer-links">
+    <a href="../index.html" class="m-drawer-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a>
+    <a href="../desktop/index.html" class="m-drawer-link"><i class="fas fa-desktop"></i><span>Desktop Guide</span></a>
+    <a href="index.html" class="m-drawer-link"><i class="fas fa-mobile-alt"></i><span>Mobile Guide</span></a>
+    <a href="../features.html" class="m-drawer-link active"><i class="fas fa-search"></i><span>Feature Directory</span></a>
+    <a href="../../Home/index.html" class="m-drawer-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a>
+    <a href="../../Contact/contact.html" class="m-drawer-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </div>
+</div>
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio">
+            <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>
+            <li class="desktop-nav-item"><a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF"><i class="fas fa-download" aria-hidden="true"></i><span>CV</span></a></li>
+        </ul>
+    </div>
+</nav><div id="bg-canvas-container"></div>
+<nav class="pg-topbar">
+  <a href="../features.html" class="pg-back"><i class="fas fa-arrow-left"></i> Features</a>
+  <div class="pg-bc"><span>Guide</span><span class="sep">/</span><span>Features</span><span class="sep">/</span><span class="cur">Fullscreen System</span></div>
+  <div class="pg-badge"><i class="fas fa-expand"></i> Desktop Only</div>
+</nav>
+<header class="pg-hero">
+  <div class="hero-label"><i class="fas fa-expand-arrows-alt"></i> Feature Deep Dive</div>
+  <h1 class="hero-title"><span>Persistent Fullscreen</span> — First Click → Full Screen, Every Page</h1>
+  <p class="hero-desc">A3KM Studio automatically enters fullscreen on the desktop on the first meaningful click. Once approved, fullscreen persists across all page navigations for the entire session — no re-approval needed. It's transparent and smart: navigation link clicks are intentionally excluded from triggering fullscreen.</p>
+  <p class="hero-desc-bn">Desktop-এ প্রথম meaningful click-এ browser fullscreen হয়ে যায়। একবার approve হলে পুরো session জুড়ে প্রতিটি page load-এ automatic fullscreen হয় — sessionStorage দিয়ে persist করে। Mobile-এ এই feature কাজ করে না।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-desktop"></i> Desktop only</span>
+    <span class="badge badge-green"><i class="fas fa-save"></i> sessionStorage persist</span>
+    <span class="badge badge-yellow"><i class="fas fa-brain"></i> Smart nav-click exclusion</span>
+  </div>
+</header>
+<main class="pg-main">
+  <div class="divider"></div>
+
+  <!-- HOW IT WORKS -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-cogs"></i> How It Works</div>
+    <h2 class="sec-title">Fullscreen <span>Engine</span></h2>
+    <p class="sec-sub">The entire system is an IIFE in <code style="font-family:Fira Code,monospace;font-size:0.85em;">Optimization/fullscreen-init.js</code> — under 50 lines. It handles both the first-visit flow and the returning-session flow.</p>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="fs-num">1</div>
+        <div class="fs-body">
+          <div class="fs-name">Mobile skip check</div>
+          <div class="fs-desc">First thing — detects mobile via <code class="fs-code">navigator.userAgentData.mobile</code> or UA regex test. If mobile → <code class="fs-code">return</code> immediately. The entire module does nothing on phones/tablets. Fullscreen on mobile browsers is not a useful experience.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">2</div>
+        <div class="fs-body">
+          <div class="fs-name">Session check — returning visitor path</div>
+          <div class="fs-desc">Reads <code class="fs-code">sessionStorage.getItem('a3km_fullscreen')</code>. If it equals <code class="fs-code">'1'</code>, the user already approved fullscreen this session. Attaches to <code class="fs-code">DOMContentLoaded</code> → fires <code class="fs-code">enterFullscreen()</code> after a 300ms delay. <strong>Then returns early</strong> — no click listener is set up.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">3</div>
+        <div class="fs-body">
+          <div class="fs-name">First visit — click listener</div>
+          <div class="fs-desc">If session key not found → attaches <code class="fs-code">document.addEventListener('click', onFirstClick)</code>. Waits for any click anywhere on the page.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">4</div>
+        <div class="fs-body">
+          <div class="fs-name">Smart click filtering — navigation excluded</div>
+          <div class="fs-desc">Inside <code class="fs-code">onFirstClick()</code>: checks if the click target is inside an <code class="fs-code">a[href]</code> element. If yes, checks the href — if it's a real navigation link (not <code class="fs-code">#</code>, not empty) → <code class="fs-code">return</code> without triggering fullscreen. This means clicking a nav link to go to another page does <strong>not</strong> count as the first click. Only actual interaction clicks (buttons, cards, divs) trigger it.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">5</div>
+        <div class="fs-body">
+          <div class="fs-name">Enter fullscreen + save + remove listener</div>
+          <div class="fs-desc">On a valid first click: ① <code class="fs-code">sessionStorage.setItem('a3km_fullscreen', '1')</code> ② calls <code class="fs-code">enterFullscreen()</code> ③ removes the click listener with <code class="fs-code">document.removeEventListener('click', onFirstClick)</code> — it only fires once.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">6</div>
+        <div class="fs-body">
+          <div class="fs-name">enterFullscreen() — cross-browser</div>
+          <div class="fs-desc">Calls the fullscreen API with vendor prefix fallbacks: <code class="fs-code">requestFullscreen</code> → <code class="fs-code">webkitRequestFullscreen</code> → <code class="fs-code">mozRequestFullScreen</code> → <code class="fs-code">msRequestFullscreen</code>. Wrapped in <code class="fs-code">.catch(() => {})</code> so if the browser rejects it (e.g., strict security settings), no error surfaces to the user.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCE CODE DISPLAY -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-file-code"></i> Source Code</div>
+    <h2 class="sec-title">Complete <span>Source</span></h2>
+    <p class="sec-sub">The full implementation — 47 lines including comments.</p>
+    <div class="code-block"><pre><span class="c-comment">/* Persistent Fullscreen — Optimization/fullscreen-init.js */</span>
+(<span class="c-kw">function</span> () {
+    <span class="c-str">'use strict'</span>;
+    <span class="c-kw">const</span> SESSION_KEY = <span class="c-str">'a3km_fullscreen'</span>;
+
+    <span class="c-comment">// Skip on mobile</span>
+    <span class="c-kw">if</span> (navigator.userAgentData ? navigator.userAgentData.mobile
+        : <span class="c-fn">/android|iphone|ipad|ipod/i</span>.<span class="c-fn">test</span>(navigator.userAgent)) <span class="c-kw">return</span>;
+
+    <span class="c-kw">function</span> <span class="c-fn">enterFullscreen</span>() {
+        <span class="c-kw">const</span> el = document.documentElement;
+        <span class="c-kw">if</span> (document.fullscreenElement) <span class="c-kw">return</span>;
+        <span class="c-kw">const</span> fn = el.requestFullscreen || el.webkitRequestFullscreen
+                 || el.mozRequestFullScreen || el.msRequestFullscreen;
+        <span class="c-kw">if</span> (fn) fn.<span class="c-fn">call</span>(el).<span class="c-fn">catch</span>(() => {});
+    }
+
+    <span class="c-comment">// Returning session → auto-enter on load</span>
+    <span class="c-kw">if</span> (sessionStorage.<span class="c-fn">getItem</span>(SESSION_KEY) === <span class="c-str">'1'</span>) {
+        document.<span class="c-fn">addEventListener</span>(<span class="c-str">'DOMContentLoaded'</span>, () => {
+            <span class="c-fn">setTimeout</span>(enterFullscreen, 300);
+        });
+        <span class="c-kw">return</span>;
+    }
+
+    <span class="c-comment">// First visit: wait for non-navigation click</span>
+    <span class="c-kw">function</span> <span class="c-fn">onFirstClick</span>(e) {
+        <span class="c-kw">const</span> anchor = e.target.<span class="c-fn">closest</span>(<span class="c-str">'a[href]'</span>);
+        <span class="c-kw">if</span> (anchor) {
+            <span class="c-kw">const</span> href = anchor.<span class="c-fn">getAttribute</span>(<span class="c-str">'href'</span>);
+            <span class="c-kw">if</span> (href &amp;&amp; href !== <span class="c-str">'#'</span> &amp;&amp; !href.<span class="c-fn">startsWith</span>(<span class="c-str">'#'</span>)) <span class="c-kw">return</span>;
+        }
+        sessionStorage.<span class="c-fn">setItem</span>(SESSION_KEY, <span class="c-str">'1'</span>);
+        <span class="c-fn">enterFullscreen</span>();
+        document.<span class="c-fn">removeEventListener</span>(<span class="c-str">'click'</span>, onFirstClick);
+    }
+    document.<span class="c-fn">addEventListener</span>(<span class="c-str">'click'</span>, onFirstClick);
+})();</pre></div>
+  </section>
+
+  <!-- KEY DESIGN DECISIONS -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-lightbulb"></i> Design Decisions</div>
+    <h2 class="sec-title">Why It Works <span>This Way</span></h2>
+    <div class="features-grid-2">
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-mouse-pointer"></i></div>
+        <div class="feat-name">Why first click, not page load?</div>
+        <div class="feat-desc">Browsers require fullscreen to be triggered from a direct user gesture (click, keypress). Calling <code style="font-family:Fira Code,monospace;font-size:0.88em;">requestFullscreen()</code> directly on page load without a user gesture will throw a permission error and silently fail. The first click gives the browser the user gesture it requires.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-database"></i></div>
+        <div class="feat-name">Why sessionStorage not localStorage?</div>
+        <div class="feat-desc"><code style="font-family:Fira Code,monospace;font-size:0.88em;">sessionStorage</code> is per-tab and cleared when the tab is closed. Each new session of the site starts fresh — the user gets the fullscreen prompt once per session. Using <code style="font-family:Fira Code,monospace;font-size:0.88em;">localStorage</code> would mean it never prompts again after the first ever visit.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-ban"></i></div>
+        <div class="feat-name">Why skip navigation link clicks?</div>
+        <div class="feat-desc">When a user clicks a nav link, the page navigates. On the new page, the script runs again and finds <code style="font-family:Fira Code,monospace;font-size:0.88em;">a3km_fullscreen='1'</code> → auto-enters fullscreen. If navigation clicks also triggered it on the first page load, the fullscreen API call would fire just as the page changes — creating a race condition or double-trigger.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-clock"></i></div>
+        <div class="feat-name">Why the 300ms delay on returning pages?</div>
+        <div class="feat-desc">Even though fullscreen persists through session, the browser still needs a gesture context when entering on a new page load. The 300ms <code style="font-family:Fira Code,monospace;font-size:0.88em;">setTimeout</code> gives the DOM time to settle — some browsers are more lenient about gesture requirements when the call happens slightly after <code style="font-family:Fira Code,monospace;font-size:0.88em;">DOMContentLoaded</code>.</div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-keyboard"></i> How to exit fullscreen</div>
+      <p>Press <strong>Esc</strong> or <strong>F11</strong> at any time. The browser always provides its own fullscreen exit controls regardless of what the page does. The site does not prevent exiting fullscreen. If you exit and then navigate to another page, it will auto-enter fullscreen again (because the session key is still set).</p>
+    </div>
+  </section>
+
+  <!-- BROWSER COMPAT -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-globe"></i> Browser Support</div>
+    <h2 class="sec-title">Cross-Browser <span>Compatibility</span></h2>
+    <table class="compat-table">
+      <thead><tr><th>Browser</th><th>API Method</th><th>Support</th></tr></thead>
+      <tbody>
+        <tr><td>Chrome / Edge (modern)</td><td>requestFullscreen()</td><td class="ok">✓ Standard</td></tr>
+        <tr><td>Safari (desktop)</td><td>webkitRequestFullscreen()</td><td class="ok">✓ Vendor prefix</td></tr>
+        <tr><td>Firefox (old)</td><td>mozRequestFullScreen()</td><td class="ok">✓ Vendor prefix</td></tr>
+        <tr><td>IE 11</td><td>msRequestFullscreen()</td><td class="ok">✓ Vendor prefix</td></tr>
+        <tr><td>Mobile Chrome/Safari</td><td>—</td><td style="color:var(--txt-dim);">Skipped by mobile UA check</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TECH REFERENCE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-code"></i> Technical Reference</div>
+    <h2 class="sec-title">Code <span>Details</span></h2>
+    <div class="tech-box">
+      <div class="tech-box-title"><i class="fas fa-file-code"></i> Key Constants &amp; APIs</div>
+      <div class="tech-kv">
+        <div class="tech-row"><div class="tech-key">File</div><div class="tech-val">Optimization/fullscreen-init.js</div></div>
+        <div class="tech-row"><div class="tech-key">Pattern</div><div class="tech-val">IIFE — (function(){ ... })()</div></div>
+        <div class="tech-row"><div class="tech-key">Session key</div><div class="tech-val">sessionStorage: 'a3km_fullscreen' = '1'</div></div>
+        <div class="tech-row"><div class="tech-key">Entry point</div><div class="tech-val">document.addEventListener('click', onFirstClick)</div></div>
+        <div class="tech-row"><div class="tech-key">Returning session</div><div class="tech-val">DOMContentLoaded → setTimeout(enterFullscreen, 300)</div></div>
+        <div class="tech-row"><div class="tech-key">Fullscreen API</div><div class="tech-val">document.documentElement.requestFullscreen()</div></div>
+        <div class="tech-row"><div class="tech-key">Guard check</div><div class="tech-val">if (document.fullscreenElement) return — prevents double-enter</div></div>
+        <div class="tech-row"><div class="tech-key">Error handling</div><div class="tech-val">.catch(() => {}) — silent failure</div></div>
+        <div class="tech-row"><div class="tech-key">Mobile skip</div><div class="tech-val">navigator.userAgentData.mobile || /android|iphone|ipad|ipod/i</div></div>
+        <div class="tech-row"><div class="tech-key">Nav link exclusion</div><div class="tech-val">e.target.closest('a[href]') with href check</div></div>
+        <div class="tech-row"><div class="tech-key">Scope applies to</div><div class="tech-val">All desktop pages that include this script</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- RELATED FEATURE GUIDES -->
+  <section style="margin-bottom:56px;">
+    <div class="sec-label"><i class="fas fa-compass"></i> Explore More</div>
+    <h2 class="sec-title">Other <span>Feature Guides</span></h2>
+    <p class="sec-sub">More deep-dives into A3KM Studio features — shortcuts, hidden tricks, mobile vs desktop comparisons and code references.</p>
+    <div class="rg-grid" id="relatedGuides"></div>
+    <div class="dir-cta">
+      <a href="../features.html"><i class="fas fa-search"></i> Browse All 88 Features in the Directory <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+</main>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">যত বড়ো হও, তত বিনম্র হও — মহাবিশ্বের বিস্তার দেখো এবং নিজের ক্ষুদ্রতা অনুভব করো।</p>
+      <cite class="wg-qsrc">&#8212; হযরত উমার (রাঃ)</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-chevron-up"></i></button>
+<script src="../assets/guide.js" defer></script>
+<script src="../../Optimization/Background/background-system.js" defer></script>
+<script>
+const CURRENT_GUIDE = 'fullscreen';
+const FEATURE_GUIDES = [
+  {id:'video-player',     name:'Video Player',        icon:'play-circle',  desc:'YouTube IFrame, PiP, like/share, related videos, API enrichment',  cats:['Mobile','Desktop'],  url:'feature-video-player.html'},
+  {id:'pdf-reader',       name:'PDF Reader',           icon:'file-pdf',     desc:'Zoom, page nav, book mode, swipe, keyboard shortcuts, password',   cats:['Desktop','Mobile','Content'], url:'feature-pdf-reader.html'},
+  {id:'markdown-reader',  name:'Markdown Reader',      icon:'file-alt',     desc:'Custom renderer, TOC, GitHub sync, code highlighting, share',       cats:['Mobile','Content'],  url:'feature-markdown-reader.html'},
+  {id:'pwa-offline',      name:'PWA & Offline',        icon:'wifi',         desc:'5-cache system, LRU eviction, install prompt, update notifier',     cats:['PWA','Mobile'],      url:'feature-pwa-offline.html'},
+  {id:'search-system',    name:'Search System',        icon:'search',       desc:'AdvancedSearchManager, 12 filters, tags, instant client-side',      cats:['Desktop','Mobile'],  url:'feature-search-system.html'},
+  {id:'only-boss',        name:'Only-Boss Admin',      icon:'lock',         desc:'SHA-256 auth, session timer, managers, command center',             cats:['Admin','Desktop'],   url:'feature-only-boss.html'},
+  {id:'calculators',      name:'Calculators',          icon:'calculator',   desc:'Resistor color code, LED current, capacitor decoder, quick ref',    cats:['Desktop','Mobile'],  url:'feature-calculators.html'},
+  {id:'sync-bookmark',    name:'Sync & Bookmarks',     icon:'sync',         desc:'GitHub API sync, localStorage keys, navbar auto-hide',              cats:['PWA','Shared'],      url:'feature-sync-bookmark.html'},
+  {id:'contact-form',     name:'Contact Form',         icon:'paper-plane',  desc:'EmailJS primary, Web3Forms fallback, mailto final fallback',        cats:['Desktop','Mobile'],  url:'feature-contact-form.html'},
+  {id:'fullscreen',       name:'Fullscreen System',    icon:'expand',       desc:'First-click fullscreen, session persist, nav-click exclusion',      cats:['Desktop','PWA'],     url:'feature-fullscreen.html'}
+];
+const RG_CAT_CLASS = {Desktop:'rgb-desktop',Mobile:'rgb-mobile',Admin:'rgb-admin',PWA:'rgb-pwa',Content:'rgb-content',Shared:'rgb-shared'};
+function renderRelatedGuides(){
+  const el = document.getElementById('relatedGuides');
+  if(!el) return;
+  const others = FEATURE_GUIDES.filter(g => g.id !== CURRENT_GUIDE);
+  el.innerHTML = others.map(g => {
+    const badges = g.cats.map(c => '<span class="rg-badge '+(RG_CAT_CLASS[c]||'')+'">'+c+'</span>').join('');
+    return '<a class="rg-card" href="'+g.url+'">'
+      +'<div class="rg-icon"><i class="fas fa-'+g.icon+'"></i></div>'
+      +'<div class="rg-name">'+g.name+'</div>'
+      +'<div class="rg-badges">'+badges+'</div>'
+      +'<div class="rg-desc">'+g.desc+'</div>'
+      +'<div class="rg-explore">Explore Guide <i class="fas fa-arrow-right"></i></div>'
+      +'</a>';
+  }).join('');
+}
+window.addEventListener('scroll',()=>{
+  const b=document.getElementById('bttBtn');
+  if(b) b.classList.toggle('visible',window.scrollY>500);
+},{passive:true});
+document.addEventListener('DOMContentLoaded',renderRelatedGuides);
+</script>
+<script>
+// MOBILE DRAWER
+(function(){
+  var btn=document.getElementById('mNavMenuBtn');
+  var drawer=document.getElementById('mDrawer');
+  var overlay=document.getElementById('mDrawerOverlay');
+  if(!btn)return;
+  function open(){drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');btn.innerHTML='<i class="fas fa-times"></i>';}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.innerHTML='<i class="fas fa-bars"></i>';}
+  btn.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script><script src="../../Optimization/navbar-autohide.js"></script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

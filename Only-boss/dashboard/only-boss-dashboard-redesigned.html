@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- Chart.js for Activity Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         <!-- Dashboard Specific Styles -->
     <link rel="stylesheet" href="only-boss-dashboard-new.css">
     
@@ -83,6 +84,116 @@
 
     <!-- Activity Logger -->
     <script src="../shared/activity-logger.js"></script>
+
+    <!-- ============================================================
+         ACTIVITY ANALYTICS DASHBOARD
+         Live stats, pie chart, bar chart, recent log feed
+         Auto-syncs to GitHub every 60 seconds via GitHub API
+         ============================================================ -->
+    <div class="dashboard-container" style="margin-top: 0; padding-top: 0;">
+        <!-- Section Header -->
+        <div class="section-header" style="margin-top: 30px;">
+            <h2><i class="fas fa-chart-line"></i> Activity Analytics</h2>
+            <p>Real-time admin activity monitoring — auto-backed up to GitHub every minute</p>
+        </div>
+
+        <!-- Stat Row -->
+        <div class="act-stat-row" id="actStatRow">
+            <div class="act-stat-card">
+                <i class="fas fa-bolt"></i>
+                <div>
+                    <span class="act-stat-num" id="actStatToday">–</span>
+                    <span class="act-stat-label">Today</span>
+                </div>
+            </div>
+            <div class="act-stat-card">
+                <i class="fas fa-calendar-week"></i>
+                <div>
+                    <span class="act-stat-num" id="actStatWeek">–</span>
+                    <span class="act-stat-label">This Week</span>
+                </div>
+            </div>
+            <div class="act-stat-card">
+                <i class="fas fa-layer-group"></i>
+                <div>
+                    <span class="act-stat-num" id="actStatTotal">–</span>
+                    <span class="act-stat-label">All Time</span>
+                </div>
+            </div>
+            <div class="act-stat-card act-stat-sync" id="actSyncCard">
+                <i class="fas fa-cloud-upload-alt" id="actSyncIcon"></i>
+                <div>
+                    <span class="act-stat-num" id="actSyncStatus">–</span>
+                    <span class="act-stat-label">GitHub Sync</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="act-charts-row">
+            <!-- Pie: Activity by Type -->
+            <div class="act-chart-card">
+                <div class="act-chart-header">
+                    <i class="fas fa-chart-pie"></i> Activity by Type
+                </div>
+                <div class="act-pie-wrap">
+                    <canvas id="actPieChart"></canvas>
+                </div>
+                <div id="actPieLegend" class="act-pie-legend"></div>
+            </div>
+
+            <!-- Bar: Activity by Hour -->
+            <div class="act-chart-card act-chart-card--wide">
+                <div class="act-chart-header">
+                    <i class="fas fa-chart-bar"></i> Activity by Hour of Day
+                    <span class="act-chart-sub">Last 7 days</span>
+                </div>
+                <div style="position:relative; height:200px;">
+                    <canvas id="actBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="act-feed-card">
+            <div class="act-feed-header">
+                <span><i class="fas fa-stream"></i> Recent Activity Feed</span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="act-btn act-btn--sm" onclick="actManualSync()" id="actSyncBtn" title="Sync to GitHub now">
+                        <i class="fas fa-upload"></i> Sync Now
+                    </button>
+                    <button class="act-btn act-btn--sm act-btn--danger" onclick="actClearLogs()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                    <button class="act-btn act-btn--sm" onclick="actRefresh()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="act-filters">
+                <button class="act-filter-btn active" onclick="actFilter('all', this)">All</button>
+                <button class="act-filter-btn" onclick="actFilter('upload', this)"><i class="fas fa-upload"></i> Upload</button>
+                <button class="act-filter-btn" onclick="actFilter('delete', this)"><i class="fas fa-trash"></i> Delete</button>
+                <button class="act-filter-btn" onclick="actFilter('edit', this)"><i class="fas fa-edit"></i> Edit</button>
+                <button class="act-filter-btn" onclick="actFilter('login', this)"><i class="fas fa-key"></i> Login</button>
+                <button class="act-filter-btn" onclick="actFilter('system', this)"><i class="fas fa-cog"></i> System</button>
+                <button class="act-filter-btn" onclick="actFilter('error', this)"><i class="fas fa-exclamation-circle"></i> Error</button>
+            </div>
+
+            <div id="actFeed" class="act-feed-body">
+                <div class="act-empty">
+                    <i class="fas fa-inbox"></i>
+                    <p>No activity recorded yet</p>
+                    <small>Actions in Content Manager, Projects, etc. will appear here</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- GitHub Sync Status Banner -->
+        <div id="actGithubBanner" class="act-github-banner" style="display:none;"></div>
+    </div>
 
     <!-- Dashboard JavaScript -->
     <script>
@@ -368,8 +479,282 @@
                 console.log('✅ Mobile mode: Manager pages will use mobile-optimized styling');
             }
         })();
+
+        // ======================================================
+        //  ACTIVITY ANALYTICS  (Charts + Feed + GitHub Sync)
+        // ======================================================
+        (function() {
+            /* ── Palette ── */
+            const TYPE_COLORS = {
+                upload:  '#4CAF50',
+                delete:  '#f44336',
+                edit:    '#2196F3',
+                update:  '#FF9800',
+                system:  '#9C27B0',
+                error:   '#FF5722',
+                login:   '#00BCD4',
+            };
+            const GITHUB_API = 'https://api.github.com/repos/Akhinoor14/A3KM-Studio/contents/';
+            const LOG_PATH   = 'Only-boss/activity-logs/activity-log.json';
+
+            let pieChart   = null;
+            let barChart   = null;
+            let activeFilter = 'all';
+            let syncTimer  = null;
+
+            /* ── Helpers ── */
+            function pad2(n) { return String(n).padStart(2, '0'); }
+
+            function relativeTime(ts) {
+                const diff = Date.now() - ts;
+                if (diff < 60000)  return 'Just now';
+                if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+                if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+                return Math.floor(diff / 86400000) + 'd ago';
+            }
+
+            function formatTime(ts) {
+                const d = new Date(ts);
+                return `${pad2(d.getHours())}:${pad2(d.getMinutes())} ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}`;
+            }
+
+            /* ── Render Stats ── */
+            function renderStats(stats) {
+                const el = id => document.getElementById(id);
+                if (!stats) return;
+                el('actStatToday').textContent = stats.today  ?? 0;
+                el('actStatWeek').textContent  = stats.thisWeek ?? 0;
+                el('actStatTotal').textContent = stats.total ?? 0;
+            }
+
+            /* ── Pie Chart ── */
+            function renderPie(byType) {
+                const canvas = document.getElementById('actPieChart');
+                if (!canvas) return;
+                const labels  = Object.keys(byType).filter(k => byType[k] > 0);
+                const data    = labels.map(k => byType[k]);
+                const colors  = labels.map(k => TYPE_COLORS[k] || '#888');
+
+                if (pieChart) pieChart.destroy();
+                pieChart = new Chart(canvas, {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+                    options: {
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` }
+                            }
+                        },
+                        cutout: '60%',
+                        animation: { duration: 600 }
+                    }
+                });
+
+                // Custom Legend
+                const legendEl = document.getElementById('actPieLegend');
+                if (legendEl) {
+                    legendEl.innerHTML = labels.map((l, i) =>
+                        `<span class="act-pie-item">
+                           <span class="act-pie-dot" style="background:${colors[i]}"></span>
+                           ${l} <b>${data[i]}</b>
+                         </span>`
+                    ).join('');
+                }
+            }
+
+            /* ── Bar Chart ── */
+            function renderBar(byHour) {
+                const canvas = document.getElementById('actBarChart');
+                if (!canvas) return;
+                const labels = Array.from({length:24}, (_,i) =>
+                    i === 0 ? '12a' : i < 12 ? i+'a' : i === 12 ? '12p' : (i-12)+'p'
+                );
+                if (barChart) barChart.destroy();
+                barChart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Actions',
+                            data: byHour,
+                            backgroundColor: 'rgba(204,0,0,0.6)',
+                            borderColor: '#CC0000',
+                            borderWidth: 1,
+                            borderRadius: 3
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                            y: { ticks: { color: '#aaa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+                        },
+                        plugins: { legend: { display: false } },
+                        animation: { duration: 400 }
+                    }
+                });
+            }
+
+            /* ── Feed ── */
+            function renderFeed(logs) {
+                const feed = document.getElementById('actFeed');
+                if (!feed) return;
+                let filtered = activeFilter === 'all' ? logs : logs.filter(l => l.type === activeFilter);
+                if (!filtered.length) {
+                    feed.innerHTML = `<div class="act-empty">
+                        <i class="fas fa-inbox"></i>
+                        <p>No ${activeFilter === 'all' ? '' : activeFilter+' '}activity yet</p>
+                        <small>Actions will appear here once recorded</small>
+                    </div>`;
+                    return;
+                }
+                feed.innerHTML = filtered.slice(0, 50).map(log => {
+                    const color = TYPE_COLORS[log.type] || '#888';
+                    return `<div class="act-feed-item" data-type="${log.type}">
+                        <span class="act-feed-dot" style="background:${color}"></span>
+                        <div class="act-feed-content">
+                            <span class="act-feed-type" style="color:${color}">${(log.type||'').toUpperCase()}</span>
+                            <span class="act-feed-msg">${log.activity || '–'}</span>
+                        </div>
+                        <div class="act-feed-meta">
+                            <span class="act-feed-status ${log.status === 'success' ? 'ok' : log.status === 'error' ? 'err' : ''}">${log.status || ''}</span>
+                            <span class="act-feed-time" title="${new Date(log.timestamp).toLocaleString()}">${relativeTime(log.timestamp)}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            /* ── Main Refresh ── */
+            window.actRefresh = function() {
+                if (typeof ActivityLogger === 'undefined') return;
+                const stats  = ActivityLogger.getStatistics();
+                const logs   = ActivityLogger.getLogs(500);
+                renderStats(stats);
+                renderPie(stats.byType || {});
+                renderBar(stats.byHour || new Array(24).fill(0));
+                renderFeed(logs);
+            };
+
+            /* ── Filter ── */
+            window.actFilter = function(type, btn) {
+                activeFilter = type;
+                document.querySelectorAll('.act-filter-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                actRefresh();
+            };
+
+            /* ── Clear Logs ── */
+            window.actClearLogs = function() {
+                if (!confirm('Clear ALL activity logs from this device?\n\nThis cannot be undone.')) return;
+                if (typeof ActivityLogger !== 'undefined') ActivityLogger.clearLogs();
+                actRefresh();
+            };
+
+            /* ── GitHub Sync ── */
+            async function saveLogsToGitHub(manual) {
+                const token = localStorage.getItem('github_token');
+                if (!token) {
+                    setSyncStatus('No Token', false);
+                    if (manual) showBanner('⚠️ No GitHub token found. Save your token in Command Center first.', 'warn');
+                    return;
+                }
+                if (typeof ActivityLogger === 'undefined') return;
+                const logs = ActivityLogger.getLogs(1000);
+                const payload = JSON.stringify({ lastSync: new Date().toISOString(), logs }, null, 2);
+                const content = btoa(unescape(encodeURIComponent(payload)));
+
+                try {
+                    // check if file exists for SHA
+                    let sha = null;
+                    const getRes = await fetch(GITHUB_API + LOG_PATH, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (getRes.ok) { const j = await getRes.json(); sha = j.sha; }
+
+                    const body = { message: `Auto-sync activity logs (${logs.length} entries)`, content };
+                    if (sha) body.sha = sha;
+
+                    const putRes = await fetch(GITHUB_API + LOG_PATH, {
+                        method: 'PUT',
+                        headers: {
+                            Authorization: `token ${token}`,
+                            Accept: 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    if (!putRes.ok) throw new Error((await putRes.json()).message || putRes.status);
+
+                    const now = new Date().toLocaleTimeString();
+                    setSyncStatus('Synced ' + now, true);
+                    if (manual) showBanner(`✅ Synced ${logs.length} logs to GitHub at ${now}`, 'ok');
+                } catch(e) {
+                    setSyncStatus('Sync Failed', false);
+                    if (manual) showBanner('❌ GitHub sync failed: ' + e.message, 'err');
+                    console.error('[Activity Sync]', e);
+                }
+            }
+
+            function setSyncStatus(msg, ok) {
+                const el = document.getElementById('actSyncStatus');
+                const ic = document.getElementById('actSyncIcon');
+                const card = document.getElementById('actSyncCard');
+                if (el) el.textContent = msg;
+                if (ic) ic.className = ok ? 'fas fa-check-circle' : 'fas fa-cloud-upload-alt';
+                if (card) card.classList.toggle('act-stat-synced', !!ok);
+            }
+
+            function showBanner(msg, type) {
+                const b = document.getElementById('actGithubBanner');
+                if (!b) return;
+                b.textContent = msg;
+                b.className = `act-github-banner act-banner--${type}`;
+                b.style.display = 'block';
+                clearTimeout(b._t);
+                b._t = setTimeout(() => { b.style.display = 'none'; }, 5000);
+            }
+
+            window.actManualSync = async function() {
+                const btn = document.getElementById('actSyncBtn');
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing…'; }
+                await saveLogsToGitHub(true);
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Sync Now'; }
+            };
+
+            /* ── Real-time update on new log entries ── */
+            window.addEventListener('activityLogged', () => actRefresh());
+
+            /* ── Auto-sync every 60 s ── */
+            function startAutoSync() {
+                saveLogsToGitHub(false);            // run once immediately
+                syncTimer = setInterval(() => saveLogsToGitHub(false), 60000);
+            }
+
+            /* ── Boot ── */
+            document.addEventListener('DOMContentLoaded', () => {
+                // Small delay so auth check runs first
+                setTimeout(() => {
+                    actRefresh();
+                    startAutoSync();
+                }, 800);
+            });
+        })();
     </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../Optimization/cursor-effects.js" defer></script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">নেতৃত্ব হলো সেবা — ক্ষমতা নয়।</p>
+      <cite class="wg-qsrc">&#8212; হযরত আবু বকর সিদ্দিক (রাঃ)</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

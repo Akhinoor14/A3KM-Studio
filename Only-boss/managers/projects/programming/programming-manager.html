@@ -135,7 +135,7 @@
     .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(204,0,0,0.5); }
     .container {
       position: relative; z-index: 1;
-      max-width: 1600px; margin: 0 auto; padding: 100px 40px 40px;
+      max-width: 1600px; margin: 0 auto; padding: 10px 40px 40px;
       display: grid; grid-template-columns: 280px 1fr; gap: 30px;
     }
     .sidebar {
@@ -506,38 +506,6 @@
   </div>
 
     <!-- Fixed Top Navbar -->
-    <div class="top-navbar">
-        <div class="navbar-content">
-            <div class="navbar-brand">
-                <div class="brand-icon">💻</div>
-                <div>
-                    <h1>Programming Projects Manager</h1>
-                    <p>Code Management System</p>
-                </div>
-            </div>
-            <div class="navbar-actions">
-                <span id="tokenStatus" class="token-status checking">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Checking token...
-                </span>
-                <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
-                    <i class="fas fa-bug"></i> Debug
-                </button>
-                <a href="../category-selector.html" class="btn btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back</span>
-                </a>
-                <button class="btn btn-save" onclick="saveJSON()">
-                    <i class="fas fa-save"></i>
-                    <span>Save JSON</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Container -->
     <div class="container">
         <!-- Sidebar -->
@@ -563,6 +531,16 @@
                     </div>
                 </div>
             </nav>
+
+            <!-- GitHub Token Status -->
+            <div style="padding:14px;border-top:1px solid rgba(204,0,0,0.25);">
+                <div style="font-size:0.8rem;font-weight:700;color:var(--primary-red,#CC0000);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+                <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                    <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-bug"></i> Debug</button>
+                </div>
+            </div>
 
             <!-- Quick Stats -->
             <div class="quick-stats">
@@ -603,7 +581,7 @@
             <!-- Restore active tab (runs AFTER tab elements exist) -->
             <script>
               (function() {
-                const savedTab = localStorage.getItem('programmingManager_activeTab') || 'dashboard';
+                const savedTab = 'dashboard';
                 const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
                 const tabContent = document.getElementById(savedTab + 'Tab');
                 if (tabBtn) tabBtn.classList.add('active');
@@ -1175,13 +1153,24 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Programming Manager - Initializing...');
+            console.log('📍 Script dependencies check:', {
+                UnifiedTokenManager: typeof UnifiedTokenManager !== 'undefined',
+                CentralAPIGateway: typeof CentralAPIGateway !== 'undefined',
+                GitHubContentUploader: typeof GitHubContentUploader !== 'undefined',
+                GitHubAPIHandler: typeof GitHubAPIHandler !== 'undefined'
+            });
+            
             // Initialize central API system first
-            tokenManager = new UnifiedTokenManager();
             try {
+                tokenManager = new UnifiedTokenManager();
                 centralAPI = CentralAPIGateway.getInstance();
                 githubUploader = centralAPI.getUploader();
+                console.log('✅ Central API initialized successfully');
             } catch (e) {
-                console.warn('⚠️ CentralAPIGateway init failed (non-critical):', e.message);
+                console.error('❌ CentralAPIGateway init failed:', e.message);
+                alert('⚠️ Programming Manager failed to initialize.\n\nError: ' + e.message + '\n\nCheck browser console (F12) for details.');
+                return;
             }
             
             // Initialize project modules
@@ -1195,7 +1184,10 @@
             // Load token through unified manager
             const token = tokenManager.loadToken();
             if (token) {
-                localStorage.setItem('githubToken', token); // Sync to project handler
+                localStorage.setItem('github_token', token);
+                console.log('✅ Token loaded and synced:', token.substring(0, 10) + '...');
+            } else {
+                console.warn('⚠️ No token found - uploads will fail');
             }
             githubHandler.loadToken();
             
@@ -1207,7 +1199,8 @@
                 loadContent();
             }, 60000);
 
-            console.log('✅ Programming Manager initialized with Central API');
+            console.log('✅ Programming Manager - Initialization complete');
+            console.log('📊 Current data:', { programs: programmingData.programs?.length || 0, version: programmingData.version });
             console.log('🔗 Token system: Unified');
 
             // Rich text editor event listeners
@@ -1270,7 +1263,8 @@
                     tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
                     
                     // Sync to project handler
-                    localStorage.setItem('githubToken', token);
+                    localStorage.setItem('github_token', token);
+                    console.log('✅ Token validated successfully');
                 } else {
                     tokenBadge.className = 'token-status missing';
                     tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
@@ -1304,18 +1298,23 @@
 
         // ===== DATA LOADING =====
         async function loadContent() {
+            console.log('📂 Loading programming data from GitHub...');
             try {
                 const response = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
                 if (!response.ok) throw new Error('GitHub raw ' + response.status);
                 programmingData = await response.json();
                 currentContent = programmingData.programs || [];
+                console.log('✅ Data loaded from GitHub:', currentContent.length, 'projects');
             } catch (err) {
+                console.warn('⚠️ GitHub fetch failed, trying local fallback:', err.message);
                 // Fallback: try local relative path (offline / first load)
                 try {
                     const fb = await fetch('../../../../Projects%20Code/programming/programs.json?t=' + Date.now());
                     programmingData = await fb.json();
                     currentContent = programmingData.programs || [];
+                    console.log('✅ Data loaded from local:', currentContent.length, 'projects');
                 } catch {
+                    console.error('❌ Both GitHub and local load failed');
                     currentContent = programmingData.programs || [];
                 }
             }
@@ -1354,9 +1353,22 @@
                     badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
                 }, 3000);
             } catch (err) {
+                console.error('❌ GitHub push failed:', err);
                 if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }
                 badge.className = prevClass;
                 badge.innerHTML = prevHTML;
+                
+                // Check if token is missing
+                const currentToken = localStorage.getItem('github_token');
+                console.log('🔍 Token check:', currentToken ? 'EXISTS (' + currentToken.length + ' chars)' : 'MISSING');
+                
+                if (!currentToken || err.message.toLowerCase().includes('token')) {
+                    if (confirm('⚠️ GitHub token missing or invalid.\n\nError: ' + err.message + '\n\nConfigure in Command Center?')) {
+                        window.location.href = '../../shared/command-center.html?tab=api';
+                    }
+                } else {
+                    alert('❌ GitHub Push Failed\n\n' + err.message + '\n\nCheck browser console (F12) for details.');
+                }
                 throw err; // re-throw so callers can show error
             }
         }
@@ -1426,6 +1438,7 @@
             // Token check (book-manager style)
             const tokenStatus = await centralAPI.getStatus();
             if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+                console.error('❌ Token check failed:', tokenStatus);
                 alert('❌ GitHub token is missing or invalid. Please configure your token first.');
                 return;
             }
@@ -1436,10 +1449,13 @@
             const difficulty = document.getElementById('projectDifficulty').value;
             const code = document.getElementById('projectCode').value.trim();
             
-            if (!title || !language || !category || !difficulty || !code) {
-                alert('⚠️ Please fill all required fields!');
-                return;
-            }
+            console.log('🔍 Upload Project - Validation:', { title, language, category, difficulty, codeLength: code.length });
+            
+            if (!title) { alert('⚠️ Project title is required!'); return; }
+            if (!language) { alert('⚠️ Language is required!'); return; }
+            if (!category) { alert('⚠️ Category is required!'); return; }
+            if (!difficulty) { alert('⚠️ Difficulty is required!'); return; }
+            if (!code) { alert('⚠️ Code is required!'); return; }
 
             // Early duplicate check (before showing progress bar)
             if (!editingProjectId && !checkDuplicate(title)) return;
@@ -1594,6 +1610,7 @@
                 await delay(1000);
                 
                 progress.classList.remove('active');
+                console.log('✅ Project ' + (editingProjectId ? 'updated' : 'added') + ' successfully:', newProject.id);
                 alert(editingProjectId
                     ? `✅ Project Updated!\n\n📚 ${title}`
                     : `✅ Project Added Successfully!\n\n📚 ${title}\n📂 Category: ${category}\n💻 Language: ${language}`);
@@ -1608,7 +1625,7 @@
             } catch (error) {
                 progressText.textContent = '⚠️ Upload Error';
                 console.error('❌ Upload failed:', error);
-                alert(`❌ Upload failed:\n\n${error.message}`);
+                alert(`❌ Upload failed:\n\n${error.message}\n\nCheck browser console (F12) for details.`);
                 progress.classList.remove('active');
             }
         }
@@ -1749,7 +1766,13 @@
 
         function editProject(id) {
             const project = programmingData.programs.find(p => p.id === id);
-            if (!project) { alert('Project not found!'); return; }
+            if (!project) {
+                console.error('❌ Project not found:', id);
+                alert('Project not found!');
+                return;
+            }
+            
+            console.log('✏️ Editing project:', { id, title: project.title });
 
             editingProjectId = id;
 
@@ -1837,9 +1860,18 @@
 
         async function deleteProject(id) {
             const project = programmingData.programs.find(p => p.id === id);
-            if (!confirm(`Delete "${project?.title || id}"? This cannot be undone.`)) return;
+            const title = project?.title || id;
+            
+            console.log('🗑️ Delete requested:', { id, title });
+            
+            if (!confirm(`Delete "${title}"? This cannot be undone.`)) {
+                console.log('❌ Delete cancelled by user');
+                return;
+            }
             
             programmingData.programs = programmingData.programs.filter(p => p.id !== id);
+            console.log('✅ Project deleted locally:', title);
+            
             updateStatistics();
             renderManageContent();
             updateDashboard();
@@ -1847,9 +1879,10 @@
             
             // Auto-push to GitHub via central pushData
             try {
-                await pushData(`Delete project: ${project?.title || id}`);
+                await pushData(`Delete project: ${title}`);
+                console.log('✅ Delete pushed to GitHub successfully');
             } catch (err) {
-                console.error('GitHub push failed after delete:', err);
+                console.error('❌ GitHub push failed after delete:', err);
                 alert('⚠️ Deleted locally but GitHub push failed: ' + err.message);
             }
         }
@@ -2128,5 +2161,19 @@
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
     <!-- #2 Push Progress Bar -->
     <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">একটি ভালো অ্যালগরিদম হলো জ্ঞানের সর্বোচ্চ প্রকাশ।</p>
+      <cite class="wg-qsrc">&#8212; আল-খোয়ারিজমি অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

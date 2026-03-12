@@ -741,40 +741,6 @@
   </div>
 
     <!-- Header -->
-    <div class="header">
-        <div class="header-container">
-            <div class="header-left">
-                <div class="arduino-icon">
-                    <i class="fas fa-microchip"></i>
-                </div>
-                <div class="header-title">
-                    <h1>Arduino Projects Manager</h1>
-                    <p>Upload, edit, and organize Arduino UNO projects</p>
-                </div>
-            </div>
-            <div class="header-actions">
-                <span id="tokenStatus" class="token-status checking">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Checking token...
-                </span>
-                <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
-                    <i class="fas fa-bug"></i> Debug
-                </button>
-                <a href="../category-selector.html" class="btn btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back</span>
-                </a>
-                <button class="btn btn-save" onclick="saveJSON()">
-                    <i class="fas fa-save"></i>
-                    <span>Save JSON</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Container -->
     <div class="container">
         <!-- Sidebar -->
@@ -799,6 +765,16 @@
                 <div class="tab-item" onclick="switchTab('structure')">
                     <i class="fas fa-folder-tree"></i>
                     <span>Folder Structure</span>
+                </div>
+            </div>
+
+            <!-- GitHub Token Status -->
+            <div style="padding:14px;border-top:1px solid rgba(0,137,123,0.3);">
+                <div style="font-size:0.8rem;font-weight:700;color:var(--arduino-teal);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+                <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                    <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-bug"></i> Debug</button>
                 </div>
             </div>
 
@@ -832,7 +808,7 @@
         <!-- Restore saved tab before page renders (prevents flash) -->
         <script>
           (function() {
-            const savedTab = localStorage.getItem('arduinoManager_activeTab') || 'dashboard';
+            const savedTab = 'dashboard';
             // Activate the appropriate tab
             const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
             let tabContent = document.getElementById(savedTab + 'Tab');
@@ -863,7 +839,7 @@
                                 <i class="fas fa-bolt" style="font-size: 1.8rem; color: white;"></i>
                             </div>
                             <div>
-                                <h3 style="color: var(--arduino-teal); font-size: 2rem; font-weight: 800;">23</h3>
+                                <h3 id="dashTotalProjects" style="color: var(--arduino-teal); font-size: 2rem; font-weight: 800;">23</h3>
                                 <p style="color: var(--text-secondary); font-size: 0.9rem;">Total Projects</p>
                             </div>
                         </div>
@@ -875,7 +851,7 @@
                                 <i class="fas fa-layer-group" style="font-size: 1.8rem; color: white;"></i>
                             </div>
                             <div>
-                                <h3 style="color: #4CAF50; font-size: 2rem; font-weight: 800;">4</h3>
+                                <h3 id="dashTotalCategories" style="color: #4CAF50; font-size: 2rem; font-weight: 800;">4</h3>
                                 <p style="color: var(--text-secondary); font-size: 0.9rem;">Categories</p>
                             </div>
                         </div>
@@ -1874,6 +1850,8 @@
 
         // Load existing project data
         async function loadExistingData() {
+            console.log('📂 Loading arduino data from GitHub...');
+            
             // GitHub raw first (always most current)
             try {
                 const r = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
@@ -1884,9 +1862,12 @@
                     renderProjectsList();
                     document.getElementById('jsonEditor').value = JSON.stringify(arduinoData, null, 2);
                     generateFolderStructure();
+                    console.log('✅ Data loaded from GitHub:', arduinoData.projects?.length || 0, 'projects');
                     return;
                 }
-            } catch(e) { /* fall through to cache */ }
+            } catch(e) { 
+                console.warn('⚠️ GitHub fetch failed, trying cache fallback:', e.message);
+            }
 
             // Cache fallback (offline support)
             const cached = loadFromCache();
@@ -1895,17 +1876,24 @@
                 updateStats();
                 renderProjectsList();
                 document.getElementById('jsonEditor').value = JSON.stringify(arduinoData, null, 2);
+                console.log('✅ Data loaded from cache:', arduinoData.projects?.length || 0, 'projects');
                 return;
             }
 
             // Local file last resort
+            console.warn('⚠️ Cache empty, trying local file fallback...');
             try {
                 const response = await fetch('../../../../Projects Code/Arduino/arduino-data.json');
                 if (response.ok) {
                     arduinoData = await response.json();
                     saveToCache(arduinoData);
-                } else { console.log('?? No data file, starting fresh'); }
-            } catch (error) { console.log('?? Using default empty data'); }
+                    console.log('✅ Data loaded from local:', arduinoData.projects?.length || 0, 'projects');
+                } else { 
+                    console.error('❌ No data file found, starting fresh'); 
+                }
+            } catch (error) { 
+                console.error('❌ All data load methods failed, using default empty data'); 
+            }
             updateStats();
             renderProjectsList();
             document.getElementById('jsonEditor').value = JSON.stringify(arduinoData, null, 2);
@@ -1927,6 +1915,10 @@
             document.getElementById('sensorProjects').textContent = stats.sensors;
             document.getElementById('displayProjects').textContent = stats.displays;
             document.getElementById('advancedProjects').textContent = stats.advanced;
+            const dashTP = document.getElementById('dashTotalProjects');
+            if (dashTP) dashTP.textContent = stats.total;
+            const dashTC = document.getElementById('dashTotalCategories');
+            if (dashTC) dashTC.textContent = [...new Set(arduinoData.projects.map(p => p.category).filter(Boolean))].length;
         }
 
         // Render projects list with pagination
@@ -2312,10 +2304,13 @@
                 progressText.textContent = '✅ Complete!';
                 await new Promise(r => setTimeout(r, 1000));
                 progressContainer.style.display = 'none';
+                console.log('✅ Project uploaded successfully:', newProject.title);
                 showAlert('success', `✅ "${newProject.title}" uploaded to GitHub!`);
             } catch (error) {
                 progressContainer.style.display = 'none';
-                showAlert('error', '❌ Upload failed: ' + error.message);
+                console.error('❌ Upload failed:', error.message);
+                console.error('❌ Full error:', error);
+                showAlert('error', '❌ Upload failed: ' + error.message + '\n\nCheck console (F12) for details.');
             }
         });
 
@@ -2548,26 +2543,6 @@
             } catch (error) {
                 showAlert('error', '? Cannot format invalid JSON');
             }
-        }
-
-        // Save JSON
-        function saveJSON() {
-            validateJSON();
-            downloadJSON();
-        }
-
-        // Download JSON
-        function downloadJSON() {
-            const dataStr = JSON.stringify(arduinoData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'arduino-data.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showAlert('success', '✅ JSON downloaded! Upload to: Projects Code/Arduino/arduino-data.json');
         }
 
         // Generate folder structure
@@ -2816,10 +2791,19 @@
         let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
             let tokenManager, centralAPI, githubUploader; // Central API integration
         window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Arduino Manager - Initializing...');
+            
             // Initialize central API system first
-            tokenManager = new UnifiedTokenManager();
-            centralAPI = CentralAPIGateway.getInstance();
-            githubUploader = centralAPI.getUploader(); // Book-manager style uploader
+            try {
+                tokenManager = new UnifiedTokenManager();
+                centralAPI = CentralAPIGateway.getInstance();
+                githubUploader = centralAPI.getUploader(); // Book-manager style uploader
+                console.log('✅ Central API initialized successfully');
+            } catch (e) {
+                console.error('❌ CentralAPIGateway init failed:', e.message);
+                alert('⚠️ Arduino Manager failed to initialize. Check console (F12) for details.');
+                return;
+            }
 
             // Initialize project modules
             githubHandler = new GitHubAPIHandler();
@@ -2832,12 +2816,16 @@
             // Load token through unified manager
             const token = tokenManager.loadToken();
             if (token) {
-                localStorage.setItem('githubToken', token); // Sync to project handler
+                localStorage.setItem('github_token', token); // Sync to project handler
+                console.log('✅ Token loaded and synced:', token.substring(0, 10) + '...');
+            } else {
+                console.warn('⚠️ No token found in storage');
             }
             githubHandler.loadToken();
             
             updateTokenStatus();
-            console.log('? Arduino Manager initialized with Central API');
+            console.log('✅ Arduino Manager - Initialization complete');
+            console.log('📊 Modules loaded: TokenManager, CentralAPI, GitHubHandler, VersionHistory, Tags, Search, Analytics');
         });
 
         // Rich text editor functions for add modal
@@ -2980,11 +2968,12 @@
                 if (!token) throw new Error('No token');
                 
                 const validation = await tokenManager.validateToken(token);
+                console.log('🔍 Token validation result:', validation.valid ? '✅ Valid' : '❌ Invalid');
                 
                 if (validation.valid) {
                     tokenBadge.className = 'token-status active';
                     tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
-                    localStorage.setItem('githubToken', token); // Sync to project handler
+                    localStorage.setItem('github_token', token); // Sync to project handler
                 } else {
                     tokenBadge.className = 'token-status missing';
                     tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
@@ -3046,16 +3035,29 @@
             try {
                 const tokenStatus = await centralAPI.getStatus();
                 if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+                    console.error('❌ Token validation failed:', tokenStatus.token);
+                    const token = localStorage.getItem('github_token');
+                    console.error('❌ Token in localStorage:', token ? 'exists' : 'missing');
                     throw new Error('No valid token');
                 }
                 if (bar) bar.style.width = '70%';
+                console.log('📤 Pushing data to GitHub:', commitMsg);
                 await githubUploader.uploadFile(GITHUB_REPO_PATH, JSON.stringify(arduinoData, null, 2), commitMsg);
                 badge.className = 'token-status active';
                 badge.innerHTML = '<i class="fas fa-check-circle"></i> Saved ✔';
                 if (bar) { bar.style.width = '100%'; setTimeout(() => { bar.style.width = '0%'; bar.parentElement.style.display = 'none'; }, 800); }
                 logActivity(commitMsg);
+                console.log('✅ Data pushed successfully:', commitMsg);
                 setTimeout(() => { badge.className = 'token-status active'; badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active'; }, 3000);
-            } catch(e) { badge.className = prevClass; badge.innerHTML = prevHTML; if (bar) bar.parentElement.style.display = 'none'; throw e; }
+            } catch(e) { 
+                console.error('❌ Push failed:', e.message);
+                console.error('❌ Full error:', e);
+                badge.className = prevClass; 
+                badge.innerHTML = prevHTML; 
+                if (bar) bar.parentElement.style.display = 'none'; 
+                alert('❌ GitHub push failed: ' + e.message + '\n\nCheck console (F12) for details.');
+                throw e; 
+            }
         }
 
         function logActivity(action) {
@@ -3387,5 +3389,19 @@
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
     <!-- #2 Push Progress Bar -->
     <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">পরীক্ষা-নিরীক্ষার মাধ্যমে আবিষ্কার — এটিই বৈজ্ঞানিক পদ্ধতির ভিত্তি।</p>
+      <cite class="wg-qsrc">&#8212; জাবির ইবনে হাইয়ান অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

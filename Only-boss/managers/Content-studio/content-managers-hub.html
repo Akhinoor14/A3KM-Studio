@@ -286,22 +286,6 @@
   <div class="neural-cursor" id="neuralCursor"></div>
   <div class="neural-cursor-dot" id="neuralCursorDot"></div>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-inner">
-      <div class="header-left">
-        <div class="header-icon">&#128193;</div>
-        <div class="header-text">
-          <h1>Content Managers <span class="header-badge">Boss Panel</span></h1>
-          <p>Select a content type to upload, edit and manage your data</p>
-        </div>
-      </div>
-      <a href="../../dashboard/only-boss-dashboard-redesigned.html" class="back-btn">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
-      </a>
-    </div>
-  </div>
-
   <!-- Stats Strip -->
   <div class="stats-strip">
     <div class="strip-stat">
@@ -447,35 +431,109 @@
 
     // Load counts from GitHub
     async function loadCounts() {
-      const types = [
-        { strip: 'booksCount', card: 'booksCountCard', type: 'books-pdfs', file: 'books.json', key: 'books', extra: null },
-        { strip: 'videosCount', card: 'videosCountCard', type: 'educational-videos', file: 'courses.json', key: 'courses', extra: 'videosEpisodes' },
-        { strip: 'papersCount', card: 'papersCountCard', type: 'research-papers', file: 'papers.json', key: 'papers', extra: null },
-        { strip: 'vlogsCount', card: 'vlogsCountCard', type: 'video-content', file: 'videos.json', key: 'videos', extra: null },
-        { strip: 'postsCount', card: 'postsCountCard', type: 'written-posts', file: 'posts.json', key: 'posts', extra: null }
-      ];
+      const BASE = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Content%20Studio/';
       let total = 0;
-      for (const t of types) {
-        try {
-          const res = await fetch(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Content%20Studio/${t.type}/${t.file}`);
-          if (!res.ok) continue;
+
+      // ── Books ──
+      try {
+        const res = await fetch(BASE + 'books-pdfs/books.json');
+        if (res.ok) {
           const data = await res.json();
-          const items = data[t.key] || [];
-          const count = items.length;
+          const books = data.books || [];
+          const count = books.length;
           total += count;
-          [t.strip, t.card].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
-          if (t.extra === 'videosEpisodes') {
-            let eps = 0;
-            items.forEach(c => { if (c.episodes) eps += c.episodes.length; });
-            const epEl = document.getElementById('videosEpisodes');
-            if (epEl) epEl.textContent = eps;
-          }
-        } catch(e) {}
-      }
+          ['booksCount','booksCountCard'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
+          let totalMB = 0;
+          books.forEach(b => { const m = parseFloat((b.size || '0').replace(/[^0-9.]/g,'')); if (!isNaN(m)) totalMB += m; });
+          const sizeEl = document.getElementById('booksSize');
+          if (sizeEl) sizeEl.textContent = totalMB > 0 ? totalMB.toFixed(2) + ' MB' : '0 MB';
+        }
+      } catch(e) {}
+
+      // ── Educational Videos ──
+      try {
+        const res = await fetch(BASE + 'educational-videos/courses.json');
+        if (res.ok) {
+          const data = await res.json();
+          const courses = data.courses || [];
+          const count = courses.length;
+          total += count;
+          ['videosCount','videosCountCard'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
+          let eps = 0;
+          courses.forEach(c => { if (c.episodes) eps += c.episodes.length; });
+          const epEl = document.getElementById('videosEpisodes');
+          if (epEl) epEl.textContent = eps;
+        }
+      } catch(e) {}
+
+      // ── Research Papers ──
+      try {
+        const res = await fetch(BASE + 'research-papers/papers.json');
+        if (res.ok) {
+          const data = await res.json();
+          const papers = data.papers || [];
+          const count = papers.length;
+          total += count;
+          ['papersCount','papersCountCard'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
+          let citations = 0;
+          papers.forEach(p => { citations += (parseInt(p.citations) || 0); });
+          const citEl = document.getElementById('papersCitations');
+          if (citEl) citEl.textContent = citations;
+        }
+      } catch(e) {}
+
+      // ── Vlogs (videos.json uses categories structure, not a flat 'videos' array) ──
+      try {
+        const res = await fetch(BASE + 'video-content/videos.json');
+        if (res.ok) {
+          const data = await res.json();
+          let vlogCount = 0;
+          const cats = data.categories || {};
+          Object.values(cats).forEach(cat => {
+            if (cat && typeof cat === 'object') {
+              Object.values(cat).forEach(group => {
+                if (group && group.videos) vlogCount += group.videos.length;
+              });
+            }
+          });
+          total += vlogCount;
+          ['vlogsCount','vlogsCountCard'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = vlogCount; });
+        }
+      } catch(e) {}
+
+      // ── Written Posts ──
+      try {
+        const res = await fetch(BASE + 'written-posts/posts.json');
+        if (res.ok) {
+          const data = await res.json();
+          const posts = data.posts || [];
+          const count = posts.length;
+          total += count;
+          ['postsCount','postsCountCard'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
+          const drafts = posts.filter(p => p.status === 'draft').length;
+          const draftEl = document.getElementById('postsDrafts');
+          if (draftEl) draftEl.textContent = drafts;
+        }
+      } catch(e) {}
+
       const tot = document.getElementById('totalContent');
       if (tot) tot.textContent = total;
     }
     document.addEventListener('DOMContentLoaded', loadCounts);
   </script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">সংগঠিত জ্ঞানই শক্তি — বিচ্ছিন্ন জ্ঞান দুর্বলতা।</p>
+      <cite class="wg-qsrc">&#8212; মাওলানা আব্দুল হামিদ খান ভাসানী</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

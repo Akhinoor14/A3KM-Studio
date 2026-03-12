@@ -254,7 +254,7 @@
 
       background: transparent;
 
-      padding-top: 70px;
+      padding-top: 10px;
 
       position: relative;
 
@@ -1791,59 +1791,6 @@
     <button class="banner-close" onclick="document.getElementById('tokenMissingBanner').style.display='none'" title="Dismiss">&times;</button>
   </div>
 
-  <!-- Fixed Top Navbar -->
-
-  <div class="top-navbar">
-
-    <div class="navbar-content">
-
-      <div class="navbar-brand">
-
-        <div class="brand-icon">📚</div>
-
-        <div>
-
-          <h1>Books Manager</h1>
-
-          <p>Digital Library Management System</p>
-
-        </div>
-
-      </div>
-
-      <div class="navbar-actions">
-
-        <span id="tokenStatus" class="token-status checking">
-
-          <i class="fas fa-spinner fa-spin"></i>
-
-          Checking token...
-
-        </span>
-
-        <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
-
-          <i class="fas fa-sync-alt"></i>
-
-        </button>
-
-        <button id="tokenDebugBtn" class="token-debug-btn">
-
-          <i class="fas fa-code"></i> Debug
-
-        </button>
-
-        <a href="content-managers-hub.html" class="back-btn">
-          <i class="fas fa-arrow-left"></i> Back to Managers Hub
-
-        </a>
-
-      </div>
-
-    </div>
-
-  </div>
-
 
 
   <div class="container">
@@ -1862,7 +1809,7 @@
 
       <div class="sidebar-nav">
 
-        <div class="tab-item" onclick="switchTab('dashboard')">📊 Dashboard</div>
+        <div class="tab-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
 
         <div class="tab-item" onclick="switchTab('upload')">📤 Upload Book</div>
 
@@ -1870,6 +1817,16 @@
 
         <div class="tab-item" onclick="switchTab('stats')">📈 Statistics</div>
 
+      </div>
+
+      <!-- GitHub Token Status -->
+      <div style="padding:14px;border-top:1px solid rgba(204,0,0,0.25);">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--primary-red,#CC0000);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+        <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+        <div style="display:flex;gap:6px;">
+          <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-code"></i> Debug</button>
+        </div>
       </div>
 
       <div class="quick-stats">
@@ -1962,7 +1919,7 @@
 
       <!-- DASHBOARD TAB -->
 
-      <div id="dashboardTab" class="tab-content">
+      <div id="dashboardTab" class="tab-content active">
 
         <div class="stats-grid">
 
@@ -2983,8 +2940,17 @@
   <script>
 
     // Initialize Central API Gateway (handles token management automatically)
-
-    const gateway = CentralAPIGateway.getInstance();
+    console.log('📚 Books Manager - Initializing...');
+    
+    let gateway;
+    try {
+      gateway = CentralAPIGateway.getInstance();
+      console.log('✅ CentralAPIGateway initialized successfully');
+    } catch (e) {
+      console.error('❌ CentralAPIGateway init failed:', e.message);
+      alert('⚠️ Books Manager failed to initialize. Check console (F12) for details.');
+      throw e;
+    }
 
     
 
@@ -3193,15 +3159,37 @@
 
     
 
+    console.log('🎨 Initializing SVG Generator...');
+
     const svgGenerator = new SVGCoverGenerator();
 
-    const thumbnailHandler = new ThumbnailHandler();
-
-    const githubUploader = gateway.getUploader(); // Get uploader from gateway
+    console.log('✅ SVG Generator initialized');
 
     
 
+    console.log('🖼️ Initializing Thumbnail Handler...');
+
+    const thumbnailHandler = new ThumbnailHandler();
+
+    console.log('✅ Thumbnail Handler initialized');
+
+    
+
+    console.log('📤 Getting GitHub Uploader from CentralAPI...');
+
+    const githubUploader = gateway.getUploader(); // Get uploader from gateway
+
+    console.log('✅ GitHub Uploader ready');
+
+    
+
+    console.log('📋 Initializing Content Manager...');
+
     const contentManager = new ContentManager(githubUploader);
+
+    console.log('✅ Content Manager initialized');
+
+    console.log('📊 All core components loaded successfully');
 
     let currentContent = [];
 
@@ -4442,7 +4430,11 @@
 
       } catch (error) {
 
-        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load books</p>';
+        console.error('❌ Failed to load books:', error.message);
+
+        console.error('❌ Full error:', error);
+
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">❌ Failed to load books<br><small>Check console (F12) for details</small></p>';
 
       }
 
@@ -4998,11 +4990,29 @@
 
       if (confirm(`🗑️ Delete "${title}"?\n\nThis action cannot be undone!`)) {
 
+        console.log('🗑️ Deleting book:', title, 'ID:', id);
+
         contentManager.deleteContent(CONTENT_TYPE, id)
 
-          .then(() => { alert('? Book deleted successfully!'); loadManageContent(); })
+          .then(() => { 
 
-          .catch(err => alert('? Delete failed: ' + err.message));
+            console.log('✅ Book deleted successfully:', title);
+
+            alert('? Book deleted successfully!'); 
+
+            loadManageContent(); 
+
+          })
+
+          .catch(err => {
+
+            console.error('❌ Delete failed:', err.message);
+
+            console.error('❌ Full error:', err);
+
+            alert('? Delete failed: ' + err.message + '\n\nCheck console (F12) for details.');
+
+          });
 
       }
 
@@ -5516,7 +5526,11 @@
 
       } catch (error) {
 
-        alert('? Update failed: ' + error.message);
+        console.error('❌ Update failed:', error.message);
+
+        console.error('❌ Full error:', error);
+
+        alert('? Update failed: ' + error.message + '\n\nCheck console (F12) for details.');
 
       }
 
@@ -5941,6 +5955,20 @@
 
     <script src="../../../Optimization/cursor-effects.js" defer></script>
 
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">বই হলো জ্ঞানের পাত্র — যে পাত্র ঢেলে দিলে কমে না, বরং বাড়ে।</p>
+      <cite class="wg-qsrc">&#8212; হযরত আলী (রাঃ)</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 
 </html>

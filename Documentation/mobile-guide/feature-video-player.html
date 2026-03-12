@@ -248,9 +248,11 @@
   <div class="badges-row">
     <span class="badge badge-yt"><i class="fab fa-youtube"></i> YouTube IFrame</span>
     <span class="badge badge-red"><i class="fas fa-mobile-alt"></i> Mobile</span>
-    <span class="badge badge-green"><i class="fas fa-video"></i> PiP</span>
+    <span class="badge badge-green"><i class="fas fa-video"></i> PiP + Fallback</span>
     <span class="badge badge-yellow"><i class="fas fa-bolt"></i> YT Data API v3</span>
     <span class="badge badge-blue"><i class="fas fa-bookmark"></i> Bookmark</span>
+    <span class="badge badge-red"><i class="fas fa-hand-point-up"></i> Zone Gestures</span>
+    <span class="badge badge-green"><i class="fas fa-expand-arrows-alt"></i> Landscape FS</span>
   </div>
 </header>
 
@@ -332,6 +334,50 @@
     </div>
   </section>
 
+  <!-- TOUCH GESTURE SYSTEM -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-hand-point-up"></i> Touch Controls</div>
+    <h2 class="sec-title">Zone-Based <span>Gesture System</span></h2>
+    <p class="sec-sub">The video player uses a 3-zone swipe gesture system on mobile — each horizontal region of the player screen has its own control. A transparent <code>.vp-gesture</code> layer sits over the entire player with <code>touch-action: none</code> to intercept all touch events before YouTube handles them.</p>
+    <!-- Zone diagram -->
+    <div style="background:rgba(6,0,0,0.92);border:1px solid var(--red-border-md);border-radius:12px;padding:14px;margin-bottom:28px;">
+      <div style="font-size:0.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(204,0,0,0.7);margin-bottom:12px;"><i class="fas fa-grip-lines-vertical" style="margin-right:6px;"></i> Gesture Zones — Player Overlay</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;height:80px;border-radius:8px;overflow:hidden;border:1px solid rgba(204,0,0,0.25);">
+        <div style="background:rgba(0,80,180,0.18);border-right:1px solid rgba(100,150,255,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+          <i class="fas fa-sun" style="color:rgba(100,180,255,0.8);font-size:1rem;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:rgba(100,180,255,0.9);">LEFT ⅓</div>
+          <div style="font-size:0.55rem;color:rgba(100,150,200,0.7);">Brightness</div>
+          <div style="font-size:0.48rem;color:rgba(80,120,180,0.6);">↑ swipe up/down</div>
+        </div>
+        <div style="background:rgba(80,0,0,0.25);border-right:1px solid rgba(204,0,0,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+          <i class="fas fa-arrows-alt-v" style="color:rgba(255,80,80,0.8);font-size:1rem;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:rgba(255,100,100,0.9);">CENTER</div>
+          <div style="font-size:0.55rem;color:rgba(200,80,80,0.7);">Fullscreen</div>
+          <div style="font-size:0.48rem;color:rgba(160,60,60,0.6);">↑ swipe up</div>
+        </div>
+        <div style="background:rgba(0,120,60,0.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+          <i class="fas fa-volume-up" style="color:rgba(80,220,130,0.8);font-size:1rem;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:rgba(80,220,130,0.9);">RIGHT ⅓</div>
+          <div style="font-size:0.55rem;color:rgba(60,180,100,0.7);">Volume</div>
+          <div style="font-size:0.48rem;color:rgba(40,140,80,0.6);">↑ swipe up/down</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:0.62rem;color:rgba(120,80,80,0.7);"><i class="fas fa-info-circle" style="margin-right:5px;"></i> All zone swipes use <code style="font-family:Fira Code,monospace;font-size:.6rem;color:rgba(255,120,120,.8);">requestAnimationFrame</code> batching for smooth 60fps updates</div>
+    </div>
+    <div class="features-grid-3">
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(0,80,180,0.12);border-color:rgba(100,150,255,0.25);color:rgba(100,180,255,0.9);"><i class="fas fa-sun"></i></div><div class="feat-name">Brightness Zone (Left)</div><div class="feat-desc">Swipe up/down in the left ⅓ of the player to adjust screen brightness. Requires browser brightness API — shows overlay indicator.</div></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(0,120,60,0.12);border-color:rgba(60,200,100,0.25);color:rgba(80,220,130,0.9);"><i class="fas fa-volume-up"></i></div><div class="feat-name">Volume Zone (Right)</div><div class="feat-desc">Swipe up/down in the right ⅓ to control volume via <code>player.setVolume()</code>. Uses RAF batching for smooth 60fps response — no jank.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-expand"></i></div><div class="feat-name">Fullscreen Zone (Center)</div><div class="feat-desc">Swipe up in the center of the player triggers fullscreen. Swipe down exits fullscreen. Single-finger gesture, threshold ≥30px.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-hand-pointer"></i></div><div class="feat-name">Single Tap → Controls Only</div><div class="feat-desc">A single tap on the gesture layer shows/hides the control bar — it does <strong>not</strong> play or pause the video. Prevents accidental pause.</div></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(140,0,200,0.1);border-color:rgba(180,80,255,0.25);color:rgba(200,120,255,0.9);"><i class="fas fa-mobile-alt"></i></div><div class="feat-name">Landscape Fullscreen</div><div class="feat-desc">When entering landscape FS, <code>body.vp-landscape-fs</code> class is added. CSS hides all page siblings except <code>#vpWrapper</code> — clean immersive view.</div></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(0,160,80,0.08);border-color:rgba(0,200,80,0.2);color:rgba(80,220,130,0.9);"><i class="fas fa-video"></i></div><div class="feat-name">PiP Smart Fallback</div><div class="feat-desc">If PiP is requested before the player is ready (<code>!playerReady</code>), a mini-remote overlay appears instead of silently failing. Lets you control playback instantly.</div></div>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-shield-alt"></i> touch-action: none</div>
+      <p>The <code>.vp-gesture</code> overlay has <code>touch-action: none</code> set via CSS. This prevents the browser's default touch behaviors (scroll, pinch-zoom, double-tap-zoom) from conflicting with the zone gesture recognition — especially important in landscape orientation.</p>
+    </div>
+  </section>
+
   <!-- LOAD FLOW -->
   <section style="margin-bottom:48px;">
     <div class="sec-label"><i class="fas fa-code-branch"></i> Load Flow</div>
@@ -394,9 +440,11 @@
         <div class="compare-col-title"><i class="fas fa-mobile-alt"></i> Mobile</div>
         <ul class="compare-list">
           <li><i class="fas fa-check"></i> <div><strong>playsinline=1</strong> — plays inside the page, not fullscreen auto-launch</div></li>
-          <li><i class="fas fa-check"></i> Native PiP via browser long-tap menu</li>
+          <li><i class="fas fa-check"></i> <div><strong>Zone gestures:</strong> left⅓ brightness, right⅓ volume, center swipe = fullscreen</div></li>
+          <li><i class="fas fa-check"></i> Single tap shows controls only — no accidental pause</li>
+          <li><i class="fas fa-check"></i> Landscape FS hides all page UI via <code>body.vp-landscape-fs</code></li>
+          <li><i class="fas fa-check"></i> PiP fallback mini-remote if player not yet ready</li>
           <li><i class="fas fa-check"></i> Touch to tap Like / Share / Bookmark</li>
-          <li><i class="fas fa-check"></i> Swipe or tap related video cards</li>
           <li><i class="fas fa-check"></i> Expandable description section</li>
           <li><i class="fas fa-times" style="color:rgba(255,80,80,0.6);"></i> No keyboard shortcuts (no keyboard)</li>
         </ul>
@@ -432,6 +480,14 @@
       <p>While watching a video, leave the app or switch tabs. The video continues floating as a PiP overlay. This works because the iframe has <code>allow="picture-in-picture"</code> — it's a browser-native feature, not custom code.</p>
     </div>
     <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> PiP mini-remote fallback</div>
+      <p>If you trigger PiP before the YouTube player has finished initializing (<code>playerReady = false</code>), a mini-remote control overlay appears automatically. This lets you pause, seek, and control volume without waiting — the overlay disappears once the main player is ready.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> Single-tap doesn't pause</div>
+      <p>Unlike most video players, tapping the center of the player does <em>not</em> toggle play/pause. A single tap on the <code>.vp-gesture</code> overlay only shows or hides the control bar. To pause, use the play/pause button in the control bar itself. This prevents accidental pausing.</p>
+    </div>
+    <div class="callout">
       <div class="callout-title"><i class="fas fa-lightbulb"></i> Like state is session-only</div>
       <p>The <code>isLiked</code> flag is an in-memory JS variable — not persisted to localStorage. It resets on page refresh. This is intentional — the like button is a quick quality-signal UI element, not a tracking system.</p>
     </div>
@@ -453,6 +509,12 @@
         <div class="tech-row"><div class="tech-key">Enrichment key store</div><div class="tech-val">localStorage key: youtube_api_key</div></div>
         <div class="tech-row"><div class="tech-key">Views formatter</div><div class="tech-val">formatViews() — 1200 → "1.2K"</div></div>
         <div class="tech-row"><div class="tech-key">Likes formatter</div><div class="tech-val">formatLikes() — 4800 → "4.8K"</div></div>
+        <div class="tech-row"><div class="tech-key">Gesture overlay element</div><div class="tech-val">.vp-gesture — touch-action: none; position: absolute; inset: 0</div></div>
+        <div class="tech-row"><div class="tech-key">Gesture zones</div><div class="tech-val">Left ⅓ = brightness · Center = fullscreen · Right ⅓ = volume</div></div>
+        <div class="tech-row"><div class="tech-key">Volume smoothing</div><div class="tech-val">requestAnimationFrame batch — player.setVolume() called in rAF callback</div></div>
+        <div class="tech-row"><div class="tech-key">Single tap behavior</div><div class="tech-val">Shows/hides controls only — does not trigger play/pause</div></div>
+        <div class="tech-row"><div class="tech-key">Landscape fullscreen CSS</div><div class="tech-val">body.vp-landscape-fs — siblings hidden, only #vpWrapper visible</div></div>
+        <div class="tech-row"><div class="tech-key">PiP not-ready fallback</div><div class="tech-val">if (!playerReady) → show mini-remote overlay</div></div>
       </div>
     </div>
   </section>

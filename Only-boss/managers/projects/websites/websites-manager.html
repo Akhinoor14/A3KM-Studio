@@ -384,23 +384,6 @@
     <button class="banner-close" onclick="document.getElementById('tokenMissingBanner').style.display='none'" title="Dismiss">&times;</button>
   </div>
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      <div class="header-icon"><i class="fas fa-globe"></i></div>
-      <div class="header-title">
-        <h1>Websites Manager</h1>
-        <p>Manage all website & web project entries</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <span id="tokenStatus" class="token-status checking"><i class="fas fa-spinner fa-spin"></i> Checking token...</span>
-      <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token"><i class="fas fa-sync-alt"></i></button>
-      <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token"><i class="fas fa-bug"></i> Debug</button>
-      <a href="../category-selector.html" class="back-btn"><i class="fas fa-arrow-left"></i><span>Back</span></a>
-    </div>
-  </div>
-
   <!-- MAIN CONTAINER -->
   <div class="container">
 
@@ -418,6 +401,15 @@
           <button class="tab-item" onclick="switchTab('export')"><i class="fas fa-cloud-upload-alt"></i> Export / GitHub</button>
         </div>
       </nav>
+      <!-- GitHub Token Status -->
+      <div style="padding:14px;border-top:1px solid rgba(204,0,0,0.25);">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--primary-red,#CC0000);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+        <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+        <div style="display:flex;gap:6px;">
+          <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-bug"></i> Debug</button>
+        </div>
+      </div>
       <div class="quick-stats">
         <h3>Quick Stats</h3>
         <div class="stat-item"><span>Total Sites</span><span class="stat-value" id="qTotal">—</span></div>
@@ -431,7 +423,7 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = localStorage.getItem('websitesManager_activeTab') || 'dashboard';
+        const savedTab = 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
@@ -993,13 +985,34 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    tokenManager  = new UnifiedTokenManager();
-    centralAPI    = CentralAPIGateway.getInstance();
-    githubUploader = centralAPI.getUploader();
-    githubHandler = new GitHubAPIHandler();
+    console.log('🚀 Websites Manager - Initializing...');
+    console.log('📍 Script dependencies check:', {
+      UnifiedTokenManager: typeof UnifiedTokenManager !== 'undefined',
+      CentralAPIGateway: typeof CentralAPIGateway !== 'undefined',
+      GitHubContentUploader: typeof GitHubContentUploader !== 'undefined',
+      GitHubAPIHandler: typeof GitHubAPIHandler !== 'undefined'
+    });
+    
+    try {
+      tokenManager  = new UnifiedTokenManager();
+      centralAPI    = CentralAPIGateway.getInstance();
+      githubUploader = centralAPI.getUploader();
+      githubHandler = new GitHubAPIHandler();
+      
+      console.log('✅ All components initialized successfully');
+    } catch (initError) {
+      console.error('❌ Initialization failed:', initError);
+      alert('⚠️ Websites Manager failed to initialize.\n\nError: ' + initError.message + '\n\nCheck browser console (F12) for details.');
+      return;
+    }
 
     const token = tokenManager.loadToken();
-    if (token) localStorage.setItem('githubToken', token);
+    if (token) {
+      localStorage.setItem('github_token', token);
+      console.log('✅ Token loaded and synced:', token.substring(0, 10) + '...');
+    } else {
+      console.warn('⚠️ No token found - uploads will fail');
+    }
     githubHandler.loadToken();
 
     updateTokenStatus();
@@ -1085,6 +1098,9 @@
             }
         }
     });
+    
+    console.log('✅ Websites Manager - Initialization complete');
+    console.log('📊 Current data:', { projects: websitesData.projects?.length || 0, version: websitesData.version });
   });
 
   // ═══════════════════════════════════════════════════════
@@ -1101,8 +1117,9 @@
       if (validation.valid) {
         badge.className = 'token-status active';
         badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
-        localStorage.setItem('githubToken', token);
+        localStorage.setItem('github_token', token);
         document.getElementById('exportTokenStatus').textContent = 'Active';
+        console.log('✅ Token validated successfully');
       } else {
         throw new Error('Invalid');
       }
@@ -1206,15 +1223,22 @@
         badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
       }, 3000);
     } catch(e) {
+      console.error('❌ GitHub push failed:', e);
       if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }
       badge.className = prevClass;
       badge.innerHTML = prevHTML;
-      if (!githubHandler.isAuthenticated() || (e.message && e.message.toLowerCase().includes('token'))) {
-        if (confirm('GitHub token missing. Configure in Command Center?')) {
+      
+      // Check if token is missing
+      const currentToken = localStorage.getItem('github_token');
+      console.log('🔍 Token check:', currentToken ? 'EXISTS (' + currentToken.length + ' chars)' : 'MISSING');
+      
+      if (!currentToken || !githubHandler.isAuthenticated() || (e.message && e.message.toLowerCase().includes('token'))) {
+        if (confirm('⚠️ GitHub token missing or invalid.\n\nError: ' + e.message + '\n\nConfigure in Command Center?')) {
           window.location.href = '../../shared/command-center.html?tab=api';
         }
       } else {
         showToast('Push failed: ' + e.message, 'error');
+        alert('❌ GitHub Push Failed\n\n' + e.message + '\n\nCheck browser console (F12) for details.');
       }
       throw e;
     }
@@ -1317,7 +1341,13 @@
     const cat   = document.getElementById('fCategory').value;
     const stat  = document.getElementById('fStatus').value;
     const desc  = document.getElementById('richFDescription')?.innerHTML || '';
-    if (!title || !url || !cat || !desc) { showToast('Please fill in all required fields', 'error'); return; }
+    
+    console.log('🔍 Add Website - Validation:', { title, url, cat, stat, descLength: desc.length });
+    
+    if (!title) { showToast('Website title is required', 'error'); return; }
+    if (!url) { showToast('Website URL is required', 'error'); return; }
+    if (!cat) { showToast('Category is required', 'error'); return; }
+    if (!desc || desc.trim() === '' || desc === '<br>') { showToast('Description cannot be empty', 'error'); return; }
 
     const projects = websitesData.projects || [];
     const nextId = generateNextId();
@@ -1352,10 +1382,18 @@
     updateDashboard();
     resetAddForm();
     switchTabByName('manage');
+    console.log('✅ Website added locally:', entry);
+    
     // Auto-push directly to GitHub
     pushData('Add website: ' + title)
-      .then(() => showToast('Website added & saved to GitHub!', 'success'))
-      .catch(() => showToast('Added locally but GitHub push failed', 'error'));
+      .then(() => {
+        console.log('✅ Successfully pushed to GitHub');
+        showToast('Website added & saved to GitHub!', 'success');
+      })
+      .catch((err) => {
+        console.error('❌ Failed to push to GitHub:', err);
+        showToast('Added locally but GitHub push failed: ' + err.message, 'error');
+      });
   }
 
   function switchTabByName(name) {
@@ -1465,9 +1503,16 @@
     const title = document.getElementById('eTitle').value.trim();
     const url   = document.getElementById('eUrl').value.trim();
     const desc  = document.getElementById('editRichDescription')?.innerHTML || '';
+    
+    console.log('🔍 Edit Website - Validation:', { id, title, url, descLength: desc.length });
+    
     if (!title || !url || !desc) { showToast('Title, URL and Description are required', 'error'); return; }
     const idx = (websitesData.projects || []).findIndex(p => p.id === id);
-    if (idx === -1) return;
+    if (idx === -1) {
+      console.error('❌ Website not found:', id);
+      showToast('Website not found in data', 'error');
+      return;
+    }
     const techRaw = document.getElementById('eTechStack').value;
     const tagsRaw = document.getElementById('eTags').value;
     websitesData.projects[idx] = {
@@ -1490,23 +1535,48 @@
     updateDashboard();
     renderManageGrid();
     document.getElementById('editModalOverlay').classList.remove('active');
+    
+    console.log('✅ Website edited locally:', websitesData.projects[idx]);
+    
     // Auto-push directly to GitHub
     pushData('Update website: ' + title)
-      .then(() => showToast('Changes saved to GitHub!', 'success'))
-      .catch(() => showToast('Saved locally but GitHub push failed', 'error'));
+      .then(() => {
+        console.log('✅ Edit pushed to GitHub successfully');
+        showToast('Changes saved to GitHub!', 'success');
+      })
+      .catch((err) => {
+        console.error('❌ Failed to push edit to GitHub:', err);
+        showToast('Saved locally but GitHub push failed: ' + err.message, 'error');
+      });
   }
 
   function deleteWebsite(id) {
     const entry = (websitesData.projects || []).find(p => p.id === id);
-    if (!confirm('Delete "' + (entry?.title || id) + '"? This cannot be undone.')) return;
+    const title = entry?.title || id;
+    
+    console.log('🗑️ Delete requested:', { id, title });
+    
+    if (!confirm('Delete "' + title + '"? This cannot be undone.')) {
+      console.log('❌ Delete cancelled by user');
+      return;
+    }
+    
     websitesData.projects = (websitesData.projects || []).filter(p => p.id !== id);
+    console.log('✅ Website deleted locally:', title);
+    
     rebuildStatistics();
     updateDashboard();
     renderManageGrid();
     // Auto-push directly to GitHub
-    pushData('Delete website: ' + (entry?.title || id))
-      .then(() => showToast('Deleted & saved to GitHub!', 'success'))
-      .catch(() => showToast('Deleted locally but GitHub push failed', 'error'));
+    pushData('Delete website: ' + title)
+      .then(() => {
+        console.log('✅ Delete pushed to GitHub successfully');
+        showToast('Deleted & saved to GitHub!', 'success');
+      })
+      .catch((err) => {
+        console.error('❌ Failed to push delete to GitHub:', err);
+        showToast('Deleted locally but GitHub push failed: ' + err.message, 'error');
+      });
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1550,5 +1620,19 @@
   </script>
     <!-- #2 Push Progress Bar -->
     <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">নেটওয়ার্ক মানুষকে সংযুক্ত করে — জ্ঞান মানুষকে একত্রিত করে।</p>
+      <cite class="wg-qsrc">&#8212; মাওলানা ভাসানী অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

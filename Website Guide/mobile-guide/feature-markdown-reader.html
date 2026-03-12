@@ -1,0 +1,450 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep guide to A3KM Studio Markdown reader — custom renderer, table of contents, GitHub sync, code highlighting, share buttons.">
+  <meta name="author" content="Md Akhinoor Islam">
+  <meta name="theme-color" content="#000000">
+
+  <title>Markdown Reader Feature – A3KM Studio Guide</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{--red:#CC0000;--red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);--bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);--txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;--shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);--radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);}
+.pg-topbar{position:sticky;top:70px;z-index:190;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}
+.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}
+.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}
+.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge{font-size:0.7rem;font-weight:600;color:rgba(255,100,100,0.85);background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,220,50,0.9);background:rgba(200,160,0,0.08);border-color:rgba(200,160,0,0.25);}
+.badge-blue{color:rgba(80,160,255,0.9);background:rgba(0,80,200,0.07);border-color:rgba(0,80,200,0.22);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}
+.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+/* phone */
+.bp{width:280px;min-height:500px;background:rgba(6,0,0,0.92);border:2px solid rgba(80,40,40,0.7);border-radius:36px;padding:16px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.06);flex-shrink:0;}
+.bp-notch{width:80px;height:12px;background:rgba(0,0,0,0.9);border-radius:8px;margin:0 auto 12px;border:1px solid rgba(80,40,40,0.5);}
+.bp-screen{background:rgba(0,0,0,0.95);border-radius:24px;overflow:hidden;border:1px solid rgba(60,20,20,0.6);}
+.bp-hdr{padding:10px 12px;background:rgba(0,0,0,0.98);border-bottom:1px solid rgba(80,0,0,0.3);display:flex;align-items:center;justify-content:space-between;}
+.bp-hdr-back{font-size:0.6rem;color:rgba(204,0,0,0.8);display:flex;align-items:center;gap:4px;}
+.bp-hdr-btn{width:22px;height:22px;background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:rgba(204,0,0,0.8);}
+/* anatomy */
+.anatomy-wrap{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start;margin-bottom:40px;}
+.anatomy-labels{display:flex;flex-direction:column;gap:12px;padding-top:8px;}
+.al-item{display:flex;align-items:flex-start;gap:10px;}
+.al-num{width:22px;height:22px;border-radius:50%;background:rgba(204,0,0,0.15);border:1.5px solid rgba(204,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:var(--red);flex-shrink:0;margin-top:1px;}
+.al-txt h4{font-size:0.8rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.al-txt p{font-size:0.75rem;color:var(--txt-dim);line-height:1.5;}
+/* post mockup */
+.bp-post-meta{padding:8px 12px;border-bottom:1px solid rgba(204,0,0,0.15);}
+.bp-post-cat{font-size:0.4rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.bp-post-title{font-size:0.6rem;font-weight:700;color:var(--txt-bright);margin-bottom:3px;line-height:1.3;}
+.bp-post-badges{display:flex;gap:4px;}
+.bp-post-badge{font-size:0.38rem;padding:1px 6px;border-radius:4px;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.2);color:rgba(204,0,0,0.8);}
+.bp-post-badge-ls{background:rgba(0,180,100,0.1);border-color:rgba(0,180,100,0.25);color:rgba(0,200,100,0.8);}
+.bp-toc{padding:6px 12px;background:rgba(204,0,0,0.04);border-bottom:1px solid rgba(204,0,0,0.12);}
+.bp-toc-title{font-size:0.4rem;font-weight:700;color:var(--txt-dim);margin-bottom:3px;text-transform:uppercase;}
+.bp-toc-item{font-size:0.42rem;color:rgba(204,0,0,0.7);margin-bottom:2px;}
+.bp-article{padding:8px 12px;}
+.bp-art-h1{font-size:0.55rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;border-bottom:1px solid rgba(204,0,0,0.2);padding-bottom:2px;}
+.bp-art-p{font-size:0.42rem;color:var(--txt-mid);line-height:1.5;margin-bottom:4px;}
+.bp-art-code{font-size:0.4rem;font-family:'Fira Code',monospace;background:rgba(0,0,0,0.8);border:1px solid rgba(204,0,0,0.15);border-radius:3px;padding:4px 6px;color:rgba(200,200,220,0.9);margin-bottom:4px;overflow:hidden;}
+.bp-art-quote{border-left:2px solid var(--red);background:rgba(204,0,0,0.06);padding:3px 6px;margin-bottom:4px;}
+.bp-art-quote p{font-size:0.4rem;color:var(--txt-dim);font-style:italic;}
+.bp-share-row{padding:6px 12px;border-top:1px solid rgba(204,0,0,0.12);display:flex;gap:6px;}
+.bp-share-btn{font-size:0.42rem;padding:3px 8px;border-radius:5px;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.2);color:rgba(204,0,0,0.8);display:flex;align-items:center;gap:3px;}
+/* grid */
+.features-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+.features-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;}
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;transition:all .25s var(--ease);}
+.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--red);margin-bottom:12px;}
+.feat-name{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+/* syntax table */
+.syntax-table{width:100%;border-collapse:collapse;margin-bottom:32px;}
+.syntax-table th{font-size:0.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-dim);padding:10px 16px;border-bottom:1px solid var(--red-border);text-align:left;}
+.syntax-table td{font-size:0.8rem;padding:11px 16px;border-bottom:1px solid rgba(204,0,0,0.08);color:var(--txt-mid);vertical-align:middle;}
+.syntax-table tr:hover td{background:rgba(204,0,0,0.04);}
+.md-ex{font-family:'Fira Code',monospace;font-size:0.72rem;color:rgba(200,200,220,0.8);background:rgba(0,0,0,0.4);padding:1px 6px;border-radius:4px;}
+.md-out{font-size:0.78rem;color:var(--txt-bright);}
+/* tech box */
+.tech-box{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;}
+.tech-box-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.tech-kv{display:flex;flex-direction:column;gap:6px;}
+.tech-row{display:flex;gap:12px;font-size:0.77rem;}
+.tech-key{color:var(--txt-dim);min-width:160px;flex-shrink:0;}
+.tech-val{color:var(--txt-bright);font-family:'Fira Code',monospace;font-size:0.72rem;}
+/* callout */
+.callout{border-left:3px solid var(--red);background:rgba(204,0,0,0.06);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin-bottom:24px;}
+.callout-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:0.78rem;color:var(--txt-dim);line-height:1.6;}
+/* flow */
+.flow-steps{display:flex;flex-direction:column;gap:0;margin-bottom:32px;}
+.flow-step{display:flex;gap:16px;align-items:flex-start;position:relative;padding-bottom:24px;}
+.flow-step:last-child{padding-bottom:0;}
+.flow-step::before{content:'';position:absolute;left:18px;top:38px;bottom:0;width:2px;background:linear-gradient(180deg,rgba(204,0,0,0.4),transparent);}
+.flow-step:last-child::before{display:none;}
+.flow-num{width:36px;height:36px;border-radius:50%;background:rgba(204,0,0,0.1);border:2px solid rgba(204,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:var(--red);flex-shrink:0;}
+.flow-body h4{font-size:0.85rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.flow-body p{font-size:0.78rem;color:var(--txt-dim);line-height:1.5;}
+@media(max-width:900px){.anatomy-wrap{grid-template-columns:1fr}.bp{margin:0 auto}.features-grid-2,.features-grid-3{grid-template-columns:1fr}}
+
+/* ── RELATED GUIDES ── */
+.rg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.rg-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:0;transition:all .25s var(--ease);}
+.rg-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.rg-icon{width:36px;height:36px;border-radius:9px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--red);margin-bottom:10px;}
+.rg-name{font-size:0.84rem;font-weight:700;color:var(--txt-bright);margin-bottom:6px;}
+.rg-desc{font-size:0.72rem;color:var(--txt-dim);line-height:1.45;flex:1;}
+.rg-badges{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0 10px;}
+.rg-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid;letter-spacing:.05em;text-transform:uppercase;}
+.rgb-desktop{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.rgb-mobile{color:rgba(80,220,120,0.9);background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.25);}
+.rgb-admin{color:rgba(255,210,40,0.9);background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.28);}
+.rgb-pwa{color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.08);border-color:rgba(139,0,255,0.25);}
+.rgb-content{color:rgba(255,155,55,0.9);background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.25);}
+.rgb-shared{color:rgba(180,180,180,0.7);background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);}
+.rg-explore{font-size:0.7rem;color:var(--red);display:flex;align-items:center;gap:5px;transition:gap .2s;}
+.rg-card:hover .rg-explore{gap:8px;}
+.dir-cta{text-align:center;padding:8px 0 0;}
+.dir-cta a{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--red);text-decoration:none;border:1px solid var(--red-border);padding:10px 24px;border-radius:20px;background:rgba(204,0,0,0.06);transition:all .22s;}
+.dir-cta a:hover{background:rgba(204,0,0,0.14);border-color:rgba(204,0,0,0.45);}
+/* ── BACK TO TOP ── */
+.btt{position:fixed;bottom:28px;right:28px;z-index:999;width:44px;height:44px;background:#CC0000;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 20px rgba(204,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(12px);transition:all .28s;}
+.btt.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.btt:hover{background:#8B0000;transform:translateY(-2px);}
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .pg-topbar{top:52px !important;}
+  .pg-main{padding:0 16px 80px !important;}
+  .features-grid-2,.features-grid-3{grid-template-columns:1fr !important;}
+  .compare-wrap,.anatomy-wrap{grid-template-columns:1fr !important;}
+  .pg-hero{padding:32px 16px 28px !important;}
+  .shortcut-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .shortcut-table{min-width:460px;}
+  .tech-row{flex-direction:column;gap:3px;}
+  .tech-key{min-width:unset !important;}
+  .rg-grid{grid-template-columns:1fr !important;}
+  body{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px));}
+}</style>
+</head>
+<body>
+<!-- MOBILE NAV (shown ≤768px, replaces hidden g-nav) -->
+<nav class="m-nav" id="mobileNav">
+  <a href="../features.html" class="m-nav-back" title="Feature Directory"><i class="fas fa-arrow-left"></i></a>
+  <a href="../../Home/index.html" class="m-nav-logo">
+    <img src="../../images/logo.svg" class="m-nav-logo-img" width="30" height="30" alt="A3KM">
+    <div class="m-nav-brand">
+      <span class="m-nav-brand-name">Markdown Reader</span>
+      <span class="m-nav-brand-sub">Feature Guide</span>
+    </div>
+  </a>
+  <div class="m-nav-menu">
+    <button class="m-nav-btn" id="mNavMenuBtn" title="Navigation" aria-label="Open navigation menu" aria-expanded="false">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+<div class="m-drawer-overlay" id="mDrawerOverlay"></div>
+<div class="m-drawer" id="mDrawer">
+  <div class="m-drawer-links">
+    <a href="../index.html" class="m-drawer-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a>
+    <a href="../desktop/index.html" class="m-drawer-link"><i class="fas fa-desktop"></i><span>Desktop Guide</span></a>
+    <a href="index.html" class="m-drawer-link"><i class="fas fa-mobile-alt"></i><span>Mobile Guide</span></a>
+    <a href="../features.html" class="m-drawer-link active"><i class="fas fa-search"></i><span>Feature Directory</span></a>
+    <a href="../../Home/index.html" class="m-drawer-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a>
+    <a href="../../Contact/contact.html" class="m-drawer-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </div>
+</div>
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio">
+            <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>
+            <li class="desktop-nav-item"><a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF"><i class="fas fa-download" aria-hidden="true"></i><span>CV</span></a></li>
+        </ul>
+    </div>
+</nav><div id="bg-canvas-container"></div>
+
+<nav class="pg-topbar">
+  <a href="../features.html" class="pg-back"><i class="fas fa-arrow-left"></i> Features</a>
+  <div class="pg-bc">
+    <span>Guide</span><span class="sep">/</span>
+    <span>Features</span><span class="sep">/</span>
+    <span class="cur">Markdown Reader</span>
+  </div>
+  <div class="pg-badge"><i class="fas fa-file-alt"></i> Custom Renderer</div>
+</nav>
+
+<header class="pg-hero">
+  <div class="hero-label"><i class="fas fa-file-alt"></i> Feature Deep Dive</div>
+  <h1 class="hero-title"><span>Markdown Reader</span> — Posts, TOC & GitHub Sync</h1>
+  <p class="hero-desc">A3KM Studio's post reader renders Markdown into rich HTML using a <strong>completely custom renderer</strong> — no external library. It supports headings, code blocks with syntax highlighting, tables, blockquotes, TOC generation, and GitHub cloud sync merged with local drafts.</p>
+  <p class="hero-desc-bn">Zero external library — সম্পূর্ণ custom JavaScript দিয়ে Markdown থেকে HTML render হয়। Table of Contents auto-generate হয়, syntax highlighting আছে, dark-red theme, এবং GitHub Cloud + localStorage দুটো থেকেই post load করা যায়।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-code"></i> Custom Renderer</span>
+    <span class="badge badge-green"><i class="fab fa-github"></i> GitHub Sync</span>
+    <span class="badge badge-yellow"><i class="fas fa-list"></i> Auto TOC</span>
+    <span class="badge badge-blue"><i class="fas fa-database"></i> localStorage</span>
+  </div>
+</header>
+
+<main class="pg-main">
+  <div class="divider"></div>
+
+  <!-- FEATURES -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-info-circle"></i> What is it?</div>
+    <h2 class="sec-title">Post Reader — <span>Full Feature Set</span></h2>
+    <p class="sec-sub">The Written Posts section uses a custom Markdown-to-HTML engine built in <code>post-reader.js</code>. No markdown library dependency — fully owned and customized.</p>
+    <div class="features-grid-3">
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-list-ol"></i></div><div class="feat-name">Auto Table of Contents</div><div class="feat-desc"><code>generateTOC: true</code> option. Scans all H2/H3 headings and builds a clickable TOC. Smooth scroll on click.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-palette"></i></div><div class="feat-name">Syntax Highlighting</div><div class="feat-desc"><code>syntaxHighlight: true</code> option. Code blocks get language-specific coloring. Copy button on each block.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-shield-alt"></i></div><div class="feat-name">HTML Sanitization</div><div class="feat-desc"><code>sanitize: true</code> escapes dangerous HTML before rendering. Prevents XSS in user-written content.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fab fa-github"></i></div><div class="feat-name">GitHub Cloud Sync</div><div class="feat-desc">Posts load from GitHub repo by default. If a local draft exists in localStorage (<code>a3km_posts</code>), it merges and takes priority.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-database"></i></div><div class="feat-name">Offline / Draft Mode</div><div class="feat-desc">Posts with <code>_source: 'localStorage'</code> flag are local drafts — shown with a green "Local" badge. Not on GitHub yet.</div></div>
+      <div class="feat-card"><div class="feat-icon"><i class="fas fa-share-alt"></i></div><div class="feat-name">Share Buttons</div><div class="feat-desc">Copy link, WhatsApp, and Twitter share buttons at article bottom. Web Share API used on mobile.</div></div>
+    </div>
+  </section>
+
+  <!-- ANATOMY -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-sitemap"></i> Anatomy</div>
+    <h2 class="sec-title">Article <span>UI Breakdown</span></h2>
+    <div class="anatomy-wrap">
+      <div class="bp">
+        <div class="bp-notch"></div>
+        <div class="bp-screen">
+          <div class="bp-hdr">
+            <div class="bp-hdr-back"><i class="fas fa-arrow-left"></i> Posts</div>
+            <div style="font-size:0.52rem;color:rgba(255,255,255,0.5);">Article</div>
+            <div class="bp-hdr-btn"><i class="fas fa-bookmark"></i></div>
+          </div>
+          <div class="bp-post-meta">
+            <div class="bp-post-cat">Tutorial</div>
+            <div class="bp-post-title">Arduino I2C Communication with Multiple Sensors</div>
+            <div class="bp-post-badges">
+              <div class="bp-post-badge">English</div>
+              <div class="bp-post-badge">8 min read</div>
+              <div class="bp-post-badge-ls bp-post-badge">● Local</div>
+            </div>
+          </div>
+          <div class="bp-toc">
+            <div class="bp-toc-title">Table of Contents</div>
+            <div class="bp-toc-item">→ Introduction</div>
+            <div class="bp-toc-item">→ Setup & Wiring</div>
+            <div class="bp-toc-item">→ Code Walkthrough</div>
+          </div>
+          <div class="bp-article">
+            <div class="bp-art-h1">Introduction</div>
+            <div class="bp-art-p">I2C allows multiple sensors to share the same two wires (SDA/SCL) with unique addresses...</div>
+            <div class="bp-art-code">Wire.begin();<br>sensor.begin(0x48);</div>
+            <div class="bp-art-quote"><p>Note: Pull-up resistors (4.7kΩ) required on SDA and SCL lines.</p></div>
+          </div>
+          <div class="bp-share-row">
+            <div class="bp-share-btn"><i class="fas fa-link"></i> Copy</div>
+            <div class="bp-share-btn"><i class="fab fa-whatsapp"></i></div>
+            <div class="bp-share-btn"><i class="fab fa-twitter"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="anatomy-labels">
+        <div class="al-item"><div class="al-num">1</div><div class="al-txt"><h4>Article Header</h4><p>Category badge, title, language + reading time meta, and a source badge (cloud vs local draft).</p></div></div>
+        <div class="al-item"><div class="al-num">2</div><div class="al-txt"><h4>Auto Table of Contents</h4><p>Generated by <code>generateTOC()</code>. All H2/H3 headings become clickable anchors. Smooth scroll animation.</p></div></div>
+        <div class="al-item"><div class="al-num">3</div><div class="al-txt"><h4>Rendered Markdown Body</h4><p>Custom <code>renderMarkdown()</code> converts Markdown: headings, bold, italic, code blocks, blockquotes, links, lists, tables.</p></div></div>
+        <div class="al-item"><div class="al-num">4</div><div class="al-txt"><h4>Code Blocks</h4><p>Fenced code with language tag (```js, ```cpp etc.) renders with syntax highlighting and a Copy button via <code>copyButton: true</code>.</p></div></div>
+        <div class="al-item"><div class="al-num">5</div><div class="al-txt"><h4>Local Draft Badge</h4><p>Green "● Local" badge shown when <code>_source === 'localStorage'</code>. Indicates the post exists in your device, not yet on GitHub.</p></div></div>
+        <div class="al-item"><div class="al-num">6</div><div class="al-txt"><h4>Share Buttons</h4><p>Copy-link, WhatsApp, Twitter. On mobile uses Web Share API if available, falls back to clipboard copy.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYNTAX SUPPORT TABLE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-edit"></i> Markdown Syntax</div>
+    <h2 class="sec-title">Supported <span>Markdown Elements</span></h2>
+    <p class="sec-sub">Everything the custom renderer handles — no external library.</p>
+    <table class="syntax-table">
+      <thead><tr><th>Element</th><th>Markdown</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Heading H1–H3</td><td><span class="md-ex"># Title</span></td><td><span class="md-out">Bold section title</span></td></tr>
+        <tr><td>Bold</td><td><span class="md-ex">**text**</span></td><td><span class="md-out"><strong>text</strong></span></td></tr>
+        <tr><td>Italic</td><td><span class="md-ex">*text*</span></td><td><span class="md-out"><em>text</em></span></td></tr>
+        <tr><td>Code (inline)</td><td><span class="md-ex">`code`</span></td><td><span class="md-out" style="font-family:monospace;background:rgba(204,0,0,0.1);padding:1px 5px;border-radius:3px;">code</span></td></tr>
+        <tr><td>Code block</td><td><span class="md-ex">```lang\ncode\n```</span></td><td><span class="md-out">Highlighted block + Copy button</span></td></tr>
+        <tr><td>Blockquote</td><td><span class="md-ex">&gt; text</span></td><td><span class="md-out">Red-left-border quote block</span></td></tr>
+        <tr><td>Link</td><td><span class="md-ex">[text](url)</span></td><td><span class="md-out">Styled anchor tag</span></td></tr>
+        <tr><td>Unordered list</td><td><span class="md-ex">- item</span></td><td><span class="md-out">Bullet list</span></td></tr>
+        <tr><td>Ordered list</td><td><span class="md-ex">1. item</span></td><td><span class="md-out">Numbered list</span></td></tr>
+        <tr><td>Horizontal rule</td><td><span class="md-ex">---</span></td><td><span class="md-out">Section divider</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- GITHUB SYNC FLOW -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fab fa-github"></i> Data Flow</div>
+    <h2 class="sec-title">GitHub Sync <span>& Local Merge</span></h2>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><h4>Fetch from GitHub</h4><p>Posts are fetched from GitHub repository via raw URL. Loaded into a posts array in memory.</p></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><h4>Read localStorage (<code>a3km_posts</code>)</h4><p>Any posts saved locally (via Quick Post Creator) are read from <code>localStorage.getItem('a3km_posts')</code>.</p></div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><h4>Merge: local takes priority</h4><p>Local posts are merged with GitHub posts. If same ID exists in both, the local version wins. Local posts get <code>_source: 'localStorage'</code> flag.</p></div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><h4>Render in UI</h4><p>Posts show green "● Local" badge if from localStorage. GitHub posts show the cloud date.</p></div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><h4>Publish via Only-Boss</h4><p>When ready, use the Posts Manager in Only-Boss to push the local post to GitHub — removing the draft badge permanently.</p></div></div>
+    </div>
+  </section>
+
+  <!-- HIDDEN FEATURES -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-eye-slash"></i> Hidden Features</div>
+    <h2 class="sec-title">Lesser-Known <span>Tricks</span></h2>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> No-library renderer</div>
+      <p>Unlike most sites that use marked.js or showdown.js, A3KM's renderer is entirely custom. It supports <code>theme: 'dark-red'</code>, <code>showLineNumbers: true</code>, and <code>copyButton: true</code> — all impossible with locked libraries.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> Language filter</div>
+      <p>The posts listing page filters by language (English / Bengali / Arabic). Language is stored as metadata in each post's frontmatter. The filter is instant — no reload.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> Quick Post Creator (Only-Boss)</div>
+      <p>The Quick Post Creator in Only-Boss writes directly to <code>a3km_posts</code> localStorage. You can draft and preview a full article without internet — then publish when connected.</p>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-code"></i> Technical Details</div>
+    <h2 class="sec-title">Code <span>Reference</span></h2>
+    <div class="tech-box">
+      <div class="tech-box-title"><i class="fas fa-file-code"></i> Key File</div>
+      <div class="tech-kv">
+        <div class="tech-row"><div class="tech-key">Reader JS</div><div class="tech-val">mobile/content-studio/written-posts/post-reader.js</div></div>
+        <div class="tech-row"><div class="tech-key">Renderer call</div><div class="tech-val">renderMarkdown(markdown, { generateTOC, syntaxHighlight, showLineNumbers, copyButton, sanitize, theme })</div></div>
+        <div class="tech-row"><div class="tech-key">Theme option</div><div class="tech-val">'dark-red'</div></div>
+        <div class="tech-row"><div class="tech-key">Local posts key</div><div class="tech-val">localStorage: a3km_posts</div></div>
+        <div class="tech-row"><div class="tech-key">Local draft flag</div><div class="tech-val">_source: 'localStorage'</div></div>
+        <div class="tech-row"><div class="tech-key">TOC generator</div><div class="tech-val">generateTOC() — scans rendered H2/H3 elements</div></div>
+        <div class="tech-row"><div class="tech-key">HTML escape</div><div class="tech-val">escapeHtml() — &amp;, &lt;, &gt; encoding</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- RELATED FEATURE GUIDES -->
+  <section style="margin-bottom:56px;">
+    <div class="sec-label"><i class="fas fa-compass"></i> Explore More</div>
+    <h2 class="sec-title">Other <span>Feature Guides</span></h2>
+    <p class="sec-sub">More deep-dives into A3KM Studio features — shortcuts, hidden tricks, mobile vs desktop comparisons and code references.</p>
+    <div class="rg-grid" id="relatedGuides"></div>
+    <div class="dir-cta">
+      <a href="../features.html"><i class="fas fa-search"></i> Browse All 88 Features in the Directory <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+</main>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">সহজ ভাষায় কঠিন সত্য বলাই প্রকৃত পণ্ডিতের গুণ।</p>
+      <cite class="wg-qsrc">&#8212; হযরত আলী (রাঃ)</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-chevron-up"></i></button>
+<script src="../assets/guide.js" defer></script>
+<script src="../../Optimization/Background/background-system.js" defer></script>
+<script>
+const CURRENT_GUIDE = 'markdown-reader';
+const FEATURE_GUIDES = [
+  {id:'video-player',     name:'Video Player',        icon:'play-circle',  desc:'YouTube IFrame, PiP, like/share, related videos, API enrichment',  cats:['Mobile','Desktop'],  url:'feature-video-player.html'},
+  {id:'pdf-reader',       name:'PDF Reader',           icon:'file-pdf',     desc:'Zoom, page nav, book mode, swipe, keyboard shortcuts, password',   cats:['Desktop','Mobile','Content'], url:'feature-pdf-reader.html'},
+  {id:'markdown-reader',  name:'Markdown Reader',      icon:'file-alt',     desc:'Custom renderer, TOC, GitHub sync, code highlighting, share',       cats:['Mobile','Content'],  url:'feature-markdown-reader.html'},
+  {id:'pwa-offline',      name:'PWA & Offline',        icon:'wifi',         desc:'5-cache system, LRU eviction, install prompt, update notifier',     cats:['PWA','Mobile'],      url:'feature-pwa-offline.html'},
+  {id:'search-system',    name:'Search System',        icon:'search',       desc:'AdvancedSearchManager, 12 filters, tags, instant client-side',      cats:['Desktop','Mobile'],  url:'feature-search-system.html'},
+  {id:'only-boss',        name:'Only-Boss Admin',      icon:'lock',         desc:'SHA-256 auth, session timer, managers, command center',             cats:['Admin','Desktop'],   url:'feature-only-boss.html'},
+  {id:'calculators',      name:'Calculators',          icon:'calculator',   desc:'Resistor color code, LED current, capacitor decoder, quick ref',    cats:['Desktop','Mobile'],  url:'feature-calculators.html'},
+  {id:'sync-bookmark',    name:'Sync & Bookmarks',     icon:'sync',         desc:'GitHub API sync, localStorage keys, navbar auto-hide',              cats:['PWA','Shared'],      url:'feature-sync-bookmark.html'},
+  {id:'contact-form',     name:'Contact Form',         icon:'paper-plane',  desc:'EmailJS primary, Web3Forms fallback, mailto final fallback',        cats:['Desktop','Mobile'],  url:'feature-contact-form.html'},
+  {id:'fullscreen',       name:'Fullscreen System',    icon:'expand',       desc:'First-click fullscreen, session persist, nav-click exclusion',      cats:['Desktop','PWA'],     url:'feature-fullscreen.html'}
+];
+const RG_CAT_CLASS = {Desktop:'rgb-desktop',Mobile:'rgb-mobile',Admin:'rgb-admin',PWA:'rgb-pwa',Content:'rgb-content',Shared:'rgb-shared'};
+function renderRelatedGuides(){
+  const el = document.getElementById('relatedGuides');
+  if(!el) return;
+  const others = FEATURE_GUIDES.filter(g => g.id !== CURRENT_GUIDE);
+  el.innerHTML = others.map(g => {
+    const badges = g.cats.map(c => '<span class="rg-badge '+(RG_CAT_CLASS[c]||'')+'">'+c+'</span>').join('');
+    return '<a class="rg-card" href="'+g.url+'">'
+      +'<div class="rg-icon"><i class="fas fa-'+g.icon+'"></i></div>'
+      +'<div class="rg-name">'+g.name+'</div>'
+      +'<div class="rg-badges">'+badges+'</div>'
+      +'<div class="rg-desc">'+g.desc+'</div>'
+      +'<div class="rg-explore">Explore Guide <i class="fas fa-arrow-right"></i></div>'
+      +'</a>';
+  }).join('');
+}
+window.addEventListener('scroll',()=>{
+  const b=document.getElementById('bttBtn');
+  if(b) b.classList.toggle('visible',window.scrollY>500);
+},{passive:true});
+document.addEventListener('DOMContentLoaded',renderRelatedGuides);
+</script>
+<script>
+// MOBILE DRAWER
+(function(){
+  var btn=document.getElementById('mNavMenuBtn');
+  var drawer=document.getElementById('mDrawer');
+  var overlay=document.getElementById('mDrawerOverlay');
+  if(!btn)return;
+  function open(){drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');btn.innerHTML='<i class="fas fa-times"></i>';}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.innerHTML='<i class="fas fa-bars"></i>';}
+  btn.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script><script src="../../Optimization/navbar-autohide.js"></script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

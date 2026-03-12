@@ -1,0 +1,638 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arduino Projects Guide — A3KM Studio</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{
+  --red:#CC0000;--red-dark:#8B0000;--teal:#00979d;
+  --red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);
+  --bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);
+  --txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;
+  --shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);
+  --radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);
+}
+
+/* ─── TOPBAR ─── */
+.pg-topbar{position:sticky;top:85px;z-index:100;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}
+.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}
+.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}
+.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge-mob{font-size:0.7rem;font-weight:600;color:rgba(100,200,255,0.85);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+
+/* ─── HERO ─── */
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-teal{color:rgba(0,200,210,0.9);background:rgba(0,151,157,0.1);border-color:rgba(0,151,157,0.3);}
+.badge-blue{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,210,50,0.9);background:rgba(200,150,0,0.1);border-color:rgba(200,150,0,0.3);}
+
+/* ─── MAIN ─── */
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}
+.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+
+/* ─── PHONE MOCKUP ─── */
+.bp{width:280px;min-height:500px;background:rgba(6,0,0,0.92);border:2px solid rgba(80,40,40,0.7);border-radius:36px;padding:16px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.06);flex-shrink:0;}
+.bp-notch{width:80px;height:12px;background:rgba(0,0,0,0.9);border-radius:8px;margin:0 auto 12px;border:1px solid rgba(80,40,40,0.5);}
+.bp-screen{background:rgba(0,0,0,0.95);border-radius:24px;overflow:hidden;border:1px solid rgba(60,20,20,0.6);}
+.bp-hdr{padding:10px 12px;background:rgba(0,0,0,0.98);border-bottom:1px solid rgba(80,0,0,0.3);display:flex;align-items:center;justify-content:space-between;}
+.bp-hdr-back{font-size:0.6rem;color:rgba(204,0,0,0.8);display:flex;align-items:center;gap:4px;}
+.bp-hdr-title{font-size:0.62rem;font-weight:700;color:var(--txt-bright);}
+.bp-hdr-actions{display:flex;gap:6px;}
+.bp-hdr-btn{width:22px;height:22px;background:rgba(204,0,0,0.15);border:1px solid rgba(204,0,0,0.3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:rgba(204,0,0,0.8);}
+.bp-hero{padding:14px 12px 10px;background:linear-gradient(135deg,rgba(20,0,0,0.9),rgba(0,0,0,0.95));}
+.bp-hero-icon{width:36px;height:36px;background:rgba(204,0,0,0.2);border:1px solid rgba(204,0,0,0.4);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.bp-hero-title{font-size:0.75rem;font-weight:800;color:var(--txt-white);margin-bottom:2px;}
+.bp-hero-sub{font-size:0.55rem;color:var(--txt-dim);margin-bottom:6px;}
+.bp-hero-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.55rem;font-weight:700;color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.18);border:1px solid rgba(204,0,0,0.35);padding:2px 8px;border-radius:10px;}
+.bp-searchbar{margin:6px 12px;padding:7px 10px;background:rgba(204,0,0,0.07);border:1px solid rgba(204,0,0,0.25);border-radius:8px;display:flex;align-items:center;gap:6px;font-size:0.55rem;color:var(--txt-dim);}
+.bp-filters{padding:8px 12px;display:flex;gap:5px;overflow:hidden;}
+.bp-chip{padding:4px 8px;border-radius:12px;font-size:0.5rem;font-weight:600;border:1px solid rgba(204,0,0,0.25);color:var(--txt-dim);background:rgba(204,0,0,0.05);white-space:nowrap;}
+.bp-chip.active{background:var(--red);border-color:var(--red);color:#fff;}
+.bp-chip .cnt{font-size:0.45rem;opacity:0.7;margin-left:2px;}
+.bp-card{margin:0 10px 8px;background:rgba(204,0,0,0.06);border:1px solid rgba(204,0,0,0.18);border-radius:10px;overflow:hidden;}
+.bp-card-img{height:56px;background:linear-gradient(135deg,rgba(204,0,0,0.15),rgba(0,0,0,0.9));display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:rgba(204,0,0,0.4);}
+.bp-card-body{padding:7px 9px;}
+.bp-card-badge{font-size:0.44rem;font-weight:700;color:rgba(204,0,0,0.85);background:rgba(204,0,0,0.12);padding:1px 6px;border-radius:8px;margin-bottom:3px;display:inline-block;}
+.bp-card-title{font-size:0.6rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.bp-card-desc{font-size:0.5rem;color:var(--txt-dim);line-height:1.4;}
+.bp-card-meta{font-size:0.48rem;color:rgba(204,0,0,0.6);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.bp-bnav{padding:6px 12px;background:rgba(0,0,0,0.98);border-top:1px solid rgba(80,0,0,0.3);display:flex;justify-content:space-around;}
+.bp-bnav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.44rem;color:var(--txt-ghost);}
+.bp-bnav-item.active{color:var(--red);}
+
+/* Viewer mockup elements */
+.bp-vhero{padding:14px 12px;background:linear-gradient(135deg,rgba(20,0,0,0.95),rgba(0,0,0,1));}
+.bp-vhero-img{height:80px;background:linear-gradient(135deg,rgba(204,0,0,0.12),rgba(0,0,0,0.95));border-radius:8px;border:1px solid rgba(60,0,0,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.bp-section-hdr{padding:8px 12px 4px;font-size:0.58rem;font-weight:700;color:var(--txt-bright);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(60,0,0,0.3);margin-top:4px;}
+.bp-section-hdr i{color:var(--red);}
+.bp-comp-item{margin:0 12px 3px;padding:5px 7px;background:rgba(204,0,0,0.05);border:1px solid rgba(60,0,0,0.3);border-radius:6px;font-size:0.5rem;color:var(--txt-mid);display:flex;align-items:center;gap:5px;}
+.bp-comp-num{width:14px;height:14px;background:rgba(204,0,0,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:var(--red);font-weight:700;flex-shrink:0;}
+.bp-code-block{margin:0 12px 6px;background:rgba(0,0,0,0.6);border:1px solid rgba(80,80,80,0.3);border-radius:8px;overflow:hidden;}
+.bp-code-hdr{padding:5px 8px;background:rgba(0,0,0,0.5);border-bottom:1px solid rgba(60,60,60,0.4);display:flex;justify-content:space-between;align-items:center;font-size:0.48rem;color:var(--txt-dim);}
+.bp-code-copy{padding:2px 6px;background:rgba(204,0,0,0.2);border:1px solid rgba(204,0,0,0.35);border-radius:4px;font-size:0.42rem;color:rgba(204,0,0,0.9);}
+.bp-code-body{padding:6px 8px;font-family:'Fira Code',monospace;font-size:0.45rem;color:#c0c0c0;line-height:1.5;}
+.bp-tinkercad-btn{margin:6px 12px;padding:7px 10px;background:rgba(0,151,157,0.2);border:1px solid rgba(0,151,157,0.4);border-radius:8px;font-size:0.52rem;font-weight:700;color:rgba(0,200,210,0.9);display:flex;align-items:center;justify-content:center;gap:5px;}
+.bp-readme{margin:0 12px 6px;background:rgba(0,0,0,0.4);border:1px solid rgba(60,0,0,0.4);border-radius:8px;padding:8px;font-size:0.5rem;color:var(--txt-dim);line-height:1.5;}
+.bp-save-active{color:#ffc107 !important;}
+
+/* ─── ANATOMY ─── */
+.anatomy-wrap{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start;margin-bottom:40px;}
+.anatomy-labels{display:flex;flex-direction:column;gap:12px;padding-top:8px;}
+.al-item{display:flex;align-items:flex-start;gap:10px;}
+.al-num{width:22px;height:22px;background:rgba(204,0,0,0.18);border:1px solid var(--red-border-md);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--red);flex-shrink:0;margin-top:1px;}
+.al-title{font-size:0.82rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.al-desc{font-size:0.74rem;color:var(--txt-mid);line-height:1.5;}
+.al-desc-bn{font-size:0.7rem;color:var(--txt-dim);line-height:1.45;margin-top:2px;}
+
+/* ─── FEATURE GRID ─── */
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px;}
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:20px;transition:all .3s;}
+.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-3px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:1rem;}
+.feat-icon-red{background:rgba(204,0,0,0.12);border:1px solid var(--red-border);color:var(--red);}
+.feat-icon-teal{background:rgba(0,151,157,0.1);border:1px solid rgba(0,151,157,0.3);color:rgba(0,200,210,0.9);}
+.feat-icon-yellow{background:rgba(200,150,0,0.1);border:1px solid rgba(200,150,0,0.3);color:rgba(255,210,50,0.9);}
+.feat-icon-green{background:rgba(0,160,0,0.08);border:1px solid rgba(0,160,0,0.25);color:rgba(100,220,120,0.9);}
+.feat-icon-blue{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);color:rgba(100,180,255,0.9);}
+.feat-title{font-size:0.9rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.76rem;color:var(--txt-mid);line-height:1.55;}
+.feat-desc-bn{font-size:0.72rem;color:var(--txt-dim);line-height:1.5;margin-top:3px;}
+code.ic{font-family:'Fira Code',monospace;font-size:0.68rem;color:rgba(255,130,130,0.85);background:rgba(204,0,0,0.09);padding:1px 5px;border-radius:3px;}
+
+/* ─── FLOW ROW ─── */
+.flow-row{display:flex;align-items:center;gap:0;margin:0 0 36px;flex-wrap:wrap;}
+.flow-node{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:16px 20px;flex:1;min-width:140px;text-align:center;transition:all .3s;}
+.flow-node:hover{background:var(--bg-card-h);}
+.flow-node-num{font-size:0.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-ghost);margin-bottom:3px;}
+.flow-node-title{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:2px;}
+.flow-node-file{font-family:'Fira Code',monospace;font-size:0.62rem;color:rgba(255,130,130,0.7);}
+.flow-arrow{color:rgba(204,0,0,0.5);font-size:1rem;margin:0 6px;flex-shrink:0;}
+
+/* ─── TABLE ─── */
+.guide-table-wrap{overflow-x:auto;margin:16px 0 36px;}
+.guide-table{width:100%;border-collapse:collapse;font-size:0.77rem;}
+.guide-table th{padding:10px 14px;text-align:left;font-size:0.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-dim);border-bottom:1px solid var(--red-border);}
+.guide-table td{padding:10px 14px;color:var(--txt-mid);border-bottom:1px solid rgba(204,0,0,0.08);vertical-align:top;}
+.guide-table tr:last-child td{border-bottom:none;}
+.guide-table td code{font-family:'Fira Code',monospace;font-size:0.7rem;color:rgba(255,130,130,0.85);background:rgba(204,0,0,0.09);padding:1px 5px;border-radius:3px;}
+
+/* ─── CALLOUT ─── */
+.callout{background:rgba(204,0,0,0.05);border:1px solid rgba(204,0,0,0.2);border-left:3px solid var(--red);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin:0 0 32px;font-size:0.8rem;color:var(--txt-mid);line-height:1.6;}
+.callout strong{color:var(--txt-bright);}
+.callout-teal{border-left-color:var(--teal);background:rgba(0,151,157,0.05);border-color:rgba(0,151,157,0.2);}
+
+/* ─── FILTER CHIP DEMO ─── */
+.chip-demo{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 32px;}
+.chip-demo-item{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:0.72rem;font-weight:600;border:1px solid;cursor:default;}
+.chip-active{color:#fff;background:var(--red);border-color:var(--red);}
+.chip-idle{color:var(--txt-dim);background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2);}
+.chip-cnt{font-size:0.6rem;font-family:'Rajdhani',sans-serif;font-weight:700;opacity:0.8;}
+
+/* ─── CATEGORY CARDS ─── */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px;}
+.cat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-lg);padding:16px;text-align:center;}
+.cat-icon{font-size:1.2rem;margin-bottom:6px;}
+.cat-name{font-size:0.78rem;font-weight:700;color:var(--txt-bright);margin-bottom:3px;}
+.cat-count{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--red);}
+.cat-desc{font-size:0.65rem;color:var(--txt-dim);margin-top:3px;line-height:1.4;}
+
+[data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .5s var(--ease),transform .5s var(--ease);}
+[data-reveal].visible{opacity:1;transform:none;}
+
+@media(max-width:900px){.pg-topbar{padding:0 16px;}.pg-hero,.pg-main{padding-left:20px;padding-right:20px;}.feat-grid,.cat-grid{grid-template-columns:1fr 1fr;}.anatomy-wrap{grid-template-columns:1fr;}.bp{margin:0 auto;}}
+</style>
+</head>
+<body>
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio">
+            <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>
+            <li class="desktop-nav-item"><a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF"><i class="fas fa-download" aria-hidden="true"></i><span>CV</span></a></li>
+        </ul>
+    </div>
+</nav>
+<div class="scan-line"></div>
+
+<!-- ─── TOPBAR ─── -->
+<nav class="pg-topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="projects.html" class="pg-back"><i class="fas fa-arrow-left"></i> Mobile Projects</a>
+    <div class="pg-bc"><span class="sep">/</span><span class="cur">Arduino Guide</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="pg-badge-mob"><i class="fas fa-mobile-alt"></i> Mobile Guide</div>
+    <a href="../features.html" class="pg-back" style="border-color:rgba(204,0,0,0.35);color:rgba(255,130,130,0.85);"><i class="fas fa-search"></i> Feature Search</a>
+    <a href="index.html" class="pg-back"><i class="fas fa-th"></i> All Guides</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="pg-hero" data-reveal>
+  <div class="hero-label"><i class="fas fa-microchip"></i> Mobile Projects — Arduino</div>
+  <h1 class="hero-title">Arduino Projects<br><span>Complete Guide</span></h1>
+  <p class="hero-desc">A complete walkthrough of the Arduino section — from the category listing page to the full project viewer. Every feature, every button documented.</p>
+  <p class="hero-desc-bn">Arduino Projects section-এর প্রতিটা feature-এর বিস্তারিত guide। Listing page থেকে শুরু করে Project Viewer-এর প্রতিটা কোণ।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-microchip"></i> 23 Projects</span>
+    <span class="badge badge-teal"><i class="fas fa-cube"></i> Tinkercad Simulation</span>
+    <span class="badge badge-blue"><i class="fas fa-code"></i> Arduino (.ino) Viewer</span>
+    <span class="badge badge-green"><i class="fas fa-book-open"></i> README + Explanation</span>
+    <span class="badge badge-yellow"><i class="fas fa-bookmark"></i> Bookmark (localStorage)</span>
+  </div>
+</section>
+
+<main class="pg-main">
+
+  <!-- ═══ NAVIGATION FLOW ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-route"></i> Page Flow</div>
+    <h2 class="sec-title">2-Page <span>Navigation</span></h2>
+    <p class="sec-sub">Arduino section-এ দুটো page — listing আর viewer।</p>
+  </div>
+  <div class="flow-row" data-reveal>
+    <div class="flow-node">
+      <div class="flow-node-num">Page 01</div>
+      <div class="flow-node-title">Arduino Listing</div>
+      <div class="flow-node-file">arduino-projects.html</div>
+    </div>
+    <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+    <div class="flow-node">
+      <div class="flow-node-num">Page 02</div>
+      <div class="flow-node-title">Project Viewer</div>
+      <div class="flow-node-file">project-viewer.html?id=X&amp;category=arduino</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 1 — LISTING ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-list"></i> Page 1</div>
+    <h2 class="sec-title">Arduino <span>Listing Page</span></h2>
+    <p class="sec-sub"><code class="ic">arduino-projects.html</code> — Cards load dynamically from <code class="ic">arduino-data.json</code>।</p>
+  </div>
+
+  <div class="anatomy-wrap" data-reveal>
+    <div class="bp">
+      <div class="bp-notch"></div>
+      <div class="bp-screen">
+        <!-- Header -->
+        <div class="bp-hdr">
+          <div class="bp-hdr-back"><i class="fas fa-arrow-left"></i> Projects</div>
+          <div class="bp-hdr-actions">
+            <div class="bp-hdr-btn" id="ann-3"><i class="fas fa-search"></i></div>
+          </div>
+        </div>
+        <!-- Category Hero -->
+        <div class="bp-hero" id="ann-1">
+          <div class="bp-hero-icon"><i class="fas fa-microchip" style="color:var(--red);"></i></div>
+          <div class="bp-hero-title">All Arduino Projects</div>
+          <div class="bp-hero-sub">IoT, Sensors &amp; Embedded Systems</div>
+          <div class="bp-hero-badge"><i class="fas fa-layer-group"></i> 23 Projects</div>
+        </div>
+        <!-- Search bar (visible for demo) -->
+        <div class="bp-searchbar" id="ann-4">
+          <i class="fas fa-search" style="color:var(--red);font-size:.55rem;"></i>
+          <span>Search Arduino projects...</span>
+        </div>
+        <!-- Filter chips -->
+        <div class="bp-filters" id="ann-5">
+          <div class="bp-chip active">All <span class="cnt">23</span></div>
+          <div class="bp-chip"><i class="fas fa-lightbulb" style="font-size:.45rem;"></i> LED</div>
+          <div class="bp-chip"><i class="fas fa-microchip" style="font-size:.45rem;"></i> Sensors</div>
+          <div class="bp-chip"><i class="fas fa-tv" style="font-size:.45rem;"></i> Display</div>
+        </div>
+        <!-- Cards -->
+        <div class="bp-card" id="ann-6">
+          <div class="bp-card-img"><i class="fas fa-bolt"></i></div>
+          <div class="bp-card-body">
+            <div class="bp-card-badge">LED Basics</div>
+            <div class="bp-card-title">LED Pattern Control</div>
+            <div class="bp-card-desc">Control blinking patterns using potentiometer.</div>
+            <div class="bp-card-meta"><i class="fas fa-tools"></i> 5 Components</div>
+          </div>
+        </div>
+        <div class="bp-card">
+          <div class="bp-card-img"><i class="fas fa-microchip"></i></div>
+          <div class="bp-card-body">
+            <div class="bp-card-badge">Sensors</div>
+            <div class="bp-card-title">Ultrasonic Distance</div>
+            <div class="bp-card-desc">HC-SR04 sensor with LCD display.</div>
+            <div class="bp-card-meta"><i class="fas fa-tools"></i> 4 Components</div>
+          </div>
+        </div>
+        <!-- Bottom Nav -->
+        <div class="bp-bnav">
+          <div class="bp-bnav-item"><i class="fas fa-home"></i><span>Home</span></div>
+          <div class="bp-bnav-item"><i class="fas fa-user-circle"></i><span>About</span></div>
+          <div class="bp-bnav-item active"><i class="fas fa-folder-open"></i><span>Projects</span></div>
+          <div class="bp-bnav-item"><i class="fas fa-layer-group"></i><span>Studio</span></div>
+          <div class="bp-bnav-item"><i class="fas fa-envelope"></i><span>Contact</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anatomy-labels">
+      <div class="al-item">
+        <div class="al-num">1</div>
+        <div class="al-content">
+          <div class="al-title">Category Hero</div>
+          <div class="al-desc">Microchip icon, "All Arduino Projects" heading, subtitle, count badge (23 Projects). Heading text dynamically changes based on active filter.</div>
+          <div class="al-desc-bn">Active filter অনুযায়ী heading বদলায় — "LED Projects", "Sensor Projects" ইত্যাদি।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">2</div>
+        <div class="al-content">
+          <div class="al-title">Back Button</div>
+          <div class="al-desc">Returns to <code class="ic">projects.html</code> Hub page.</div>
+          <div class="al-desc-bn">Projects hub-এ ফিরে যায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">3</div>
+        <div class="al-content">
+          <div class="al-title">Search Toggle</div>
+          <div class="al-desc">Magnifier icon in header right. Tap → search bar appears/disappears (<code class="ic">searchSection</code> element, default <code class="ic">display:none</code>).</div>
+          <div class="al-desc-bn">Header-এর search icon tap করলে নিচে search bar দেখা যায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">4</div>
+        <div class="al-content">
+          <div class="al-title">Search Bar</div>
+          <div class="al-desc">Searches across: <strong>title</strong>, <strong>description</strong>, and <strong>components[]</strong> simultaneously. Clear button (×) shows when text is entered.</div>
+          <div class="al-desc-bn">Title, description, components সব কিছু একসাথে search করে। ×  button দিয়ে clear।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">5</div>
+        <div class="al-content">
+          <div class="al-title">Filter Chips (Scrollable)</div>
+          <div class="al-desc">5 chips: All, LED Basics, Sensors/Actuators, Display/Input, Advanced. Each chip shows live count. Active chip turns red. Fade indicators show scroll direction.</div>
+          <div class="al-desc-bn">5টা filter chip — tap করলে count badge আছে। Scroll করলে ডানে আরো chip দেখা যায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">6</div>
+        <div class="al-content">
+          <div class="al-title">Project Card</div>
+          <div class="al-desc">Circuit image thumbnail (fallback: microchip icon), category badge, title, description, component count. Tapping navigates to <code class="ic">project-viewer.html?id=X&amp;category=arduino</code>.</div>
+          <div class="al-desc-bn">Circuit image না থাকলে microchip placeholder দেখায়। Tap → viewer।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter chip legend -->
+  <div class="sec-label" data-reveal><i class="fas fa-filter"></i> Filter Categories</div>
+  <div class="cat-grid" data-reveal>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-lightbulb" style="color:rgba(255,230,0,0.8);"></i></div>
+      <div class="cat-name">LED Basics</div>
+      <div class="cat-desc">LED patterns, blink sequences, potentiometer control</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-microchip" style="color:rgba(100,200,255,0.8);"></i></div>
+      <div class="cat-name">Sensors &amp; Actuators</div>
+      <div class="cat-desc">Ultrasonic, temperature, motion, motor control</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-tv" style="color:rgba(150,200,150,0.8);"></i></div>
+      <div class="cat-name">Display &amp; Input</div>
+      <div class="cat-desc">LCD screens, button inputs, keypad interfaces</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon"><i class="fas fa-robot" style="color:rgba(200,100,255,0.8);"></i></div>
+      <div class="cat-name">Advanced</div>
+      <div class="cat-desc">Bluetooth, WiFi, IoT, complex multi-sensor systems</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 2 — VIEWER ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-eye"></i> Page 2</div>
+    <h2 class="sec-title">Project <span>Viewer</span></h2>
+    <p class="sec-sub"><code class="ic">project-viewer.html?id=X&category=arduino</code> — URL query string দিয়ে project load হয়।</p>
+  </div>
+
+  <div class="anatomy-wrap" data-reveal>
+    <div class="bp">
+      <div class="bp-notch"></div>
+      <div class="bp-screen">
+        <!-- Header -->
+        <div class="bp-hdr">
+          <div class="bp-hdr-back"><i class="fas fa-arrow-left"></i> Back to Projects</div>
+          <div class="bp-hdr-actions">
+            <div class="bp-hdr-btn"><i class="fas fa-share-alt"></i></div>
+            <div class="bp-hdr-btn bp-save-active"><i class="fas fa-bookmark"></i></div>
+          </div>
+        </div>
+        <!-- Hero image -->
+        <div class="bp-vhero">
+          <div class="bp-vhero-img"><i class="fas fa-microchip" style="font-size:1.8rem;color:rgba(204,0,0,0.35);"></i></div>
+          <div style="font-size:0.65rem;font-weight:800;color:var(--txt-white);margin-bottom:2px;">LED Pattern Control</div>
+          <div style="font-size:0.52rem;color:var(--txt-dim);">Control LED blinking using potentiometer</div>
+        </div>
+        <!-- Components -->
+        <div class="bp-section-hdr"><i class="fas fa-cubes"></i> Components Required</div>
+        <div class="bp-comp-item"><div class="bp-comp-num">1</div> Arduino UNO</div>
+        <div class="bp-comp-item"><div class="bp-comp-num">2</div> 5× LED</div>
+        <div class="bp-comp-item"><div class="bp-comp-num">3</div> Potentiometer</div>
+        <!-- Code -->
+        <div class="bp-section-hdr"><i class="fas fa-code"></i> Arduino Sketch</div>
+        <div class="bp-code-block">
+          <div class="bp-code-hdr">
+            <span>Led-pattern.ino</span>
+            <div style="display:flex;gap:4px;"><div class="bp-code-copy"><i class="fas fa-copy"></i> Copy</div><div class="bp-code-copy"><i class="fas fa-download"></i></div></div>
+          </div>
+          <div class="bp-code-body">void setup() {<br>&nbsp;&nbsp;pinMode(led, OUTPUT);<br>}<br>void loop() { ... }</div>
+        </div>
+        <!-- Tinkercad -->
+        <div class="bp-section-hdr"><i class="fas fa-cube"></i> Tinkercad Simulation</div>
+        <div class="bp-tinkercad-btn"><i class="fas fa-play"></i> Open in Tinkercad</div>
+        <!-- Bottom Nav -->
+        <div class="bp-bnav">
+          <div class="bp-bnav-item"><i class="fas fa-home"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-user-circle"></i></div>
+          <div class="bp-bnav-item active"><i class="fas fa-folder-open"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-layer-group"></i></div>
+          <div class="bp-bnav-item"><i class="fas fa-envelope"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anatomy-labels">
+      <div class="al-item">
+        <div class="al-num">1</div>
+        <div class="al-content">
+          <div class="al-title">Share Button</div>
+          <div class="al-desc">Uses native <strong>Web Share API</strong> (<code class="ic">navigator.share()</code>). Opens phone's native share sheet — WhatsApp, copy link, etc.</div>
+          <div class="al-desc-bn">Android/iOS-এর native share sheet খোলে। WhatsApp, copy link সব option আসে।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">2</div>
+        <div class="al-content">
+          <div class="al-title">Bookmark Button</div>
+          <div class="al-desc">Saves bookmark state in <code class="ic">localStorage</code> as <code class="ic">project_[id]_saved</code>. Icon turns <strong>yellow</strong> when saved. Persists after page close.</div>
+          <div class="al-desc-bn">Bookmark করলে icon হলুদ হয়। Browser বন্ধ করলেও থাকে।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">3</div>
+        <div class="al-content">
+          <div class="al-title">Circuit Image / Hero</div>
+          <div class="al-desc">Circuit diagram from <code class="ic">Projects Storage/Arduino UNO.../[folder]/circuit.png</code>. Fallback: microchip placeholder icon.</div>
+          <div class="al-desc-bn">Project folder থেকে circuit.png load করে। না পেলে icon placeholder।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">4</div>
+        <div class="al-content">
+          <div class="al-title">Components List</div>
+          <div class="al-desc">Numbered list of all required components. Pulled from <code class="ic">components[]</code> array in arduino-data.json.</div>
+          <div class="al-desc-bn">JSON-এর components array থেকে numbered list।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">5</div>
+        <div class="al-content">
+          <div class="al-title">Arduino Sketch (.ino)</div>
+          <div class="al-desc">Code section with filename header, <strong>Copy</strong> button (copies to clipboard) and <strong>Download</strong> button (downloads .ino file).</div>
+          <div class="al-desc-bn">Copy বা Download করা যায়। File name header-এ দেখায়।</div>
+        </div>
+      </div>
+      <div class="al-item">
+        <div class="al-num">6</div>
+        <div class="al-content">
+          <div class="al-title">Tinkercad Simulation</div>
+          <div class="al-desc">Circuit preview image + teal "Open in Tinkercad" button. Opens project directly in <strong>Tinkercad.com</strong> online simulator.</div>
+          <div class="al-desc-bn">Tinkercad.com-এ directly circuit simulate করা যায়।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full feature grid — Viewer -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-star"></i> All Viewer Features</div>
+    <h2 class="sec-title">Project Viewer — <span>Every Feature</span></h2>
+    <p class="sec-sub">Viewer page-এ সব features এক জায়গায়।</p>
+  </div>
+
+  <div class="feat-grid" data-reveal>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-red"><i class="fas fa-share-alt"></i></div>
+      <div class="feat-title">Web Share API</div>
+      <div class="feat-desc">Native <code class="ic">navigator.share()</code> — phone's own share sheet with project title + URL. Works on all modern Android/iOS browsers.</div>
+      <div class="feat-desc-bn">Phone-এর native share dialog — WhatsApp, Instagram, copy link যা চাও।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-yellow"><i class="fas fa-bookmark"></i></div>
+      <div class="feat-title">Persistent Bookmark</div>
+      <div class="feat-desc"><code class="ic">localStorage.setItem('project_[id]_saved', true)</code> — yellow icon when active. Survives page refresh and browser restart.</div>
+      <div class="feat-desc-bn">LocalStorage-এ save হয়। পরে এসেও bookmarked দেখা যায়।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-blue"><i class="fas fa-cubes"></i></div>
+      <div class="feat-title">Components List</div>
+      <div class="feat-desc">Numbered list from <code class="ic">components[]</code> in JSON — Arduino UNO, resistors, sensors, etc. All parts clearly listed.</div>
+      <div class="feat-desc-bn">প্রতিটা component numbered list-এ দেখায়।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-red"><i class="fas fa-file-code"></i></div>
+      <div class="feat-title">Arduino Sketch Viewer</div>
+      <div class="feat-desc">.ino file loads with syntax display. File name in header. <strong>Copy</strong> button for clipboard. <strong>Download</strong> button for .ino file. Scrollable horizontally.</div>
+      <div class="feat-desc-bn">.ino code দেখা, copy করা, download করা সব possible।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-teal"><i class="fas fa-cube"></i></div>
+      <div class="feat-title">Tinkercad Simulation</div>
+      <div class="feat-desc">Circuit preview image + teal button that opens the actual Tinkercad project in browser. Unique to Arduino category — simulate without hardware.</div>
+      <div class="feat-desc-bn">Hardware ছাড়াই online-এ circuit simulate করা যায়।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-green"><i class="fas fa-book-open"></i></div>
+      <div class="feat-title">README Viewer</div>
+      <div class="feat-desc">Markdown README rendered inline. Max 250px height, scrollable. Fullscreen button to read fully. <strong>Download README</strong> button.</div>
+      <div class="feat-desc-bn">README.md markdown render করে দেখায়। Fullscreen + download সুবিধা।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-blue"><i class="fas fa-graduation-cap"></i></div>
+      <div class="feat-title">Beginner Explanation</div>
+      <div class="feat-desc">"Code Explanation (For Beginners)" — separate markdown section. Fullscreen button. Explains code line by line in simple language.</div>
+      <div class="feat-desc-bn">Beginner-দের জন্য code explanation আলাদা section-এ। Fullscreen-এ পড়ার সুবিধা।</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon feat-icon-red"><i class="fas fa-search"></i></div>
+      <div class="feat-title">Deep Search</div>
+      <div class="feat-desc">Listing page search covers title + description + <strong>all component names</strong>. Type "resistor" → only projects with resistors show up.</div>
+      <div class="feat-desc-bn">Component দিয়েও search করা যায়। "LED" লিখলে LED project গুলো দেখাবে।</div>
+    </div>
+  </div>
+
+  <!-- ═══ DATA SCHEMA ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-database"></i> Data Schema</div>
+    <h2 class="sec-title">arduino-data.json — <span>Fields</span></h2>
+    <p class="sec-sub">প্রতিটা project object-এর সব field।</p>
+  </div>
+  <div class="guide-table-wrap" data-reveal>
+    <table class="guide-table">
+      <thead>
+        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Number</td><td>Unique project ID — used in URL <code class="ic">?id=X</code> and localStorage key</td></tr>
+        <tr><td><code>category</code></td><td>String</td><td><code>led-basics</code> | <code>sensors-actuators</code> | <code>display-input</code> | <code>advanced-projects</code></td></tr>
+        <tr><td><code>folder</code></td><td>String</td><td>Storage folder name e.g. <code>01 LED Pattern</code> — used to build file paths</td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Project display name</td></tr>
+        <tr><td><code>subtitle</code></td><td>String</td><td>Short tagline shown below title</td></tr>
+        <tr><td><code>description</code></td><td>String</td><td>Searchable description shown on listing card</td></tr>
+        <tr><td><code>components</code></td><td>Array</td><td>List of required hardware parts — also searchable</td></tr>
+        <tr><td><code>tinkercad</code></td><td>URL</td><td>Tinkercad simulation link — triggers Tinkercad section in viewer</td></tr>
+        <tr><td><code>files.code</code></td><td>String</td><td>.ino filename — loaded as Arduino Sketch</td></tr>
+        <tr><td><code>files.circuit</code></td><td>String</td><td>circuit.png — hero image in viewer</td></tr>
+        <tr><td><code>files.readme</code></td><td>String</td><td>README.md — loaded and rendered in README section</td></tr>
+        <tr><td><code>files.explanation</code></td><td>String</td><td>Explanation .md file — loaded in Beginner Explanation section</td></tr>
+        <tr><td><code>dateAdded</code></td><td>String</td><td>ISO date</td></tr>
+        <tr><td><code>codeFile</code></td><td>String</td><td>Alias for files.code (legacy field)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ FILE MAP ═══ -->
+  <div class="divider"></div>
+  <div data-reveal>
+    <div class="sec-label"><i class="fas fa-folder-open"></i> File Map</div>
+    <h2 class="sec-title">All <span>Files</span></h2>
+  </div>
+  <div class="guide-table-wrap" data-reveal>
+    <table class="guide-table">
+      <thead><tr><th>File</th><th>Location</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>arduino-projects.html</code></td><td>mobile/projects/</td><td>Category listing — filter chips, project cards grid</td></tr>
+        <tr><td><code>arduino-projects.js</code></td><td>mobile/projects/</td><td>Loads JSON, renders cards, search+filter logic</td></tr>
+        <tr><td><code>project-viewer.html</code></td><td>mobile/projects/</td><td>Shared viewer for Arduino, MATLAB, SolidWorks</td></tr>
+        <tr><td><code>project-viewer.js</code></td><td>mobile/projects/</td><td>Renders all viewer sections dynamically by category</td></tr>
+        <tr><td><code>arduino-data.json</code></td><td>Projects Code/Arduino/</td><td>All 23 Arduino project objects</td></tr>
+        <tr><td><code>arduino-projects.html</code></td><td>Projects Code/Arduino/</td><td>Desktop Arduino listing page</td></tr>
+        <tr><td><code>arduino-project-viewer.html</code></td><td>Projects Code/Arduino/</td><td>Desktop Arduino project viewer</td></tr>
+        <tr><td><code>projects.css</code></td><td>mobile/projects/</td><td>Shared styles for all mobile project pages</td></tr>
+        <tr><td>circuit.png / *.ino / README.md</td><td>Projects Storage/Arduino UNO.../[folder]/</td><td>Per-project assets — circuit image, code, docs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;" data-reveal>
+    <a href="projects-detail.html" style="display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;color:rgba(255,130,130,0.9);background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);border-radius:8px;padding:8px 14px;text-decoration:none;" onmouseover="this.style.background='rgba(204,0,0,0.18)'" onmouseout="this.style.background='rgba(204,0,0,0.1)'"><i class="fas fa-arrow-left"></i> Projects Hub Guide</a>
+    <a href="projects-solidworks.html" style="display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;color:rgba(255,180,50,0.9);background:rgba(255,140,0,0.08);border:1px solid rgba(255,140,0,0.28);border-radius:8px;padding:8px 14px;text-decoration:none;" onmouseover="this.style.background='rgba(255,140,0,0.16)'" onmouseout="this.style.background='rgba(255,140,0,0.08)'">SolidWorks Guide <i class="fas fa-arrow-right"></i></a>
+  </div>
+
+</main>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">আমরা তোমাদের জন্য প্রতিটি জিনিসে নিদর্শন রেখেছি — তোমরা কি বুঝবে না?</p>
+      <cite class="wg-qsrc">&#8212; আল-কুরআন — সূরা বাকারা: ১৬৪</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/guide.js"></script>
+<script>
+const obs = new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')}),{threshold:0.08});
+document.querySelectorAll('[data-reveal]').forEach(el=>obs.observe(el));
+</script>
+<script src="../../Optimization/navbar-autohide.js"></script>
+    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

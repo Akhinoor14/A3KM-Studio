@@ -117,7 +117,7 @@
         // Add apple-touch-icon
         const icon = document.createElement('link');
         icon.rel = 'apple-touch-icon';
-        icon.href = '/images/favicon.svg';
+        icon.href = '/images/icon-180.png';
         document.head.appendChild(icon);
         
         // Add iOS splash screens (optional - uses theme colors if images missing)
@@ -125,8 +125,6 @@
         splashLink.rel = 'apple-touch-startup-image';
         splashLink.href = '/images/favicon.svg';
         document.head.appendChild(splashLink);
-        icon.href = '/images/favicon.svg';
-        document.head.appendChild(icon);
         
         console.log('✅ iOS meta tags injected');
     }

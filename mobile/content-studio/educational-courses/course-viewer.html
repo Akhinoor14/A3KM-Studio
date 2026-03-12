@@ -76,7 +76,7 @@
             position: absolute; inset: 0; background: #000;
             opacity: 0; pointer-events: none; z-index: 3; transition: opacity 0.1s;
         }
-        .vp-gesture { position: absolute; inset: 0; z-index: 10; }
+        .vp-gesture { position: absolute; inset: 0; z-index: 10; touch-action: none; }
         .vp-controls {
             position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
             display: flex; align-items: center; justify-content: flex-end; padding: 0 10px;
@@ -123,7 +123,7 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            display: flex; align-items: center; gap: 20px;
+            display: flex; align-items: center; gap: 36px;
             z-index: 14;
             opacity: 0; transition: opacity 0.28s ease;
             pointer-events: none;
@@ -132,17 +132,17 @@
             opacity: 1; pointer-events: auto;
         }
         .vp-mc-btn {
-            width: 46px; height: 46px;
+            width: 54px; height: 54px;
             display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.62);
             border: 1.5px solid rgba(255,255,255,0.22);
-            border-radius: 50%; color: #fff; font-size: 17px;
+            border-radius: 50%; color: #fff; font-size: 20px;
             cursor: pointer; -webkit-tap-highlight-color: transparent;
             transition: transform 0.14s cubic-bezier(0.4,0,0.2,1), background 0.14s;
             backdrop-filter: blur(6px);
         }
         .vp-mc-btn.center {
-            width: 56px; height: 56px; font-size: 21px;
+            width: 66px; height: 66px; font-size: 24px;
             background: rgba(204,0,0,0.62);
             border-color: rgba(255,255,255,0.3);
         }
@@ -399,6 +399,10 @@
             border: 1px solid rgba(204,0,0,0.28); border-radius: 3px;
             font-size: 9.5px; font-weight: 800; color: rgba(255,255,255,0.6);
         }
+        /* Hide page content during landscape fullscreen */
+        body.vp-landscape-fs > *:not(#vpWrapper):not(.vp-pip-fallback) {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -519,11 +523,7 @@
                 <i class="fas fa-envelope" aria-hidden="true"></i>
                 <span class="mobile-nav-label">Contact</span>
             </a>
-        
-            <a href="../../../Documentation/index.html" class="mobile-nav-item" aria-label="Website Guide">
-                <i class="fas fa-book-open" aria-hidden="true"></i>
-                <span class="mobile-nav-label">Guide</span>
-            </a></div>
+        </div>
     </nav>
 
     <div id="mobileNavbar"></div>
@@ -547,6 +547,7 @@
         let currentVol   = 80;
         let brightness   = 0;
         let controlsTimer = null;
+        let volRaf = null, pendingVol = null;
 
         const wrapper    = document.getElementById('vpWrapper');
         const inner      = document.getElementById('videoPlayerContainer');
@@ -753,7 +754,7 @@
             }
             async function openDocPiP(){
                 if(fbOpen) closeFbOverlay();
-                if(!playerReady||!ytPlayer) return;
+                if(!playerReady||!ytPlayer){openFbOverlay();return;}
                 const vd=ytPlayer.getVideoData?ytPlayer.getVideoData():{};
                 const vidId=vd.video_id||'', stT=ytPlayer.getCurrentTime?ytPlayer.getCurrentTime():0;
                 if(!vidId){openFbOverlay();return;}
@@ -877,6 +878,7 @@
                 inner.style.transform='';
             }
             state='landscapeFS';
+            document.body.classList.add('vp-landscape-fs');
             const el=wrapper;
             const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
             if(req) Promise.resolve(req.call(el)).catch(()=>{});
@@ -886,6 +888,7 @@
         function exitLandscapeFS(){
             if(state!=='landscapeFS') return;
             state='normal';
+            document.body.classList.remove('vp-landscape-fs');
             if(document.fullscreenElement||document.webkitFullscreenElement){
                 const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
                 if(exit) Promise.resolve(exit.call(document)).catch(()=>{});
@@ -905,6 +908,7 @@
             const inFS=!!(document.fullscreenElement||document.webkitFullscreenElement);
             if(!inFS&&state==='landscapeFS'){
                 state='normal';
+                document.body.classList.remove('vp-landscape-fs');
                 try{screen.orientation.unlock();}catch(e){}
                 updateFsIcon();
             }
@@ -936,13 +940,18 @@
             if(!gLocked&&(adx>LOCK_THRESH||ady>LOCK_THRESH)){
                 gLocked=true;
                 if(ady>adx){
-                    if(state==='normal'&&dy>0) gMode='swipe-enter';
+                    const wr=wrapper.getBoundingClientRect();
+                    const inLeftZone=t.clientX<(wr.left+wr.width/3);
+                    const inRightZone=t.clientX>(wr.left+wr.width*2/3);
+                    if(inRightZone){
+                        gMode='vol'; lockedH=wr.height||200; touchStartY=t.clientY;
+                    }else if(inLeftZone){
+                        gMode='bri'; lockedH=wr.height||200; touchStartY=t.clientY;
+                    }else if(state==='normal'&&dy>0) gMode='swipe-enter';
                     else if(state==='portraitFS'&&dy<0) gMode='swipe-exit';
                     else{
-                        const wr=wrapper.getBoundingClientRect();
                         gMode=t.clientX>=(wr.left+wr.width/2)?'vol':'bri';
-                        lockedH=wr.height||200;
-                        touchStartY=t.clientY;
+                        lockedH=wr.height||200; touchStartY=t.clientY;
                     }
                 }
             }
@@ -960,15 +969,22 @@
             } else if(gMode==='vol'){
                 const delta=(touchStartY-t.clientY)/(lockedH*0.75)*100;
                 currentVol=clamp(currentVol+delta,0,100); touchStartY=t.clientY;
-                if(ytPlayer&&playerReady) ytPlayer.setVolume(Math.round(currentVol));
-                localStorage.setItem('vp_vol', Math.round(currentVol));
-                syncVolHud(); showHud(volHud,1500);
+                syncVolHud(); showHud(volHud,2000);
+                pendingVol=Math.round(currentVol);
+                if(!volRaf) volRaf=requestAnimationFrame(()=>{
+                    volRaf=null;
+                    if(ytPlayer&&playerReady&&pendingVol!==null){
+                        ytPlayer.setVolume(pendingVol);
+                        localStorage.setItem('vp_vol',pendingVol);
+                        pendingVol=null;
+                    }
+                });
             } else if(gMode==='bri'){
                 const delta=(touchStartY-t.clientY)/(lockedH*0.75)*0.70;
                 brightness=clamp(brightness+delta,0,0.70); touchStartY=t.clientY;
                 briOverlay.style.opacity=brightness;
                 briFill.style.height=((1-brightness/0.70)*100)+'%';
-                showHud(briHud,1500);
+                showHud(briHud,2000);
             }
         },{passive:true});
 
@@ -990,9 +1006,10 @@
                 if(state==='landscapeFS') exitLandscapeFS(); else enterLandscapeFS();
                 showTapRing(rx,ry);
             } else {
+                /* single tap — show controls only, use play button to play/pause */
                 lastTapTs=now;
                 pendingSingleTap=setTimeout(()=>{
-                    pendingSingleTap=null; playPause(); showTapRing(rx,ry);
+                    pendingSingleTap=null; showTapRing(rx,ry);
                 },240);
             }
         },{passive:true});
@@ -1002,5 +1019,19 @@
     </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../Optimization/cursor-effects.js" defer></script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">দেখে শেখা — শুনে শেখার চেয়ে দ্রুততর।</p>
+      <cite class="wg-qsrc">&#8212; ইবনুল হাইসাম অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -2633,19 +2633,11 @@
 
         </a>
 
-        <button class="btn-save" onclick="window.location.href='../posts/create-post.html'" style="background: linear-gradient(135deg, #4CAF50, #388E3C); margin-right: 10px;" title="Ultra-fast posting with minimal fields, images & videos">
+        <button class="btn-save" onclick="window.location.href='../posts/create-post.html'" style="background: linear-gradient(135deg, #4CAF50, #388E3C);" title="Ultra-fast posting with minimal fields, images & videos">
 
           <i class="fas fa-bolt"></i>
 
           <span>Quick Post</span>
-
-        </button>
-
-        <button class="btn-save" onclick="saveToGitHub()">
-
-          <i class="fas fa-save"></i>
-
-          <span>Save Changes</span>
 
         </button>
 
@@ -2662,7 +2654,7 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = localStorage.getItem('postsManager_activeTab') || 'dashboard';
+        const savedTab = 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
@@ -4168,8 +4160,17 @@ Use the toolbar buttons above for quick formatting!"
   <script>
 
     // Initialize Central API Gateway
-
-    const gateway = CentralAPIGateway.getInstance();
+    console.log('📝 Posts Manager - Initializing...');
+    
+    let gateway;
+    try {
+      gateway = CentralAPIGateway.getInstance();
+      console.log('✅ CentralAPIGateway initialized successfully');
+    } catch (e) {
+      console.error('❌ CentralAPIGateway init failed:', e.message);
+      alert('⚠️ Posts Manager failed to initialize. Check console (F12) for details.');
+      throw e;
+    }
 
     
 
@@ -4202,11 +4203,29 @@ Use the toolbar buttons above for quick formatting!"
 
     const CONTENT_TYPE = 'written-posts';
 
+    console.log('🎨 Initializing SVG Generator...');
+
     const svgGenerator = new SVGCoverGenerator();
+
+    console.log('✅ SVG Generator initialized');
+
+    
+
+    console.log('📤 Getting GitHub Uploader from CentralAPI...');
 
     const githubUploader = gateway.getUploader();
 
+    console.log('✅ GitHub Uploader ready');
+
+    
+
+    console.log('📋 Initializing Content Manager...');
+
     const contentManager = new ContentManager(githubUploader);
+
+    console.log('✅ Content Manager initialized');
+
+    console.log('📊 All core components loaded successfully');
 
     let currentContent = [];
 
@@ -5653,6 +5672,20 @@ Use the toolbar buttons above for quick formatting!"
     <!-- Neural Grid Cursor Effect -->
 
     <script src="../../../Optimization/cursor-effects.js" defer><\/script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">প্রতিটি শব্দ একটি দায়িত্ব — কিয়ামতে প্রতিটি শব্দের হিসাব হবে।</p>
+      <cite class="wg-qsrc">&#8212; হাদিস</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 
         </html>
@@ -6293,7 +6326,9 @@ ${content}`;
 
       } catch (error) {
 
-        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load posts</p>';
+        console.error('? Failed to load posts:', error.message);
+        console.error('? Full error:', error);
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">? Failed to load posts<br><small>Check console (F12) for details</small></p>';
 
         console.error('Load error:', error);
 

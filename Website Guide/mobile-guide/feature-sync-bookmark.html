@@ -1,0 +1,500 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep guide to A3KM Studio sync and bookmarks — GitHub API realtime sync, localStorage keys, navbar auto-hide, reading position save.">
+  <meta name="author" content="Md Akhinoor Islam">
+  <meta name="theme-color" content="#000000">
+
+  <title>Sync & Bookmarks – A3KM Studio Guide</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../../Optimization/Background/background-system.css">
+  <link rel="stylesheet" href="../../Optimization/navbar/desktop-navbar.css">
+  <link rel="stylesheet" href="../../Optimization/global-scrollbar.css">
+  <link rel="stylesheet" href="../assets/guide.css">
+<style>
+:root{--red:#CC0000;--red-glow-sm:rgba(204,0,0,0.08);--red-border:rgba(204,0,0,0.22);--red-border-md:rgba(204,0,0,0.45);--bg-card:rgba(8,0,0,0.7);--bg-card-h:rgba(14,2,2,0.85);--txt-white:#fff;--txt-bright:#f5f0f0;--txt-mid:#bba8a8;--txt-dim:#7a6060;--txt-ghost:#4a3838;--shadow-hover:0 12px 48px rgba(204,0,0,0.22),0 4px 16px rgba(0,0,0,0.9);--radius-md:10px;--radius-lg:16px;--ease:cubic-bezier(.4,0,.2,1);}
+.pg-topbar{position:sticky;top:70px;z-index:190;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--red-border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+.pg-back{display:flex;align-items:center;gap:8px;color:var(--txt-dim);text-decoration:none;font-size:0.8rem;font-weight:500;padding:5px 12px 5px 8px;border:1px solid transparent;border-radius:6px;transition:all .2s;}.pg-back:hover{color:var(--red);border-color:var(--red-border);background:var(--red-glow-sm);}.pg-back i{transition:transform .2s;}.pg-back:hover i{transform:translateX(-3px);}
+.pg-bc{font-size:0.72rem;color:var(--txt-ghost);display:flex;align-items:center;gap:8px;}.pg-bc .sep{color:rgba(204,0,0,0.4);}.pg-bc .cur{color:var(--txt-dim);font-weight:500;}
+.pg-badge{font-size:0.7rem;font-weight:600;color:rgba(255,100,100,0.85);background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.25);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.pg-hero{max-width:1200px;margin:0 auto;padding:64px 36px 48px;}
+.hero-label{font-size:0.67rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:14px;}.hero-label::before{content:'';width:18px;height:2px;background:var(--red);border-radius:1px;}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:var(--txt-white);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}.hero-title span{color:var(--red);}
+.hero-desc{font-size:0.9rem;color:var(--txt-mid);line-height:1.7;max-width:680px;margin-bottom:6px;}
+.hero-desc-bn{font-size:0.83rem;color:var(--txt-dim);line-height:1.65;max-width:680px;margin-bottom:24px;}
+.badges-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;padding:3px 10px;border-radius:12px;border:1px solid;}
+.badge-red{color:rgba(255,100,100,0.9);background:rgba(204,0,0,0.1);border-color:rgba(204,0,0,0.3);}
+.badge-green{color:rgba(100,220,120,0.9);background:rgba(0,200,0,0.07);border-color:rgba(0,200,0,0.25);}
+.badge-yellow{color:rgba(255,220,50,0.9);background:rgba(200,160,0,0.08);border-color:rgba(200,160,0,0.25);}
+.pg-main{max-width:1200px;margin:0 auto;padding:0 36px 80px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--red-border),transparent);margin:0 0 48px;}
+.sec-label{font-size:0.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:10px;}.sec-label::before{content:'';width:14px;height:2px;background:var(--red);border-radius:1px;}
+.sec-title{font-size:1.4rem;font-weight:800;color:var(--txt-white);margin-bottom:6px;}.sec-title span{color:var(--red);}
+.sec-sub{font-size:0.84rem;color:var(--txt-dim);margin-bottom:32px;line-height:1.6;}
+.feat-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;transition:all .25s var(--ease);}.feat-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.feat-icon{width:38px;height:38px;border-radius:10px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--red);margin-bottom:12px;}
+.feat-name{font-size:0.88rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.feat-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+.features-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;}
+.features-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;}
+/* flow steps */
+.flow-steps{display:flex;flex-direction:column;gap:0;margin-bottom:24px;}
+.flow-step{display:flex;gap:16px;position:relative;}
+.flow-step::before{content:'';position:absolute;left:18px;top:38px;bottom:-2px;width:1px;background:var(--red-border);}
+.flow-step:last-child::before{display:none;}
+.fs-num{width:36px;height:36px;border-radius:50%;background:rgba(204,0,0,0.12);border:1px solid var(--red-border-md);color:var(--red);font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.fs-body{flex:1;padding-bottom:20px;}
+.fs-name{font-size:0.85rem;font-weight:700;color:var(--txt-bright);margin-bottom:4px;}
+.fs-desc{font-size:0.77rem;color:var(--txt-dim);line-height:1.5;}
+.fs-code{font-family:'Fira Code',monospace;font-size:0.7rem;color:rgba(255,160,160,0.85);background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;}
+/* localStorage table */
+.ls-table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:24px;}
+.ls-table th{text-align:left;padding:8px 12px;font-size:0.67rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--red-border);font-weight:700;}
+.ls-table td{padding:9px 12px;color:var(--txt-dim);border-bottom:1px solid rgba(204,0,0,0.06);vertical-align:top;}
+.ls-table td:first-child{font-family:'Fira Code',monospace;font-size:0.72rem;color:rgba(255,160,160,0.85);}
+.ls-table td:nth-child(2){color:var(--txt-mid);}
+.ls-table tr:hover td{background:rgba(204,0,0,0.03);}
+/* callout */
+.callout{border-left:3px solid var(--red);background:rgba(204,0,0,0.06);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:14px 18px;margin-bottom:24px;}
+.callout-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:0.78rem;color:var(--txt-dim);line-height:1.6;}
+/* al anatomy */
+.anatomy-wrap{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;margin-bottom:32px;}
+.al-list{display:flex;flex-direction:column;gap:10px;}
+.al-item{display:flex;gap:10px;align-items:flex-start;}
+.al-num{width:24px;height:24px;border-radius:50%;border:1px solid var(--red-border-md);color:var(--red);font-size:0.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.al-txt strong{display:block;font-size:0.8rem;color:var(--txt-bright);margin-bottom:2px;}
+.al-txt span{font-size:0.73rem;color:var(--txt-dim);line-height:1.45;}
+/* tech box */
+.tech-box{background:rgba(6,0,0,0.8);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;}
+.tech-box-title{font-size:0.75rem;font-weight:700;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.tech-kv{display:flex;flex-direction:column;gap:6px;}
+.tech-row{display:flex;gap:12px;font-size:0.77rem;}
+.tech-key{color:var(--txt-dim);min-width:180px;flex-shrink:0;}
+.tech-val{color:var(--txt-bright);font-family:'Fira Code',monospace;font-size:0.72rem;}
+.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.compare-col{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;}
+.compare-col h4{font-size:0.8rem;font-weight:700;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.compare-col ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.compare-col ul li{font-size:0.75rem;color:var(--txt-dim);display:flex;align-items:flex-start;gap:7px;line-height:1.4;}
+.compare-col ul li i{color:var(--red);flex-shrink:0;margin-top:2px;font-size:0.6rem;}
+@media(max-width:900px){.features-grid-2,.features-grid-3,.anatomy-wrap,.compare-wrap{grid-template-columns:1fr}}
+
+/* ── RELATED GUIDES ── */
+.rg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.rg-card{background:var(--bg-card);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:0;transition:all .25s var(--ease);}
+.rg-card:hover{background:var(--bg-card-h);border-color:var(--red-border-md);transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.rg-icon{width:36px;height:36px;border-radius:9px;background:rgba(204,0,0,0.1);border:1px solid var(--red-border);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--red);margin-bottom:10px;}
+.rg-name{font-size:0.84rem;font-weight:700;color:var(--txt-bright);margin-bottom:6px;}
+.rg-desc{font-size:0.72rem;color:var(--txt-dim);line-height:1.45;flex:1;}
+.rg-badges{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0 10px;}
+.rg-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid;letter-spacing:.05em;text-transform:uppercase;}
+.rgb-desktop{color:rgba(100,180,255,0.9);background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.25);}
+.rgb-mobile{color:rgba(80,220,120,0.9);background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.25);}
+.rgb-admin{color:rgba(255,210,40,0.9);background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.28);}
+.rgb-pwa{color:rgba(180,100,255,0.9);background:rgba(139,0,255,0.08);border-color:rgba(139,0,255,0.25);}
+.rgb-content{color:rgba(255,155,55,0.9);background:rgba(255,100,0,0.08);border-color:rgba(255,100,0,0.25);}
+.rgb-shared{color:rgba(180,180,180,0.7);background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);}
+.rg-explore{font-size:0.7rem;color:var(--red);display:flex;align-items:center;gap:5px;transition:gap .2s;}
+.rg-card:hover .rg-explore{gap:8px;}
+.dir-cta{text-align:center;padding:8px 0 0;}
+.dir-cta a{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--red);text-decoration:none;border:1px solid var(--red-border);padding:10px 24px;border-radius:20px;background:rgba(204,0,0,0.06);transition:all .22s;}
+.dir-cta a:hover{background:rgba(204,0,0,0.14);border-color:rgba(204,0,0,0.45);}
+/* ── BACK TO TOP ── */
+.btt{position:fixed;bottom:28px;right:28px;z-index:999;width:44px;height:44px;background:#CC0000;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 20px rgba(204,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(12px);transition:all .28s;}
+.btt.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.btt:hover{background:#8B0000;transform:translateY(-2px);}
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .pg-topbar{top:52px !important;}
+  .pg-main{padding:0 16px 80px !important;}
+  .features-grid-2,.features-grid-3{grid-template-columns:1fr !important;}
+  .compare-wrap,.anatomy-wrap{grid-template-columns:1fr !important;}
+  .pg-hero{padding:32px 16px 28px !important;}
+  .shortcut-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .shortcut-table{min-width:460px;}
+  .tech-row{flex-direction:column;gap:3px;}
+  .tech-key{min-width:unset !important;}
+  .rg-grid{grid-template-columns:1fr !important;}
+  body{padding-bottom:calc(65px + env(safe-area-inset-bottom,0px));}
+}</style>
+</head>
+<body>
+<!-- MOBILE NAV (shown ≤768px, replaces hidden g-nav) -->
+<nav class="m-nav" id="mobileNav">
+  <a href="../features.html" class="m-nav-back" title="Feature Directory"><i class="fas fa-arrow-left"></i></a>
+  <a href="../../Home/index.html" class="m-nav-logo">
+    <img src="../../images/logo.svg" class="m-nav-logo-img" width="30" height="30" alt="A3KM">
+    <div class="m-nav-brand">
+      <span class="m-nav-brand-name">Sync &amp; Bookmarks</span>
+      <span class="m-nav-brand-sub">Feature Guide</span>
+    </div>
+  </a>
+  <div class="m-nav-menu">
+    <button class="m-nav-btn" id="mNavMenuBtn" title="Navigation" aria-label="Open navigation menu" aria-expanded="false">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+<div class="m-drawer-overlay" id="mDrawerOverlay"></div>
+<div class="m-drawer" id="mDrawer">
+  <div class="m-drawer-links">
+    <a href="../index.html" class="m-drawer-link"><i class="fas fa-book-open"></i><span>Guide Home</span></a>
+    <a href="../desktop/index.html" class="m-drawer-link"><i class="fas fa-desktop"></i><span>Desktop Guide</span></a>
+    <a href="index.html" class="m-drawer-link"><i class="fas fa-mobile-alt"></i><span>Mobile Guide</span></a>
+    <a href="../features.html" class="m-drawer-link active"><i class="fas fa-search"></i><span>Feature Directory</span></a>
+    <a href="../../Home/index.html" class="m-drawer-link"><i class="fas fa-home"></i><span>A3KM Studio</span></a>
+    <a href="../../Contact/contact.html" class="m-drawer-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </div>
+</div>
+<nav class="desktop-navbar" id="desktopNavbar">
+    <div class="desktop-nav-container">
+        <a href="../../Home/index.html" class="desktop-nav-logo" title="A3KM Studio">
+            <img src="../../images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">
+            <div class="desktop-nav-brand">
+                <span class="desktop-nav-brand-name">A3KM Studio</span>
+                <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>
+            </div>
+        </a>
+        <ul class="desktop-nav-menu">
+            <li class="desktop-nav-item"><a href="../../About me/about.html" class="desktop-nav-link" id="nav-about" aria-label="About Me"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Projects Code/projects.html" class="desktop-nav-link" id="nav-projects" aria-label="View Projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Content Studio/hub.html" class="desktop-nav-link" id="nav-studio" aria-label="Content Studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>
+            <li class="desktop-nav-item"><a href="../../Contact/contact.html" class="desktop-nav-link" id="nav-contact" aria-label="Contact Me"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>
+            <li class="desktop-nav-item"><a href="../../About me/CV/Akhinoor_Islam_CV_2026.pdf" class="desktop-nav-link desktop-nav-cv-btn" download="Md_Akhinoor_Islam_CV_2026.pdf" title="Download CV" aria-label="Download CV PDF"><i class="fas fa-download" aria-hidden="true"></i><span>CV</span></a></li>
+        </ul>
+    </div>
+</nav><div id="bg-canvas-container"></div>
+<nav class="pg-topbar">
+  <a href="../features.html" class="pg-back"><i class="fas fa-arrow-left"></i> Features</a>
+  <div class="pg-bc"><span>Guide</span><span class="sep">/</span><span>Features</span><span class="sep">/</span><span class="cur">Sync & Bookmarks</span></div>
+  <div class="pg-badge"><i class="fas fa-sync"></i> Real-Time Sync</div>
+</nav>
+<header class="pg-hero">
+  <div class="hero-label"><i class="fas fa-sync"></i> Feature Deep Dive</div>
+  <h1 class="hero-title"><span>Sync & Bookmarks</span> — GitHub Sync, Likes, Navbar</h1>
+  <p class="hero-desc">A3KM Studio keeps content fresh with a real-time GitHub sync engine — polling every 30 seconds and firing instantly when you focus the tab. Video bookmarks persist to localStorage. Written posts merge from GitHub and device storage. All API keys are stored and retrieved locally, no server auth needed.</p>
+  <p class="hero-desc-bn">Real-time GitHub sync প্রতি 30 সেকেন্ডে update চেক করে — tab focus করলেই আবার sync হয়। Video bookmark localStorage-এ save হয়। Written posts GitHub এবং device storage merge করে দেখায়। সব API key locally store হয়।</p>
+  <div class="badges-row">
+    <span class="badge badge-red"><i class="fas fa-sync-alt"></i> 30s polling</span>
+    <span class="badge badge-green"><i class="fas fa-bookmark"></i> localStorage persist</span>
+    <span class="badge badge-yellow"><i class="fas fa-eye"></i> Focus trigger</span>
+  </div>
+</header>
+<main class="pg-main">
+  <div class="divider"></div>
+
+  <!-- REAL-TIME SYNC -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-cloud-download-alt"></i> Real-Time Sync</div>
+    <h2 class="sec-title">GitHub <span>Sync Engine</span></h2>
+    <p class="sec-sub">The <code style="font-size:0.8em;font-family:Fira Code,monospace;color:rgba(255,160,160,0.85);">RealTimeGitHubSync</code> class manages all content synchronization with GitHub, ensuring the site always displays the latest content.</p>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="fs-num">1</div>
+        <div class="fs-body">
+          <div class="fs-name">Class Initialization</div>
+          <div class="fs-desc">On page load, <code class="fs-code">RealTimeGitHubSync</code> reads stored <code class="fs-code">github_api_token</code> and repository config from <code class="fs-code">localStorage</code>. Sets up internal state: <code class="fs-code">lastSyncTime</code>, <code class="fs-code">isActiveSyncing = false</code>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">2</div>
+        <div class="fs-body">
+          <div class="fs-name">30-second Polling Timer</div>
+          <div class="fs-desc">A <code class="fs-code">setInterval</code> fires every 30,000 ms. Before making any network call, it checks <code class="fs-code">isActiveSyncing</code> — if already syncing, it skips that tick to prevent concurrent requests.</div>
+          <div class="fs-code">setInterval(() => sync(), 30000)</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">3</div>
+        <div class="fs-body">
+          <div class="fs-name">Window Focus Trigger</div>
+          <div class="fs-desc">A <code class="fs-code">window.addEventListener('focus')</code> listener fires an immediate sync when the user returns to the tab. This ensures content is fresh even if the tab was in the background for a long time.</div>
+          <div class="fs-code">window.addEventListener('focus', () => sync())</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">4</div>
+        <div class="fs-body">
+          <div class="fs-name">GitHub API Call</div>
+          <div class="fs-desc">Fetches from <code class="fs-code">https://api.github.com/repos/{username}/{repository}</code> using the stored token as Bearer auth. Lists repository contents and compares with locally cached versions.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">5</div>
+        <div class="fs-body">
+          <div class="fs-name">Merge & Cache Update</div>
+          <div class="fs-desc">New content from GitHub is merged with any local <code class="fs-code">a3km_posts</code> entries. Posts with <code class="fs-code">_source:'localStorage'</code> flag are kept even if not on GitHub. <code class="fs-code">lastSyncTime</code> is updated in localStorage.</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-shield-alt"></i> Concurrent sync protection</div>
+      <p>The <strong>isActiveSyncing</strong> boolean prevents multiple overlapping sync operations. If you rapidly switch tabs or rapidly focus the window, only one sync runs at a time. This prevents race conditions and duplicate API calls.</p>
+    </div>
+  </section>
+
+  <!-- BOOKMARK SYSTEM -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-bookmark"></i> Bookmarks</div>
+    <h2 class="sec-title">Video <span>Bookmarks</span></h2>
+    <p class="sec-sub">The bookmark button in the video viewer header saves/unsaves video IDs to localStorage. All bookmarks persist across sessions.</p>
+    <div class="features-grid-2">
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-bookmark"></i></div>
+        <div class="feat-name">Saving a Bookmark</div>
+        <div class="feat-desc">Tap the <i class="fas fa-bookmark" style="color:var(--red);font-size:0.75em;"></i> bookmark icon in the video viewer header. The icon turns filled. The video ID is added to the <code style="font-family:Fira Code,monospace;font-size:0.9em;">savedVideos</code> localStorage array. Instantly persisted — no server required.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-list"></i></div>
+        <div class="feat-name">Viewing Saved Videos</div>
+        <div class="feat-desc">The video list page reads <code style="font-family:Fira Code,monospace;font-size:0.9em;">savedVideos</code> from localStorage and filters the video grid. Bookmarked videos are visually highlighted. Remove a bookmark by tapping the icon again.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-heart"></i></div>
+        <div class="feat-name">Like State</div>
+        <div class="feat-desc">The video player also tracks <code style="font-family:Fira Code,monospace;font-size:0.9em;">isLiked</code> state via a separate localStorage key. Unlike bookmarks (saved for later), likes are simple engagement markers. Both states are independent.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div class="feat-name">Works Offline</div>
+        <div class="feat-desc">Because bookmarks are localStorage-only, they work completely offline. If you bookmark a video while offline, the bookmark is still there when you reconnect. No sync to server happens for bookmarks.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOCALSTORAGE REFERENCE TABLE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-database"></i> Storage Reference</div>
+    <h2 class="sec-title">All <span>localStorage Keys</span></h2>
+    <p class="sec-sub">Every key that A3KM Studio reads or writes to localStorage — your complete reference for debugging and understanding persistence.</p>
+    <table class="ls-table">
+      <thead>
+        <tr><th>Key</th><th>What it stores</th><th>Where set</th><th>Type</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>savedVideos</td>
+          <td>Array of bookmarked video IDs</td>
+          <td>Video viewer header bookmark button</td>
+          <td>JSON array</td>
+        </tr>
+        <tr>
+          <td>a3km_posts</td>
+          <td>Written posts (both GitHub + locally drafted). Each post may have <code style="font-family:Fira Code;font-size:0.9em;">_source:'localStorage'</code> flag</td>
+          <td>Post Reader, GitHub sync merge</td>
+          <td>JSON array</td>
+        </tr>
+        <tr>
+          <td>lastSyncTime</td>
+          <td>Timestamp of last successful GitHub sync (Date.now())</td>
+          <td>RealTimeGitHubSync after each sync</td>
+          <td>Number (ms)</td>
+        </tr>
+        <tr>
+          <td>github_api_token</td>
+          <td>GitHub Personal Access Token for API calls</td>
+          <td>Only-Boss Command Center > API Config</td>
+          <td>String</td>
+        </tr>
+        <tr>
+          <td>youtube_api_key</td>
+          <td>YouTube Data API v3 key for enriched video data</td>
+          <td>Only-Boss Command Center > API Config</td>
+          <td>String</td>
+        </tr>
+        <tr>
+          <td>a3km_last_update_check</td>
+          <td>Timestamp of last version.json check by update notifier</td>
+          <td>update-notifier.js (checks every 6h)</td>
+          <td>Number (ms)</td>
+        </tr>
+        <tr>
+          <td>pwa_install_dismissed</td>
+          <td>How many times the PWA install prompt was dismissed</td>
+          <td>pwa-install-prompt.js</td>
+          <td>Number (max 3)</td>
+        </tr>
+        <tr>
+          <td>pwa_install_remind_after</td>
+          <td>Timestamp after which to re-show the install prompt</td>
+          <td>pwa-install-prompt.js (set to +7 days)</td>
+          <td>Number (ms)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="callout-title"><i class="fas fa-lightbulb"></i> Debug tip: clear specific keys</div>
+      <p>Open <strong>DevTools &gt; Application &gt; Local Storage</strong> to inspect or delete any of these keys. Deleting <code style="font-family:Fira Code,monospace;font-size:0.9em;">pwa_install_dismissed</code> will re-enable the install prompt. Deleting <code style="font-family:Fira Code,monospace;font-size:0.9em;">a3km_last_update_check</code> forces an immediate version check on next load.</p>
+    </div>
+  </section>
+
+  <!-- NAVBAR AUTO-HIDE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-bars"></i> Navbar Auto-Hide</div>
+    <h2 class="sec-title">Smart <span>Navbar Behavior</span></h2>
+    <p class="sec-sub">The navbar auto-hides on scroll through a priority system — not a simple show/hide toggle.</p>
+    <div class="anatomy-wrap">
+      <div class="al-list">
+        <div class="al-item">
+          <div class="al-num">1</div>
+          <div class="al-txt">
+            <strong>Mouse hover (highest priority)</strong>
+            <span>Moving the mouse near the top of the screen immediately reveals the navbar. Overrides scroll state.</span>
+          </div>
+        </div>
+        <div class="al-item">
+          <div class="al-num">2</div>
+          <div class="al-txt">
+            <strong>Scroll direction</strong>
+            <span>Scrolling up shows the navbar; scrolling down hides it. Direction is calculated from delta between scroll positions.</span>
+          </div>
+        </div>
+        <div class="al-item">
+          <div class="al-num">3</div>
+          <div class="al-txt">
+            <strong>Inactivity timer</strong>
+            <span>After 3 seconds of no scroll and no mouse movement, the navbar auto-hides (on sub-pages only, not the home page).</span>
+          </div>
+        </div>
+      </div>
+      <div class="feat-card" style="align-self:start;">
+        <div class="feat-name" style="margin-bottom:8px;">Applies to sub-pages only</div>
+        <div class="feat-desc">The navbar auto-hide only activates on sub-pages (content pages, viewers, project pages). The home page always shows the navbar. This prevents disorientation on landing.</div>
+      </div>
+    </div>
+    <div class="compare-wrap">
+      <div class="compare-col">
+        <h4><i class="fas fa-desktop"></i> Desktop behavior</h4>
+        <ul>
+          <li><i class="fas fa-circle"></i> Mouse proximity to top reveals instantly</li>
+          <li><i class="fas fa-circle"></i> Scroll down 80px → hide</li>
+          <li><i class="fas fa-circle"></i> Scroll up any amount → show</li>
+          <li><i class="fas fa-circle"></i> 3s inactivity → auto-hide</li>
+          <li><i class="fas fa-circle"></i> CSS transition: opacity + transform</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h4><i class="fas fa-mobile-alt"></i> Mobile behavior</h4>
+        <ul>
+          <li><i class="fas fa-circle"></i> No mouse, scroll direction only</li>
+          <li><i class="fas fa-circle"></i> Swipe up → hide navbar</li>
+          <li><i class="fas fa-circle"></i> Swipe down → show navbar</li>
+          <li><i class="fas fa-circle"></i> Touch end → short grace period before hide</li>
+          <li><i class="fas fa-circle"></i> More aggressive hiding for vertical space</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH REFERENCE -->
+  <section style="margin-bottom:48px;">
+    <div class="sec-label"><i class="fas fa-code"></i> Technical Details</div>
+    <h2 class="sec-title">Code <span>Reference</span></h2>
+    <div class="tech-box">
+      <div class="tech-box-title"><i class="fas fa-file-code"></i> Key Files</div>
+      <div class="tech-kv">
+        <div class="tech-row"><div class="tech-key">GitHub sync class</div><div class="tech-val">Optimization/realtime-github-sync.js → RealTimeGitHubSync</div></div>
+        <div class="tech-row"><div class="tech-key">Sync interval</div><div class="tech-val">30,000 ms (30 seconds)</div></div>
+        <div class="tech-row"><div class="tech-key">Sync trigger 2</div><div class="tech-val">window.addEventListener('focus', ...)</div></div>
+        <div class="tech-row"><div class="tech-key">Concurrent lock</div><div class="tech-val">isActiveSyncing (bool, prevents overlapping)</div></div>
+        <div class="tech-row"><div class="tech-key">GitHub API endpoint</div><div class="tech-val">https://api.github.com/repos/{username}/{repository}</div></div>
+        <div class="tech-row"><div class="tech-key">Bookmark storage</div><div class="tech-val">localStorage: savedVideos (JSON array of IDs)</div></div>
+        <div class="tech-row"><div class="tech-key">Posts key</div><div class="tech-val">localStorage: a3km_posts (JSON array, merged)</div></div>
+        <div class="tech-row"><div class="tech-key">Local post flag</div><div class="tech-val">_source:'localStorage' property on post object</div></div>
+        <div class="tech-row"><div class="tech-key">Navbar auto-hide</div><div class="tech-val">Optimization/navbar-autohide.js + navbar-autohide.css</div></div>
+        <div class="tech-row"><div class="tech-key">Navbar priority</div><div class="tech-val">Mouse proximity > Scroll direction > Inactivity timer</div></div>
+        <div class="tech-row"><div class="tech-key">Update check interval</div><div class="tech-val">Every 6 hours → version.json → update-notifier.js</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- RELATED FEATURE GUIDES -->
+  <section style="margin-bottom:56px;">
+    <div class="sec-label"><i class="fas fa-compass"></i> Explore More</div>
+    <h2 class="sec-title">Other <span>Feature Guides</span></h2>
+    <p class="sec-sub">More deep-dives into A3KM Studio features — shortcuts, hidden tricks, mobile vs desktop comparisons and code references.</p>
+    <div class="rg-grid" id="relatedGuides"></div>
+    <div class="dir-cta">
+      <a href="../features.html"><i class="fas fa-search"></i> Browse All 88 Features in the Directory <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+</main>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">দুটি নেয়ামত সম্পর্কে অধিকাংশ মানুষ উদাসীন — সুস্বাস্থ্য ও অবসর।</p>
+      <cite class="wg-qsrc">&#8212; হাদিস — বুখারি শরিফ</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-chevron-up"></i></button>
+<script src="../assets/guide.js" defer></script>
+<script src="../../Optimization/Background/background-system.js" defer></script>
+<script>
+const CURRENT_GUIDE = 'sync-bookmark';
+const FEATURE_GUIDES = [
+  {id:'video-player',     name:'Video Player',        icon:'play-circle',  desc:'YouTube IFrame, PiP, like/share, related videos, API enrichment',  cats:['Mobile','Desktop'],  url:'feature-video-player.html'},
+  {id:'pdf-reader',       name:'PDF Reader',           icon:'file-pdf',     desc:'Zoom, page nav, book mode, swipe, keyboard shortcuts, password',   cats:['Desktop','Mobile','Content'], url:'feature-pdf-reader.html'},
+  {id:'markdown-reader',  name:'Markdown Reader',      icon:'file-alt',     desc:'Custom renderer, TOC, GitHub sync, code highlighting, share',       cats:['Mobile','Content'],  url:'feature-markdown-reader.html'},
+  {id:'pwa-offline',      name:'PWA & Offline',        icon:'wifi',         desc:'5-cache system, LRU eviction, install prompt, update notifier',     cats:['PWA','Mobile'],      url:'feature-pwa-offline.html'},
+  {id:'search-system',    name:'Search System',        icon:'search',       desc:'AdvancedSearchManager, 12 filters, tags, instant client-side',      cats:['Desktop','Mobile'],  url:'feature-search-system.html'},
+  {id:'only-boss',        name:'Only-Boss Admin',      icon:'lock',         desc:'SHA-256 auth, session timer, managers, command center',             cats:['Admin','Desktop'],   url:'feature-only-boss.html'},
+  {id:'calculators',      name:'Calculators',          icon:'calculator',   desc:'Resistor color code, LED current, capacitor decoder, quick ref',    cats:['Desktop','Mobile'],  url:'feature-calculators.html'},
+  {id:'sync-bookmark',    name:'Sync & Bookmarks',     icon:'sync',         desc:'GitHub API sync, localStorage keys, navbar auto-hide',              cats:['PWA','Shared'],      url:'feature-sync-bookmark.html'},
+  {id:'contact-form',     name:'Contact Form',         icon:'paper-plane',  desc:'EmailJS primary, Web3Forms fallback, mailto final fallback',        cats:['Desktop','Mobile'],  url:'feature-contact-form.html'},
+  {id:'fullscreen',       name:'Fullscreen System',    icon:'expand',       desc:'First-click fullscreen, session persist, nav-click exclusion',      cats:['Desktop','PWA'],     url:'feature-fullscreen.html'}
+];
+const RG_CAT_CLASS = {Desktop:'rgb-desktop',Mobile:'rgb-mobile',Admin:'rgb-admin',PWA:'rgb-pwa',Content:'rgb-content',Shared:'rgb-shared'};
+function renderRelatedGuides(){
+  const el = document.getElementById('relatedGuides');
+  if(!el) return;
+  const others = FEATURE_GUIDES.filter(g => g.id !== CURRENT_GUIDE);
+  el.innerHTML = others.map(g => {
+    const badges = g.cats.map(c => '<span class="rg-badge '+(RG_CAT_CLASS[c]||'')+'">'+c+'</span>').join('');
+    return '<a class="rg-card" href="'+g.url+'">'
+      +'<div class="rg-icon"><i class="fas fa-'+g.icon+'"></i></div>'
+      +'<div class="rg-name">'+g.name+'</div>'
+      +'<div class="rg-badges">'+badges+'</div>'
+      +'<div class="rg-desc">'+g.desc+'</div>'
+      +'<div class="rg-explore">Explore Guide <i class="fas fa-arrow-right"></i></div>'
+      +'</a>';
+  }).join('');
+}
+window.addEventListener('scroll',()=>{
+  const b=document.getElementById('bttBtn');
+  if(b) b.classList.toggle('visible',window.scrollY>500);
+},{passive:true});
+document.addEventListener('DOMContentLoaded',renderRelatedGuides);
+</script>
+<script>
+// MOBILE DRAWER
+(function(){
+  var btn=document.getElementById('mNavMenuBtn');
+  var drawer=document.getElementById('mDrawer');
+  var overlay=document.getElementById('mDrawerOverlay');
+  if(!btn)return;
+  function open(){drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');btn.innerHTML='<i class="fas fa-times"></i>';}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.innerHTML='<i class="fas fa-bars"></i>';}
+  btn.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>    <!-- Neural Grid Cursor Effect -->
+    <script src="../../Optimization/cursor-effects.js" defer></script>
+</body>
+</html>

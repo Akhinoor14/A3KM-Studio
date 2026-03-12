@@ -207,7 +207,7 @@
       display: flex;
       min-height: 100vh;
       background: transparent;
-      padding-top: 70px;
+      padding-top: 10px;
       position: relative;
       z-index: 1;
     }
@@ -1276,6 +1276,15 @@
           <div class="tab-item" onclick="switchTab('stats')">📈 Statistics</div>
         </div>
       </div>
+      <!-- GitHub Token Status -->
+      <div style="padding:14px;border-top:1px solid rgba(204,0,0,0.25);">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--primary-red,#CC0000);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+        <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+        <div style="display:flex;gap:6px;">
+          <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-code"></i> Debug</button>
+        </div>
+      </div>
       <div class="quick-stats">
         <h3>Quick Stats</h3>
         <div class="stat-item">
@@ -1296,7 +1305,7 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = localStorage.getItem('educationalVideosManager_activeTab') || 'dashboard';
+        const savedTab = 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
@@ -2246,7 +2255,17 @@
     ];
 
     // Initialize Central API Gateway
-    const gateway = CentralAPIGateway.getInstance();
+    console.log('🎓 Educational Videos Manager - Initializing...');
+    
+    let gateway;
+    try {
+      gateway = CentralAPIGateway.getInstance();
+      console.log('✅ CentralAPIGateway initialized successfully');
+    } catch (e) {
+      console.error('❌ CentralAPIGateway init failed:', e.message);
+      alert('⚠️ Educational Videos Manager failed to initialize. Check console (F12) for details.');
+      throw e;
+    }
     
 
     // ─── Token Status Manager (matches books-manager pattern) ───
@@ -2389,9 +2408,13 @@
               const range = document.createRange();
               range.setStartBefore(newP.firstChild);
               range.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
+        ole.log('📤 Getting GitHub Uploader from CentralAPI...');
+    const githubUploader = gateway.getUploader();
+    console.log('✅ GitHub Uploader ready');
+    
+    console.log('📋 Initializing Content Manager...');
+    const contentManager = new ContentManager(githubUploader);
+    console.log('✅ Content Manager initialized'
           }
         }
       });
@@ -2493,7 +2516,9 @@
         filterContent();
       } catch (error) {
         console.error('Load manage content error:', error);
-        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">Failed to load</p>';
+        console.error('? Failed to load courses:', error.message);
+        console.error('? Full error:', error);
+        grid.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">? Failed to load courses<br><small>Check console (F12) for details</small></p>';
       }
     }
 
@@ -3514,5 +3539,19 @@
 </script>
     <!-- Neural Grid Cursor Effect -->
     <script src="../../../Optimization/cursor-effects.js" defer></script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">দৃষ্টি দিয়ে শেখা কানে শুনে শেখার চেয়ে গভীর।</p>
+      <cite class="wg-qsrc">&#8212; হযরত আলী (রাঃ) অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

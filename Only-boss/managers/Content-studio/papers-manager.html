@@ -1253,23 +1253,6 @@
   <div class="neural-cursor" id="neuralCursor"></div>
   <div class="neural-cursor-dot" id="neuralCursorDot"></div>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-container">
-      <div class="header-left">
-        <div class="header-icon">📄</div>
-        <div class="header-title">
-          <h1>Research Papers Manager</h1>
-          <p>Manage academic papers, publications & research documents</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <a href="content-managers-hub.html" class="back-btn">← Back to Managers Hub</a>
-        <button class="btn-save" onclick="saveToGitHub()">💾 Save to GitHub</button>
-      </div>
-    </div>
-  </div>
-
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -1312,7 +1295,7 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = localStorage.getItem('papersManager_activeTab') || 'dashboard';
+        const savedTab = 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[data-tab="${savedTab}"]`);
         const tabContent = document.getElementById(savedTab + '-tab');
@@ -2058,7 +2041,17 @@
     };
 
     // Initialize Central API Gateway
-    const gateway = CentralAPIGateway.getInstance();
+    console.log('📄 Papers Manager - Initializing...');
+    
+    let gateway;
+    try {
+      gateway = CentralAPIGateway.getInstance();
+      console.log('✅ CentralAPIGateway initialized successfully');
+    } catch (e) {
+      console.error('❌ CentralAPIGateway init failed:', e.message);
+      alert('⚠️ Papers Manager failed to initialize. Check console (F12) for details.');
+      throw e;
+    }
     
 
     function showTokenModal(redirectUrl) {
@@ -2082,7 +2075,9 @@
       }
     });
     
+    console.log('📤 Getting GitHub Uploader from CentralAPI...');
     const githubUploader = gateway.getUploader();
+    console.log('✅ GitHub Uploader ready');
 
     // Global variables
     let papersData = { categoryGroups: [], papers: [] };
@@ -2225,7 +2220,9 @@
     
     // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
+      console.log('📋 Initializing Content Manager...');
       contentManager = new ContentManager(githubUploader);
+      console.log('✅ Content Manager initialized');
       await loadPapers();
       await loadCategories();
       loadFilterCategories();
@@ -2672,7 +2669,9 @@
         loadAuthorSuggestions();
         renderPapers();
       } catch (error) {
-        alert('❌ Failed to upload paper: ' + error.message);
+        console.error('❌ Failed to upload paper:', error.message);
+        console.error('❌ Full error:', error);
+        alert('❌ Failed to upload paper: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     
@@ -2955,8 +2954,10 @@
           renderPapers();
         }, 1500);
       } catch (error) {
+        console.error('❌ Bulk delete failed:', error.message);
+        console.error('❌ Full error:', error);
         progressContainer.classList.remove('active');
-        alert('❌ Failed to delete papers: ' + error.message);
+        alert('❌ Failed to delete papers: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     
@@ -2975,7 +2976,9 @@
         renderPapers();
         alert('✅ Paper deleted successfully!');
       } catch (error) {
-        alert('❌ Failed to delete paper: ' + error.message);
+        console.error('❌ Delete failed:', error.message);
+        console.error('❌ Full error:', error);
+        alert('❌ Failed to delete paper: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     
@@ -3099,7 +3102,9 @@
         filteredPapers = [...papersData.papers];
         renderPapers();
       } catch (error) {
-        alert('❌ Failed to delete PDF file: ' + error.message);
+        console.error('❌ Failed to delete PDF:', error.message);
+        console.error('❌ Full error:', error);
+        alert('❌ Failed to delete PDF file: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     
@@ -3140,7 +3145,9 @@
           alert('✅ PDF file uploaded successfully!');
           editPdfFileToUpload = null;
         } catch (error) {
-          alert('❌ Failed to upload PDF: ' + error.message);
+          console.error('❌ PDF upload failed:', error.message);
+          console.error('❌ Full error:', error);
+          alert('❌ Failed to upload PDF: ' + error.message + '\n\nCheck console (F12) for details.');
           return;
         }
       }
@@ -3174,7 +3181,9 @@
         renderPapers();
         alert('✅ Paper updated successfully!');
       } catch (error) {
-        alert('❌ Failed to update paper: ' + error.message);
+        console.error('❌ Update failed:', error.message);
+        console.error('❌ Full error:', error);
+        alert('❌ Failed to update paper: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     
@@ -3325,27 +3334,6 @@
       }
     }
     
-    // Save to GitHub
-    async function saveToGitHub() {
-      if (!confirm('Save papers.json to GitHub?')) return;
-      
-      try {
-        const tokenStatus = await gateway.getStatus();
-        if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
-          alert('⚠️ GitHub token missing or invalid. Please set up your token first.');
-          return;
-        }
-        await githubUploader.uploadFile(
-          'Content Studio/research-papers/papers.json',
-          JSON.stringify(papersData, null, 2),
-          'Updated research papers data'
-        );
-        alert('✅ Saved to GitHub successfully!');
-      } catch (error) {
-        alert('❌ Failed to save to GitHub: ' + error.message);
-      }
-    }
-
     // Category Search Filter Function
     function filterCategorySelect() {
       const searchInput = document.getElementById('categorySearch');
@@ -3513,5 +3501,19 @@
   color: rgba(255,255,255,0.85);
 }
 </style>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">গবেষণাপত্র হলো মানবজাতির মস্তিষ্কের ছাপ — যা প্রজন্মকে পথ দেখায়।</p>
+      <cite class="wg-qsrc">&#8212; ইবনুল হাইসাম অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -37,6 +37,7 @@
                 .slice(0, 6);
 
             renderDetail(book, related);
+        window._currentDetailBook = book;
         } catch (e) {
             showError('Failed to load: ' + e.message);
         }
@@ -135,12 +136,9 @@
 
                 <!-- ACTION STRIP -->
                 <div class="action-strip">
-                    <a class="btn-read" href="book-reader.html?id=${bookId}">
+                    <button class="btn-read" onclick="openCurrentBook()">
                         <i class="fas fa-book-reader"></i> Read Book
-                    </a>
-                    <a class="btn-3d" href="book-reader.html?id=${bookId}&bookmode=true">
-                        <i class="fas fa-book-open"></i> Book Mode
-                    </a>
+                    </button>
                 </div>
 
                 <div class="divider"></div>
@@ -197,6 +195,25 @@
             }
         });
     }
+
+    // ── Open PDF directly ─────────────────────────────────────────────────────
+    window.openCurrentBook = function () {
+        const book = window._currentDetailBook;
+        if (!book) return;
+        let pdfPath = book.downloadUrl || book.pdfUrl || '';
+        if (!pdfPath) { return; }
+        if (pdfPath.includes('github.com') || pdfPath.includes('githubusercontent.com')) {
+            pdfPath = `https://corsproxy.io/?${encodeURIComponent(pdfPath)}`;
+        }
+        openUniversalPDFViewer({
+            filePath: pdfPath,
+            title: book.title,
+            downloadName: `${book.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+            showDownload: true,
+            allowZoom: true,
+            password: 'MOUnoor21014'
+        });
+    };
 
     // ── Toggle Summary ────────────────────────────────────────────────────────
     window.toggleSummary = function () {

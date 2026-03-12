@@ -886,6 +886,8 @@ async function flipPage(direction) {
     inner.classList.add(exitClass);
     await delay(200);
     inner.classList.remove(exitClass);
+    // Hide the blank canvas during re-render to prevent black flash between animations
+    inner.style.opacity = '0';
 
     // Cancel any stale queued render, wait for in-progress render to fully settle,
     // then render the correct target page before playing the enter animation.
@@ -915,7 +917,8 @@ async function flipPage(direction) {
         return;
     }
 
-    // Enter animation
+    // Enter animation — clear inline opacity so the animation's own opacity takes over
+    inner.style.opacity = '';
     inner.classList.add(enterClass);
     await delay(280);
     inner.classList.remove(enterClass);

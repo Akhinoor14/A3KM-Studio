@@ -36,7 +36,10 @@ const PRECACHE_URLS = [
   '/mobile/shared/mobile-navbar.js',
   '/mobile/shared/mobile-navbar.html',
   '/mobile/shared/mobile-common.css',
-  '/mobile/manifest.json'
+  '/mobile/manifest.json',
+  '/images/logo.svg',
+  '/images/favicon.svg',
+  '/images/icon-180.png'
 ];
 
 // Install event - cache critical resources

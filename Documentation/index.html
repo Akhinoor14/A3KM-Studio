@@ -546,6 +546,88 @@
   .platform-title { font-size: 1.5rem; }
   .cta-box { padding: 36px 24px; }
 }
+
+/* ─── Device Detection Banner ───────────── */
+.device-banner {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+  animation: fadeSlideUp 0.7s 0.5s var(--ease) both;
+}
+.db-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: rgba(204,0,0,0.06);
+  border: 1px solid rgba(204,0,0,0.35);
+  border-left: 3px solid var(--red);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+.db-icon {
+  width: 40px; height: 40px;
+  background: rgba(204,0,0,0.12);
+  border: 1px solid var(--red-border);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--red);
+  flex-shrink: 0;
+}
+.db-text-wrap { flex: 1; min-width: 0; }
+.db-text {
+  font-size: 0.85rem;
+  color: var(--txt-mid);
+  margin-bottom: 2px;
+}
+.db-text strong { color: var(--txt-white); font-weight: 700; }
+.db-sub {
+  font-size: 0.75rem;
+  color: var(--txt-dim);
+  line-height: 1.4;
+}
+.db-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--txt-white);
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  flex-shrink: 0;
+  box-shadow: 0 3px 14px rgba(204,0,0,0.3);
+  transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast);
+}
+.db-btn:hover { transform: translateX(3px); box-shadow: 0 5px 22px rgba(204,0,0,0.5); }
+.db-btn i { font-size: 0.7rem; }
+
+/* Recommended badge on platform cards */
+.recommended-badge {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.68rem; font-weight: 700;
+  color: rgba(255,215,0,0.95);
+  background: rgba(200,150,0,0.15);
+  border: 1px solid rgba(200,150,0,0.4);
+  padding: 4px 12px;
+  border-radius: 20px;
+  animation: fadeIn 0.5s 1s both;
+}
+.recommended-badge i { font-size: 0.65rem; }
+.platform-card.is-recommended {
+  border-color: var(--red-border-md);
+  box-shadow: 0 0 0 1px rgba(204,0,0,0.2), 0 8px 32px rgba(204,0,0,0.15);
+}
+
+@media (max-width: 640px) {
+  .device-banner { padding: 0 20px; }
+  .db-inner { flex-wrap: wrap; gap: 12px; }
+  .db-btn { width: 100%; justify-content: center; }
+}
 </style>
 </head>
 
@@ -625,7 +707,7 @@
 
     <!-- DESKTOP -->
     <a href="desktop/index.html" class="platform-card reveal">
-      <div class="platform-count"><span>7</span> Pages</div>
+      <div class="platform-count"><span>17</span> Pages</div>
       <div class="platform-visual">
         <div class="platform-visual-grid"></div>
         <div class="platform-visual-particle"></div>
@@ -666,7 +748,7 @@
 
     <!-- MOBILE -->
     <a href="mobile-guide/index.html" class="platform-card reveal reveal-delay-1">
-      <div class="platform-count"><span>14</span> Pages</div>
+      <div class="platform-count"><span>28</span> Pages</div>
       <div class="platform-visual">
         <div class="platform-visual-grid"></div>
         <div class="platform-visual-particle"></div>
@@ -888,6 +970,52 @@
 
 <script src="assets/guide.js"></script>
 <script src="../Optimization/navbar-autohide.js"></script>
+<script>
+// ── Device Auto-Detection ──────────────────────────────────────
+(function detectDevice() {
+  const isMob =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    ('ontouchstart' in window && window.innerWidth < 900);
+
+  const deviceLabel = isMob ? 'Mobile' : 'Desktop';
+  const guideHref   = isMob ? 'mobile-guide/index.html' : 'desktop/index.html';
+  const guideLabel  = isMob ? 'Mobile Guide' : 'Desktop Guide';
+  const iconClass   = isMob ? 'fa-mobile-alt' : 'fa-desktop';
+  const subText     = isMob
+    ? 'Touch gestures, PWA offline, haptic feedback, splash screen — all in the mobile guide.'
+    : 'Advanced animations, hover effects, sidebar filters, full-screen layouts — all in the desktop guide.';
+
+  // Build detection banner
+  const banner = document.createElement('div');
+  banner.className = 'device-banner';
+  banner.innerHTML =
+    `<div class="db-inner">
+      <div class="db-icon"><i class="fas ${iconClass}"></i></div>
+      <div class="db-text-wrap">
+        <p class="db-text">আপনি <strong>${deviceLabel}</strong> থেকে দেখছেন &mdash; <strong>${guideLabel}</strong> দিয়ে শুরু করুন</p>
+        <p class="db-sub">${subText}</p>
+      </div>
+      <a href="${guideHref}" class="db-btn">${guideLabel} <i class="fas fa-arrow-right"></i></a>
+    </div>`;
+
+  const chooser = document.querySelector('.section-chooser');
+  if (chooser) chooser.insertAdjacentElement('beforebegin', banner);
+
+  // Mark recommended card
+  document.querySelectorAll('.platform-card').forEach(function(card) {
+    const href = card.getAttribute('href') || '';
+    const isThisCard = isMob ? href.includes('mobile-guide') : href.includes('desktop');
+    if (isThisCard) {
+      const badge = document.createElement('div');
+      badge.className = 'recommended-badge';
+      badge.innerHTML = '<i class="fas fa-star"></i> Your Device';
+      card.style.position = 'relative';
+      card.appendChild(badge);
+      card.classList.add('is-recommended');
+    }
+  });
+})();
+</script>
 <script src="../Optimization/pwa-install-prompt.js" defer></script>
 <script src="../Optimization/update-notifier.js" defer></script>
     <!-- Neural Grid Cursor Effect -->

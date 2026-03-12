@@ -257,15 +257,8 @@
     function handleReadAsBook(bookId) {
         const book = allBooks.find(b => b.id === bookId);
         if (book) {
-            // Vibration feedback
-            if (navigator.vibrate) {
-                navigator.vibrate([30, 50, 30]);
-            }
-
-            console.log(`📖 Opening book in Book Mode: ${book.title}`);
-            
-            // Open in book reader with bookmode parameter
-            window.location.href = `book-reader.html?id=${bookId}&bookmode=true`;
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            window.location.href = `book-detail.html?id=${bookId}`;
         }
     }
 

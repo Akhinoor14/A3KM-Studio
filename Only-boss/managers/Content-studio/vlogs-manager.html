@@ -473,21 +473,6 @@
   <!-- Neural Cursor -->
   <div class="neural-cursor" id="neuralCursor"></div>
   <div class="neural-cursor-dot" id="neuralCursorDot"></div>
-  <div class="header">
-    <div class="header-container">
-      <div class="header-left">
-        <div class="header-icon"><i class="fas fa-video"></i></div>
-        <div class="header-title">
-          <h1>Video Blogs Manager</h1>
-          <p>Professional vlog content management system with YouTube integration</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <a href="content-managers-hub.html" class="back-btn">← Back to Managers Hub</a>
-      </div>
-    </div>
-  </div>
-
   <div class="container">
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
@@ -519,7 +504,7 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = localStorage.getItem('vlogsManager_activeTab') || 'dashboard';
+        const savedTab = 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
@@ -967,7 +952,17 @@
     };
 
     // Initialize Central API Gateway
-    const gateway = CentralAPIGateway.getInstance();
+    console.log('🎥 Vlogs Manager - Initializing...');
+    
+    let gateway;
+    try {
+      gateway = CentralAPIGateway.getInstance();
+      console.log('✅ CentralAPIGateway initialized successfully');
+    } catch (e) {
+      console.error('❌ CentralAPIGateway init failed:', e.message);
+      alert('⚠️ Vlogs Manager failed to initialize. Check console (F12) for details.');
+      throw e;
+    }
     
 
     function showTokenModal(redirectUrl) {
@@ -994,9 +989,18 @@
     const CONTENT_TYPE = 'video-content';
     const ITEMS_PER_PAGE = 12;
     
+    console.log('🎨 Initializing SVG Generator...');
     const svgGenerator = new SVGCoverGenerator();
+    console.log('✅ SVG Generator initialized');
+    
+    console.log('📤 Getting GitHub Uploader from CentralAPI...');
     const githubUploader = gateway.getUploader();
+    console.log('✅ GitHub Uploader ready');
+    
+    console.log('📋 Initializing Content Manager...');
     const contentManager = new ContentManager(githubUploader);
+    console.log('✅ Content Manager initialized');
+    console.log('📊 All core components loaded successfully');
     
     let allVlogs = [];
     let filteredVlogs = [];
@@ -1300,7 +1304,9 @@
         
         filterVlogs();
       } catch (error) {
-        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #f44336; grid-column: 1 / -1;">? Failed to load vlogs</p>';
+        console.error('❌ Failed to load vlogs:', error.message);
+        console.error('❌ Full error:', error);
+        grid.innerHTML = '<p style="text-align: center; padding: 60px; color: #f44336; grid-column: 1 / -1;">❌ Failed to load vlogs<br><small>Check console (F12) for details</small></p>';
         console.error('Load error:', error);
       }
     }
@@ -1532,8 +1538,10 @@
         }, 2000);
         
       } catch (error) {
+        console.error('❌ Bulk delete failed:', error.message);
+        console.error('❌ Full error:', error);
         progress.classList.remove('active');
-        alert(`? Bulk delete failed: ${error.message}`);
+        alert(`❌ Bulk delete failed: ${error.message}\n\nCheck console (F12) for details.`);
       }
     }
 
@@ -1547,7 +1555,9 @@
         selectedVlogs.delete(id);
         loadManageContent();
       } catch (error) {
-        alert(`? Delete failed: ${error.message}`);
+        console.error('❌ Delete failed:', error.message);
+        console.error('❌ Full error:', error);
+        alert(`❌ Delete failed: ${error.message}\n\nCheck console (F12) for details.`);
       }
     }
 
@@ -1609,7 +1619,9 @@
         await contentManager.updateContent(CONTENT_TYPE, vlogId, vlog);
         alert('✅ Thumbnail marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
         document.getElementById('edit-currentVlogThumbnailPath').textContent = 'No custom thumbnail (using YouTube thumbnail)';
-        loadManageContent();
+        console.error('❌ Failed to delete thumbnail:', error.message);
+        console.error('❌ Full error:', error);
+        alert('❌ Failed to delete thumbnail: ' + error.message + '\n\nCheck console (F12) for details.'
       } catch (error) {
         alert('? Failed to delete thumbnail: ' + error.message);
       }
@@ -1691,10 +1703,12 @@
             // Upload thumbnail to GitHub
             await contentManager.uploadFile(thumbnailPath, editVlogThumbnailFileToUpload, `Upload thumbnail: ${fileName} for vlog ${vlogId}`);
             
-            // Update vlog with new thumbnail path
-            updatedVlog.thumbnailPath = thumbnailPath;
-            updatedVlog.thumbnail = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
-            
+            // Upda✅ Thumbnail uploaded successfully!');
+            editVlogThumbnailFileToUpload = null;
+          } catch (uploadError) {
+            console.error('❌ Thumbnail upload failed:', uploadError.message);
+            console.error('❌ Full error:', uploadError);
+            alert('❌ Failed to upload thumbnail: ' + uploadError.message + '\n\nCheck console (F12) for details.'
             alert('? Thumbnail uploaded successfully!');
             editVlogThumbnailFileToUpload = null;
           } catch (uploadError) {
@@ -1702,7 +1716,9 @@
             return;
           }
         }
-        
+        console.error('❌ Update failed:', error.message);
+        console.error('❌ Full error:', error);
+        alert(`❌ Update failed: ${error.message}\n\nCheck console (F12) for details.
         await contentManager.updateContent(CONTENT_TYPE, updatedVlog.id, updatedVlog);
         alert('? Vlog updated successfully!');
         closeEditModal();
@@ -2242,5 +2258,19 @@
   color: rgba(255,255,255,0.85);
 }
 </style>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">চোখ দিয়ে দেখো, কান দিয়ে শোনো — সত্যকে প্রচার করো।</p>
+      <cite class="wg-qsrc">&#8212; আল-কুরআন অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

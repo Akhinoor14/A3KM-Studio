@@ -537,40 +537,6 @@
 
     <div class="container">
         <!-- Header -->
-        <div class="header">
-            <div class="header-container">
-                <div class="header-left">
-                    <div class="header-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="header-title">
-                        <h1>MATLAB Manager</h1>
-                        <p>Upload, edit &amp; organize MATLAB simulations and code projects</p>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <span id="tokenStatus" class="token-status checking">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        Checking token...
-                    </span>
-                    <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token status">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token">
-                        <i class="fas fa-bug"></i> Debug
-                    </button>
-                    <a href="../category-selector.html" class="btn back-btn">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Back</span>
-                    </a>
-                    <button class="btn btn-save" onclick="saveJSON()">
-                        <i class="fas fa-save"></i>
-                        <span>Save JSON</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Main Layout -->
         <div class="main-layout">
             <!-- Sidebar Navigation -->
@@ -598,8 +564,15 @@
                     </div>
                 </div>
 
-                <div class="stats-panel">
-                    <h3><i class="fas fa-chart-pie"></i> Quick Stats</h3>
+                <!-- GitHub Token Status -->
+                <div style="padding:14px;border-top:1px solid rgba(204,0,0,0.25);">
+                    <div style="font-size:0.8rem;font-weight:700;color:var(--primary-red);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fas fa-key"></i> GitHub Token</div>
+                    <span id="tokenStatus" class="token-status checking" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+                    <div style="display:flex;gap:6px;margin-bottom:10px;">
+                        <button id="tokenRefreshBtn" class="token-refresh-btn" title="Refresh token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        <button id="tokenDebugBtn" class="token-debug-btn" title="Debug token" style="flex:1;padding:6px 4px;font-size:11px;justify-content:center;"><i class="fas fa-bug"></i> Debug</button>
+                    </div>
+
                     <div class="stat-item-sidebar">
                         <span>Total Projects</span>
                         <span id="sidebarTotal">0</span>
@@ -630,7 +603,7 @@
             <!-- Restore saved tab before page renders (prevents flash) -->
             <script>
               (function() {
-                const savedTab = localStorage.getItem('matlabManager_activeTab') || 'dashboard';
+                const savedTab = 'dashboard';
                 // Activate the appropriate tab
                 const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
                 const tabContent = document.getElementById(savedTab);
@@ -1304,6 +1277,8 @@
 
         // Load existing data from JSON file
         async function loadExistingData() {
+            console.log('📂 Loading MATLAB data from GitHub...');
+            
             // GitHub raw first (always most current)
             try {
                 const r = await fetch(GITHUB_RAW_URL + '?t=' + Date.now());
@@ -1312,32 +1287,36 @@
                     saveToCache(projectsData);
                     updateStats();
                     renderProjectsList();updateFolderStructure();
+                    console.log('✅ Data loaded from GitHub:', projectsData.projects?.length || 0, 'projects');
                     return;
                 }
-            } catch(e) { /* fall through to cache */ }
+            } catch(e) { 
+                console.warn('⚠️ GitHub fetch failed, trying cache fallback:', e.message);
+            }
 
             // Cache fallback (offline support)
             const cached = loadFromCache();
             if (cached) {
                 projectsData = cached;
-                console.log('?? Loaded from cache:', projectsData.projects.length, 'projects');
+                console.log('✅ Data loaded from cache:', projectsData.projects?.length || 0, 'projects');
                 updateStats();
                 renderProjectsList();updateFolderStructure();
                 return;
             }
 
             // Local file fallback
+            console.warn('⚠️ Cache empty, trying local file fallback...');
             try {
                 const response = await fetch('../../../Projects Code/MATLAB/matlab-data.json');
                 if (response.ok) {
                     projectsData = await response.json();
                     saveToCache(projectsData);
-                    console.log('? Loaded fresh data:', projectsData.projects.length, 'projects');
+                    console.log('✅ Data loaded from local:', projectsData.projects?.length || 0, 'projects');
                 } else {
-                    console.log('?? No existing data found, starting fresh');
+                    console.error('❌ No existing data found, starting fresh');
                 }
             } catch (error) {
-                console.log('?? Starting with empty project list');
+                console.error('❌ All data load methods failed, starting with empty project list');
             }
             updateStats();
             renderProjectsList();updateFolderStructure();
@@ -1535,9 +1514,13 @@
                 logActivity('Add MATLAB: ' + newProject.title);
                 progressFill.style.width = '100%'; progressText.textContent = '✅ Complete!';
                 await new Promise(r => setTimeout(r, 1000)); progressContainer.style.display = 'none';
+                console.log('✅ Project uploaded successfully:', newProject.title);
                 showAlert('success', `✅ "${newProject.title}" uploaded to GitHub!`);
             } catch (error) {
-                progressContainer.style.display = 'none'; showAlert('error', '❌ Upload failed: ' + error.message);
+                progressContainer.style.display = 'none';
+                console.error('❌ Upload failed:', error.message);
+                console.error('❌ Full error:', error);
+                showAlert('error', '❌ Upload failed: ' + error.message + '\n\nCheck console (F12) for details.');
             }
         });
 
@@ -2317,10 +2300,19 @@
         let githubHandler, versionHistory, tagsManager, advancedSearch, analyticsInstance, readmeGenerator;
             let tokenManager, centralAPI, githubUploader; // Central API integration
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 MATLAB Manager - Initializing...');
+            
             // Initialize central API system first
-            tokenManager = new UnifiedTokenManager();
-            centralAPI = CentralAPIGateway.getInstance();
-            githubUploader = centralAPI.getUploader(); // Book-manager style uploader
+            try {
+                tokenManager = new UnifiedTokenManager();
+                centralAPI = CentralAPIGateway.getInstance();
+                githubUploader = centralAPI.getUploader(); // Book-manager style uploader
+                console.log('✅ Central API initialized successfully');
+            } catch (e) {
+                console.error('❌ CentralAPIGateway init failed:', e.message);
+                alert('⚠️ MATLAB Manager failed to initialize. Check console (F12) for details.');
+                return;
+            }
             
             // Initialize modules
             githubHandler = new GitHubAPIHandler();
@@ -2333,11 +2325,15 @@
             // Load token through unified manager
             const token = tokenManager.loadToken();
             if (token) {
-                localStorage.setItem('githubToken', token); // Sync to project handler
+                localStorage.setItem('github_token', token); // Sync to project handler
+                console.log('✅ Token loaded and synced:', token.substring(0, 10) + '...');
+            } else {
+                console.warn('⚠️ No token found in storage');
             }
             githubHandler.loadToken();
             updateTokenStatus();
-            console.log('? MATLAB Manager initialized with Central API');
+            console.log('✅ MATLAB Manager - Initialization complete');
+            console.log('📊 Modules loaded: TokenManager, CentralAPI, GitHubHandler, VersionHistory, Tags, Search, Analytics');
             
             // Toolbox counter
             const updateToolboxCount = () => {
@@ -2492,11 +2488,12 @@
                 if (!token) throw new Error('No token');
                 
                 const validation = await tokenManager.validateToken(token);
+                console.log('🔍 Token validation result:', validation.valid ? '✅ Valid' : '❌ Invalid');
                 
                 if (validation.valid) {
                     tokenBadge.className = 'token-status active';
                     tokenBadge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active';
-                    localStorage.setItem('githubToken', token);
+                    localStorage.setItem('github_token', token);
                 } else {
                     tokenBadge.className = 'token-status missing';
                     tokenBadge.innerHTML = '<i class="fas fa-times-circle"></i> Token Missing';
@@ -2545,18 +2542,27 @@
             try {
                 const tokenStatus = await centralAPI.getStatus();
                 if (tokenStatus.token === 'missing' || tokenStatus.token === 'invalid') {
+                    console.error('❌ Token validation failed:', tokenStatus.token);
+                    const token = localStorage.getItem('github_token');
+                    console.error('❌ Token in localStorage:', token ? 'exists' : 'missing');
                     throw new Error('No valid token');
                 }
                 if (_bar) _bar.style.width = '70%';
+                console.log('📤 Pushing data to GitHub:', commitMsg);
                 await githubUploader.uploadFile(GITHUB_REPO_PATH, JSON.stringify(projectsData, null, 2), commitMsg);
                 if (_bar) { _bar.style.width = '100%'; setTimeout(() => { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }, 800); }
                 badge.className = 'token-status active';
                 badge.innerHTML = '<i class="fas fa-check-circle"></i> Saved ✔';
                 logActivity(commitMsg);
+                console.log('✅ Data pushed successfully:', commitMsg);
                 setTimeout(() => { badge.className = 'token-status active'; badge.innerHTML = '<i class="fas fa-check-circle"></i> Token Active'; }, 3000);
             } catch(e) {
+                console.error('❌ Push failed:', e.message);
+                console.error('❌ Full error:', e);
                 if (_bar) { _bar.style.width = '0%'; _bar.parentElement.style.display = 'none'; }
-                badge.className = prevClass; badge.innerHTML = prevHTML; throw e;
+                badge.className = prevClass; badge.innerHTML = prevHTML;
+                alert('❌ GitHub push failed: ' + e.message + '\n\nCheck console (F12) for details.');
+                throw e;
             }
         }
 
@@ -2856,5 +2862,19 @@
     <script src="../../../../Optimization/cursor-effects.js" defer></script>
     <!-- #2 Push Progress Bar -->
     <div id="pushProgress" style="display:none;position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5);z-index:99999;"><div id="pushProgressBar" style="height:100%;width:0%;background:#CC0000;transition:width 0.3s ease;"></div></div>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">সংখ্যার মধ্যেই সৃষ্টির রহস্য লুকিয়ে আছে।</p>
+      <cite class="wg-qsrc">&#8212; আল-বিরুনি অনুপ্রাণিত</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

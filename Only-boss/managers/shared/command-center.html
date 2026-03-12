@@ -620,9 +620,6 @@
             <button class="tab-btn active" onclick="switchTab('api')">
                 <i class="fas fa-plug"></i> API Configuration
             </button>
-            <button class="tab-btn" onclick="switchTab('activity')">
-                <i class="fas fa-history"></i> Activity Log
-            </button>
         </div>
 
         <!-- Tab: API Configuration -->
@@ -849,6 +846,9 @@
                         </button>
                     </div>
 
+                    <!-- YouTube Key Saved Status Badge -->
+                    <div id="youtubeKeyStatus" style="display:none; margin-top:12px;"></div>
+
                     <!-- Duration Updater -->
                     <div style="margin-top: 25px; border-top: 1px solid rgba(139,0,0,0.3); padding-top: 20px;">
                         <h3 style="color: #FFD700; margin-bottom: 12px; font-size: 15px;">
@@ -857,11 +857,13 @@
                         <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 15px;">
                             Fetches correct video durations from YouTube API and auto-saves to videos.json on GitHub.
                         </p>
+                        <!-- Key-ready indicator above Fetch button -->
+                        <div id="fetchBtnStatus" style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:10px 12px; background:rgba(0,0,0,0.35); border:1px solid rgba(139,0,0,0.2); border-radius:8px; font-size:12px;"></div>
                         <button class="btn" id="durationFetchBtn" onclick="runDurationUpdater()" style="width: 100%;">
                             <i class="fas fa-rocket"></i> Fetch Durations from YouTube
                         </button>
 
-                        <div id="durationStats" style="display:none; margin-top:15px; display: none;">
+                        <div id="durationStats" style="display:none; margin-top:15px;">
                             <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:12px;">
                                 <div style="background:rgba(139,0,0,0.15); border:1px solid rgba(139,0,0,0.3); border-radius:8px; padding:12px; text-align:center;">
                                     <span id="durStatTotal" style="font-size:1.8rem; color:#C80000; font-weight:700; display:block;">0</span>
@@ -900,25 +902,6 @@
             </div>
         </div>
 
-        <!-- Tab: Activity Log -->
-        <div id="activityTab" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: var(--text-primary);">Recent Activity</h2>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="clearActivityLogs()">
-                        <i class="fas fa-trash"></i> Clear Logs
-                    </button>
-                    <button class="btn btn-secondary" onclick="loadActivityLog()">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
-                </div>
-            </div>
-            <div class="activity-log" id="activityLog">
-                <p style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">
-                    No recent activity
-                </p>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -930,7 +913,6 @@
             // Initial load of all data
             await loadStatus();
             loadContentCounts();
-            loadActivityLog();
             loadSavedTokens();
             updateAPIStatusIndicators();
             
@@ -947,23 +929,19 @@
             // Real-time updates via event bus
             gateway.on('content:uploaded', () => {
                 loadContentCounts();
-                loadActivityLog();
                 showSuccess('✅ Content uploaded successfully!');
             });
             
             gateway.on('content:deleted', () => {
                 loadContentCounts();
-                loadActivityLog();
                 showSuccess('✅ Content deleted successfully!');
             });
             
             gateway.on('content:updated', () => {
-                loadActivityLog();
                 showSuccess('✅ Content updated successfully!');
             });
             
             gateway.on('api:error', (data) => {
-                loadActivityLog();
                 showError(`❌ API Error: ${data.error || 'Unknown error'}`);
             });
             
@@ -1146,79 +1124,6 @@
             }
         }
 
-        // Load activity log with better formatting
-        function loadActivityLog() {
-            try {
-                const logs = (typeof ActivityLogger !== 'undefined')
-                    ? ActivityLogger.getLogs(50)
-                    : [];
-                const container = document.getElementById('activityLog');
-                
-                if (!logs || logs.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 60px 20px;">
-                            <i class="fas fa-inbox fa-3x" style="margin-bottom: 15px; opacity: 0.3;"></i>
-                            <p style="font-size: 16px;">No Activity Yet</p>
-                            <p style="font-size: 12px;">Activity will appear here when you upload, delete, or modify content</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = '';
-                
-                logs.forEach((log, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'activity-item';
-                    
-                    const typeIcons = {
-                        'upload':   '📤 Upload',
-                        'delete':   '🗑️ Delete',
-                        'edit':     '✏️ Edit',
-                        'update':   '✏️ Update',
-                        'system':   '⚙️ System',
-                        'error':    '❌ Error',
-                        'login':    '🔑 Login'
-                    };
-                    
-                    const typeLabel = typeIcons[log.type] || ('📋 ' + (log.type || 'Activity'));
-                    const timeObj = new Date(log.timestamp);
-                    const timeDiff = Date.now() - timeObj.getTime();
-                    
-                    let timeStr = '';
-                    if (timeDiff < 60000) {
-                        timeStr = 'Just now';
-                    } else if (timeDiff < 3600000) {
-                        timeStr = Math.floor(timeDiff / 60000) + 'm ago';
-                    } else if (timeDiff < 86400000) {
-                        timeStr = Math.floor(timeDiff / 3600000) + 'h ago';
-                    } else {
-                        timeStr = timeObj.toLocaleDateString();
-                    }
-                    
-                    const description = log.activity || log.data?.title || log.data?.error || 'Activity recorded';
-                    const details = log.details ? ` • ${log.details}` : '';
-                    
-                    div.innerHTML = `
-                        <div class="activity-item-info">
-                            <h4>${typeLabel}</h4>
-                            <p>${description}${details}</p>
-                        </div>
-                        <div class="activity-time">${timeStr}</div>
-                    `;
-                    
-                    container.appendChild(div);
-                });
-                
-            } catch (error) {
-                console.error('Error loading activity log:', error);
-                const container = document.getElementById('activityLog');
-                if (container) {
-                    container.innerHTML = `<p style="color: rgba(255,255,255,0.5); padding: 20px; text-align: center;">⚠️ Error loading activity log</p>`;
-                }
-            }
-        }
-
         // Save GitHub token
         async function saveGitHubToken() {
             const token = document.getElementById('githubToken').value.trim();
@@ -1261,17 +1166,65 @@
             }
             
             localStorage.setItem('youtube_api_key', key);
-            updateAPIStatusIndicators(); // Update indicators
-            showSuccess('✅ YouTube API key saved successfully!');
             document.getElementById('youtubeKey').value = '';
+            document.getElementById('youtubeKey').placeholder = '●●●●●●●●●●●●●●●● (saved)';
+            updateAPIStatusIndicators();
+            updateYouTubeKeyStatus();
+            showSuccess('✅ YouTube API key saved successfully!');
         }
 
         // Clear YouTube key
         function clearYouTubeKey() {
             if (confirm('Are you sure you want to clear the YouTube API key?')) {
                 localStorage.removeItem('youtube_api_key');
-                updateAPIStatusIndicators(); // Update indicators
+                document.getElementById('youtubeKey').placeholder = 'AIzaSyxxxxxxxxxxxxxxxxxxxxxxxx';
+                updateAPIStatusIndicators();
+                updateYouTubeKeyStatus();
                 showSuccess('YouTube key cleared');
+            }
+        }
+
+        // Show/update YouTube key save status inline
+        function updateYouTubeKeyStatus() {
+            const key = localStorage.getItem('youtube_api_key');
+            const statusEl = document.getElementById('youtubeKeyStatus');
+            const fetchEl   = document.getElementById('fetchBtnStatus');
+
+            if (key) {
+                const masked = key.substring(0, 7) + '••••••••' + key.substring(key.length - 4);
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+                                     background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.35);
+                                     border-radius:8px;">
+                            <i class="fab fa-youtube" style="color:#FF0000;font-size:18px;"></i>
+                            <div style="flex:1;">
+                                <span style="color:#4CAF50;font-weight:700;font-size:13px;">✅ YouTube API Key Saved</span>
+                                <code style="display:block;color:rgba(255,255,255,0.5);font-size:11px;
+                                             margin-top:2px;letter-spacing:1px;">${masked}</code>
+                            </div>
+                            <span style="background:rgba(76,175,80,0.25);color:#4CAF50;font-size:10px;
+                                         font-weight:700;padding:3px 10px;border-radius:12px;white-space:nowrap;">ACTIVE</span>
+                        </div>`;
+                }
+                if (fetchEl) {
+                    fetchEl.style.borderColor = 'rgba(76,175,80,0.3)';
+                    fetchEl.style.background  = 'rgba(76,175,80,0.08)';
+                    fetchEl.innerHTML = `<i class="fas fa-check-circle" style="color:#4CAF50;font-size:14px;"></i>
+                        <span style="color:rgba(255,255,255,0.75);">Ready — will use saved key
+                            <code style="background:rgba(255,255,255,0.08);padding:1px 6px;
+                                         border-radius:4px;font-size:11px;">${masked}</code>
+                        </span>`;
+                }
+            } else {
+                if (statusEl) { statusEl.style.display = 'none'; statusEl.innerHTML = ''; }
+                if (fetchEl) {
+                    fetchEl.style.borderColor = 'rgba(255,152,0,0.35)';
+                    fetchEl.style.background  = 'rgba(255,152,0,0.08)';
+                    fetchEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#FF9800;font-size:14px;"></i>
+                        <span style="color:#FF9800;">No YouTube API key saved — enter and save your key above first.</span>`;
+                }
             }
         }
 
@@ -1319,7 +1272,9 @@
 
             for (let i = 0; i < batches.length; i++) {
                 const ids = batches[i].join(',');
-                const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(ids)}&key=${encodeURIComponent(apiKey)}`;
+                // NOTE: do NOT encodeURIComponent(ids) — commas must stay as plain commas
+                // for YouTube to interpret them as a list of separate video IDs.
+                const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${encodeURIComponent(apiKey)}`;
                 try {
                     _durLog(`Batch ${i + 1}/${batches.length}: requesting ${batches[i].length} video(s)...`, 'info');
                     const resp = await fetch(url);
@@ -1334,6 +1289,11 @@
                         statsRef.fetched++;
                         _durUpdateStats(statsRef.total, statsRef.fetched, statsRef.updated);
                         _durLog(`${item.id}: ${results[item.id]}`, 'success');
+                    });
+                    // Log IDs YouTube couldn't return (private / deleted / invalid)
+                    const returnedIds = new Set((data.items || []).map(it => it.id));
+                    batches[i].filter(id => !returnedIds.has(id)).forEach(id => {
+                        _durLog(`${id}: not found on YouTube (private/deleted/invalid)`, 'warning');
                     });
                     if (i < batches.length - 1) await new Promise(r => setTimeout(r, 500));
                 } catch (err) {
@@ -1363,7 +1323,7 @@
             const statsRef = { total: 0, fetched: 0, updated: 0 };
 
             try {
-                const VIDEOS_PATH = 'A3KM Studio/Content Studio/video-content/videos.json';
+                const VIDEOS_PATH = 'Content Studio/video-content/videos.json';
                 _durLog('Loading videos.json from GitHub...', 'info');
 
                 const uploader = gateway.getUploader();
@@ -1374,25 +1334,27 @@
                 const bytes = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
                 const videosData = JSON.parse(new TextDecoder('utf-8').decode(bytes));
 
-                // Collect all video IDs
+                // Collect all video IDs — iterate ALL category types dynamically
                 const videoIds = [];
-                const videoMap = new Map();
+                const videoMap = new Map(); // videoId → array of video objects (same ID may appear in multiple categories)
                 const categories = videosData.categories || {};
-                ['video-blog', 'educational'].forEach(cat => {
-                    if (categories[cat]) {
-                        Object.values(categories[cat]).forEach(group => {
-                            (group.videos || []).forEach(v => {
-                                if (v.videoId) {
-                                    videoIds.push(v.videoId);
-                                    videoMap.set(v.videoId, v);
-                                    statsRef.total++;
-                                }
-                            });
+                Object.values(categories).forEach(catObj => {
+                    if (!catObj || typeof catObj !== 'object' || Array.isArray(catObj)) return;
+                    Object.values(catObj).forEach(group => {
+                        (group.videos || []).forEach(v => {
+                            if (v.videoId) {
+                                // Deduplicate videoIds list
+                                if (!videoIds.includes(v.videoId)) videoIds.push(v.videoId);
+                                // Store ALL object refs so every copy gets updated
+                                if (!videoMap.has(v.videoId)) videoMap.set(v.videoId, []);
+                                videoMap.get(v.videoId).push(v);
+                                statsRef.total++;
+                            }
                         });
-                    }
+                    });
                 });
                 _durUpdateStats(statsRef.total, 0, 0);
-                _durLog(`Found ${videoIds.length} video(s) in videos.json`, 'info');
+                _durLog(`Found ${videoIds.length} unique video(s) across all categories`, 'info');
 
                 if (videoIds.length === 0) {
                     _durLog('No videos found — nothing to update.', 'warning');
@@ -1404,26 +1366,29 @@
                 // Fetch durations from YouTube
                 const durations = await _fetchYouTubeDurations(videoIds, apiKey, statsRef);
 
-                // Apply updates
+                // Apply updates — videoMap stores arrays of refs (handles dupes across categories)
                 Object.entries(durations).forEach(([videoId, duration]) => {
-                    const video = videoMap.get(videoId);
-                    if (video) {
-                        const old = video.duration;
-                        video.duration = duration;
-                        if (old !== duration) {
-                            _durLog(`Updated ${videoId}: ${old} → ${duration}`, 'warning');
-                            statsRef.updated++;
-                            _durUpdateStats(statsRef.total, statsRef.fetched, statsRef.updated);
-                        }
+                    const refs = videoMap.get(videoId) || [];
+                    const oldDuration = refs.length > 0 ? refs[0].duration : null;
+                    refs.forEach(video => { video.duration = duration; }); // update ALL refs
+                    if (oldDuration !== duration) {
+                        _durLog(`Updated ${videoId}: ${oldDuration || '(none)'} → ${duration}`, 'warning');
+                        statsRef.updated++;
+                        _durUpdateStats(statsRef.total, statsRef.fetched, statsRef.updated);
                     }
                 });
 
-                _durLog(`Saving updated videos.json to GitHub...`, 'info');
                 const updatedContent = JSON.stringify(videosData, null, 2);
-                await uploader.uploadFile(VIDEOS_PATH, updatedContent, `⏱️ Updated video durations (${statsRef.updated} changed)`);
 
-                _durLog(`✅ Done! Fetched: ${statsRef.fetched}, Updated: ${statsRef.updated}`, 'success');
-                showSuccess(`✅ Duration update complete — ${statsRef.updated} video(s) updated and saved to GitHub!`);
+                if (statsRef.updated === 0) {
+                    _durLog(`✅ All ${statsRef.fetched} duration(s) already up-to-date — nothing to save.`, 'success');
+                    showSuccess(`✅ All durations already up-to-date!`);
+                } else {
+                    _durLog(`Saving updated videos.json to GitHub...`, 'info');
+                    await uploader.uploadFile(VIDEOS_PATH, updatedContent, `⏱️ Updated video durations (${statsRef.updated} changed)`);
+                    _durLog(`✅ Done! Fetched: ${statsRef.fetched}, Updated: ${statsRef.updated}`, 'success');
+                    showSuccess(`✅ Duration update complete — ${statsRef.updated} video(s) updated and saved to GitHub!`);
+                }
                 btn.innerHTML = '<i class="fas fa-check"></i> Done!';
                 setTimeout(() => {
                     btn.disabled = false;
@@ -1476,6 +1441,7 @@
             
             // Update API status indicators
             updateAPIStatusIndicators();
+            updateYouTubeKeyStatus();
         }
         
         // Save additional GitHub tokens
@@ -2015,16 +1981,7 @@
                 stopQRScanner();
             }
         });
-        // Clear activity logs only
-        function clearActivityLogs() {
-            if (confirm('Clear all activity logs?')) {
-                if (typeof ActivityLogger !== 'undefined') ActivityLogger.clearLogs();
-                loadActivityLog();
-                showSuccess('✅ Activity logs cleared');
-            }
-        }
 
-        // Export logs with proper formatting
         // Show success message
         function showSuccess(message) {
             const msg = document.getElementById('successMessage');
@@ -2064,5 +2021,19 @@
     }
 })();
 </script>
+<footer class="wg-footer">
+  <div class="wg-footer-inner">
+    <div class="wg-qwrap">
+      <span class="wg-qmark">&#8220;</span>
+      <p class="wg-qtext">একটি কেন্দ্র থেকে পরিচালনা — এটিই কার্যকর নেতৃত্বের নীতি।</p>
+      <cite class="wg-qsrc">&#8212; হযরত উমার (রাঃ)</cite>
+    </div>
+    <div class="wg-divider"></div>
+    <div class="wg-copy">
+      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
+      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
