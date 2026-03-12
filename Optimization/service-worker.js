@@ -1,5 +1,5 @@
 /* A3KM Studio Service Worker - Enhanced Offline Support with Runtime Caching */
-const VERSION = 'v3.1.0-enhanced-2026-02-15';
+const VERSION = 'v3.2.0-hybrid-storage-2026-03-12';
 const CACHE_PREFIX = 'a3km-studio';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${VERSION}`;
 const HTML_CACHE = `${CACHE_PREFIX}-html-${VERSION}`;
@@ -19,6 +19,7 @@ const CORE_ASSETS = [
   '/images/favicon.svg',
   '/images/logo.svg',
   '/Optimization/manifest.json',
+  '/Optimization/hybrid-storage-manager.js',
   '/Optimization/offline-content-manager.js',
   '/Optimization/pwa-install-prompt.js',
   '/Optimization/update-notifier.js',

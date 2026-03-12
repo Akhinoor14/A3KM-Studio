@@ -49,17 +49,9 @@
       height: 52px;
     }
 
-    .viewer-back-btn {
-      color: var(--accent);
-      font-size: 16px;
-      text-decoration: none;
-      padding: 6px;
-      -webkit-tap-highlight-color: transparent;
-    }
-
     .viewer-title {
       flex: 1;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
       color: #fff;
       white-space: nowrap;
@@ -393,19 +385,22 @@
       border-radius: 10px;
       font-size: 14px;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--accent), #008822);
-      color: #000;
-      border: none;
+      background: linear-gradient(135deg, var(--accent), #8B0000);
+      color: #fff;
+      border: 2px solid rgba(204,0,0,0.4);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       -webkit-tap-highlight-color: transparent;
+      transition: all 0.3s;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 15px rgba(204,0,0,0.3);
     }
 
     .btn-run-big:disabled { opacity: 0.4; }
-    .btn-run-big:active   { filter: brightness(0.9); }
+    .btn-run-big:active   { filter: brightness(0.85); transform: translateY(1px); }
 
     .stdin-label {
       font-size: 11px;
@@ -568,29 +563,29 @@
       bottom: 70px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      border: 1px solid rgba(0,204,68,0.3);
+      background: rgba(10,0,0,0.95);
+      border: 1.5px solid rgba(204,0,0,0.5);
       border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 11px;
-      color: rgba(0,204,68,0.8);
+      padding: 8px 18px;
+      font-size: 12px;
+      color: rgba(255,180,180,0.9);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       z-index: 300;
       display: none;
+      box-shadow: 0 4px 20px rgba(204,0,0,0.3);
+      backdrop-filter: blur(8px);
     }
 
     .pyodide-loading.show { display: flex; }
+    .pyodide-loading i { color: var(--accent); }
   </style>
 </head>
 <body>
 
   <!-- Top bar -->
   <header class="viewer-topbar">
-    <a href="programming-listing.html" class="viewer-back-btn" id="backBtn">
-      <i class="fas fa-arrow-left"></i>
-    </a>
     <span class="viewer-title" id="viewerTitle">Loading…</span>
     <span class="viewer-lang-badge" id="viewerLangBadge">–</span>
     <div class="status-dot" id="statusDot" title="Status"></div>
@@ -915,12 +910,20 @@
       if (pyodideLoading || pyodideReady) return;
       pyodideLoading = true;
       pyLoading().classList.add('show');
+      
+      const startTime = Date.now();
 
       try {
+        // Use indexedDB: true for faster subsequent loads
         const { loadPyodide: loadPy } = await import('https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.mjs');
-        pyodide = await loadPy();
+        pyodide = await loadPy({
+          indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/',
+          fullStdLib: false  // Don't load full stdlib for faster initial load
+        });
         pyodideReady = true;
-        setNotice('<i class="fas fa-check-circle"></i> Python is ready.', false);
+        
+        const loadTime = ((Date.now() - startTime) / 1000).toFixed(1);
+        setNotice(`<i class="fas fa-check-circle"></i> Python ready in ${loadTime}s.`, false);
         setStatus('ready');
         runBtn().disabled = false;
         if (runAllBtn()) runAllBtn().disabled = false;

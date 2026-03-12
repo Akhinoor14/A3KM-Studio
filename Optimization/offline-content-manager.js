@@ -1,20 +1,29 @@
 /**
- * A3KM Studio - Offline Content Manager
+ * A3KM Studio - Offline Content Manager (Enhanced with Hybrid Storage)
  * Automatically downloads all content for offline access when PWA is installed
+ * Uses intelligent hybrid storage (Cache API + OPFS + IndexedDB) for optimal performance
  * Handles YouTube videos intelligently (metadata only, not video files)
  * Auto-detects content updates and prompts for re-download
  */
 
 class OfflineContentManager {
-        // Helper: Detect mobile device
-        isMobileDevice() {
-            return /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(navigator.userAgent || navigator.vendor || window.opera);
-        }
     constructor() {
         // Version tracking for auto-updates
-        this.CONTENT_VERSION = 'v3.1.0-2026-02-15-enhanced';
+        this.CONTENT_VERSION = 'v3.2.0-2026-03-12-hybrid-storage';
         this.VERSION_STORAGE_KEY = 'a3km_offline_content_version';
         this.VERSION_URL = '/version.json';
+        
+        this.isDownloading = false;
+        this.downloadProgress = 0;
+        this.totalFiles = 0;
+        this.downloadedFiles = 0;
+        this.failedFiles = [];
+        
+        // Reference to hybrid storage manager (loaded from hybrid-storage-manager.js)
+        this.hybridStorage = null;
+        
+        // Wait for hybrid storage to be ready
+        this.waitForHybridStorage();
         
         this.isDownloading = false;
         this.downloadProgress = 0;
@@ -46,7 +55,7 @@ class OfflineContentManager {
                 '/About me/about-desktop.css',
                 '/Contact/contact.html',
                 '/Projects Code/projects.html',
-                '/Documentation/index.html'
+                '/Website Guide/index.html'
             ],
             
             // Shared Resources
@@ -248,7 +257,7 @@ class OfflineContentManager {
             
             // Documentation (critical files only - rest via runtime caching)
             documentation: [
-                '/Documentation/index.html',
+                '/Website Guide/index.html',
                 '/Documentation/viewer.html',
                 '/Documentation/viewer-enhanced.html',
                 '/Documentation/README.md',
@@ -775,6 +784,207 @@ class OfflineContentManager {
                     Retry
                 </button>
             `;
+        }
+    }
+    
+    /**
+     * Wait for hybrid storage manager to be ready
+     */
+    async waitForHybridStorage() {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+        
+        while (!window.hybridStorage && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (window.hybridStorage) {
+            this.hybridStorage = window.hybridStorage;
+            console.log('✅ Hybrid Storage Manager connected');
+        } else {
+            console.warn('⚠️ Hybrid Storage Manager not available, will use service worker caching');
+        }
+    }
+    
+    /**
+     * Start downloading offline content
+     * @param {boolean} silent - If true, downloads silently without showing progress
+     */
+    async startOfflineContentDownload(silent = false) {
+        if (this.isDownloading) {
+            console.log('Download already in progress');
+            return;
+        }
+        
+        // Check if we're online
+        if (!navigator.onLine) {
+            console.log('Offline - skipping download');
+            return;
+        }
+        
+        this.isDownloading = true;
+        this.downloadedFiles = 0;
+        this.failedFiles = [];
+        
+        try {
+            // Collect all files to download
+            const allFiles = [];
+            
+            // Add all files from content manifest
+            for (const category in this.contentManifest) {
+                if (Array.isArray(this.contentManifest[category])) {
+                    allFiles.push(...this.contentManifest[category]);
+                }
+            }
+            
+            // Filter out external content (YouTube, CDNs, etc)
+            const filesToCache = allFiles.filter(url => {
+                return !this.isExternalContent(url);
+            });
+            
+            this.totalFiles = filesToCache.length;
+            
+            console.log(`📦 Starting offline content download: ${this.totalFiles} files`);
+            
+            // If hybrid storage is available, use it
+            if (this.hybridStorage) {
+                await this.downloadWithHybridStorage(filesToCache, silent);
+            } else {
+                // Fallback to service worker caching
+                await this.downloadWithServiceWorker(filesToCache, silent);
+            }
+            
+            // Mark as downloaded
+            localStorage.setItem('a3km_offline_content_downloaded', 'true');
+            localStorage.setItem(this.VERSION_STORAGE_KEY, this.CONTENT_VERSION);
+            
+            console.log(`✅ Download complete: ${this.downloadedFiles} cached, ${this.failedFiles.length} failed`);
+            
+            if (!silent) {
+                this.showCompletionPopup(this.downloadedFiles, this.failedFiles.length);
+            }
+            
+        } catch (error) {
+            console.error('❌ Download error:', error);
+            if (!silent) {
+                this.showDownloadError(error);
+            }
+        } finally {
+            this.isDownloading = false;
+        }
+    }
+    
+    /**
+     * Download files using hybrid storage manager
+     */
+    async downloadWithHybridStorage(files, silent) {
+        const batchSize = 5; // Download 5 files at a time
+        
+        for (let i = 0; i < files.length; i += batchSize) {
+            const batch = files.slice(i, i + batchSize);
+            
+            await Promise.all(batch.map(async (url) => {
+                try {
+                    // Fetch the file
+                    const response = await fetch(url);
+                    
+                    if (response.ok) {
+                        // Get file data as ArrayBuffer
+                        const data = await response.arrayBuffer();
+                        
+                        // Store using hybrid storage
+                        await this.hybridStorage.store(url, data, {
+                            contentType: response.headers.get('content-type') || 'application/octet-stream',
+                            url: url
+                        });
+                        
+                        this.downloadedFiles++;
+                    } else {
+                        this.failedFiles.push({ url, reason: `HTTP ${response.status}` });
+                    }
+                } catch (error) {
+                    console.warn(`Failed to cache: ${url}`, error);
+                    this.failedFiles.push({ url, reason: error.message });
+                }
+            }));
+            
+            // Update progress
+            if (!silent) {
+                this.updateProgress(this.downloadedFiles, this.totalFiles, this.failedFiles.length);
+            }
+            
+            // Small delay between batches to avoid overwhelming the browser
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
+    /**
+     * Download files using service worker (fallback)
+     */
+    async downloadWithServiceWorker(files, silent) {
+        // Send files to service worker for caching
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'CACHE_URLS',
+                urls: files
+            });
+            
+            // Service worker will send progress updates via messages
+            // which are handled in the init() method
+        } else {
+            console.warn('Service worker not available');
+            throw new Error('Service worker not available');
+        }
+    }
+    
+    /**
+     * Check if URL is external content (YouTube, CDN, etc)
+     */
+    isExternalContent(url) {
+        const externalPatterns = [
+            /youtube\.com/,
+            /youtu\.be/,
+            /cdnjs\.cloudflare\.com/,
+            /googleapis\.com/,
+            /gstatic\.com/,
+            /unpkg\.com/,
+            /jsdelivr\.net/
+        ];
+        
+        return externalPatterns.some(pattern => pattern.test(url));
+    }
+    
+    /**
+     * Update progress display
+     */
+    updateProgress(current, total, failed) {
+        const percent = Math.round((current / total) * 100);
+        
+        // Update install progress tracker if available
+        if (window.updateInstallProgress) {
+            const status = failed > 0 
+                ? `Caching files (${failed} skipped)...`
+                : 'Caching files...';
+            
+            window.updateInstallProgress(percent, current, total, status);
+        }
+        
+        console.log(`📦 Progress: ${current}/${total} (${percent}%) - ${failed} failed`);
+    }
+    
+    /**
+     * Hide progress animation
+     */
+    hideProgressAnimation() {
+        const progressOverlay = document.getElementById('offline-progress-overlay');
+        if (progressOverlay) {
+            progressOverlay.remove();
+        }
+        
+        const progressUI = document.getElementById('offline-download-progress');
+        if (progressUI) {
+            progressUI.remove();
         }
     }
 }

@@ -3,7 +3,7 @@
 // Enhanced offline caching with runtime caching and performance optimization
 // ============================================================================
 
-const VERSION = 'v3.1.0-enhanced-2026-02-15';
+const VERSION = 'v3.2.0-hybrid-storage-2026-03-12';
 const CACHE_PREFIX = 'a3km-mobile';
 const CACHE_NAME = `${CACHE_PREFIX}-${VERSION}`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-${VERSION}`;
@@ -39,7 +39,12 @@ const PRECACHE_URLS = [
   '/mobile/manifest.json',
   '/images/logo.svg',
   '/images/favicon.svg',
-  '/images/icon-180.png'
+  '/images/icon-180.png',
+  '/Optimization/hybrid-storage-manager.js',
+  '/Optimization/offline-content-manager.js',
+  '/Optimization/pwa-install-prompt.js',
+  '/Optimization/update-notifier.js',
+  '/version.json'
 ];
 
 // Install event - cache critical resources

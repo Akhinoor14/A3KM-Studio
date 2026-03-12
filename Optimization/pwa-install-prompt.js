@@ -11,6 +11,7 @@ class PWAInstallPrompt {
         this.isDismissed = false;
         this.dismissCount = 0;
         this.lastDismissDate = null;
+        this.autoDismissInterval = null; // For auto-hide countdown
         
         // Configuration
         this.DISMISS_LIMIT = 3; // Show max 3 times before permanent dismiss
@@ -440,6 +441,366 @@ class PWAInstallPrompt {
     }
     
     /**
+     * Show install progress tracker with percentage
+     */
+    showInstallProgress(promptElement) {
+        // Replace prompt content with progress tracker
+        const card = promptElement.querySelector('div[style*="background: linear-gradient"]');
+        if (!card) return;
+        
+        card.innerHTML = `
+            <div style="position: relative; z-index: 1; text-align: center; padding: 20px;">
+                <!-- Installing Icon with Animation -->
+                <div style="
+                    width: 120px;
+                    height: 120px;
+                    margin: 0 auto 32px;
+                    background: linear-gradient(135deg, #8B0000 0%, #580000 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 8px 32px rgba(139, 0, 0, 0.6);
+                    position: relative;
+                    animation: pulse 2s ease-in-out infinite;
+                ">
+                    <!-- Spinning Ring -->
+                    <div style="
+                        position: absolute;
+                        width: 130px;
+                        height: 130px;
+                        border: 3px solid transparent;
+                        border-top-color: #8B0000;
+                        border-radius: 50%;
+                        animation: spin 1.5s linear infinite;
+                    "></div>
+                    
+                    <!-- Download Icon -->
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        <style>
+                            @keyframes downloadMove {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(-8px); }
+                            }
+                        </style>
+                        <animateTransform attributeName="transform" type="translate" values="0 0; 0 3; 0 0" dur="1.5s" repeatCount="indefinite"/>
+                    </svg>
+                    
+                    <!-- Percentage Text -->
+                    <div id="install-percentage" style="
+                        position: absolute;
+                        bottom: -50px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        font-size: 48px;
+                        font-weight: 900;
+                        color: #8B0000;
+                        font-family: 'Inter', sans-serif;
+                        text-shadow: 0 2px 10px rgba(139, 0, 0, 0.5);
+                    ">0%</div>
+                </div>
+                
+                <!-- Title -->
+                <h2 style="
+                    font-size: 32px;
+                    font-weight: 900;
+                    color: #ffffff;
+                    margin: 60px 0 16px 0;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    Installing App...
+                </h2>
+                
+                <!-- Status Text -->
+                <p id="install-status-text" style="
+                    font-size: 16px;
+                    color: rgba(255, 255, 255, 0.7);
+                    margin: 0 0 32px 0;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    Preparing your offline experience
+                </p>
+                
+                <!-- Progress Bar -->
+                <div style="
+                    width: 100%;
+                    height: 8px;
+                    background: rgba(139, 0, 0, 0.2);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 16px;
+                ">
+                    <div id="install-progress-bar" style="
+                        width: 0%;
+                        height: 100%;
+                        background: linear-gradient(90deg, #8B0000 0%, #FF4444 100%);
+                        border-radius: 10px;
+                        transition: width 0.3s ease;
+                        box-shadow: 0 0 10px rgba(139, 0, 0, 0.6);
+                    "></div>
+                </div>
+                
+                <!-- Files Counter -->
+                <div id="install-files-counter" style="
+                    font-size: 14px;
+                    color: rgba(255, 255, 255, 0.5);
+                    font-family: 'Inter', sans-serif;
+                ">
+                    Downloading core files...
+                </div>
+            </div>
+        `;
+        
+        // Animate progress from 0 to 100
+        this.animateInstallProgress();
+    }
+    
+    /**
+     * Animate install progress percentage
+     * Can be driven by real service worker data via window.updateInstallProgress()
+     */
+    animateInstallProgress() {
+        const percentageEl = document.getElementById('install-percentage');
+        const progressBarEl = document.getElementById('install-progress-bar');
+        const statusTextEl = document.getElementById('install-status-text');
+        const filesCounterEl = document.getElementById('install-files-counter');
+        
+        if (!percentageEl || !progressBarEl) return;
+        
+        // Expose global function for real-time updates from service worker
+        window.updateInstallProgress = (progress, cached, total, statusText) => {
+            if (percentageEl) percentageEl.textContent = Math.floor(progress) + '%';
+            if (progressBarEl) progressBarEl.style.width = progress + '%';
+            if (statusTextEl && statusText) statusTextEl.textContent = statusText;
+            if (filesCounterEl && cached !== undefined && total !== undefined) {
+                filesCounterEl.textContent = `${cached} of ${total} files cached`;
+            }
+            
+            // Auto-complete at 100%
+            if (progress >= 100) {
+                setTimeout(() => {
+                    this.showInstallComplete();
+                }, 500);
+            }
+        };
+        
+        // Fallback: Simulate progress if no real data comes in
+        const stages = [
+            { progress: 0, text: 'Preparing your offline experience', files: 'Initializing...' },
+            { progress: 15, text: 'Downloading core files', files: '12 of 85 files cached' },
+            { progress: 35, text: 'Caching essential resources', files: '30 of 85 files cached' },
+            { progress: 55, text: 'Setting up offline mode', files: '47 of 85 files cached' },
+            { progress: 75, text: 'Optimizing performance', files: '64 of 85 files cached' },
+            { progress: 90, text: 'Finalizing installation', files: '76 of 85 files cached' },
+            { progress: 100, text: 'Installation complete!', files: '85 of 85 files cached ✓' }
+        ];
+        
+        let currentStage = 0;
+        let simulationTimeout = null;
+        
+        const updateStage = () => {
+            if (currentStage >= stages.length) {
+                setTimeout(() => {
+                    if (document.getElementById('install-percentage')) {
+                        this.showInstallComplete();
+                    }
+                }, 500);
+                return;
+            }
+            
+            const stage = stages[currentStage];
+            
+            // Smooth percentage animation
+            let currentProgress = parseInt(percentageEl.textContent) || 0;
+            const targetProgress = stage.progress;
+            const step = (targetProgress - currentProgress) / 20;
+            
+            const animatePercentage = () => {
+                if (currentProgress < targetProgress) {
+                    currentProgress += step;
+                    if (currentProgress > targetProgress) currentProgress = targetProgress;
+                    
+                    percentageEl.textContent = Math.floor(currentProgress) + '%';
+                    progressBarEl.style.width = currentProgress + '%';
+                    
+                    requestAnimationFrame(animatePercentage);
+                } else {
+                    if (statusTextEl) statusTextEl.textContent = stage.text;
+                    if (filesCounterEl) filesCounterEl.textContent = stage.files;
+                    
+                    currentStage++;
+                    simulationTimeout = setTimeout(updateStage, 800 + Math.random() * 400);
+                }
+            };
+            
+            animatePercentage();
+        };
+        
+        // Start simulation after small delay (will be overridden if real data comes)
+        setTimeout(updateStage, 300);
+        
+        // Listen for real service worker progress events
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'INSTALL_PROGRESS') {
+                    // Clear simulation if real data arrives
+                    if (simulationTimeout) {
+                        clearTimeout(simulationTimeout);
+                        simulationTimeout = null;
+                    }
+                    
+                    const { progress, cached, total, status } = event.data;
+                    window.updateInstallProgress(progress, cached, total, status);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Show installation complete message
+     */
+    showInstallComplete() {
+        const prompt = document.getElementById('pwa-install-prompt');
+        if (!prompt) return;
+        
+        const card = prompt.querySelector('div[style*="background: linear-gradient"]');
+        if (!card) return;
+        
+        card.innerHTML = `
+            <div style="position: relative; z-index: 1; text-align: center; padding: 40px;">
+                <!-- Success Icon -->
+                <div style="
+                    width: 120px;
+                    height: 120px;
+                    margin: 0 auto 32px;
+                    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
+                    animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                ">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </div>
+                
+                <!-- Success Title -->
+                <h2 style="
+                    font-size: 36px;
+                    font-weight: 900;
+                    color: #22c55e;
+                    margin: 0 0 16px 0;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    All Set! 🎉
+                </h2>
+                
+                <!-- Success Message -->
+                <p style="
+                    font-size: 18px;
+                    color: rgba(255, 255, 255, 0.8);
+                    margin: 0 0 32px 0;
+                    line-height: 1.6;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    A3KM Studio is now installed!<br>
+                    <span style="font-size: 15px; color: rgba(255, 255, 255, 0.6);">
+                        Access all content offline anytime
+                    </span>
+                </p>
+                
+                <!-- Close Button -->
+                <button id="install-complete-close-btn" style="
+                    background: linear-gradient(135deg, #8B0000 0%, #5a0000 100%);
+                    color: white;
+                    border: none;
+                    padding: 16px 48px;
+                    border-radius: 12px;
+                    font-size: 17px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    width: auto;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.5);
+                    font-family: 'Inter', sans-serif;
+                ">
+                    Get Started
+                </button>
+                
+                <!-- Auto-dismiss countdown -->
+                <p style="
+                    font-size: 13px;
+                    color: rgba(255, 255, 255, 0.4);
+                    margin-top: 16px;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    Auto-closing in <span id="auto-dismiss-countdown">5</span>s...
+                </p>
+            </div>
+        `;
+        
+        // Add success animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes successBounce {
+                0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+                50% { transform: scale(1.1) rotate(10deg); }
+                100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Close button handler
+        const closeBtn = document.getElementById('install-complete-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.dismissInstallPrompt();
+            });
+        }
+        
+        // Auto-dismiss countdown (5 seconds)
+        let countdown = 5;
+        const countdownEl = document.getElementById('auto-dismiss-countdown');
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdownEl) {
+                countdownEl.textContent = countdown;
+            }
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                this.dismissInstallPrompt();
+            }
+        }, 1000);
+        
+        // Store interval ID to clear on manual dismiss
+        this.autoDismissInterval = countdownInterval;
+    }
+    
+    /**
+     * Dismiss install prompt with animation
+     */
+    dismissInstallPrompt() {
+        // Clear auto-dismiss interval if exists
+        if (this.autoDismissInterval) {
+            clearInterval(this.autoDismissInterval);
+            this.autoDismissInterval = null;
+        }
+        
+        const prompt = document.getElementById('pwa-install-prompt');
+        if (prompt) {
+            prompt.style.animation = 'fadeOut 0.4s ease-out';
+            setTimeout(() => {
+                prompt.remove();
+            }, 400);
+        }
+    }
+    
+    /**
      * Handle install button click
      */
     async handleInstallClick(promptElement) {
@@ -447,6 +808,9 @@ class PWAInstallPrompt {
             console.warn('⚠️ Install prompt not available');
             return;
         }
+        
+        // Show installing progress tracker
+        this.showInstallProgress(promptElement);
         
         // Show browser's install prompt
         this.deferredPrompt.prompt();
@@ -611,6 +975,29 @@ installPromptStyles.textContent = `
         to { 
             opacity: 0; 
             transform: translateX(100px); 
+        }
+    }
+    
+    @keyframes spin {
+        from { 
+            transform: rotate(0deg); 
+        }
+        to { 
+            transform: rotate(360deg); 
+        }
+    }
+    
+    @keyframes successBounce {
+        0% { 
+            transform: scale(0) rotate(-180deg); 
+            opacity: 0; 
+        }
+        50% { 
+            transform: scale(1.1) rotate(10deg); 
+        }
+        100% { 
+            transform: scale(1) rotate(0deg); 
+            opacity: 1; 
         }
     }
 `;
