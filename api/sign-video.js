@@ -160,3 +160,8 @@ export default async function handler(req, res) {
     return jsonRes(res, 500, { error: 'Internal server error' });
   }
 }
+
+// Vercel function configuration
+export const config = {
+  maxDuration: 10,
+};
