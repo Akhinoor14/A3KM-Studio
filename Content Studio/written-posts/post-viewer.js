@@ -6,6 +6,10 @@
 (function() {
   'use strict';
 
+  function decodeBase64Unicode(value) {
+    return decodeURIComponent(escape(atob(value)));
+  }
+
   // Get post ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const postId = urlParams.get('id');
@@ -82,20 +86,21 @@
       // STEP 2: Load posts from posts.json
       const response = await fetch('posts.json');
       const data = await response.json();
-      allPosts = data.posts || [];
+      allPosts = (data.posts || []).map(normalizePostRecord);
       
-      // STEP 3: Load posts from localStorage (Simple Creator!)
+      // STEP 3: Load posts from local browser cache
       const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
       
       if (localPosts.length > 0) {
-        console.log(`✅ Found ${localPosts.length} posts from Simple Creator!`);
+        console.log(`✅ Found ${localPosts.length} cached local posts.`);
         
         // Merge with existing posts (avoid duplicates)
         localPosts.forEach(localPost => {
-          const exists = allPosts.find(p => p.id === localPost.id);
+          const normalized = normalizePostRecord(localPost);
+          const exists = allPosts.find(p => p.id === normalized.id);
           if (!exists) {
-            allPosts.push(localPost);
-            console.log(`✅ Added post: ${localPost.id}`);
+            allPosts.push(normalized);
+            console.log(`✅ Added post: ${normalized.id}`);
           }
         });
       }
@@ -134,7 +139,7 @@
 
       if (response.ok) {
         const data = await response.json();
-        const content = atob(data.content);
+        const content = decodeBase64Unicode(data.content);
         const githubPosts = JSON.parse(content);
         
         // Merge with localStorage
@@ -162,6 +167,18 @@
       console.error('⚠️ Cloud sync failed:', error);
       // Don't block page load if sync fails
     }
+  }
+
+  function normalizePostRecord(post) {
+    return {
+      ...post,
+      date: post.date || post.publishDate || post.lastModified || '',
+      readTime: post.readTime || post.readingTime || 0,
+      summary: post.summary || post.description || post.contentPreview || '',
+      contentPath: post.contentPath || post.markdownFile || post.content || '',
+      markdownFile: post.markdownFile || post.contentPath || '',
+      coverImage: post.coverImage || post.thumbnail || ''
+    };
   }
 
   /* ============================================
@@ -201,7 +218,7 @@
       // If content is a file path - traditional markdown posts
       else if (currentPost.content && (currentPost.content.endsWith('.md') || currentPost.content.includes('/'))) {
         console.log('Loading markdown from file:', currentPost.content);
-        const response = await fetch(currentPost.content);
+        const response = await fetch(encodeURI(currentPost.content));
         
         if (response.ok) {
           const markdownContent = await response.text();
@@ -225,7 +242,7 @@
       // Fallback for old format
       else {
         const mdPath = currentPost.markdownFile || currentPost.contentPath || `Content Studio/written-posts/${currentPost.id}.md`;
-        const response = await fetch(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${mdPath}`);
+        const response = await fetch(encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${mdPath}`));
         
         if (response.ok) {
           const markdownContent = await response.text();

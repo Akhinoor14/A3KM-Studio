@@ -1,11 +1,15 @@
 ﻿// ============================================================================
 // POST LISTING - Blog Posts Section (Mobile)
-// Displays blog posts and articles from Content%20Code/content.json
-// Fetches data from central content.json
+// Displays blog posts and articles from posts.json
+// Fetches data from Content Studio/written-posts/posts.json
 // ============================================================================
 
 (function() {
     'use strict';
+
+    function decodeBase64Unicode(value) {
+        return decodeURIComponent(escape(atob(value)));
+    }
 
     // ========== STATE ==========
     let allPosts = [];
@@ -34,20 +38,20 @@
             // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
             await syncFromGitHubCloud();
             
-            // STEP 2: Load posts from central content.json
-            const response = await fetch('../../../Content%20Code/content.json');
+            // STEP 2: Load posts from central posts.json
+            const response = await fetch('../../../Content%20Studio/written-posts/posts.json');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            allPosts = data['written-posts'] || [];
+            allPosts = (data.posts || []).map(normalizeRemotePost);
             
-            // STEP 3: Load posts from localStorage (Quick Post Creator!)
+            // STEP 3: Load posts from local browser cache
             const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
             
             if (localPosts.length > 0) {
-                console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator!`);
+                console.log(`✅ Found ${localPosts.length} cached local posts.`);
                 
                 // Normalize and merge with existing posts (avoid duplicates)
                 localPosts.forEach(localPost => {
@@ -60,7 +64,7 @@
                 });
             }
             
-            console.log(`📝 Total ${allPosts.length} posts loaded (GitHub + localStorage + Cloud)`);
+            console.log(`📝 Total ${allPosts.length} posts loaded (posts.json + localStorage + Cloud)`);
             
             hideLoadingState();
             renderPosts();
@@ -99,7 +103,7 @@
 
             if (response.ok) {
                 const data = await response.json();
-                const content = atob(data.content);
+                const content = decodeBase64Unicode(data.content);
                 const githubPosts = JSON.parse(content);
                 
                 // Merge with localStorage
@@ -345,6 +349,31 @@
             author: post.author || 'Md Akhinoor Islam',
             views: post.views || 0,
             _source: 'localStorage' // Tag to identify source
+        };
+    }
+
+    function normalizeRemotePost(post) {
+        const fallbackText = stripHtml(post.contentPreview || post.excerpt || post.summary || post.description || '');
+        const readTime = post.readTime || post.readingTime || Math.max(1, Math.ceil(fallbackText.split(/\s+/).filter(Boolean).length / 200));
+
+        return {
+            id: post.id,
+            title: post.title || 'Untitled Post',
+            category: 'written-posts',
+            subcategory: post.category || post.subcategory || 'General',
+            description: post.summary || post.description || fallbackText || 'No description available',
+            mdFilePath: post.contentPath || post.markdownFile || post.content || '',
+            thumbnail: post.thumbnail || post.coverImage || '',
+            readingTime: `${readTime} min`,
+            publishDate: post.publishDate || post.date || post.lastModified || new Date().toISOString(),
+            language: post.language || 'en',
+            tags: Array.isArray(post.tags) ? post.tags : [],
+            icon: 'fa-pen-fancy',
+            status: post.status || 'published',
+            author: post.author || 'Md Akhinoor Islam',
+            views: post.views || 0,
+            contentPath: post.contentPath || post.markdownFile || '',
+            markdownFile: post.markdownFile || post.contentPath || ''
         };
     }
 

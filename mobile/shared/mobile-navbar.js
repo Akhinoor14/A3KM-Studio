@@ -5,6 +5,10 @@
 
 (function() {
     'use strict';
+
+    // Prevent duplicate initialization when script is included multiple times.
+    if (window.__A3KM_MOBILE_NAV_READY__) return;
+    window.__A3KM_MOBILE_NAV_READY__ = true;
     
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
@@ -14,8 +18,13 @@
     }
     
     function initMobileNav() {
-        // Redirect desktop users to the desktop site (avoid resize-based false positives)
-        redirectToDesktopIfNeeded();
+        if (!document.body) return;
+
+        // Desktop users should see desktop-style navigation instead of mobile bottom nav
+        if (!isMobileDevice()) {
+            applyDesktopExperience();
+            return;
+        }
 
         // Set active state based on current page
         setActiveNavItem();
@@ -34,15 +43,14 @@
             return uaData.mobile;
         }
 
-        // Fallback to user agent string and screen size
+        // Fallback to user agent string only (desktop should remain desktop even on small windows)
         const ua = navigator.userAgent || navigator.vendor || window.opera;
         const isMobileUA = /android|iphone|ipad|ipod|iemobile|opera mini|blackberry|mobile/i.test(ua);
-        
-        // Also check screen size as additional verification
-        const isSmallScreen = window.innerWidth <= 768;
-        
-        // Return true if either UA indicates mobile OR screen is small
-        return isMobileUA || isSmallScreen;
+
+        // iPadOS desktop UA fallback: treat touch-capable MacIntel as mobile/tablet device.
+        const isIPadDesktopUA = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+
+        return isMobileUA || isIPadDesktopUA;
     }
 
     function normalizePath(pathname) {
@@ -58,9 +66,11 @@
         const mappings = [
             { mobile: '/mobile/home/index.html', desktop: '/Home/index.html' },
             { mobile: '/mobile/about/about.html', desktop: '/About me/about.html' },
+            { mobile: '/mobile/about/certificates-viewer.html', desktop: '/About me/certificates-viewer.html' },
             { mobile: '/mobile/projects/projects.html', desktop: '/Projects Code/projects.html' },
             { mobile: '/mobile/content-studio/hub.html', desktop: '/Content Studio/hub.html' },
             { mobile: '/mobile/contact/contact.html', desktop: '/Contact/contact.html' },
+            { mobile: '/mobile/guide/index.html', desktop: '/Website Guide/index.html' },
             { mobile: '/mobile/content-studio/video-blogs/video-gallery.html', desktop: '/Content Studio/video-content/video-gallery.html' },
             { mobile: '/mobile/content-studio/video-blogs/video-viewer.html', desktop: '/Content Studio/video-content/video-viewer.html' },
             { mobile: '/mobile/content-studio/written-posts/post-listing.html', desktop: '/Content Studio/written-posts/post-listing-new.html' },
@@ -83,10 +93,100 @@
     }
 
     function redirectToDesktopIfNeeded() {
-        if (isMobileDevice()) return;
         const target = getDesktopEquivalentPath();
-        if (target && window.location.pathname !== target) {
+        if (target && normalizePath(window.location.pathname) !== normalizePath(target)) {
             window.location.replace(target);
+            return true;
+        }
+
+        return false;
+    }
+
+    function applyDesktopExperience() {
+        // If a direct desktop equivalent exists, go there.
+        if (redirectToDesktopIfNeeded()) return;
+
+        // Otherwise keep the current page but replace mobile nav with desktop-style top nav.
+        hideMobileBottomNav();
+        ensureDesktopNavbarStyles();
+        injectDesktopFallbackNavbar();
+    }
+
+    function hideMobileBottomNav() {
+        const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+        if (mobileBottomNav) {
+            mobileBottomNav.style.display = 'none';
+        }
+        document.body.style.paddingBottom = '0';
+    }
+
+    function ensureDesktopNavbarStyles() {
+        const head = document.head || document.getElementsByTagName('head')[0];
+        if (!head) return;
+
+        if (!document.querySelector('link[data-desktop-navbar-fallback="css"]')) {
+            const cssLink = document.createElement('link');
+            cssLink.rel = 'stylesheet';
+            cssLink.href = '/Optimization/navbar/desktop-navbar.css';
+            cssLink.setAttribute('data-desktop-navbar-fallback', 'css');
+            head.appendChild(cssLink);
+        }
+
+        if (!document.querySelector('link[data-desktop-navbar-fallback="autohide"]')) {
+            const autohideLink = document.createElement('link');
+            autohideLink.rel = 'stylesheet';
+            autohideLink.href = '/Optimization/navbar-autohide.css';
+            autohideLink.setAttribute('data-desktop-navbar-fallback', 'autohide');
+            head.appendChild(autohideLink);
+        }
+    }
+
+    function injectDesktopFallbackNavbar() {
+        const existingDesktopNav = document.getElementById('desktopNavbar');
+        if (existingDesktopNav) {
+            existingDesktopNav.style.setProperty('display', 'block', 'important');
+            return;
+        }
+
+        const nav = document.createElement('nav');
+        nav.className = 'desktop-navbar';
+        nav.id = 'desktopNavbar';
+        nav.innerHTML = [
+            '<div class="desktop-nav-container">',
+            '  <a href="/Home/index.html" class="desktop-nav-logo" title="A3KM Studio - Home" aria-label="A3KM Studio Home">',
+            '    <img src="/images/logo.svg" alt="A3KM Studio Logo" class="desktop-nav-logo-img" width="55" height="55">',
+            '    <div class="desktop-nav-brand">',
+            '      <span class="desktop-nav-brand-name">A3KM Studio</span>',
+            '      <span class="desktop-nav-brand-tagline">Engineering · Education · Innovation</span>',
+            '    </div>',
+            '  </a>',
+            '  <ul class="desktop-nav-menu">',
+            '    <li class="desktop-nav-item"><a href="/About me/about.html" class="desktop-nav-link" data-fallback-nav="about"><i class="fas fa-user-circle" aria-hidden="true"></i><span>About</span></a></li>',
+            '    <li class="desktop-nav-item"><a href="/Projects Code/projects.html" class="desktop-nav-link" data-fallback-nav="projects"><i class="fas fa-folder-open" aria-hidden="true"></i><span>Projects</span></a></li>',
+            '    <li class="desktop-nav-item"><a href="/Content Studio/hub.html" class="desktop-nav-link" data-fallback-nav="studio"><i class="fas fa-layer-group" aria-hidden="true"></i><span>Content Studio</span></a></li>',
+            '    <li class="desktop-nav-item"><a href="/Contact/contact.html" class="desktop-nav-link" data-fallback-nav="contact"><i class="fas fa-envelope" aria-hidden="true"></i><span>Contact</span></a></li>',
+            '  </ul>',
+            '</div>'
+        ].join('');
+
+        nav.style.setProperty('display', 'block', 'important');
+        document.body.insertBefore(nav, document.body.firstChild);
+        document.body.style.paddingTop = '95px';
+        markDesktopFallbackActiveLink();
+    }
+
+    function markDesktopFallbackActiveLink() {
+        const path = normalizePath(window.location.pathname);
+        const activeKey = path.includes('/mobile/about/') ? 'about'
+            : path.includes('/mobile/projects/') ? 'projects'
+            : path.includes('/mobile/content-studio/') ? 'studio'
+            : path.includes('/mobile/contact/') ? 'contact'
+            : '';
+
+        if (!activeKey) return;
+        const activeLink = document.querySelector('[data-fallback-nav="' + activeKey + '"]');
+        if (activeLink) {
+            activeLink.classList.add('active');
         }
     }
     
@@ -106,7 +206,12 @@
             
             if (!href) return;
             
-            const hrefNorm = normalizePath(href);
+            const hrefPath = getResolvedPathname(href);
+            if (!hrefPath) return;
+
+            const hrefNorm = normalizePath(hrefPath);
+            const hrefPage = hrefNorm.split('/').pop().split('.')[0];
+            const currentPage = currentPath.split('/').pop().split('.')[0];
             
             // Guide icon active on any Documentation page
             if (hrefNorm.includes('documentation') && isDocumentation) {
@@ -118,15 +223,23 @@
             if (hrefNorm.includes('documentation')) return;
             
             // Check if current path matches this nav item
-            if (currentPath.includes(hrefNorm.split('/').pop().split('.')[0])) {
+            if (hrefPage && currentPage === hrefPage) {
                 item.classList.add('active');
             }
             // Special case for home page
             else if ((currentPath.endsWith('/') || currentPath.includes('index') || currentPath.includes('home')) 
-                     && hrefNorm.includes('index')) {
+                     && (hrefPage === 'index' || hrefPage === 'home')) {
                 item.classList.add('active');
             }
         });
+    }
+
+    function getResolvedPathname(href) {
+        try {
+            return new URL(href, window.location.href).pathname;
+        } catch (err) {
+            return null;
+        }
     }
     
     /**
@@ -183,7 +296,7 @@
         if (targetPage === currentPage || 
             (targetPage === 'index' && (currentPage === '' || currentPage === 'index'))) {
             e.preventDefault();
-            scrollToTop();
+            window.scrollToTop();
         }
         // Otherwise, allow normal navigation
     }
@@ -191,7 +304,7 @@
     // Expose functions globally if needed
     window.mobileNav = {
         setActiveNavItem: setActiveNavItem,
-        scrollToTop: scrollToTop
+        scrollToTop: window.scrollToTop
     };
     
 })();

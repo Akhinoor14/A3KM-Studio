@@ -29,8 +29,8 @@ A3KM Studio
 │   Projects Code/projects.html        │   mobile/projects/projects.html
 │   Content Studio/hub.html            │   mobile/content-studio/hub.html
 │   Documentation/index.html           │   Documentation/mobile/docs-hub.html
-│   Only-boss/auth/only-boss.html      │   (mobile CSS overrides only)
-│   Only-boss/dashboard/...            │
+│   [restricted admin route]           │   (mobile CSS overrides only)
+│   [restricted admin modules]         │
 │
 └─ SHARED
     Optimization/ (PWA, navbar, bg, scrollbar)
@@ -229,16 +229,16 @@ Removed features: markdown loader, docs-data.json cards, viewer-enhanced.html, v
 ---
 
 ### D8. Only-Boss Admin Portal
-**Path:** `Only-boss/auth/only-boss.html`  
-**Secret admin portal — accessible via footer crown icon**
+**Path:** Internal route (restricted)  
+**Restricted admin portal — public technical access details are intentionally redacted**
 
 #### Authentication
-- SHA-256 password hashing (`only-boss-auth.js`)
-- Password visibility toggle
-- Two-step UI (step1 → successStep)
-- Session → `sessionStorage` on success
+- Multi-step credential verification
+- Secure session lifecycle handling
+- Access state validation
+- Internal auth implementation (redacted)
 
-#### Dashboard (`Only-boss/dashboard/only-boss-dashboard-redesigned.html`)
+#### Dashboard (Restricted Internal View)
 | Card | Function |
 |---|---|
 | Command Center | Unified control hub (2-col span, gold border) |
@@ -250,19 +250,18 @@ Removed features: markdown loader, docs-data.json cards, viewer-enhanced.html, v
 | Backup & Restore | Data backup system |
 | Content Managers Hub | Books, videos, papers, vlogs, posts |
 
-#### Security System (Extreme)
+#### Security System
 | Feature | Detail |
 |---|---|
-| Session expiry | 30-min timer, countdown, color warning <10min, alert <5min |
-| Browser fingerprinting | Canvas + UA + language + platform + timezone + screen (SHA-256 hashed) |
-| Continuous re-validation | Every 2 min full auth, every 30s fingerprint check |
-| Tab visibility check | Re-validates when returning to tab |
-| DevTools detection | Outer/inner window size comparison every 5s |
-| SessionStorage tamper | Overrides `setItem` to detect unauthorized writes |
-| Console tamper | Verifies original console methods every 5s |
-| Clickjacking protection | `window.self !== window.top` check |
-| Copy protection | Blocks copying session-related strings |
-| Back-button prevention | `pushState` override |
+| Session expiry | Time-limited authenticated session |
+| Device/session checks | Environment consistency checks |
+| Continuous validation | Periodic access verification |
+| Visibility handling | Re-check on context return |
+| Runtime monitoring | Suspicious behavior detection |
+| Tamper safeguards | Integrity guardrails in place |
+| Frame protection | Clickjacking mitigation applied |
+| Data handling | Sensitive text protection applied |
+| Navigation controls | Unauthorized back-navigation mitigation |
 
 ---
 
@@ -376,13 +375,13 @@ Font: system-ui (-apple-system, BlinkMacSystemFont, Segoe UI, Roboto)
 | 3 | **Quick Access Grid** | 5 cards: Projects, Content Studio, Skills, Certificates, Documentation |
 | 4 | **Featured Projects** | 3 cards: Arduino (23+), SOLIDWORKS (50+), MATLAB |
 | 5 | **Social Links** | GitHub, LinkedIn, Facebook, Email |
-| 6 | **Footer** | Copyright + **10-tap secret gesture** → admin login |
+| 6 | **Footer** | Copyright + restricted internal access gesture |
 
-#### Secret Admin Access
-- 10 rapid taps on copyright text
-- Taps 5–10: copyright text gradually turns red
-- Final tap: haptic buzz pattern `[50,100,50,100,50]`
-- Toast notification + redirect to `Only-boss/auth/`
+#### Restricted Admin Access
+- Internal multi-step gesture verification
+- Progressive visual confirmation
+- Haptic feedback confirmation
+- Redirects to restricted internal route
 
 #### Navigation: Bottom nav (Home active)
 

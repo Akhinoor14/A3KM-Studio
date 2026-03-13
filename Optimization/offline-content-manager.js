@@ -9,7 +9,7 @@
 class OfflineContentManager {
     constructor() {
         // Version tracking for auto-updates
-        this.CONTENT_VERSION = 'v3.2.3-2026-03-13-dark-depth';
+        this.CONTENT_VERSION = 'v3.2.6-2026-03-13-mobile-launch-splash-fix';
         this.VERSION_STORAGE_KEY = 'a3km_offline_content_version';
         this.VERSION_URL = '/version.json';
         

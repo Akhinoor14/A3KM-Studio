@@ -2858,13 +2858,13 @@
         // Get proper PDF URL
         let pdfUrl = paper.downloadUrl || paper.pdfUrl;
         if (!pdfUrl && paper.pdfPath) {
-          pdfUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.pdfPath}`;
+          pdfUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.pdfPath}`);
         }
         
         // Get thumbnail with fallback
         let thumbnailUrl = paper.thumbnail || paper.thumbnailUrl || paper.coverImage;
         if (!thumbnailUrl && paper.thumbnailPath) {
-          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.thumbnailPath}`;
+          thumbnailUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${paper.thumbnailPath}`);
         }
         
         card.innerHTML = `
@@ -3173,16 +3173,19 @@
         }
         
         try {
-          const category = document.getElementById('edit-category').value;
           const fileName = editPdfFileToUpload.name;
-          const pdfPath = `Content Storage/research-papers/${category}/${id}/${fileName}`;
+          const fileExtension = fileName.split('.').pop();
+          const paperFolder = papersData.papers[paperIndex].folderPath || `Content Storage/research-papers/${contentManager.slugify(papersData.papers[paperIndex].title || id)}`;
+          const pdfPath = `${paperFolder}/paper.${fileExtension}`;
           
           // Upload PDF to GitHub
-          await contentManager.uploadFile(pdfPath, editPdfFileToUpload, `Upload PDF: ${fileName} for paper ${id}`);
+          await githubUploader.uploadBinaryFile(pdfPath, editPdfFileToUpload, `Upload PDF: ${fileName} for paper ${id}`);
           
           // Update paper with new PDF path
+          papersData.papers[paperIndex].folderPath = paperFolder;
           papersData.papers[paperIndex].pdfPath = pdfPath;
-          papersData.papers[paperIndex].downloadUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${pdfPath}`;
+          papersData.papers[paperIndex].downloadUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${pdfPath}`);
+          document.getElementById('edit-downloadUrl').value = papersData.papers[paperIndex].downloadUrl;
           
           alert('✅ PDF file uploaded successfully!');
           editPdfFileToUpload = null;

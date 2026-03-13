@@ -833,7 +833,7 @@ api/ (Vercel Serverless Functions)
 | Every page footer | "Buy / Unlock" link | ✅ Done (Home page) |
 | `Content Studio/educational-videos/course-viewer-new.html` | Cloudflare player + YT button remove | ✅ Done |
 | `api/sign-video.js` | Vercel signed URL serverless function | ✅ Done |
-| `Only-boss/dashboard/only-boss-dashboard-redesigned.html` | New manager card links | ✅ Done |
+| `[restricted-admin-dashboard-route]` | New manager card links | ✅ Done |
 
 ---
 

@@ -51,7 +51,12 @@ const UniversalPDFViewer = {
     
     // Blob URL (stored for memory cleanup on close)
     blobUrl: null,
-    
+
+    // Dual-canvas flip: incoming page is pre-rendered here BEFORE any animation
+    // so the current page stays fully visible — zero black gap between pages.
+    incomingCanvas: null,
+    incomingCtx: null,
+
     // PDF.js CDN
     pdfjsLib: null,
     pdfjsVersion: '3.11.174'
@@ -443,6 +448,20 @@ function createViewerUI() {
                 width: 100%;
                 will-change: transform, opacity;
             }
+            /* Hidden canvas layer for the incoming page. Pre-rendered before
+               animation starts, then enters simultaneously with current exit. */
+            .pdf-page-incoming {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                will-change: transform, opacity;
+                pointer-events: none;
+                visibility: hidden;
+            }
             @keyframes pfiExitLeft {
                 from { transform: translateX(0)   rotateY(0deg)  ; opacity: 1; }
                 to   { transform: translateX(-55%) rotateY(30deg) ; opacity: 0; }
@@ -459,10 +478,10 @@ function createViewerUI() {
                 from { transform: translateX(-60%) rotateY(25deg); opacity: 0; }
                 to   { transform: translateX(0)    rotateY(0deg) ; opacity: 1; }
             }
-            .pdf-page-inner.exit-left  { animation: pfiExitLeft  0.22s ease-in  forwards; pointer-events:none; }
-            .pdf-page-inner.exit-right { animation: pfiExitRight 0.22s ease-in  forwards; pointer-events:none; }
-            .pdf-page-inner.enter-right{ animation: pfiEnterRight 0.28s ease-out forwards; }
-            .pdf-page-inner.enter-left { animation: pfiEnterLeft  0.28s ease-out forwards; }
+            .pdf-page-inner.exit-left,   .pdf-page-incoming.exit-left   { animation: pfiExitLeft   0.22s ease-in  forwards; pointer-events:none; }
+            .pdf-page-inner.exit-right,  .pdf-page-incoming.exit-right  { animation: pfiExitRight  0.22s ease-in  forwards; pointer-events:none; }
+            .pdf-page-inner.enter-right, .pdf-page-incoming.enter-right { animation: pfiEnterRight 0.28s ease-out forwards; }
+            .pdf-page-inner.enter-left,  .pdf-page-incoming.enter-left  { animation: pfiEnterLeft  0.28s ease-out forwards; }
 
             /* ── SWIPE HINT ─────────────────────────────── */
             .pdf-swipe-hint {
@@ -558,6 +577,10 @@ function createViewerUI() {
             <div class="pdf-page-inner" id="pdf-page-inner">
                 <canvas id="pdf-canvas"></canvas>
             </div>
+            <!-- Pre-rendered next/prev page — hidden until flip animation starts -->
+            <div class="pdf-page-incoming" id="pdf-page-incoming">
+                <canvas id="pdf-canvas-incoming"></canvas>
+            </div>
             <div class="pdf-loading" id="pdf-loading">
                 <div class="pdf-spinner"></div>
                 <div class="pdf-loading-text">Loading PDF...</div>
@@ -608,6 +631,8 @@ function createViewerUI() {
     UniversalPDFViewer.canvas = document.getElementById('pdf-canvas');
     UniversalPDFViewer.ctx = UniversalPDFViewer.canvas.getContext('2d');
     UniversalPDFViewer.canvasWrapper = document.getElementById('pdf-canvas-wrapper');
+    UniversalPDFViewer.incomingCanvas = document.getElementById('pdf-canvas-incoming');
+    UniversalPDFViewer.incomingCtx    = UniversalPDFViewer.incomingCanvas.getContext('2d');
     
     // Set title
     document.getElementById('pdf-viewer-title').textContent = UniversalPDFViewer.config.title;
@@ -850,10 +875,51 @@ function goToNextPage() {
 }
 
 /**
- * Animated page flip: direction 'left'=next page, 'right'=prev page
+ * Render a PDF page to an explicit canvas/context without touching main state.
+ * Used by flipPage to pre-render the incoming page while the current page
+ * stays visible on screen — this eliminates the black gap between pages.
+ */
+async function renderPageToCanvas(pageNum, targetCanvas, targetCtx) {
+    if (!UniversalPDFViewer.pdfDoc || !targetCanvas || !targetCtx) return;
+
+    const page = await UniversalPDFViewer.pdfDoc.getPage(pageNum);
+    // Re-check after async suspension: viewer may have been closed while we awaited
+    if (!UniversalPDFViewer.pdfDoc || !targetCanvas) return;
+
+    const pixelRatio = Math.min(window.devicePixelRatio || 2, 4);
+    const viewport   = page.getViewport({ scale: UniversalPDFViewer.scale });
+
+    targetCanvas.width        = Math.floor(viewport.width  * pixelRatio);
+    targetCanvas.height       = Math.floor(viewport.height * pixelRatio);
+    targetCanvas.style.width  = Math.floor(viewport.width)  + 'px';
+    targetCanvas.style.height = Math.floor(viewport.height) + 'px';
+
+    targetCtx.imageSmoothingEnabled = true;
+    targetCtx.imageSmoothingQuality = 'high';
+
+    await page.render({
+        canvasContext:          targetCtx,
+        viewport,
+        transform:              [pixelRatio, 0, 0, pixelRatio, 0, 0],
+        intent:                 'display',
+        renderInteractiveForms: false,
+        enableWebGL:            false,
+    }).promise;
+}
+
+/**
+ * Animated page flip — dual-canvas, zero black gap.
+ * direction 'left' = next page, 'right' = prev page.
+ *
+ * Flow:
+ *   1. Wait for any active render to settle.
+ *   2. Pre-render next page onto the HIDDEN incoming canvas.
+ *      → Current page stays fully visible the whole time. No blank screen.
+ *   3. Fire EXIT (current) + ENTER (incoming) animations SIMULTANEOUSLY.
+ *      → Both pages are in view during the transition — like a real page turn.
+ *   4. Commit: copy incoming bitmap → main canvas; hide incoming; update state.
  */
 async function flipPage(direction) {
-    // Prevent overlapping flip animations
     if (UniversalPDFViewer.isFlipping) return;
     UniversalPDFViewer.isFlipping = true;
 
@@ -861,38 +927,24 @@ async function flipPage(direction) {
     const hint = document.getElementById('pdf-swipe-hint');
     if (hint) hint.classList.add('hidden');
 
-    const inner = document.getElementById('pdf-page-inner');
-    if (!inner) {
-        // fallback
-        const fallbackPage = direction === 'left'
-            ? UniversalPDFViewer.currentPage + 1
-            : UniversalPDFViewer.currentPage - 1;
-        await renderPage(fallbackPage);
-        UniversalPDFViewer.isFlipping = false;
-        return;
-    }
+    const inner    = document.getElementById('pdf-page-inner');
+    const incoming = document.getElementById('pdf-page-incoming');
+    const wrapper  = document.getElementById('pdf-canvas-wrapper');
 
-    const wrapper    = document.getElementById('pdf-canvas-wrapper');
-    const exitClass  = direction === 'left' ? 'exit-left'   : 'exit-right';
-    const enterClass = direction === 'left' ? 'enter-right'  : 'enter-left';
+    const exitClass  = direction === 'left' ? 'exit-left'  : 'exit-right';
+    const enterClass = direction === 'left' ? 'enter-right' : 'enter-left';
     const nextPage   = direction === 'left'
         ? UniversalPDFViewer.currentPage + 1
         : UniversalPDFViewer.currentPage - 1;
 
-    // Lock overflow so the translation off-screen works without scrollbars
-    if (wrapper) wrapper.style.overflow = 'hidden';
+    // Fallback: DOM missing → direct render (single-canvas path)
+    if (!inner || !incoming || !UniversalPDFViewer.incomingCanvas || !UniversalPDFViewer.incomingCtx) {
+        await renderPage(nextPage);
+        UniversalPDFViewer.isFlipping = false;
+        return;
+    }
 
-    // Exit animation
-    inner.classList.add(exitClass);
-    await delay(200);
-    inner.classList.remove(exitClass);
-    // Hide the blank canvas during re-render to prevent black flash between animations
-    inner.style.opacity = '0';
-
-    // Cancel any stale queued render, wait for in-progress render to fully settle,
-    // then render the correct target page before playing the enter animation.
-    // (Setting pageNumPending here would race: pageRendering briefly goes false
-    //  between renders and our old wait resolved too early on old content.)
+    // ── 1. Wait for any active render to settle ────────────────────────────────
     UniversalPDFViewer.pageNumPending = null;
     if (UniversalPDFViewer.pageRendering) {
         await new Promise(resolve => {
@@ -904,27 +956,63 @@ async function flipPage(direction) {
             }, 20);
         });
     }
-    // Guard against viewer being closed while we waited
+    if (!UniversalPDFViewer.isOpen) { UniversalPDFViewer.isFlipping = false; return; }
+
+    // ── 2. Pre-render next page to hidden incoming canvas ──────────────────────
+    //    The main canvas keeps showing the current page throughout — no blank screen.
+    try {
+        await renderPageToCanvas(
+            nextPage,
+            UniversalPDFViewer.incomingCanvas,
+            UniversalPDFViewer.incomingCtx
+        );
+    } catch (_) {
+        // Pre-render failed — degrade gracefully to direct render
+        await renderPage(nextPage);
+        UniversalPDFViewer.isFlipping = false;
+        return;
+    }
+    if (!UniversalPDFViewer.isOpen) { UniversalPDFViewer.isFlipping = false; return; }
+
+    // ── 3. Lock overflow, reveal incoming, fire BOTH animations at once ─────────
+    if (wrapper) wrapper.style.overflow = 'hidden';
+    incoming.style.visibility = 'visible'; // incoming starts off-screen (enter anim)
+    inner.classList.add(exitClass);        // current page slides out  ──┐ simultaneous
+    incoming.classList.add(enterClass);    // next page slides in      ──┘
+
+    await delay(300); // 280ms is the longest animation; +20ms buffer for clean settle
+
+    // ── 4. Commit — all steps synchronous so no intermediate frame is painted ───
+    inner.classList.remove(exitClass);
+    incoming.classList.remove(enterClass);
+    incoming.style.visibility = 'hidden';
+
     if (!UniversalPDFViewer.isOpen) {
         UniversalPDFViewer.isFlipping = false;
         return;
     }
-    await renderPage(nextPage);
 
-    // Guard: viewer may have been closed while renderPage was awaited
-    if (!UniversalPDFViewer.isOpen) {
-        UniversalPDFViewer.isFlipping = false;
-        return;
+    // Copy pre-rendered bitmap from incoming canvas to main canvas.
+    // drawImage() is synchronous — main canvas is never blank.
+    const inCanvas   = UniversalPDFViewer.incomingCanvas;
+    const mainCanvas = UniversalPDFViewer.canvas;
+    mainCanvas.width        = inCanvas.width;
+    mainCanvas.height       = inCanvas.height;
+    mainCanvas.style.width  = inCanvas.style.width;
+    mainCanvas.style.height = inCanvas.style.height;
+    UniversalPDFViewer.ctx.drawImage(inCanvas, 0, 0);
+
+    UniversalPDFViewer.currentPage = nextPage;
+
+    // Scroll back to top-left after page change
+    if (wrapper) {
+        wrapper.scrollTop  = 0;
+        wrapper.scrollLeft = 0;
+        wrapper.style.overflow = 'auto';
     }
 
-    // Enter animation — clear inline opacity so the animation's own opacity takes over
-    inner.style.opacity = '';
-    inner.classList.add(enterClass);
-    await delay(280);
-    inner.classList.remove(enterClass);
-
-    // Restore scrollability so zoomed-in pages can be panned
-    if (wrapper) wrapper.style.overflow = 'auto';
+    updatePageInfo();
+    updateNavigationButtons();
     UniversalPDFViewer.isFlipping = false;
 }
 
@@ -1273,6 +1361,8 @@ function closeUniversalPDFViewer() {
         UniversalPDFViewer.canvas         = null;
         UniversalPDFViewer.ctx            = null;
         UniversalPDFViewer.canvasWrapper  = null;
+        UniversalPDFViewer.incomingCanvas = null;
+        UniversalPDFViewer.incomingCtx    = null;
         UniversalPDFViewer.pdfPassword    = null;
         UniversalPDFViewer.config         = {};
         

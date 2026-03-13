@@ -1772,10 +1772,11 @@
     #editRichSummary h3 { font-size:1.05em; font-weight:600; color:#CD853F; margin:8px 0 3px; }
     #editRichSummary blockquote { border-left:3px solid #8B4513; margin:8px 0; padding:6px 12px; background:rgba(139,69,19,0.1); color:rgba(240,230,230,0.7); font-style:italic; border-radius:0 4px 4px 0; }
     #editRichSummary hr { border:none; border-top:1px solid rgba(139,69,19,0.4); margin:10px 0; }
-    <!-- Shared Admin Navbar -->
-    <link rel="stylesheet" href="../../shared/only-boss-navbar.css">
-    <script src="../../shared/only-boss-navbar.js" defer></script>
   </style>
+
+  <!-- Shared Admin Navbar -->
+  <link rel="stylesheet" href="../../shared/only-boss-navbar.css">
+  <script src="../../shared/only-boss-navbar.js" defer></script>
 
 </head>
 
@@ -4780,7 +4781,7 @@
 
           const cleanPath = coverUrl.startsWith('/') ? coverUrl.slice(1) : coverUrl;
 
-          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`;
+          coverUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`);
 
         }
 
@@ -4788,7 +4789,7 @@
 
           const cleanPath = item.coverPath.startsWith('/') ? item.coverPath.slice(1) : item.coverPath;
 
-          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`;
+          coverUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`);
 
         }
 
@@ -4796,7 +4797,7 @@
 
           const cleanPath = item.thumbnailPath.startsWith('/') ? item.thumbnailPath.slice(1) : item.thumbnailPath;
 
-          coverUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`;
+          coverUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${decodeURIComponent(cleanPath)}`);
 
         }
 
@@ -5464,25 +5465,25 @@
 
           try {
 
-            const category = document.getElementById('editCategory').value;
-
             const fileName = editBookFileToUpload.name;
-
-            const filePath = `Content Storage/books-pdfs/${category}/${id}/${fileName}`;
+            const fileExtension = fileName.split('.').pop();
+            const bookFolder = originalBook.folderPath || `Content Storage/books-pdfs/${contentManager.slugify(updatedBook.title) || id}`;
+            const filePath = `${bookFolder}/book.${fileExtension}`;
 
             
 
             // Upload book file to GitHub
 
-            await contentManager.uploadFile(filePath, editBookFileToUpload, `Upload book file: ${fileName} for ${id}`);
+            await githubUploader.uploadBinaryFile(filePath, editBookFileToUpload, `Upload book file: ${fileName} for ${id}`);
 
             
 
             // Update book with new file path
 
+            updatedBook.folderPath = bookFolder;
             updatedBook.filePath = filePath;
 
-            updatedBook.downloadUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${filePath}`;
+            updatedBook.downloadUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${filePath}`);
 
             updatedBook.size = (editBookFileToUpload.size / 1024 / 1024).toFixed(2) + ' MB';
 
@@ -5518,27 +5519,27 @@
 
           try {
 
-            const category = document.getElementById('editCategory').value;
-
             const fileName = editCoverImageToUpload.name;
 
             const fileExtension = fileName.split('.').pop();
-
-            const coverPath = `Content Storage/books-pdfs/${category}/${id}/cover.${fileExtension}`;
+            const bookFolder = updatedBook.folderPath || originalBook.folderPath || `Content Storage/books-pdfs/${contentManager.slugify(updatedBook.title) || id}`;
+            const coverPath = `${bookFolder}/cover.${fileExtension}`;
 
             
 
             // Upload cover image to GitHub
 
-            await contentManager.uploadFile(coverPath, editCoverImageToUpload, `Upload cover image: ${fileName} for ${id}`);
+            await githubUploader.uploadBinaryFile(coverPath, editCoverImageToUpload, `Upload cover image: ${fileName} for ${id}`);
 
             
 
             // Update book with new cover path
 
-            updatedBook.cover = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${coverPath}`;
+            updatedBook.folderPath = bookFolder;
+            updatedBook.cover = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${coverPath}`);
 
             updatedBook.coverImage = updatedBook.cover;
+            updatedBook.thumbnail = updatedBook.cover;
 
             
 

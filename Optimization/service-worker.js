@@ -1,5 +1,5 @@
 /* A3KM Studio Service Worker - Enhanced Offline Support with Runtime Caching */
-const VERSION = 'v3.2.3-dark-depth-2026-03-13';
+const VERSION = 'v3.2.6-mobile-launch-splash-fix-2026-03-13';
 const CACHE_PREFIX = 'a3km-studio';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${VERSION}`;
 const HTML_CACHE = `${CACHE_PREFIX}-html-${VERSION}`;

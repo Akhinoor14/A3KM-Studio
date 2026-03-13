@@ -8,6 +8,11 @@
     
     // ========== SMOOTH SPLASH SCREEN REMOVAL ==========
     let splashRemoved = false;
+
+    const isStandaloneMode =
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) ||
+        window.navigator.standalone === true;
     
     // Check if splash was already shown in this session
     const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
@@ -34,8 +39,18 @@
         sessionStorage.setItem('splashShown', 'true');
     };
     
+    // Installed app already gets OS-level launch screen, so skip custom splash.
+    if (isStandaloneMode) {
+        document.body.classList.remove('splash-active');
+        const splash = document.getElementById('appSplash');
+        if (splash) {
+            splash.remove();
+        }
+        splashRemoved = true;
+        sessionStorage.setItem('splashShown', 'true');
+    }
     // If splash already shown, remove immediately
-    if (splashAlreadyShown) {
+    else if (splashAlreadyShown) {
         document.body.classList.remove('splash-active');
         const splash = document.getElementById('appSplash');
         if (splash) {

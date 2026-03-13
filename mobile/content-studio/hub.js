@@ -34,9 +34,9 @@
     async function loadContentCounts() {
         try {
             // Load all JSON files in parallel
-            const [videosData, contentData, booksData, coursesData, papersData] = await Promise.all([
+            const [videosData, postsData, booksData, coursesData, papersData] = await Promise.all([
                 fetch('../../Content%20Studio/video-content/videos.json').then(r => r.json()).catch(() => ({videos: [], videoGroups: []})),
-                fetch('../../Content%20Code/content.json').then(r => r.json()).catch(() => ({'written-posts': []})),
+                fetch('../../Content%20Studio/written-posts/posts.json').then(r => r.json()).catch(() => ({posts: []})),
                 fetch('../../Content%20Studio/books-pdfs/books.json').then(r => r.json()).catch(() => ({books: []})),
                 fetch('../../Content%20Studio/educational-videos/courses.json').then(r => r.json()).catch(() => ({courses: []})),
                 fetch('../../Content%20Studio/research-papers/papers.json').then(r => r.json()).catch(() => ({papers: []}))
@@ -58,7 +58,7 @@
                 });
             }
             
-            const postCount = (contentData['written-posts'] || []).length;
+            const postCount = (postsData.posts || []).length;
             const bookCount = (booksData.books || []).length;
             const courseCount = (coursesData.courses || []).length;
             const paperCount = (papersData.papers || []).length;

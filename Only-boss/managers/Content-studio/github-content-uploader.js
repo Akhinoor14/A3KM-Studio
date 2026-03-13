@@ -722,7 +722,10 @@ class GitHubContentUploader {
             } else if (contentType === 'written-posts') {
                 // Posts specific fields
                 jsonEntry.content = convertToRelativePath(results.paths.content);
-                jsonEntry.coverImage = convertToRelativePath(results.paths.cover);
+                jsonEntry.markdownFile = convertToRelativePath(results.paths.content);
+                jsonEntry.contentPath = convertToRelativePath(results.paths.content);
+                jsonEntry.coverImage = convertToRelativePath(results.paths.thumbnail || results.paths.cover);
+                if (results.paths.thumbnail) jsonEntry.thumbnail = convertToRelativePath(results.paths.thumbnail);
                 if (metadata.readTime) jsonEntry.readTime = metadata.readTime;
                 if (metadata.views !== undefined) jsonEntry.views = metadata.views;
                 if (metadata.likes !== undefined) jsonEntry.likes = metadata.likes;

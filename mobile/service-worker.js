@@ -3,7 +3,7 @@
 // Enhanced offline caching with runtime caching and performance optimization
 // ============================================================================
 
-const VERSION = 'v3.2.3-dark-depth-2026-03-13';
+const VERSION = 'v3.2.6-mobile-launch-splash-fix-2026-03-13';
 const CACHE_PREFIX = 'a3km-mobile';
 const CACHE_NAME = `${CACHE_PREFIX}-${VERSION}`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-${VERSION}`;

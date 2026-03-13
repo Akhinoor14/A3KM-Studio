@@ -747,6 +747,10 @@
     let batchSize     = 16;
     let currentBatch  = 1;
 
+    function decodeBase64Unicode(value) {
+      return decodeURIComponent(escape(atob(value)));
+    }
+
     // ── ICON MAP (preserved from original) ──────────────
     const ICON_MAP = {
       'Embedded Systems & Arduino': 'fa-microchip',
@@ -804,7 +808,7 @@
         const res   = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
         if (res.ok) {
           const data        = await res.json();
-          const githubPosts = JSON.parse(atob(data.content));
+          const githubPosts = JSON.parse(decodeBase64Unicode(data.content));
           const local       = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
           const localIds    = new Set(local.map(p => p.id));
           let newCount = 0;
@@ -826,12 +830,15 @@
         const res  = await fetch('posts.json');
         const data = await res.json();
 
-        allPosts = data.posts || [];
+        allPosts = (data.posts || []).map(normalizePost);
 
         // Merge localStorage posts
         const local = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
         if (local.length > 0) {
-          local.forEach(p => { if (!allPosts.find(x => x.id === p.id)) allPosts.push(p); });
+          local.forEach(p => {
+            const normalized = normalizePost(p);
+            if (!allPosts.find(x => x.id === normalized.id)) allPosts.push(normalized);
+          });
         }
 
         // Build domain map from categoryGroups
@@ -1000,6 +1007,21 @@
             </div>
           </div>
         </a>`;
+    }
+
+    function normalizePost(post) {
+      const preview = post.summary || post.description || post.contentPreview || '';
+      const readTime = post.readTime || post.readingTime || 0;
+
+      return {
+        ...post,
+        date: post.date || post.publishDate || post.lastModified || '',
+        summary: preview,
+        readTime,
+        coverImage: post.coverImage || post.thumbnail || '../../images/blog-cover-default.svg',
+        contentPath: post.contentPath || post.markdownFile || post.content || '',
+        markdownFile: post.markdownFile || post.contentPath || ''
+      };
     }
 
     // ── Event Listeners ──────────────────────────────

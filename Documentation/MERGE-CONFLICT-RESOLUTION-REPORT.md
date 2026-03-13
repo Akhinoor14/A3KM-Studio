@@ -125,7 +125,7 @@ PC-A তে (navbar section):          PC-B তে (navbar section):
 - `Documentation/desktop/index.html` — 1 conflict
 
 **Only-boss (5):**
-- `Only-boss/auth/only-boss.html` — 1 conflict
+- `[restricted-admin-route]` — 1 conflict
 - `Only-boss/managers/Content-studio/books-manager-new.html` — 1 conflict
 - `Only-boss/managers/projects/arduino/arduino-manager.html` — 1 conflict
 - `Only-boss/managers/projects/matlab/matlab-manager.html` — 1 conflict
@@ -253,7 +253,7 @@ Merge এ আমরা LOCAL রেখেছিলাম তাই এই tag �
 | `Content Studio/educational-videos/course-listing-new.html` | `../../Optimization/cursor-effects.js` |
 | `Content Studio/research-papers/paper-listing.html` | `../../Optimization/cursor-effects.js` |
 | `Documentation/desktop/index.html` | `../../Optimization/cursor-effects.js` |
-| `Only-boss/auth/only-boss.html` | `../../Optimization/cursor-effects.js` |
+| `[restricted-admin-route]` | `../../Optimization/cursor-effects.js` |
 | `Only-boss/managers/Content-studio/books-manager-new.html` | `../../../Optimization/cursor-effects.js` |
 | `Only-boss/managers/projects/arduino/arduino-manager.html` | `../../../../Optimization/cursor-effects.js` |
 | `Only-boss/managers/projects/matlab/matlab-manager.html` | `../../../../Optimization/cursor-effects.js` |

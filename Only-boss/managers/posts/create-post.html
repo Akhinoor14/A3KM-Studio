@@ -732,11 +732,19 @@
         // HELPER: Generate slug from title
         // ========================================
         function slugify(text) {
-            return text
+            const slug = text
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-+|-+$/g, '')
                 .substring(0, 50);
+
+            return slug || `post-${Date.now()}`;
+        }
+
+        function generatePostId() {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).slice(2, 8);
+            return `post-${timestamp}-${random}`;
         }
 
         // Helper: Get category group (matches github-content-uploader logic)
@@ -807,8 +815,10 @@
 
             // Generate unique post ID & slug
             const existingPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
-            const postNumber = String(existingPosts.length + 1).padStart(3, '0');
-            const postId = `post-${postNumber}`;
+            let postId = generatePostId();
+            while (existingPosts.some(post => post.id === postId)) {
+                postId = generatePostId();
+            }
             const slug = slugify(title);
             const categoryGroup = getCategoryGroup(category);
             const categorySlug = slugify(category);

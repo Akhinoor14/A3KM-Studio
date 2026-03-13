@@ -6,6 +6,10 @@
 (function() {
     'use strict';
 
+    function decodeBase64Unicode(value) {
+        return decodeURIComponent(escape(atob(value)));
+    }
+
     // ========== STATE ==========
     let allPosts = [];
     let currentPost = null;
@@ -33,11 +37,11 @@
             const data = await response.json();
             allPosts = data.posts || [];
             
-            // STEP 3: Load posts from localStorage (Quick Post Creator!)
+            // STEP 3: Load posts from local browser cache
             const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
             
             if (localPosts.length > 0) {
-                console.log(`✅ Found ${localPosts.length} posts from Quick Post Creator!`);
+                console.log(`✅ Found ${localPosts.length} cached local posts.`);
                 
                 // Normalize and merge with existing posts (avoid duplicates)
                 localPosts.forEach(localPost => {
@@ -86,7 +90,7 @@
 
             if (response.ok) {
                 const data = await response.json();
-                const content = atob(data.content);
+                const content = decodeBase64Unicode(data.content);
                 const githubPosts = JSON.parse(content);
                 
                 // Merge with localStorage
@@ -141,9 +145,8 @@
         console.log(`📖 Loading post: ${currentPost.title}`);
         
         try {
-            // Check if post is from localStorage (has inline content or _source flag)
-            const isLocalStoragePost = currentPost._source === 'localStorage' || 
-                                       (currentPost.content && !currentPost.content.startsWith('../../'));
+            // Treat only explicit local cache items as local posts.
+            const isLocalStoragePost = currentPost._source === 'localStorage';
             
             if (isLocalStoragePost) {
                 console.log(`💾 Rendering localStorage post: ${currentPost.id}`);
@@ -169,7 +172,7 @@
             }
             
             console.log(`📄 Fetching markdown from: ${mdPath}`);
-            const mdResponse = await fetch(`../../../${mdPath}`);
+            const mdResponse = await fetch(encodeURI(`../../../${mdPath}`));
             if (!mdResponse.ok) throw new Error(`Failed to load markdown: ${mdResponse.status}`);
             
             const markdownContent = await mdResponse.text();
@@ -348,14 +351,16 @@
             id: post.id,
             title: post.title || 'Untitled Post',
             description: post.summary || fallbackText || 'No description available',
-            mdFilePath: post.mdFilePath || '',
-            thumbnail: post.coverImage || '',
+            mdFilePath: post.mdFilePath || post.contentPath || post.markdownFile || '',
+            thumbnail: post.coverImage || post.thumbnail || '',
             readingTime: `${readTime} min`,
-            publishDate: post.date || new Date().toISOString().split('T')[0],
+            publishDate: post.publishDate || post.date || new Date().toISOString().split('T')[0],
             language: post.language || 'en',
             tags: Array.isArray(post.tags) ? post.tags : [],
             icon: 'fa-pen-fancy',
-            content: post.content
+            content: post.content,
+            contentPath: post.contentPath || post.markdownFile || '',
+            markdownFile: post.markdownFile || post.contentPath || ''
         };
     }
 

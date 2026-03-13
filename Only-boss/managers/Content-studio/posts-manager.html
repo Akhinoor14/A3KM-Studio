@@ -6011,11 +6011,11 @@ ${content}`;
 
         
 
-        // Upload markdown file to Content Studio/written-posts/
+        const categoryGroup = document.getElementById('categoryGroup').value;
 
-        const mdPath = `Content Studio/written-posts/${slug}.md`;
+        const categorySlug = contentManager.slugify(category);
 
-        await githubUploader.uploadFile(mdPath, mdContent, `Add post: ${title}`, false);
+        const mdPath = `Content Storage/written-posts/${categoryGroup}/${categorySlug}/${slug}.md`;
 
         
 
@@ -6044,6 +6044,10 @@ ${content}`;
           metadata: {
 
             slug: slug,
+
+            categoryGroup: categoryGroup,
+
+            categorySlug: categorySlug,
 
             status: status,
 
@@ -6209,7 +6213,7 @@ ${content}`;
 
           const data = await response.json();
 
-          const content = atob(data.content);
+          const content = decodeURIComponent(escape(atob(data.content)));
 
           const githubPosts = JSON.parse(content);
 
@@ -6317,7 +6321,7 @@ ${content}`;
 
         
 
-        // ?? STEP 2: Load posts from localStorage (Quick Post Creator!)
+        // STEP 2: Load posts from local browser cache
 
         const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
 
@@ -6325,7 +6329,7 @@ ${content}`;
 
         if (localPosts.length > 0) {
 
-          console.log(`? Found ${localPosts.length} posts from Quick Post Creator!`);
+          console.log(`Found ${localPosts.length} cached local posts.`);
 
           
 
@@ -6339,7 +6343,7 @@ ${content}`;
 
               items.push(localPost);
 
-              console.log(`? Added localStorage post: ${localPost.id}`);
+              console.log(`Added cached local post: ${localPost.id}`);
 
             }
 
@@ -6417,7 +6421,7 @@ ${content}`;
 
         
 
-        // ?? STEP 2: Load posts from localStorage (Quick Post Creator!)
+        // STEP 2: Load posts from local browser cache
 
         const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
 
@@ -6425,7 +6429,7 @@ ${content}`;
 
         if (localPosts.length > 0) {
 
-          console.log(`? Found ${localPosts.length} posts from Quick Post Creator in Manage tab!`);
+          console.log(`Found ${localPosts.length} cached local posts in Manage tab.`);
 
           
 
@@ -6443,7 +6447,7 @@ ${content}`;
 
               items.push(localPost);
 
-              console.log(`? Added localStorage post to Manage: ${localPost.id}`);
+              console.log(`Added cached local post to Manage: ${localPost.id}`);
 
             }
 
@@ -6605,7 +6609,7 @@ ${content}`;
 
         if (!thumbnailUrl && item.thumbnailPath) {
 
-          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.thumbnailPath}`;
+          thumbnailUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${item.thumbnailPath}`);
 
         }
 
@@ -7051,7 +7055,7 @@ ${content}`;
 
       const confirmMessage = isLocalStoragePost 
 
-        ? `⚠️ Delete "${post.title}"?\n\n📦 This post is from Quick Post Creator (localStorage).\n\nThis will delete:\n- Post from browser storage only\n\nThis action cannot be undone!`
+        ? `⚠️ Delete "${post.title}"?\n\n📦 This post exists only in browser local storage.\n\nThis will delete:\n- Post from browser storage only\n\nThis action cannot be undone!`
 
         : `⚠️ Delete \"${post.title}"?\n\nThis will delete:\n- Post data from GitHub JSON\n- Markdown file (if exists)\n\nThis action cannot be undone!`;
 
@@ -7519,17 +7523,45 @@ ${content}`;
 
       
 
+      const updatedTitle = document.getElementById('editTitle').value;
+
+      const updatedCategory = document.getElementById('editCategory').value;
+
+      const updatedCategoryGroup = document.getElementById('editCategoryGroup').value || post.categoryGroup || 'General & Personal';
+
+      const updatedSlug = contentManager.slugify(updatedTitle) || post.slug || id;
+
+      const updatedCategorySlug = contentManager.slugify(updatedCategory);
+
+      const nextMdPath = `Content Storage/written-posts/${updatedCategoryGroup}/${updatedCategorySlug}/${updatedSlug}.md`;
+
+      const descriptionHtml = document.getElementById('editRichPostDesc')?.innerHTML || '';
+
+      const summaryText = (descriptionHtml || document.getElementById('editMetaDescription').value || document.getElementById('editContent').value || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 200);
+
       const updatedPost = {
 
         id: id,
 
-        title: document.getElementById('editTitle').value,
+        title: updatedTitle,
 
-        category: document.getElementById('editCategory').value,
+        category: updatedCategory,
+
+        categoryGroup: updatedCategoryGroup,
+
+        categorySlug: updatedCategorySlug,
+
+        slug: updatedSlug,
 
         content: document.getElementById('editContent').value,
 
-        description: document.getElementById('editRichPostDesc')?.innerHTML || '',
+        description: descriptionHtml,
+
+        summary: summaryText,
 
         author: document.getElementById('editAuthor').value,
 
@@ -7552,6 +7584,10 @@ ${content}`;
         codeLanguage: document.getElementById('editCodeLanguage').value,
 
         audience: selectedAudiences,
+
+        markdownFile: nextMdPath,
+
+        contentPath: nextMdPath,
 
         date: new Date().toISOString()
 
@@ -7611,19 +7647,17 @@ ${content}`;
 
             try {
 
-              const category = document.getElementById('editCategory').value;
-
               const fileName = editThumbnailFileToUpload.name;
 
               const fileExtension = fileName.split('.').pop();
 
-              const thumbnailPath = `Content Storage/written-posts/${category}/${id}/thumbnail.${fileExtension}`;
+              const thumbnailPath = `Content Storage/written-posts/${updatedCategoryGroup}/${updatedCategorySlug}/covers/${updatedSlug}-${Date.now()}-thumbnail.${fileExtension}`;
 
               
 
               // Upload thumbnail to GitHub
 
-              await contentManager.uploadFile(thumbnailPath, editThumbnailFileToUpload, `Upload thumbnail: ${fileName} for post ${id}`);
+              await githubUploader.uploadBinaryFile(thumbnailPath, editThumbnailFileToUpload, `Upload thumbnail: ${fileName} for post ${id}`);
 
               
 
@@ -7631,7 +7665,11 @@ ${content}`;
 
               updatedPost.thumbnailPath = thumbnailPath;
 
-              updatedPost.thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`;
+              updatedPost.thumbnailUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`);
+
+              updatedPost.thumbnail = updatedPost.thumbnailUrl;
+
+              updatedPost.coverImage = updatedPost.thumbnailUrl;
 
               
 
@@ -7651,11 +7689,7 @@ ${content}`;
 
           
 
-          await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
-
-          
-
-          // Also save the markdown file content if it was edited
+          const previousMdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
 
           const mdContent = document.getElementById('editContent').value;
 
@@ -7663,11 +7697,21 @@ ${content}`;
 
             try {
 
-              const post = currentContent.find(p => p.id === id);
+              await contentManager.saveMarkdownFile(nextMdPath, mdContent);
 
-              const mdPath = post.markdownFile || post.contentPath || `Content Studio/written-posts/${id}.md`;
+              if (previousMdPath && previousMdPath !== nextMdPath) {
 
-              await contentManager.saveMarkdownFile(mdPath, mdContent);
+                try {
+
+                  await contentManager.deleteMarkdownFile(previousMdPath);
+
+                } catch (deleteOldMdError) {
+
+                  console.warn('Could not delete old markdown file:', deleteOldMdError);
+
+                }
+
+              }
 
             } catch (mdError) {
 
@@ -7676,6 +7720,8 @@ ${content}`;
             }
 
           }
+
+          await contentManager.updateContent(CONTENT_TYPE, id, updatedPost);
 
           
 

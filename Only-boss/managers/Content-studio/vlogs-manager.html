@@ -1462,7 +1462,7 @@
           thumbnailUrl = thumbnailUrl.replace('maxresdefault', 'hqdefault');
         }
         if (!thumbnailUrl && vlog.thumbnailPath) {
-          thumbnailUrl = `https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${vlog.thumbnailPath}`;
+          thumbnailUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${vlog.thumbnailPath}`);
         }
         if (!thumbnailUrl && vlog.youtubeId) {
           thumbnailUrl = `https://img.youtube.com/vi/${vlog.youtubeId}/hqdefault.jpg`;
@@ -1739,35 +1739,38 @@
           
           try {
             const category = document.getElementById('editCategory').value;
+            const categorySlug = contentManager.slugify(category);
             const fileName = editVlogThumbnailFileToUpload.name;
             const fileExtension = fileName.split('.').pop();
-            const thumbnailPath = `Content Storage/video-blogs/${category}/${vlogId}/thumbnail.${fileExtension}`;
+            const thumbnailPath = `Content Storage/vlogs/${categorySlug}/covers/${vlogId}-${Date.now()}-thumbnail.${fileExtension}`;
             
             // Upload thumbnail to GitHub
-            await contentManager.uploadFile(thumbnailPath, editVlogThumbnailFileToUpload, `Upload thumbnail: ${fileName} for vlog ${vlogId}`);
-            
-            // Upda✅ Thumbnail uploaded successfully!');
+            await githubUploader.uploadBinaryFile(thumbnailPath, editVlogThumbnailFileToUpload, `Upload thumbnail: ${fileName} for vlog ${vlogId}`);
+
+            // Update vlog with new thumbnail paths
+            updatedVlog.thumbnailPath = thumbnailPath;
+            updatedVlog.thumbnailUrl = encodeURI(`https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/${thumbnailPath}`);
+            updatedVlog.thumbnail = updatedVlog.thumbnailUrl;
+            updatedVlog.coverImage = updatedVlog.thumbnailUrl;
+
+            alert('✅ Thumbnail uploaded successfully!');
             editVlogThumbnailFileToUpload = null;
           } catch (uploadError) {
             console.error('❌ Thumbnail upload failed:', uploadError.message);
             console.error('❌ Full error:', uploadError);
-            alert('❌ Failed to upload thumbnail: ' + uploadError.message + '\n\nCheck console (F12) for details.'
-            alert('? Thumbnail uploaded successfully!');
-            editVlogThumbnailFileToUpload = null;
-          } catch (uploadError) {
-            alert('? Failed to upload thumbnail: ' + uploadError.message);
+            alert('❌ Failed to upload thumbnail: ' + uploadError.message + '\n\nCheck console (F12) for details.');
             return;
           }
         }
-        console.error('❌ Update failed:', error.message);
-        console.error('❌ Full error:', error);
-        alert(`❌ Update failed: ${error.message}\n\nCheck console (F12) for details.
+
         await contentManager.updateContent(CONTENT_TYPE, updatedVlog.id, updatedVlog);
-        alert('? Vlog updated successfully!');
+        alert('✅ Vlog updated successfully!');
         closeEditModal();
         loadManageContent();
       } catch (error) {
-        alert(`? Update failed: ${error.message}`);
+        console.error('❌ Update failed:', error.message);
+        console.error('❌ Full error:', error);
+        alert(`❌ Update failed: ${error.message}\n\nCheck console (F12) for details.`);
       }
     });
 

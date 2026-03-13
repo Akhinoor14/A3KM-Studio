@@ -15,6 +15,14 @@ class GitHubPostSync {
         this.apiBase = 'https://api.github.com';
     }
 
+    encodeBase64Unicode(value) {
+        return btoa(unescape(encodeURIComponent(value)));
+    }
+
+    decodeBase64Unicode(value) {
+        return decodeURIComponent(escape(atob(value)));
+    }
+
     /**
      * Initialize with stored token from API config
      */
@@ -72,7 +80,7 @@ class GitHubPostSync {
             }
 
             const data = await response.json();
-            const content = atob(data.content); // Decode base64
+            const content = this.decodeBase64Unicode(data.content); // Decode UTF-8 base64
             const postsData = JSON.parse(content);
 
             return {
@@ -100,7 +108,7 @@ class GitHubPostSync {
                 syncedFrom: 'A3KM Blog Manager'
             };
 
-            const content = btoa(JSON.stringify(postsData, null, 2)); // Base64 encode
+            const content = this.encodeBase64Unicode(JSON.stringify(postsData, null, 2)); // UTF-8 safe base64 encode
             
             const url = `${this.apiBase}/repos/${this.owner}/${this.repo}/contents/${encodeURIComponent(this.filePath)}`;
             
@@ -323,7 +331,7 @@ class GitHubPostSync {
             // Upload file
             const body = {
                 message: `📝 Add/update post: ${post.title}`,
-                content: btoa(markdownContent), // Base64 encode
+                content: this.encodeBase64Unicode(markdownContent), // UTF-8 safe base64 encode
                 branch: this.branch
             };
 

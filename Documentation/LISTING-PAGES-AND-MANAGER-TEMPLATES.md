@@ -1207,7 +1207,7 @@ Managers have exactly **4 tabs**: Dashboard, Add, Manage All, Export/GitHub. No 
 `GitHubAPIHandler` and `CentralAPIGateway` already have `owner: 'Akhinoor14'` and `repo: 'A3KM-Studio'` hardcoded internally. Do not declare `GITHUB_OWNER` or `GITHUB_REPO` variables.
 
 ### Never ask the user to enter a GitHub token in the manager:
-The token is set once in Command Center (`Only-boss/dashboard/`). All managers read from the same storage via `UnifiedTokenManager.loadToken()`. Never render a token input field inside a manager page.
+The token is set once in Command Center (restricted internal route). All managers read from the same storage via `UnifiedTokenManager.loadToken()`. Never render a token input field inside a manager page.
 
 ### Never load `mobile-universal.css` in a manager page:
 ```html
