@@ -808,10 +808,10 @@ class PWAInstallPrompt {
             console.warn('⚠️ Install prompt not available');
             return;
         }
-        
-        // Show installing progress tracker
-        this.showInstallProgress(promptElement);
-        
+
+        // Close custom prompt immediately, then trigger native install UI.
+        this.dismissInstallPrompt();
+
         // Show browser's install prompt
         this.deferredPrompt.prompt();
         
@@ -828,10 +828,6 @@ class PWAInstallPrompt {
         
         // Clear the deferred prompt
         this.deferredPrompt = null;
-        
-        // Remove prompt
-        promptElement.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => promptElement.remove(), 300);
     }
     
     /**

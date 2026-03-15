@@ -8,6 +8,24 @@
 (function () {
     'use strict';
 
+    // Normalize any URL from books.json to work at the current page depth.
+    // Handles: root-relative /Content%20Storage/..., local relative paths, absolute URLs.
+    function normalizeBookUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return rawUrl || '';
+        const u = rawUrl.trim();
+        if (/^(https?:|data:|blob:)/i.test(u)) return u;
+        let decoded;
+        try { decoded = decodeURIComponent(u); } catch(e) { decoded = u; }
+        let clean = decoded.replace(/^\//, '').replace(/^A3KM Studio\//i, '');
+        if (!clean.startsWith('Content Storage/')) return clean;
+        // Compute how many directory levels deep this page is from A3KM Studio root
+        const pathname = window.location.pathname
+            .replace(/\/A3KM%20Studio\//gi, '/')
+            .replace(/\/A3KM Studio\//gi, '/');
+        const depth = Math.max(1, pathname.split('/').filter(Boolean).length - 1);
+        return '../'.repeat(depth) + clean;
+    }
+
     const params   = new URLSearchParams(window.location.search);
     const bookId   = params.get('id');
     let   allBooks = [];
@@ -58,8 +76,9 @@
 
         /* cover with format badge */
         const formatBadge = `<div class="cover-format-badge">${book.format || 'PDF'}</div>`;
-        const coverHTML = book.cover
-            ? `<img src="${book.cover}" alt="${esc(book.title)}" onerror="this.parentElement.innerHTML='<div class=cover-placeholder><i class=fas fa-book></i></div>'" onload="this.parentElement.classList.add('loaded')">`
+        const coverSrc = normalizeBookUrl(book.cover);
+        const coverHTML = coverSrc
+            ? `<img src="${coverSrc}" alt="${esc(book.title)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.remove('loaded')" onload="this.parentElement.classList.add('loaded')">`
             : `<div class="cover-placeholder"><i class="fas fa-book"></i></div>`;
 
         /* summary */
@@ -72,7 +91,7 @@
             <a class="rel-card" href="book-detail.html?id=${r.id}">
                 <div class="rel-cover">
                     ${r.cover
-                        ? `<img src="${r.cover}" alt="${esc(r.title)}" onerror="this.parentElement.innerHTML='<i class=fas fa-book></i>'">`
+                        ? `<img src="${normalizeBookUrl(r.cover)}" alt="${esc(r.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='<i class=fas fa-book></i>'">`
                         : `<i class="fas fa-book"></i>`}
                 </div>
                 <div class="rel-info">

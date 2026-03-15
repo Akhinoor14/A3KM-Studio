@@ -639,7 +639,10 @@
     async function loadDetail() {
       if (!bookId) { showError('No book ID provided.'); return; }
       try {
-        const res = await fetch('books.json');
+        const res = await fetch('books.json', { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`books.json fetch failed with status ${res.status}`);
+        }
         const data = await res.json();
         const book = data.books.find(b => b.id === bookId);
         if (!book) { showError('Book not found.'); return; }
@@ -653,12 +656,47 @@
       }
     }
 
+    function normalizeBookAssetUrl(pathValue) {
+      if (!pathValue || typeof pathValue !== 'string') return '';
+
+      const trimmed = pathValue.trim();
+      if (/^(data:|https?:|blob:)/i.test(trimmed)) return trimmed;
+
+      let normalized = trimmed;
+      if (normalized.startsWith('/')) normalized = normalized.slice(1);
+
+      try {
+        normalized = decodeURIComponent(normalized);
+      } catch (_) {
+        // Keep original text if decodeURIComponent fails.
+      }
+
+      if (normalized.startsWith('A3KM Studio/')) {
+        normalized = normalized.slice('A3KM Studio/'.length);
+      }
+
+      if (normalized.startsWith('Content Storage/')) {
+        return `../../${normalized}`;
+      }
+
+      return normalized;
+    }
+
+    function createInlineCoverFallback(title, category) {
+      const safeTitle = (title || 'Book').toString().replace(/[<>&"']/g, '').slice(0, 34);
+      const safeCategory = (category || 'Library').toString().replace(/[<>&"']/g, '').slice(0, 28);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#164e63"/><stop offset="1" stop-color="#0f172a"/></linearGradient></defs><rect width="320" height="460" fill="url(#g)"/><rect x="24" y="24" width="272" height="412" rx="16" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/><text x="160" y="188" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#e2e8f0">${safeTitle}</text><text x="160" y="232" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#cbd5e1">${safeCategory}</text><text x="160" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8">Cover unavailable</text></svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
     function renderDetail(book, related) {
       const langLabel = book.language === 'bn' ? 'বাংলা' : 'English';
       const langCode  = book.language === 'bn' ? 'BN' : 'EN';
       const dateStr   = book.date ? new Date(book.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
       const pages     = book.pages ? `${book.pages} pages` : '—';
-      const catSlug   = book.category.toLowerCase().replace(/[^\w\s-]/g,'').replace(/\s+/g,'-');
+      const bookCover = normalizeBookAssetUrl(book.cover);
+      const bookFallback = createInlineCoverFallback(book.title, book.category);
+      const resolvedBookCover = bookCover || bookFallback;
 
       // Sanitize summary HTML (keep formatting, strip scripts)
       const summaryHTML = book.summary
@@ -667,14 +705,21 @@
 
       const relatedHTML = related.length
         ? related.map(r => `
+            ${(() => {
+              const relCover = normalizeBookAssetUrl(r.cover);
+              const relFallback = createInlineCoverFallback(r.title, r.category || book.category);
+              const relResolvedCover = relCover || relFallback;
+              return `
             <a class="rel-card" href="book-detail.html?id=${r.id}">
-              <img class="rel-cover" src="${r.cover}" alt="${r.title}" loading="lazy"
-                   onerror="this.src='../../Content Storage/books-pdfs/${catSlug}/covers/category-default.svg'">
+              <img class="rel-cover" src="${relResolvedCover}" alt="${r.title}" loading="lazy"
+                   onerror="this.onerror=null;this.src='${relFallback}'">
               <div class="rel-info">
                 <div class="rel-title">${r.title}</div>
                 <div class="rel-author">${r.author || ''}</div>
               </div>
-            </a>`).join('')
+            </a>`;
+            })()}
+            `).join('')
         : '<p class="related-empty">No related books found in this category yet.</p>';
 
       document.getElementById('detailPage').innerHTML = `
@@ -683,8 +728,8 @@
           <!-- LEFT: Cover -->
           <div class="cover-wrap">
             <div class="book-cover-3d">
-              <img class="cover-img" src="${book.cover}" alt="${book.title}"
-                   onerror="this.src='../../Content Storage/books-pdfs/${catSlug}/covers/category-default.svg'">
+              <img class="cover-img" src="${resolvedBookCover}" alt="${book.title}"
+                   onerror="this.onerror=null;this.src='${bookFallback}'">
               <span class="cover-format">${book.format || 'PDF'}</span>
             </div>
             <div class="cover-stats">

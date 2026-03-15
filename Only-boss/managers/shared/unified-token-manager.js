@@ -18,6 +18,7 @@ class UnifiedTokenManager {
         this.EXPIRY_DAYS = 90; // GitHub PAT standard expiry
         this.CHECK_INTERVAL = 3600000; // Check every hour (1 hour in ms)
         this.RATE_LIMIT_WARNING = 100; // Warn when less than 100 requests left
+        this.REQUEST_TIMEOUT_MS = 8000; // Prevent UI from staying in "Checking..." forever
         
         // API Configuration
         this.GITHUB_API = 'https://api.github.com';
@@ -27,6 +28,24 @@ class UnifiedTokenManager {
         // Initialize
         this.token = this.loadToken();
         this.autoCheckHealth();
+    }
+
+    /**
+     * 🌐 Fetch with timeout (shared for token/status checks)
+     */
+    async fetchWithTimeout(url, options = {}, timeoutMs = this.REQUEST_TIMEOUT_MS) {
+        if (typeof AbortController === 'undefined') {
+            return fetch(url, options);
+        }
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+            clearTimeout(timer);
+        }
     }
 
     /**
@@ -130,7 +149,7 @@ class UnifiedTokenManager {
             console.log('⏰ Request timestamp:', requestTime);
             console.log('🔑 Using token:', token.substring(0, 10) + '...');
             
-            const response = await fetch(apiUrl, {
+            const response = await this.fetchWithTimeout(apiUrl, {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
@@ -203,7 +222,7 @@ class UnifiedTokenManager {
             console.log('🌐 [REAL API CALL] Fetching rate limit from:', apiUrl);
             console.log('⏰ Request timestamp:', requestTime);
             
-            const response = await fetch(apiUrl, {
+            const response = await this.fetchWithTimeout(apiUrl, {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'

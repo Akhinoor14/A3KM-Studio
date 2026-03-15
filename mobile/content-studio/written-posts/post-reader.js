@@ -22,6 +22,68 @@
         loadPostsFromJSON();
     });
 
+    async function fetchPostsManifest() {
+        const cacheBust = `v=${Date.now()}`;
+        const candidatePaths = [
+            `../../../Content%20Studio/written-posts/posts.json?${cacheBust}`,
+            `../../../Content Studio/written-posts/posts.json?${cacheBust}`,
+            `/${encodeURI('A3KM Studio/Content Studio/written-posts/posts.json')}?${cacheBust}`,
+            `/${encodeURI('Content Studio/written-posts/posts.json')}?${cacheBust}`
+        ];
+
+        let lastError = null;
+        for (const path of candidatePaths) {
+            try {
+                const response = await fetch(path, { cache: 'no-store' });
+                if (!response.ok) {
+                    lastError = new Error(`HTTP ${response.status} @ ${path}`);
+                    continue;
+                }
+                const data = await response.json();
+                if (data && Array.isArray(data.posts)) {
+                    console.log(`✅ Loaded posts manifest from: ${path}`);
+                    return data;
+                }
+                lastError = new Error(`Invalid posts manifest shape @ ${path}`);
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError || new Error('Unable to load posts manifest');
+    }
+
+    async function fetchMarkdownContent(mdPath) {
+        const normalizedPath = String(mdPath || '').replace(/^\/+/, '');
+        const cacheBust = `v=${Date.now()}`;
+        const candidatePaths = [
+            `../../../${encodeURI(normalizedPath)}?${cacheBust}`,
+            `/${encodeURI(normalizedPath)}?${cacheBust}`,
+            `/${encodeURI(`A3KM Studio/${normalizedPath}`)}?${cacheBust}`
+        ];
+
+        let lastError = null;
+        for (const path of candidatePaths) {
+            try {
+                const response = await fetch(path, { cache: 'no-store' });
+                if (!response.ok) {
+                    lastError = new Error(`HTTP ${response.status} @ ${path}`);
+                    continue;
+                }
+                const text = await response.text();
+                if (text && text.trim().length > 0) {
+                    console.log(`✅ Loaded markdown from: ${path}`);
+                    return text;
+                }
+                lastError = new Error(`Empty markdown content @ ${path}`);
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError || new Error('Unable to load markdown content');
+    }
+
     /**
      * Load posts from GitHub posts.json + localStorage + Cloud
      */
@@ -30,11 +92,8 @@
             // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
             await syncFromGitHubCloud();
             
-            // STEP 2: Load posts from GitHub posts.json (Professional Manager)
-            const response = await fetch('../../../Content%20Studio/written-posts/posts.json');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
+            // STEP 2: Load posts from GitHub posts.json (with path fallbacks)
+            const data = await fetchPostsManifest();
             allPosts = data.posts || [];
             
             // STEP 3: Load posts from local browser cache
@@ -172,10 +231,7 @@
             }
             
             console.log(`📄 Fetching markdown from: ${mdPath}`);
-            const mdResponse = await fetch(encodeURI(`../../../${mdPath}`));
-            if (!mdResponse.ok) throw new Error(`Failed to load markdown: ${mdResponse.status}`);
-            
-            const markdownContent = await mdResponse.text();
+            const markdownContent = await fetchMarkdownContent(mdPath);
             console.log(`✅ Loaded ${markdownContent.length} chars of markdown`);
             
             // Convert markdown to HTML

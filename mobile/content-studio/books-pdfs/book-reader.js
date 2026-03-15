@@ -6,6 +6,22 @@
 (function() {
     'use strict';
 
+    // Normalize any URL from books.json to work at the current page depth.
+    function normalizeBookUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return rawUrl || '';
+        const u = rawUrl.trim();
+        if (/^(https?:|data:|blob:)/i.test(u)) return u;
+        let decoded;
+        try { decoded = decodeURIComponent(u); } catch(e) { decoded = u; }
+        let clean = decoded.replace(/^\//, '').replace(/^A3KM Studio\//i, '');
+        if (!clean.startsWith('Content Storage/')) return clean;
+        const pathname = window.location.pathname
+            .replace(/\/A3KM%20Studio\//gi, '/')
+            .replace(/\/A3KM Studio\//gi, '/');
+        const depth = Math.max(1, pathname.split('/').filter(Boolean).length - 1);
+        return '../'.repeat(depth) + clean;
+    }
+
     // ========== STATE ==========
     let allBooks = [];
     let currentBook = null;
@@ -95,7 +111,7 @@
     // ========== OPEN BOOK IN VIEWER ==========
     function openBookInViewer(bookMode = false) {
         // Use downloadUrl from content.json
-        let pdfPath = currentBook.downloadUrl || currentBook.pdfUrl || '#';
+        let pdfPath = normalizeBookUrl(currentBook.downloadUrl || currentBook.pdfUrl || '#');
         
         // Add CORS proxy for GitHub-hosted PDFs
         if (pdfPath.includes('github.com') || pdfPath.includes('githubusercontent.com')) {
@@ -280,7 +296,7 @@
     }
 
     function handleDownload() {
-        const url = currentBook.downloadUrl || currentBook.pdfUrl;
+        const url = normalizeBookUrl(currentBook.downloadUrl || currentBook.pdfUrl);
         if (!url) {
             showToast('⚠️ Download link not available');
             return;

@@ -58,7 +58,7 @@ function changeMainImage(imgSrc, thumbnail) {
         console.log(`🔑 Available Tokens: ${GITHUB_DIRECT_TOKENS.length}`);
         console.log('📊 All GitHub API calls will use frontend tokens');
     } else {
-        console.warn('⚠️ Frontend Token System not loaded - falling back to localStorage');
+        console.info('ℹ️ Frontend Token System not loaded - using localStorage fallback');
     }
 })();
 
@@ -5727,7 +5727,7 @@ console.log('📌 DOM Elements found:', {
 });
 
 if (!projectsGrid) {
-    console.error('❌ Projects grid not found! Cannot render projects.');
+    console.info('ℹ️ projects-grid not present on this page; static layout mode active.');
 }
 
 // Mobile Navigation Toggle
@@ -5801,12 +5801,14 @@ function updateActiveNavLink() {
 // Navbar background on scroll
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.style.background = 'linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.98))';
-        navbar.style.boxShadow = '0 8px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 0, 0, 0.06)';
-    } else {
-        navbar.style.background = 'linear-gradient(180deg, rgba(10,10,10,0.95), rgba(20,0,0,0.95))';
-        navbar.style.boxShadow = '0 6px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 0, 0, 0.04)';
+    if (navbar) {
+        if (window.scrollY > 50) {
+            navbar.style.background = 'linear-gradient(180deg, rgba(10,10,10,0.98), rgba(20,0,0,0.98))';
+            navbar.style.boxShadow = '0 8px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 0, 0, 0.06)';
+        } else {
+            navbar.style.background = 'linear-gradient(180deg, rgba(10,10,10,0.95), rgba(20,0,0,0.95))';
+            navbar.style.boxShadow = '0 6px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 0, 0, 0.04)';
+        }
     }
     
     // Update active nav link
@@ -6092,7 +6094,7 @@ function renderProjects(projectsToShow = sampleProjects) {
     console.log('🎨 Rendering projects:', projectsToShow.length, 'projects');
     
     if (!projectsGrid) {
-        console.error('❌ Projects grid not found!');
+        console.info('ℹ️ Render skipped: projects-grid not available on this page');
         return;
     }
     
@@ -6213,7 +6215,7 @@ if (projectsGrid) {
         title: c.querySelector('.project-title, .sw-card-title')?.textContent?.substring(0, 30)
     })));
 } else {
-    console.error('❌ Projects grid element not found! Check HTML for id="projects-grid"');
+    console.info('ℹ️ Dynamic grid init skipped: page uses non-legacy project layout');
 }
 
 // Contact form handling
@@ -6318,6 +6320,19 @@ function typeWriter(element, text, speed = 50) {
     }
     
     type();
+}
+
+function initializeTypingAnimation() {
+    const typingElement = document.querySelector('.typing-text');
+    if (!typingElement) return;
+
+    const originalText = typingElement.textContent || typingElement.getAttribute('data-text') || '';
+    if (!originalText.trim()) return;
+
+    typeWriter(typingElement, originalText, 45);
+    setTimeout(() => {
+        typingElement.classList.add('typed');
+    }, Math.max(600, originalText.length * 45 + 200));
 }
 
 // Initialize typing animation

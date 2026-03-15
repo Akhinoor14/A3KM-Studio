@@ -28,6 +28,37 @@
         setupEventListeners();
     });
 
+    async function fetchPostsManifest() {
+        const cacheBust = `v=${Date.now()}`;
+        const candidatePaths = [
+            `../../../Content%20Studio/written-posts/posts.json?${cacheBust}`,
+            `../../../Content Studio/written-posts/posts.json?${cacheBust}`,
+            `/${encodeURI('A3KM Studio/Content Studio/written-posts/posts.json')}?${cacheBust}`,
+            `/${encodeURI('Content Studio/written-posts/posts.json')}?${cacheBust}`
+        ];
+
+        let lastError = null;
+        for (const path of candidatePaths) {
+            try {
+                const response = await fetch(path, { cache: 'no-store' });
+                if (!response.ok) {
+                    lastError = new Error(`HTTP ${response.status} @ ${path}`);
+                    continue;
+                }
+                const data = await response.json();
+                if (data && Array.isArray(data.posts)) {
+                    console.log(`✅ Loaded posts manifest from: ${path}`);
+                    return data;
+                }
+                lastError = new Error(`Invalid posts manifest shape @ ${path}`);
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError || new Error('Unable to load posts manifest');
+    }
+
     /**
      * Load posts from central posts.json + localStorage + GitHub Cloud
      */
@@ -38,13 +69,8 @@
             // 🚀 STEP 1: Pull latest posts from GitHub Cloud (get posts from other devices!)
             await syncFromGitHubCloud();
             
-            // STEP 2: Load posts from central posts.json
-            const response = await fetch('../../../Content%20Studio/written-posts/posts.json');
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const data = await response.json();
+            // STEP 2: Load posts from central posts.json (with robust path fallbacks)
+            const data = await fetchPostsManifest();
             allPosts = (data.posts || []).map(normalizeRemotePost);
             
             // STEP 3: Load posts from local browser cache

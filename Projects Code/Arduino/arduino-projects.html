@@ -459,7 +459,6 @@
     </div>
   </div>
 
-  <script src="../../Optimization/script.js"></script>
   <script>
     // Difficulty metadata (not in JSON — maintained here)
     const projectMetadata = {
@@ -499,19 +498,39 @@
     let filteredProjects = [];
     let currentFilters = { search: '', category: 'all', sort: 'id-asc', difficulty: 'all', view: 'grid' };
 
+    function normalizeText(s) {
+      if (typeof s !== 'string') return s;
+      return s
+        .replace(/Ã—/g, '×')
+        .replace(/Î©/g, 'Ω');
+    }
+
+    function normalizeProject(p) {
+      if (!p || typeof p !== 'object') return p;
+      const out = { ...p };
+      ['folder', 'title', 'subtitle', 'description', 'project_statement'].forEach(k => {
+        if (typeof out[k] === 'string') out[k] = normalizeText(out[k]);
+      });
+      if (Array.isArray(out.components)) out.components = out.components.map(normalizeText);
+      return out;
+    }
+
     async function loadProjects() {
       try {
         const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
         let res;
-        try { res = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!res.ok) throw new Error(''); }
-        catch(e) { res = await fetch('arduino-data.json'); }
+        try { res = await fetch('arduino-data.json?t=' + Date.now()); if (!res.ok) throw new Error(''); }
+        catch(e) { res = await fetch(ARDUINO_RAW + '?t=' + Date.now()); }
         const data = await res.json();
         // Merge metadata (difficulty) into each project
-        allProjects = (data.projects || []).map(p => ({
-          ...p,
+        allProjects = (data.projects || []).map(p => {
+          const n = normalizeProject(p);
+          return {
+          ...n,
           difficulty:      (projectMetadata[p.id] || {}).difficulty      || 'Beginner',
           difficultyLevel: (projectMetadata[p.id] || {}).difficultyLevel || 1
-        }));
+          };
+        });
         document.getElementById('headerTotalProjects').textContent = allProjects.length;
         document.getElementById('totalCount').textContent = allProjects.length;
         applyFiltersAndRender();
@@ -571,11 +590,14 @@
       const tinkercad  = project.tinkercad
         ? '<a href="' + project.tinkercad + '" target="_blank" rel="noopener noreferrer" class="tinkercad-badge" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i> Tinkercad</a>'
         : '';
+      const fallbackImgUrl = imgFile
+        ? '../../Projects%20Storage/Arduino%20UNO%20Projects%20with%20Tinkercad/' + encodeURIComponent(project.folder) + '/' + (imgFile === 'circuit.png' ? 'Circuit.png' : 'circuit.png')
+        : null;
       const imgHtml = imgUrl
-        ? '<img src="' + imgUrl + '" alt="' + escHtml(project.title) + ' circuit" onerror="this.style.display=\'none\'">'
+        ? '<img src="' + imgUrl + '" alt="' + escHtml(project.title) + ' circuit" loading="lazy" onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src=this.dataset.fallback;return;} this.style.display=\'none\'; this.parentElement.querySelector(\'.thumbnail-fallback\').style.display=\'flex\';" data-fallback="' + escHtml(fallbackImgUrl || '') + '">'
         : '';
 
-      return '<div class="project-card" onclick="viewProject(' + project.id + ')">' +
+      return '<div class="project-card" data-project-id="' + escHtml(String(project.id)) + '" role="link" tabindex="0" aria-label="Open ' + escHtml(project.title) + '">' +
         '<div class="project-thumbnail">' +
           imgHtml +
           '<div class="thumbnail-fallback"' + (imgUrl ? ' style="display:none;"' : '') + '><i class="fas fa-microchip"></i></div>' +
@@ -627,10 +649,34 @@
       applyFiltersAndRender();
     }
 
-    function viewProject(id) { window.location.href = 'arduino-project-viewer.html?id=' + id; }
+    function viewProject(id) { window.location.href = 'arduino-project-viewer.html?id=' + encodeURIComponent(id); }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadProjects();
+
+      const projectsContainer = document.getElementById('projectsContainer');
+      if (projectsContainer) {
+        projectsContainer.addEventListener('click', (event) => {
+          const card = event.target.closest('.project-card');
+          if (!card) return;
+          if (event.target.closest('.tinkercad-badge')) return;
+          const projectId = card.getAttribute('data-project-id');
+          if (projectId) {
+            viewProject(projectId);
+          }
+        });
+
+        projectsContainer.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          const card = event.target.closest('.project-card');
+          if (!card) return;
+          event.preventDefault();
+          const projectId = card.getAttribute('data-project-id');
+          if (projectId) {
+            viewProject(projectId);
+          }
+        });
+      }
 
       const searchInput = document.getElementById('searchInput');
       const clearSearch = document.getElementById('clearSearch');
@@ -669,7 +715,6 @@
 
   <script src="../../Optimization/navbar-autohide.js"></script>
   <script src="../../Optimization/fullscreen-init.js"></script>
-  <script src="../../Optimization/cursor-effects.js" defer></script>
 <footer class="wg-footer">
   <div class="wg-footer-inner">
     <div class="wg-qwrap">

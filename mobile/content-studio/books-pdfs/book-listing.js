@@ -6,6 +6,22 @@
 (function() {
     'use strict';
 
+    // Normalize any URL from books.json to work at the current page depth.
+    function normalizeBookUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return rawUrl || '';
+        const u = rawUrl.trim();
+        if (/^(https?:|data:|blob:)/i.test(u)) return u;
+        let decoded;
+        try { decoded = decodeURIComponent(u); } catch(e) { decoded = u; }
+        let clean = decoded.replace(/^\//, '').replace(/^A3KM Studio\//i, '');
+        if (!clean.startsWith('Content Storage/')) return clean;
+        const pathname = window.location.pathname
+            .replace(/\/A3KM%20Studio\//gi, '/')
+            .replace(/\/A3KM Studio\//gi, '/');
+        const depth = Math.max(1, pathname.split('/').filter(Boolean).length - 1);
+        return '../'.repeat(depth) + clean;
+    }
+
     // ========== STATE ==========
     let allBooks = [];
 
@@ -102,7 +118,7 @@
                 <div class="content-thumbnail book-thumbnail">
                     <div class="book-initial">${initial}</div>
                     ${book.cover ? 
-                        `<img src="${book.cover}" alt="${book.title}" onerror="this.style.opacity='0'">` :
+                        `<img src="${normalizeBookUrl(book.cover)}" alt="${book.title}" onerror="this.onerror=null;this.style.opacity='0'">` :
                         ''
                     }
                     <span class="book-badge">${languageDisplay}</span>

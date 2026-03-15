@@ -16,6 +16,6 @@
         sessionStorage.removeItem('a3km_fullscreen');
     }
     
-    // Auto-click fullscreen system is now disabled
-    console.log('🚫 Fullscreen auto-click system disabled');
+    // Auto-click fullscreen system is now disabled.
+    // Keep this file side-effect-only without console noise.
 })();

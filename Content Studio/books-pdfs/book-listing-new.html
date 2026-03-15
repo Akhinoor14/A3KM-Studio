@@ -1199,7 +1199,10 @@
 
     async function loadBooks() {
       try {
-        const response = await fetch('books.json');
+        const response = await fetch('books.json', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`books.json fetch failed with status ${response.status}`);
+        }
         const data = await response.json();
         allBooks = data.books || [];
         filteredBooks = [...allBooks];
@@ -1219,6 +1222,22 @@
           </div>
         `;
       }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJsSingleQuoted(value) {
+      return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r?\n/g, ' ');
     }
 
     function populateCategoryFilter() {
@@ -1373,39 +1392,89 @@
       container.innerHTML = `<div class="books-grid${listModeClass}">${booksHTML}</div>`;
     }
 
+    function normalizeBookCoverUrl(coverPath) {
+      if (!coverPath || typeof coverPath !== 'string') return '';
+
+      const trimmed = coverPath.trim();
+      if (/^(data:|https?:|blob:)/i.test(trimmed)) return trimmed;
+
+      let normalized = trimmed;
+      if (normalized.startsWith('/')) {
+        normalized = normalized.slice(1);
+      }
+
+      try {
+        normalized = decodeURIComponent(normalized);
+      } catch (_) {
+        // Keep original text if decode fails due to malformed encoding.
+      }
+
+      if (normalized.startsWith('A3KM Studio/')) {
+        normalized = normalized.slice('A3KM Studio/'.length);
+      }
+
+      if (normalized.startsWith('Content Storage/')) {
+        return `../../${normalized}`;
+      }
+
+      return normalized;
+    }
+
+    function createInlineCoverFallback(title, category) {
+      const safeTitle = (title || 'Book').toString().replace(/[<>&"']/g, '').slice(0, 34);
+      const safeCategory = (category || 'Library').toString().replace(/[<>&"']/g, '').slice(0, 28);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#164e63"/><stop offset="1" stop-color="#0f172a"/></linearGradient></defs><rect width="320" height="460" fill="url(#g)"/><rect x="24" y="24" width="272" height="412" rx="16" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/><text x="160" y="188" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#e2e8f0">${safeTitle}</text><text x="160" y="232" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#cbd5e1">${safeCategory}</text><text x="160" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8">Cover unavailable</text></svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
     function createBookCard(book) {
-      const languageCode = book.language === 'bn' ? 'BN' : 'EN';
-      const categorySlug = book.category.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+      const normalizedLanguage = (book.language || '').toString().toLowerCase();
+      const languageCode = normalizedLanguage === 'bn'
+        ? 'BN'
+        : normalizedLanguage === 'en'
+          ? 'EN'
+          : normalizedLanguage.includes('bn') && normalizedLanguage.includes('en')
+            ? 'BN/EN'
+            : (book.language || 'N/A').toString().toUpperCase();
       const authorDisplay = book.author
         ? (book.author.length > 22 ? book.author.substring(0, 22) + '\u2026' : book.author)
         : 'Unknown';
       const pagesTag = book.pages ? `<span class="tag-pages">${book.pages}p</span>` : '';
+      const coverSrc = normalizeBookCoverUrl(book.cover);
+      const fallbackCover = createInlineCoverFallback(book.title, book.category);
+      const resolvedCover = coverSrc || fallbackCover;
+      const safeCategory = escapeHtml(book.category || 'Uncategorized');
+      const safeLanguage = escapeHtml(book.language || 'unknown');
+      const safeTitle = escapeHtml(book.title || 'Untitled');
+      const safeAuthor = escapeHtml(authorDisplay);
+      const safeBookId = escapeJsSingleQuoted(book.id || '');
+      const safeBookModeUrl = escapeJsSingleQuoted(`book-3d.html?id=${book.id || ''}`);
 
       return `
-        <div class="book-card" data-category="${book.category}" data-language="${book.language}">
+        <div class="book-card" data-category="${safeCategory}" data-language="${safeLanguage}">
 
           <!-- Cover with hover overlay -->
           <div class="book-cover">
-            <img src="${book.cover}" alt="${book.title}" loading="lazy"
-                 onerror="this.src='../../Content Storage/books/${categorySlug}/covers/category-default.svg'">
-            <div class="category-badge">${book.category}</div>
+            <img src="${resolvedCover}" alt="${safeTitle}" loading="lazy"
+              onerror="this.onerror=null;this.src='${fallbackCover}'">
+            <div class="category-badge">${safeCategory}</div>
             <div class="book-format-badge">${book.format || 'PDF'}</div>
             <div class="book-cover-overlay">
-              <button class="overlay-btn overlay-btn-primary" onclick="event.stopPropagation(); openBook('${book.id}')">
+              <button class="overlay-btn overlay-btn-primary" onclick="event.stopPropagation(); openBook('${safeBookId}')">
                 <i class="fas fa-eye"></i> View Details
               </button>
-              <button class="overlay-btn overlay-btn-secondary" onclick="event.stopPropagation(); openInFullscreen('book-3d.html?id=${book.id}')">
+              <button class="overlay-btn overlay-btn-secondary" onclick="event.stopPropagation(); openInFullscreen('${safeBookModeUrl}')">
                 <i class="fas fa-book-open"></i> Book Mode
               </button>
             </div>
           </div>
 
           <!-- Compact info strip -->
-          <div class="book-info" onclick="openBook('${book.id}')">
-            <h3 class="book-title">${book.title}</h3>
+          <div class="book-info" onclick="openBook('${safeBookId}')">
+            <h3 class="book-title">${safeTitle}</h3>
             <div class="book-meta-row">
               <span class="book-author-inline">
-                <i class="fas fa-user-edit"></i>${authorDisplay}
+                <i class="fas fa-user-edit"></i>${safeAuthor}
               </span>
               <div class="book-tag-group">
                 <span class="tag-lang">${languageCode}</span>

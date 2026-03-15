@@ -475,7 +475,6 @@
 
     <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-arrow-up"></i></button>
 
-    <script src="../../Optimization/script.js"></script>
     <script>
     /* ── Back Navigation ─────────────────────────────────── */
     function goBack(e){
@@ -508,17 +507,37 @@
     }
 
     /* ── Data Loading ─────────────────────────────────── */
+    function normalizeText(s) {
+        if (typeof s !== 'string') return s;
+        return s
+            .replace(/Ã—/g, '×')
+            .replace(/Î©/g, 'Ω');
+    }
+
+    function normalizeProject(p) {
+        if (!p || typeof p !== 'object') return p;
+        var out = Object.assign({}, p);
+        ['folder','title','subtitle','description','project_statement'].forEach(function(k){
+            if (typeof out[k] === 'string') out[k] = normalizeText(out[k]);
+        });
+        if (Array.isArray(out.components)) out.components = out.components.map(normalizeText);
+        return out;
+    }
+
     async function loadData() {
         try {
             const ARDUINO_RAW = 'https://raw.githubusercontent.com/Akhinoor14/A3KM-Studio/main/Projects%20Code/Arduino/arduino-data.json';
             var r;
-            try { r = await fetch(ARDUINO_RAW + '?t=' + Date.now()); if (!r.ok) throw new Error(''); }
-            catch(e) { r = await fetch('arduino-data.json'); }
+            try { r = await fetch('arduino-data.json?t=' + Date.now()); if (!r.ok) throw new Error(''); }
+            catch(e) { r = await fetch(ARDUINO_RAW + '?t=' + Date.now()); }
             if (!r.ok) throw new Error('HTTP '+r.status);
             var d = await r.json();
             if (!d || !d.projects || !d.projects.length) throw new Error('Invalid JSON');
             var cmap = {'led-basics':'led','sensors-actuators':'sensors','display-input':'display','advanced-projects':'advanced'};
-            projects = d.projects.map(function(p){ return Object.assign({},p,{category:cmap[p.category]||p.category}); });
+            projects = d.projects.map(function(p){
+                var n = normalizeProject(p);
+                return Object.assign({}, n, { category: cmap[n.category] || n.category });
+            });
             selectProject();
         } catch(e) {
             document.body.innerHTML='<div style="text-align:center;padding:100px;color:#fff;"><h2 style="color:#f44">Failed to load projects</h2><p>'+e.message+'</p><a href="arduino-projects.html" style="color:#8b0000;">Back</a></div>';
@@ -527,10 +546,10 @@
 
     function selectProject() {
         var p = new URLSearchParams(window.location.search);
-        var id = parseInt(p.get('id'))||1, folder = p.get('project'), cat = p.get('category');
+        var id = p.get('id') || 'arduino-000001', folder = p.get('project'), cat = p.get('category');
         if (cat) cur = projects.find(function(x){ return x.category===cat; }) || projects[0];
         else if (folder) cur = projects.find(function(x){ return x.folder===decodeURIComponent(folder); }) || projects[0];
-        else cur = projects.find(function(x){ return x.id===id; }) || projects[0];
+        else cur = projects.find(function(x){ return String(x.id)===String(id); }) || projects[0];
     }
 
     /* ── UI Population ─────────────────────────────────── */
@@ -540,7 +559,7 @@
         document.getElementById('hdrTitle').textContent = cur.title;
         var idx = projects.findIndex(function(p){ return p.id===cur.id; });
         document.getElementById('projCounter').textContent = (idx+1)+' / '+projects.length;
-        document.getElementById('projNum').textContent = (cur.id+'').padStart(2,'0');
+        document.getElementById('projNum').textContent = String(cur.id || '').replace(/^arduino-/, '');
         document.getElementById('heroTitle').textContent = cur.title;
         document.getElementById('catChip').textContent = catName(cur.category);
         var diff = cur.difficulty || 'Beginner';
@@ -586,11 +605,11 @@
 
         var na=document.getElementById('navArrows');
         na.innerHTML =
-            (prev?'<a href="?id='+prev.id+'" class="nav-arrow prev"><i class="fas fa-arrow-left na-i"></i><div><span class="na-label">Previous</span><span class="na-title">'+escH(prev.title)+'</span></div></a>':'<div></div>') +
-            (next?'<a href="?id='+next.id+'" class="nav-arrow next"><div style="text-align:right"><span class="na-label">Next</span><span class="na-title">'+escH(next.title)+'</span></div><i class="fas fa-arrow-right na-i"></i></a>':'');
+            (prev?'<a href="?id='+encodeURIComponent(prev.id)+'" class="nav-arrow prev"><i class="fas fa-arrow-left na-i"></i><div><span class="na-label">Previous</span><span class="na-title">'+escH(prev.title)+'</span></div></a>':'<div></div>') +
+            (next?'<a href="?id='+encodeURIComponent(next.id)+'" class="nav-arrow next"><div style="text-align:right"><span class="na-label">Next</span><span class="na-title">'+escH(next.title)+'</span></div><i class="fas fa-arrow-right na-i"></i></a>':'');
     }
     function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function goto(id){ window.location.href='?id='+id; }
+    function goto(id){ window.location.href='?id='+encodeURIComponent(id); }
 
     /* ── Media ─────────────────────────────────── */
     function setupMedia() {
@@ -662,22 +681,33 @@
         var mc=document.getElementById('mediaCont');
         mc.className='media-container image-mode'; mc.style.aspectRatio='unset';
         mc.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--border-primary);"></i></div>';
-        var names=['circuit.png','Circuit.png','CIRCUIT.png','circuit.jpg','Circuit.jpg','circuit-diagram.png','Circuit-diagram.png','Circuit Diagram.png','schematic.png','Schematic.png','diagram.png','Diagram.png','breadboard.png','Breadboard.png'];
-        var i=0, found=[];
+        var fileHint = (cur.files && cur.files.circuit) ? cur.files.circuit : '';
+        var candidates = [];
+
+        if (fileHint) {
+            candidates.push(fileHint);
+            if (fileHint === 'circuit.png') candidates.push('Circuit.png');
+            else if (fileHint === 'Circuit.png') candidates.push('circuit.png');
+        }
+
+        // Fallbacks for legacy folders with inconsistent naming.
+        ['circuit.png','Circuit.png','circuit.jpg','Circuit.jpg'].forEach(function(name){
+            if (candidates.indexOf(name) === -1) candidates.push(name);
+        });
+
+        var i = 0;
         function tryNext(){
-            if(i>=names.length){ found.length?showImgs(found):mc.innerHTML='<div class="media-placeholder"><i class="fas fa-image"></i><p>No circuit diagram</p></div>'; return; }
-            var img=new Image(), path=fp(cur.folder,names[i]);
-            img.onload=function(){ found.push({name:names[i],path:path}); i++; tryNext(); };
+            if(i>=candidates.length){
+                mc.innerHTML='<div class="media-placeholder"><i class="fas fa-image"></i><p>No circuit diagram</p></div>';
+                return;
+            }
+            var path = fp(cur.folder, candidates[i]);
+            var img = new Image();
+            img.onload=function(){
+                mc.innerHTML='<img src="'+path+'" alt="Circuit Diagram" style="width:100%;max-height:620px;object-fit:contain;border-radius:10px;">';
+            };
             img.onerror=function(){ i++; tryNext(); };
             img.src=path;
-        }
-        function showImgs(imgs){
-            if(imgs.length===1){ mc.innerHTML='<img src="'+imgs[0].path+'" alt="Circuit Diagram" style="width:100%;max-height:620px;object-fit:contain;border-radius:10px;">'; return; }
-            var html='<div style="padding:10px 14px;background:rgba(26,0,0,0.8);border-bottom:2px solid var(--border-primary);display:flex;align-items:center;gap:10px;"><i class="fas fa-images" style="color:var(--primary-red);"></i><select id="imgSel" style="flex:1;padding:6px 10px;background:rgba(10,10,10,0.95);border:2px solid var(--border-primary);border-radius:6px;color:#fff;cursor:pointer;">';
-            imgs.forEach(function(im,idx){ html+='<option value="'+idx+'">'+im.name+'</option>'; });
-            html+='</select></div><img id="cImg" src="'+imgs[0].path+'" alt="Circuit" style="width:100%;max-height:560px;object-fit:contain;">';
-            mc.innerHTML=html;
-            document.getElementById('imgSel').addEventListener('change',function(e){ document.getElementById('cImg').src=imgs[e.target.value].path; });
         }
         tryNext();
     }
@@ -770,20 +800,5 @@
 
     <script src="../../Optimization/fullscreen-init.js"></script>
     <script src="../../Optimization/navbar-autohide.js"></script>
-    <script src="../../Optimization/cursor-effects.js" defer></script>
-<footer class="wg-footer">
-  <div class="wg-footer-inner">
-    <div class="wg-qwrap">
-      <span class="wg-qmark">&#8220;</span>
-      <p class="wg-qtext">তোমরা পৃথিবীতে বিচরণ করো এবং দেখো — কীভাবে তিনি সৃষ্টির সূচনা করেছেন।</p>
-      <cite class="wg-qsrc">&#8212; আল-কুরআন — সূরা আনকাবুত: ২০</cite>
-    </div>
-    <div class="wg-divider"></div>
-    <div class="wg-copy">
-      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
-      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
-    </div>
-  </div>
-</footer>
 </body>
 </html>

@@ -1058,7 +1058,10 @@
       if (!bookId) { showErr('No book ID in URL.'); return; }
 
       try {
-        const res  = await fetch('books.json');
+        const res  = await fetch('books.json', { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`books.json fetch failed with status ${res.status}`);
+        }
         const data = await res.json();
         bookData   = data.books.find(b => b.id === bookId);
         if (!bookData) { showErr('Book not found.'); return; }
@@ -1086,16 +1089,34 @@
     }
 
     // ── PDF Loading ──────────────────────────────────────
-    function normalizeGithubUrl(url) {
+    function normalizePdfUrl(url) {
       // Decode first to prevent double-encoding (%20 becomes %2520 otherwise)
-      let u = url;
+      let u = (url || '').toString().trim();
       try { u = decodeURIComponent(u); } catch(e) {}
+
+      if (!u) return '';
+
+      if (/^(data:|blob:)/i.test(u)) return u;
+
       // Convert github.com blob URL → raw.githubusercontent.com
       if (u.includes('github.com') && u.includes('/blob/')) {
         u = u.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
       } else if (u.includes('github.com') && !u.includes('/raw/')) {
         u = u.replace('/blob/', '/raw/');
       }
+
+      // Normalize local storage paths to this page location.
+      if (!/^https?:/i.test(u)) {
+        if (u.startsWith('/')) u = u.slice(1);
+        if (u.startsWith('A3KM Studio/')) {
+          u = u.slice('A3KM Studio/'.length);
+        }
+        if (u.startsWith('Content Storage/')) {
+          return encodeURI(`../../${u}`);
+        }
+        return encodeURI(u);
+      }
+
       return u;
     }
 
@@ -1103,6 +1124,9 @@
       const loadingTask = pdfjsLib.getDocument({
         url: pdfUrl,
         password: A3KM_PDF_PASSWORD,  // Auto-apply A3KM password
+        disableRange: true,
+        disableStream: true,
+        disableAutoFetch: true,
         cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
         cMapPacked: true,
         standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
@@ -1125,12 +1149,50 @@
       return loadingTask.promise;
     }
 
+    async function tryLoadPDFFromData(pdfUrl) {
+      const bustedUrl = `${pdfUrl}${pdfUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+      const res = await fetch(bustedUrl, { cache: 'reload' });
+      if (!res.ok) {
+        throw new Error(`Fallback fetch failed with status ${res.status}`);
+      }
+
+      const buffer = await res.arrayBuffer();
+      if (!buffer || buffer.byteLength === 0) {
+        throw new Error('Fallback fetch returned an empty PDF response body');
+      }
+      const bytes = new Uint8Array(buffer);
+
+      const loadingTask = pdfjsLib.getDocument({
+        data: bytes,
+        password: A3KM_PDF_PASSWORD,
+        disableRange: true,
+        disableStream: true,
+        disableAutoFetch: true,
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+        enableXfa: true,
+        disableFontFace: false,
+        useSystemFonts: false,
+      });
+
+      loadingTask.onPassword = (updatePassword, reason) => {
+        if (reason === 1) {
+          updatePassword(A3KM_PDF_PASSWORD);
+        } else if (reason === 2) {
+          throw new Error('Incorrect PDF password');
+        }
+      };
+
+      return loadingTask.promise;
+    }
+
     let loadAttempts = [];
     let currentPdfUrl = '';
     let skipAdblockWarning = false;
 
     async function loadPDF(url, startFromIndex = 0) {
-      const rawUrl = normalizeGithubUrl(url);
+      const rawUrl = normalizePdfUrl(url);
       currentPdfUrl = rawUrl;
       const isGithub = rawUrl.includes('githubusercontent.com') || rawUrl.includes('github.com');
 
@@ -1158,11 +1220,33 @@
           return;
         } catch(e) { 
           console.warn(`[PDF Loader] ✗ Failed ${attempt.label}:`, e.message);
+          const errStr = e.message || e.toString();
+
+          const shouldTryDataFallback =
+            attempt.label === 'Direct' &&
+            (errStr.includes('Unexpected server response (204)') || errStr.includes('Unexpected server response'));
+
+          if (shouldTryDataFallback) {
+            try {
+              console.log('[PDF Loader] Trying data fallback after direct response issue...');
+              updateLoadingState('Retrying via data fallback...');
+              pdfDoc = await tryLoadPDFFromData(attempt.url);
+              totalPg = pdfDoc.numPages;
+              document.getElementById('totalPages').textContent = totalPg;
+              document.getElementById('pageInput').max = totalPg;
+              await renderPage(1);
+              console.log('[PDF Loader] ✓ Success via data fallback');
+              return;
+            } catch (fallbackErr) {
+              console.warn('[PDF Loader] ✗ Data fallback failed:', fallbackErr.message);
+              lastErr = fallbackErr;
+            }
+          }
+
           lastErr = e;
           
           // Show AdBlocker warning on first attempt failure (Direct GitHub blocked)
           // Check for common AdBlocker/network error patterns
-          const errStr = e.message || e.toString();
           const isBlocked = errStr.includes('ERR_BLOCKED_BY_CLIENT') || 
                            errStr.includes('net::ERR') || 
                            errStr.includes('Failed to fetch') ||
@@ -2039,21 +2123,5 @@
     document.addEventListener('DOMContentLoaded', init);
   </script>
   <script src="../../Optimization/fullscreen-init.js"></script>
-    <!-- Neural Grid Cursor Effect -->
-    <script src="../../Optimization/cursor-effects.js" defer></script>
-<footer class="wg-footer">
-  <div class="wg-footer-inner">
-    <div class="wg-qwrap">
-      <span class="wg-qmark">&#8220;</span>
-      <p class="wg-qtext">পড়ো! তোমার প্রভু মহামহিম — যিনি কলমের সাহায্যে শিক্ষা দিয়েছেন।</p>
-      <cite class="wg-qsrc">&#8212; আল-কুরআন — সূরা আলাক: ৩–৪</cite>
-    </div>
-    <div class="wg-divider"></div>
-    <div class="wg-copy">
-      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
-      <span class="wg-tagline">Portfolio presented by <a href="../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
-    </div>
-  </div>
-</footer>
-</body>
+   </body>
 </html>

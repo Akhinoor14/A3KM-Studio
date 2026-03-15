@@ -5,6 +5,18 @@
  */
 (function() {
     'use strict';
+
+    const isLocalhost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(window.location.hostname) || window.location.hostname.endsWith('.local');
+    const isDebugEnabled = isLocalhost || localStorage.getItem('a3km_debug_console') === '1' || window.__A3KM_DEBUG__ === true;
+
+    // Prevent verbose production console output that can expose implementation details.
+    if (!isDebugEnabled && !window.__a3kmConsoleHardened) {
+        const noop = function() {};
+        console.log = noop;
+        console.info = noop;
+        console.debug = noop;
+        window.__a3kmConsoleHardened = true;
+    }
     
     // Check if already running as installed app
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 

@@ -13,13 +13,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <title>Video Blogs Manager - A3KM Studio</title>
-  <link rel="stylesheet" href="../../../Optimization/mobile-universal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- 🎨 A3KM Unified Theme System (March 2026) -->
-  <link rel="stylesheet" href="../../shared/unified-theme.css">
-  
-  <script src="../../../Optimization/mobile-universal.js" defer></script>
+  <link rel="stylesheet" href="../shared/unified-theme.css">
   
   <style>
     :root {
@@ -547,12 +544,22 @@
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = 'dashboard';
+        const savedTab = localStorage.getItem('vlogsManager_activeTab') || 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
         if (tabBtn) tabBtn.classList.add('active');
         if (tabContent) tabContent.classList.add('active');
+
+        // Run the real tab switch once DOM is ready so loaders (e.g. loadDashboard) execute.
+        document.addEventListener('DOMContentLoaded', () => {
+          const btn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
+          if (btn) {
+            btn.click();
+          } else if (typeof window.switchTab === 'function') {
+            window.switchTab(savedTab);
+          }
+        }, { once: true });
       })();
     </script>
 
@@ -1068,7 +1075,8 @@
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
       document.getElementById(tabName + 'Tab').classList.add('active');
-      event.target.classList.add('active');
+      const activeBtn = document.querySelector(`[onclick*="switchTab('${tabName}')"]`);
+      if (activeBtn) activeBtn.classList.add('active');
       
       // Save current tab to localStorage for persistence
       localStorage.setItem('vlogsManager_activeTab', tabName);
@@ -1662,11 +1670,10 @@
         await contentManager.updateContent(CONTENT_TYPE, vlogId, vlog);
         alert('✅ Thumbnail marked for deletion!\n\n⚠️ Remember to delete the actual file from GitHub repository.');
         document.getElementById('edit-currentVlogThumbnailPath').textContent = 'No custom thumbnail (using YouTube thumbnail)';
+      } catch (error) {
         console.error('❌ Failed to delete thumbnail:', error.message);
         console.error('❌ Full error:', error);
-        alert('❌ Failed to delete thumbnail: ' + error.message + '\n\nCheck console (F12) for details.'
-      } catch (error) {
-        alert('? Failed to delete thumbnail: ' + error.message);
+        alert('❌ Failed to delete thumbnail: ' + error.message + '\n\nCheck console (F12) for details.');
       }
     }
     // ============================================================================

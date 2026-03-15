@@ -33,9 +33,11 @@
       if (/radeon|rx\s?\d|r[579]\s|amd/.test(r))                       return 'high';
       if (/apple\s?m\d/.test(r))                                         return 'high'; // M1, M2, M3…
       if (/arc\s?[a-z]?\d/.test(r))                                       return 'high'; // Intel Arc discrete
-      // Low-end / integrated
-      if (/intel|mesa|llvm|swiftshader|microsoft basic|angle|hd graphics|
-          uhd graphics|iris|mali|adreno|powervr|vivante/ix.test(r))      return 'low';
+      // Low-end / integrated (formatter-safe: avoid multiline regex literals)
+      if ([
+        'intel', 'mesa', 'llvm', 'swiftshader', 'microsoft basic', 'angle',
+        'hd graphics', 'uhd graphics', 'iris', 'mali', 'adreno', 'powervr', 'vivante'
+      ].some(function (k) { return r.indexOf(k) !== -1; })) return 'low';
       return 'mid';
     }
 
@@ -442,10 +444,17 @@
   }
 
   /* ── Events ─────────────────────────────────────────────────── */
-  document.addEventListener('mousemove', function (e) {
+  function handlePointerMove(e) {
     mx = e.clientX;
     my = e.clientY;
-  }, { passive: true });
+    // Keep custom cursor visible even when page scripts stop bubbling events.
+    cursorDot.style.opacity  = '1';
+    cursorRing.style.opacity = '1';
+  }
+
+  // Capture-phase listeners prevent notification overlays from breaking cursor updates.
+  window.addEventListener('pointermove', handlePointerMove, { passive: true, capture: true });
+  window.addEventListener('mousemove', handlePointerMove, { passive: true, capture: true });
 
   document.addEventListener('mousedown', function () {
     document.body.classList.add('a3km-clicking');
@@ -463,12 +472,6 @@
     document.body.classList.remove('a3km-hovering');
   });
 
-  document.addEventListener('mousemove', function () {
-    /* UX FIX: show cursor on first real mousemove (avoids dot at 0,0 on load) */
-    cursorDot.style.opacity  = '1';
-    cursorRing.style.opacity = '1';
-  }, { passive: true, once: true });
-
   document.addEventListener('mouseleave', function () {
     mx = -9999; my = -9999;
     lastFrameTime = 0;
@@ -484,6 +487,15 @@
   document.addEventListener('visibilitychange', function () {
     tabVisible = !document.hidden;
     if (tabVisible) lastFrameTime = 0; // reset so first frame back uses default dt
+  });
+
+  // Window-level fallback for browser UI popups / focus loss in admin tools.
+  window.addEventListener('focus', function () {
+    lastFrameTime = 0;
+    if (mx > -300) {
+      cursorDot.style.opacity  = '1';
+      cursorRing.style.opacity = '1';
+    }
   });
 
   let resizeTimer;

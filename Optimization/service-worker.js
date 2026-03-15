@@ -1,5 +1,5 @@
 /* A3KM Studio Service Worker - Enhanced Offline Support with Runtime Caching */
-const VERSION = 'v3.2.6-mobile-launch-splash-fix-2026-03-13';
+const VERSION = 'v3.2.12-final-clean-logo-2026-03-15';
 const CACHE_PREFIX = 'a3km-studio';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${VERSION}`;
 const HTML_CACHE = `${CACHE_PREFIX}-html-${VERSION}`;
@@ -138,7 +138,27 @@ async function handleImage(request) {
  * Assets (CSS, JS, Fonts): Cache-first (immutable), then network
  */
 async function handleAsset(request) {
+  const requestUrl = new URL(request.url);
+  const isCursorEffectsScript = requestUrl.pathname.endsWith('/Optimization/cursor-effects.js');
+  const isMainOptimizationScript = requestUrl.pathname.endsWith('/Optimization/script.js');
+  const isFullscreenInitScript = requestUrl.pathname.endsWith('/Optimization/fullscreen-init.js');
   const cache = await caches.open(STATIC_CACHE);
+
+  // Always prefer network for rapidly changing core scripts so hotfixes are reflected immediately.
+  if (isCursorEffectsScript || isMainOptimizationScript || isFullscreenInitScript) {
+    try {
+      const fresh = await fetch(request, { cache: 'no-store' });
+      if (fresh.ok) {
+        await cache.put(request, fresh.clone());
+      }
+      return fresh;
+    } catch (err) {
+      const cachedScript = await cache.match(request);
+      if (cachedScript) return cachedScript;
+      return new Response('', { status: 503, statusText: 'Service Unavailable' });
+    }
+  }
+
   const cached = await cache.match(request);
   if (cached) return cached;
 
@@ -158,13 +178,16 @@ async function handleAsset(request) {
  * Documents (JSON, MD, PDF): Network-first, then cache
  */
 async function handleDocument(request) {
+  const isPdf = new URL(request.url).pathname.toLowerCase().endsWith('.pdf');
   try {
-    const fresh = await fetch(request);
-    if (fresh.ok) {
+    const fresh = await fetch(request, isPdf ? { cache: 'no-store' } : undefined);
+    if (fresh && fresh.status === 200) {
       const cache = await caches.open(RUNTIME_CACHE);
       await cache.put(request, fresh.clone());
       await trimCache(RUNTIME_CACHE, MAX_RUNTIME_CACHE);
     }
+
+    // Return non-200 response as-is, but never cache it.
     return fresh;
   } catch (err) {
     const cache = await caches.open(RUNTIME_CACHE);

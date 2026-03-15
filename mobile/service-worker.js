@@ -3,7 +3,7 @@
 // Enhanced offline caching with runtime caching and performance optimization
 // ============================================================================
 
-const VERSION = 'v3.2.6-mobile-launch-splash-fix-2026-03-13';
+const VERSION = 'v3.2.12-final-clean-logo-2026-03-15';
 const CACHE_PREFIX = 'a3km-mobile';
 const CACHE_NAME = `${CACHE_PREFIX}-${VERSION}`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-${VERSION}`;
@@ -151,7 +151,24 @@ async function handleImage(request) {
  * These files rarely change and benefit from aggressive caching
  */
 async function handleAsset(request) {
+  const requestUrl = new URL(request.url);
+  const isCursorEffectsScript = requestUrl.pathname.endsWith('/Optimization/cursor-effects.js');
+  const isMainOptimizationScript = requestUrl.pathname.endsWith('/Optimization/script.js');
   const cache = await caches.open(CACHE_NAME);
+
+  if (isCursorEffectsScript || isMainOptimizationScript) {
+    try {
+      const fresh = await fetch(request, { cache: 'no-store' });
+      if (fresh && fresh.status === 200) {
+        await cache.put(request, fresh.clone());
+      }
+      return fresh;
+    } catch (error) {
+      const cachedScript = await cache.match(request);
+      if (cachedScript) return cachedScript;
+      throw error;
+    }
+  }
   
   const cached = await cache.match(request);
   if (cached) return cached;
@@ -173,14 +190,17 @@ async function handleAsset(request) {
  * Documents should be fresh but cached for offline
  */
 async function handleDocument(request) {
+  const isPdf = new URL(request.url).pathname.toLowerCase().endsWith('.pdf');
   const cache = await caches.open(RUNTIME_CACHE);
   
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, isPdf ? { cache: 'no-store' } : undefined);
     if (response && response.status === 200) {
       await cache.put(request, response.clone());
       await trimCache(RUNTIME_CACHE, MAX_RUNTIME_CACHE);
     }
+
+    // Return response even when non-200, but avoid caching problematic statuses.
     return response;
   } catch (error) {
     const cached = await cache.match(request);

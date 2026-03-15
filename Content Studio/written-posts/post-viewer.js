@@ -45,6 +45,16 @@
 
   let currentPost = null;
   let allPosts = [];
+  const isDebug =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    localStorage.getItem('a3km_debug') === 'true';
+
+  function devLog() {
+    if (isDebug) {
+      console.log.apply(console, arguments);
+    }
+  }
 
   /* ============================================
      INITIALIZATION
@@ -105,7 +115,7 @@
         });
       }
       
-      console.log(`📝 Total ${allPosts.length} posts loaded (posts.json + localStorage + Cloud)`);
+      devLog(`📝 Total ${allPosts.length} posts loaded (posts.json + localStorage + Cloud)`);
     } catch (error) {
       console.error('Error loading posts:', error);
       throw error;
@@ -119,11 +129,11 @@
     try {
       const token = localStorage.getItem('github_api_token');
       if (!token) {
-        console.log('⚠️ No GitHub token - skipping cloud sync');
+        devLog('⚠️ No GitHub token - skipping cloud sync');
         return;
       }
 
-      console.log('⬇️  Syncing posts from cloud...');
+      devLog('⬇️  Syncing posts from cloud...');
       
       const owner = 'Akhinoor14';
       const repo = 'A3KM-Studio';
@@ -158,9 +168,9 @@
         
         if (newCount > 0) {
           localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
-          console.log(`✅ Synced ${newCount} new posts from cloud to desktop viewer!`);
+          devLog(`✅ Synced ${newCount} new posts from cloud to desktop viewer!`);
         } else {
-          console.log('✅ Desktop viewer already up to date with cloud');
+          devLog('✅ Desktop viewer already up to date with cloud');
         }
       }
     } catch (error) {
@@ -186,26 +196,30 @@
      ============================================ */
   async function renderPost() {
     // Update meta information
-    elements.title.textContent = currentPost.title;
-    elements.date.textContent = formatDate(currentPost.date);
-    elements.readTime.textContent = `${currentPost.readTime} min read`;
-    elements.author.textContent = currentPost.author || 'Md Akhinoor Islam';
-    elements.views.textContent = currentPost.views || 0;
+    if (elements.title) elements.title.textContent = currentPost.title;
+    if (elements.date) elements.date.textContent = formatDate(currentPost.date);
+    if (elements.readTime) elements.readTime.textContent = `${currentPost.readTime} min read`;
+    if (elements.author) elements.author.textContent = currentPost.author || 'Md Akhinoor Islam';
+    if (elements.views) elements.views.textContent = currentPost.views || 0;
 
     // Update page title
     document.title = `${currentPost.title} - Md Akhinoor Islam`;
 
     // Render tags
-    if (currentPost.tags && currentPost.tags.length > 0) {
+    if (elements.tags && currentPost.tags && currentPost.tags.length > 0) {
       elements.tags.innerHTML = currentPost.tags.map(tag => 
         `<span class="post-tag">${escapeHTML(tag)}</span>`
       ).join('');
     }
 
     // Set cover image
-    if (currentPost.coverImage) {
+    if (elements.cover && currentPost.coverImage) {
       elements.cover.style.backgroundImage = `url('${currentPost.coverImage}')`;
       elements.cover.style.display = 'block';
+    }
+
+    if (!elements.content) {
+      throw new Error('Required element #postContent was not found');
     }
 
     // Load content - Check if inline HTML or external file
@@ -286,28 +300,33 @@
     const bookmarkKey = `post_bookmark_${postId}`;
     
     if (localStorage.getItem(likeKey)) {
-      elements.likeBtn.classList.add('active');
-      elements.likeBtn.querySelector('i').classList.replace('far', 'fas');
+      if (elements.likeBtn) {
+        elements.likeBtn.classList.add('active');
+        elements.likeBtn.querySelector('i')?.classList.replace('far', 'fas');
+      }
     }
     
     if (localStorage.getItem(bookmarkKey)) {
-      elements.bookmarkBtn.classList.add('active');
-      elements.bookmarkBtn.querySelector('i').classList.replace('far', 'fas');
+      if (elements.bookmarkBtn) {
+        elements.bookmarkBtn.classList.add('active');
+        elements.bookmarkBtn.querySelector('i')?.classList.replace('far', 'fas');
+      }
     }
 
-    elements.likeCount.textContent = currentPost.likes || 0;
+    if (elements.likeCount) elements.likeCount.textContent = currentPost.likes || 0;
 
     // Hide loading, show content
-    elements.loading.style.display = 'none';
-    elements.header.style.display = 'block';
-    elements.content.style.display = 'block';
-    elements.footer.style.display = 'block';
+    if (elements.loading) elements.loading.style.display = 'none';
+    if (elements.header) elements.header.style.display = 'block';
+    if (elements.content) elements.content.style.display = 'block';
+    if (elements.footer) elements.footer.style.display = 'block';
   }
 
   /* ============================================
      TABLE OF CONTENTS GENERATION
      ============================================ */
   function generateTOC() {
+    if (!elements.content || !elements.tocToggle || !elements.tocNav || !elements.tocSidebar) return;
     const headings = elements.content.querySelectorAll('h1, h2, h3, h4');
     
     if (headings.length === 0) {
@@ -348,6 +367,7 @@
   }
 
   function updateActiveTOC() {
+    if (!elements.content || !elements.tocNav) return;
     const headings = elements.content.querySelectorAll('h1, h2, h3, h4');
     const scrollPos = window.scrollY + 100;
 
@@ -375,32 +395,38 @@
      ============================================ */
   function setupEventListeners() {
     // Like button
-    elements.likeBtn.addEventListener('click', toggleLike);
+    if (elements.likeBtn) elements.likeBtn.addEventListener('click', toggleLike);
 
     // Bookmark button
-    elements.bookmarkBtn.addEventListener('click', toggleBookmark);
+    if (elements.bookmarkBtn) elements.bookmarkBtn.addEventListener('click', toggleBookmark);
 
     // Share buttons
-    elements.shareFacebook.addEventListener('click', () => sharePost('facebook'));
-    elements.shareTwitter.addEventListener('click', () => sharePost('twitter'));
-    elements.shareWhatsapp.addEventListener('click', () => sharePost('whatsapp'));
-    elements.shareLink.addEventListener('click', copyLink);
+    if (elements.shareFacebook) elements.shareFacebook.addEventListener('click', () => sharePost('facebook'));
+    if (elements.shareTwitter) elements.shareTwitter.addEventListener('click', () => sharePost('twitter'));
+    if (elements.shareWhatsapp) elements.shareWhatsapp.addEventListener('click', () => sharePost('whatsapp'));
+    if (elements.shareLink) elements.shareLink.addEventListener('click', copyLink);
 
     // TOC toggle
-    elements.tocToggle.addEventListener('click', () => {
-      elements.tocSidebar.classList.add('active');
-    });
+    if (elements.tocToggle && elements.tocSidebar) {
+      elements.tocToggle.addEventListener('click', () => {
+        elements.tocSidebar.classList.add('active');
+      });
+    }
 
-    elements.tocClose.addEventListener('click', () => {
-      elements.tocSidebar.classList.remove('active');
-    });
+    if (elements.tocClose && elements.tocSidebar) {
+      elements.tocClose.addEventListener('click', () => {
+        elements.tocSidebar.classList.remove('active');
+      });
+    }
 
     // Close TOC on outside click
-    elements.tocSidebar.addEventListener('click', (e) => {
-      if (e.target === elements.tocSidebar) {
-        elements.tocSidebar.classList.remove('active');
-      }
-    });
+    if (elements.tocSidebar) {
+      elements.tocSidebar.addEventListener('click', (e) => {
+        if (e.target === elements.tocSidebar) {
+          elements.tocSidebar.classList.remove('active');
+        }
+      });
+    }
 
     // Reading progress bar
     window.addEventListener('scroll', updateReadingProgress);
@@ -410,6 +436,7 @@
      INTERACTIONS
      ============================================ */
   function toggleLike() {
+    if (!elements.likeBtn) return;
     const likeKey = `post_like_${postId}`;
     const isLiked = localStorage.getItem(likeKey);
     const icon = elements.likeBtn.querySelector('i');
@@ -417,19 +444,20 @@
     if (isLiked) {
       localStorage.removeItem(likeKey);
       elements.likeBtn.classList.remove('active');
-      icon.classList.replace('fas', 'far');
+      icon?.classList.replace('fas', 'far');
       currentPost.likes = Math.max(0, (currentPost.likes || 0) - 1);
     } else {
       localStorage.setItem(likeKey, 'true');
       elements.likeBtn.classList.add('active');
-      icon.classList.replace('far', 'fas');
+      icon?.classList.replace('far', 'fas');
       currentPost.likes = (currentPost.likes || 0) + 1;
     }
 
-    elements.likeCount.textContent = currentPost.likes;
+    if (elements.likeCount) elements.likeCount.textContent = currentPost.likes;
   }
 
   function toggleBookmark() {
+    if (!elements.bookmarkBtn) return;
     const bookmarkKey = `post_bookmark_${postId}`;
     const isBookmarked = localStorage.getItem(bookmarkKey);
     const icon = elements.bookmarkBtn.querySelector('i');
@@ -437,11 +465,11 @@
     if (isBookmarked) {
       localStorage.removeItem(bookmarkKey);
       elements.bookmarkBtn.classList.remove('active');
-      icon.classList.replace('fas', 'far');
+      icon?.classList.replace('fas', 'far');
     } else {
       localStorage.setItem(bookmarkKey, 'true');
       elements.bookmarkBtn.classList.add('active');
-      icon.classList.replace('far', 'fas');
+      icon?.classList.replace('far', 'fas');
     }
   }
 
@@ -469,7 +497,8 @@
   function copyLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-      const icon = elements.shareLink.querySelector('i');
+      const icon = elements.shareLink ? elements.shareLink.querySelector('i') : null;
+      if (!icon) return;
       icon.classList.replace('fa-link', 'fa-check');
       
       setTimeout(() => {
@@ -479,6 +508,7 @@
   }
 
   function updateReadingProgress() {
+    if (!elements.readingProgress) return;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight - windowHeight;
     const scrollTop = window.scrollY;
@@ -488,6 +518,7 @@
   }
 
   function updateViews() {
+    if (!elements.views) return;
     const viewKey = `post_view_${postId}`;
     if (!sessionStorage.getItem(viewKey)) {
       currentPost.views = (currentPost.views || 0) + 1;
@@ -500,6 +531,7 @@
      RELATED POSTS
      ============================================ */
   function loadRelatedPosts() {
+    if (!elements.relatedGrid) return;
     const related = allPosts
       .filter(p => p.id !== postId)
       .filter(p => {
@@ -526,8 +558,8 @@
      ERROR HANDLING
      ============================================ */
   function showError() {
-    elements.loading.style.display = 'none';
-    elements.error.style.display = 'block';
+    if (elements.loading) elements.loading.style.display = 'none';
+    if (elements.error) elements.error.style.display = 'block';
   }
 
   /* ============================================

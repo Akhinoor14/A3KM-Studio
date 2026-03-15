@@ -36,13 +36,7 @@
 
   <!-- ?? A3KM Unified Theme System (March 2026) -->
 
-  <link rel="stylesheet" href="../../shared/unified-theme.css">
-
-  
-
-  <!-- Load Unified Token Manager -->
-
-  <script src="../shared/unified-token-manager.js"></script>
+  <link rel="stylesheet" href="../shared/unified-theme.css">
 
   
 
@@ -1746,6 +1740,89 @@
 
     }
 
+    .modal-content.modal-has-two-panel {
+      max-width: 1500px;
+      padding: 28px;
+    }
+
+    .editor-two-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .editor-left-panel {
+      min-width: 0;
+    }
+
+    .editor-right-panel {
+      position: sticky;
+      top: 92px;
+      border: 1px solid rgba(139,0,0,0.35);
+      border-radius: 14px;
+      background: linear-gradient(160deg, rgba(20,4,4,0.98) 0%, rgba(8,0,0,0.98) 100%);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .editor-right-header {
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+      border-bottom: 1px solid rgba(139,0,0,0.35);
+      background: rgba(139,0,0,0.18);
+    }
+
+    .live-preview-frame {
+      width: 100%;
+      height: 620px;
+      border: 0;
+      display: block;
+      background: #0b0b0b;
+    }
+
+    .asset-visibility-box {
+      border-top: 1px solid rgba(139,0,0,0.3);
+      padding: 10px 12px 12px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .asset-visibility-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.78);
+      margin: 6px 0;
+    }
+
+    .asset-visibility-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .asset-visibility-list li {
+      font-size: 12px;
+      color: rgba(255,255,255,0.72);
+      background: rgba(139,0,0,0.08);
+      border: 1px solid rgba(139,0,0,0.28);
+      border-radius: 8px;
+      padding: 7px 9px;
+      word-break: break-all;
+    }
+
+    .asset-visibility-list li a {
+      color: #ff9e9e;
+      text-decoration: none;
+    }
+
+    .asset-visibility-list li a:hover {
+      text-decoration: underline;
+    }
+
 
 
     /* JSON Editor */
@@ -2539,6 +2616,19 @@
 
       }
 
+      .editor-two-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-right-panel {
+        position: relative;
+        top: 0;
+      }
+
+      .live-preview-frame {
+        height: 420px;
+      }
+
     }
 
 
@@ -2646,53 +2736,34 @@
 
 
 
-  <div class="header">
-
-    <div class="header-container">
-
-      <div class="header-left">
-
-        <div class="header-icon"><i class="fas fa-pen-fancy"></i></div>
-
-        <div class="header-title">
-
-          <h1>Written Posts Manager</h1>
-
-          <p>Professional content management system</p>
-
-        </div>
-
-      </div>
-
-      <div class="header-actions">
-
-        <a href="content-managers-hub.html" class="back-btn">
-
-          <i class="fas fa-arrow-left"></i>
-
-          <span>Back to Hub</span>
-
-        </a>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-
   <div class="container">
 
     <!-- Restore saved tab before page renders (prevents flash) -->
     <script>
       (function() {
-        const savedTab = 'dashboard';
+        const savedTab = localStorage.getItem('postsManager_activeTab') || 'dashboard';
         // Activate the appropriate tab
         const tabBtn = document.querySelector(`[onclick*="switchTab('${savedTab}')"]`);
         const tabContent = document.getElementById(savedTab + 'Tab');
         if (tabBtn) tabBtn.classList.add('active');
         if (tabContent) tabContent.classList.add('active');
+
+        // Run the actual tab switch once DOM is ready and the function exists.
+        document.addEventListener('DOMContentLoaded', () => {
+          let tries = 0;
+          const maxTries = 20;
+          const triggerSavedTab = () => {
+            tries += 1;
+            if (typeof window.switchTab === 'function') {
+              window.switchTab(savedTab);
+              return;
+            }
+            if (tries < maxTries) {
+              setTimeout(triggerSavedTab, 80);
+            }
+          };
+          triggerSavedTab();
+        }, { once: true });
       })();
     </script>
 
@@ -2901,7 +2972,7 @@
 
         <div class="info-box">
 
-          <strong>? Enhanced Publishing System</strong> - Set status, target audience, difficulty level, and optimize SEO for maximum reach!
+          <strong><i class="fas fa-rocket"></i> Enhanced Publishing System</strong> - Set status, target audience, difficulty level, and optimize SEO for maximum reach!
 
         </div>
 
@@ -2931,7 +3002,7 @@
 
             <label><i class="fas fa-calendar-alt"></i> Publish Date/Time</label>
 
-            <input type="datetime-local" id="publishDate" value="${new Date().toISOString().slice(0, 16)}">
+            <input type="datetime-local" id="publishDate" value="">
 
           </div>
 
@@ -2943,7 +3014,7 @@
 
           <div class="form-group">
 
-            <label>? Category Group/Sector</label>
+            <label><i class="fas fa-project-diagram"></i> Category Group/Sector</label>
 
             <input type="text" id="categoryGroupSearch" placeholder="🔍 Type to search sectors..."
                    style="margin-bottom:8px;"
@@ -3908,7 +3979,7 @@ Use the toolbar buttons above for quick formatting!"
 
     <div class="modal-content">
 
-      <button class="modal-close" onclick="closeEditModal()">�</button>
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
 
       <h2 style="color: #8B0000; margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Post</h2>
 
@@ -3928,9 +3999,9 @@ Use the toolbar buttons above for quick formatting!"
 
               <option value="draft">📝 Draft</option>
 
-              <option value="published">? Published</option>
+              <option value="published">✅ Published</option>
 
-              <option value="scheduled">? Scheduled</option>
+              <option value="scheduled">⏰ Scheduled</option>
 
             </select>
 
@@ -4393,6 +4464,8 @@ Use the toolbar buttons above for quick formatting!"
     let currentPage = 1;
 
     const postsPerPage = 10;
+    let activeEditPostData = null;
+    let editorPanelsInitialized = false;
 
     function generateNextId() {
       const prefix = 'post-';
@@ -5338,6 +5411,260 @@ Use the toolbar buttons above for quick formatting!"
 
     }
 
+    function markdownToPreviewHtml(markdownText) {
+      let html = String(markdownText || '');
+
+      html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:10px; margin:12px 0;">');
+      html = html.replace(/^> (.+)$/gm, '<blockquote style="border-left:4px solid #8B0000; padding-left:12px; color:#666; margin:14px 0;">$1</blockquote>');
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+      html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = '<p>' + html + '</p>';
+      return html.replace(/<p><\/p>/g, '');
+    }
+
+    function buildWebsitePreviewHtml(data) {
+      const safeTitle = data.title || 'Untitled Post';
+      const safeCategory = data.category || 'Uncategorized';
+      const safeAuthor = data.author || 'Unknown Author';
+      const safeDate = data.date || new Date().toLocaleString();
+      const safeSummary = data.summary || '';
+      const bodyHtml = data.bodyHtml || '<p>No content yet...</p>';
+
+      return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Preview</title>
+  <style>
+    body { margin:0; font-family: 'Georgia', 'Times New Roman', serif; background:#f6f2ef; color:#1f1f1f; }
+    .topbar { background:#1d1a1a; color:#fff; padding:14px 20px; font:600 14px/1.2 'Segoe UI',sans-serif; }
+    .wrap { max-width:920px; margin:0 auto; padding:28px 22px 48px; }
+    .hero { background:#fff; border:1px solid #ddd; border-radius:14px; padding:22px; box-shadow:0 10px 24px rgba(0,0,0,0.08); }
+    .kicker { font:700 12px/1.2 'Segoe UI',sans-serif; color:#b10000; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:12px 0; font-size:2rem; line-height:1.25; }
+    .meta { font:500 13px/1.2 'Segoe UI',sans-serif; color:#5b5b5b; }
+    .summary { margin-top:14px; padding:10px 12px; background:#faf7f5; border-left:4px solid #b10000; border-radius:8px; }
+    article { margin-top:20px; background:#fff; border:1px solid #ddd; border-radius:14px; padding:24px; line-height:1.85; }
+    article h1, article h2, article h3 { font-family:'Segoe UI',sans-serif; color:#111; }
+    pre { background:#111; color:#eee; padding:12px; border-radius:8px; overflow:auto; }
+    code { background:#f0ece8; padding:2px 5px; border-radius:4px; }
+    a { color:#b10000; }
+  </style>
+</head>
+<body>
+  <div class="topbar">A3KM Studio - Real Website Preview</div>
+  <div class="wrap">
+    <section class="hero">
+      <div class="kicker">${safeCategory}</div>
+      <h1>${safeTitle}</h1>
+      <div class="meta">By ${safeAuthor} · ${safeDate}</div>
+      ${safeSummary ? `<div class="summary">${safeSummary}</div>` : ''}
+    </section>
+    <article>${bodyHtml}</article>
+  </div>
+</body>
+</html>`;
+    }
+
+    function setPreviewFrameHtml(frameId, html) {
+      const frame = document.getElementById(frameId);
+      if (!frame) return;
+      frame.srcdoc = html;
+    }
+
+    function renderAssetList(listId, entries) {
+      const list = document.getElementById(listId);
+      if (!list) return;
+      const unique = Array.from(new Set((entries || []).filter(Boolean)));
+      if (!unique.length) {
+        list.innerHTML = '<li>None</li>';
+        return;
+      }
+      list.innerHTML = unique.map(item => {
+        const label = String(item).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const isLink = /^https?:\/\//i.test(item);
+        return isLink
+          ? `<li><a href="${item}" target="_blank" rel="noopener">${label}</a></li>`
+          : `<li>${label}</li>`;
+      }).join('');
+    }
+
+    function collectMarkdownImageLinks(markdown) {
+      const text = String(markdown || '');
+      const matches = [];
+      const regex = /!\[[^\]]*\]\(([^)]+)\)/g;
+      let m;
+      while ((m = regex.exec(text)) !== null) {
+        matches.push(m[1]);
+      }
+      return matches;
+    }
+
+    function updateCreateLivePreview() {
+      const title = document.getElementById('title')?.value || '';
+      const category = document.getElementById('category')?.value || '';
+      const author = document.getElementById('author')?.value || '';
+      const body = document.getElementById('content')?.value || '';
+      const summary = document.getElementById('richPostDesc')?.innerText?.trim() || document.getElementById('metaDescription')?.value || '';
+      const bodyHtml = markdownToPreviewHtml(body);
+
+      setPreviewFrameHtml('createLivePreviewFrame', buildWebsitePreviewHtml({
+        title,
+        category,
+        author,
+        date: new Date().toLocaleString(),
+        summary,
+        bodyHtml
+      }));
+
+      const slug = document.getElementById('slug')?.value || '';
+      const sector = document.getElementById('categoryGroup')?.value || '';
+      const cat = document.getElementById('category')?.value || '';
+      const mdPath = (slug && sector && cat)
+        ? `Content Storage/written-posts/${sector}/${contentManager.slugify(cat)}/${slug}.md`
+        : 'Will be generated after sector/category/slug are set';
+
+      const imageFiles = collectMarkdownImageLinks(body);
+      const thumbnailFile = document.getElementById('thumbnail')?.files?.[0]?.name;
+      if (thumbnailFile) imageFiles.unshift(`Selected upload: ${thumbnailFile}`);
+
+      renderAssetList('createMdFiles', [mdPath]);
+      renderAssetList('createImageFiles', imageFiles);
+    }
+
+    function updateEditLivePreview() {
+      const title = document.getElementById('editTitle')?.value || '';
+      const category = document.getElementById('editCategory')?.value || '';
+      const author = document.getElementById('editAuthor')?.value || '';
+      const body = document.getElementById('editContent')?.value || '';
+      const summary = document.getElementById('editRichPostDesc')?.innerText?.trim() || document.getElementById('editMetaDescription')?.value || '';
+      const bodyHtml = markdownToPreviewHtml(body);
+
+      setPreviewFrameHtml('editLivePreviewFrame', buildWebsitePreviewHtml({
+        title,
+        category,
+        author,
+        date: new Date().toLocaleString(),
+        summary,
+        bodyHtml
+      }));
+
+      const mdPath = (activeEditPostData && (activeEditPostData.markdownFile || activeEditPostData.contentPath))
+        || document.getElementById('edit-currentMarkdownPath')?.textContent
+        || 'No markdown path';
+
+      const images = [];
+      if (activeEditPostData) {
+        images.push(activeEditPostData.thumbnailPath, activeEditPostData.thumbnailUrl, activeEditPostData.thumbnail, activeEditPostData.coverImage);
+      }
+      collectMarkdownImageLinks(body).forEach(img => images.push(img));
+      const replacementFile = document.getElementById('edit-thumbnailFile')?.files?.[0]?.name;
+      if (replacementFile) images.unshift(`Selected replacement: ${replacementFile}`);
+
+      renderAssetList('editMdFiles', [mdPath]);
+      renderAssetList('editImageFiles', images);
+    }
+
+    function ensureTwoPanelEditors() {
+      if (editorPanelsInitialized) return;
+
+      const uploadForm = document.getElementById('uploadForm');
+      if (uploadForm && !document.getElementById('createTwoPanelWrap')) {
+        const wrap = document.createElement('div');
+        wrap.id = 'createTwoPanelWrap';
+        wrap.className = 'editor-two-panel';
+        uploadForm.parentNode.insertBefore(wrap, uploadForm);
+
+        const left = document.createElement('div');
+        left.className = 'editor-left-panel';
+        wrap.appendChild(left);
+        left.appendChild(uploadForm);
+
+        const right = document.createElement('aside');
+        right.className = 'editor-right-panel';
+        right.innerHTML = `
+          <div class="editor-right-header"><i class="fas fa-globe"></i> Real Website Preview</div>
+          <iframe id="createLivePreviewFrame" class="live-preview-frame" title="Create Live Preview"></iframe>
+          <div class="asset-visibility-box">
+            <div class="asset-visibility-title"><i class="fas fa-file-code"></i> Markdown File Visibility</div>
+            <ul id="createMdFiles" class="asset-visibility-list"><li>None</li></ul>
+            <div class="asset-visibility-title"><i class="fas fa-images"></i> Image File Visibility</div>
+            <ul id="createImageFiles" class="asset-visibility-list"><li>None</li></ul>
+          </div>`;
+        wrap.appendChild(right);
+      }
+
+      const editForm = document.getElementById('editForm');
+      const modalContent = document.querySelector('#editModal .modal-content');
+      if (editForm && !document.getElementById('editTwoPanelWrap')) {
+        if (modalContent) modalContent.classList.add('modal-has-two-panel');
+
+        const wrap = document.createElement('div');
+        wrap.id = 'editTwoPanelWrap';
+        wrap.className = 'editor-two-panel';
+        editForm.parentNode.insertBefore(wrap, editForm);
+
+        const left = document.createElement('div');
+        left.className = 'editor-left-panel';
+        wrap.appendChild(left);
+        left.appendChild(editForm);
+
+        const right = document.createElement('aside');
+        right.className = 'editor-right-panel';
+        right.innerHTML = `
+          <div class="editor-right-header"><i class="fas fa-desktop"></i> Real Website Preview (Edit)</div>
+          <iframe id="editLivePreviewFrame" class="live-preview-frame" title="Edit Live Preview"></iframe>
+          <div class="asset-visibility-box">
+            <div class="asset-visibility-title"><i class="fas fa-file-code"></i> Markdown Files</div>
+            <ul id="editMdFiles" class="asset-visibility-list"><li>None</li></ul>
+            <div class="asset-visibility-title"><i class="fas fa-images"></i> Image Files</div>
+            <ul id="editImageFiles" class="asset-visibility-list"><li>None</li></ul>
+          </div>`;
+        wrap.appendChild(right);
+      }
+
+      const createBindings = ['title','category','author','content','metaDescription','slug','categoryGroup','thumbnail'];
+      createBindings.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', updateCreateLivePreview);
+          el.addEventListener('change', updateCreateLivePreview);
+        }
+      });
+      const createSummary = document.getElementById('richPostDesc');
+      if (createSummary) {
+        createSummary.addEventListener('input', updateCreateLivePreview);
+      }
+
+      const editBindings = ['editTitle','editCategory','editAuthor','editContent','editMetaDescription','edit-thumbnailFile'];
+      editBindings.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', updateEditLivePreview);
+          el.addEventListener('change', updateEditLivePreview);
+        }
+      });
+      const editSummary = document.getElementById('editRichPostDesc');
+      if (editSummary) {
+        editSummary.addEventListener('input', updateEditLivePreview);
+      }
+
+      updateCreateLivePreview();
+      updateEditLivePreview();
+      editorPanelsInitialized = true;
+    }
+
 
 
     // Auto-save draft to localStorage
@@ -5389,6 +5716,13 @@ Use the toolbar buttons above for quick formatting!"
     // Load auto-saved draft on page load
 
     window.addEventListener('DOMContentLoaded', () => {
+
+      const publishDateEl = document.getElementById('publishDate');
+      if (publishDateEl && !publishDateEl.value) {
+        const now = new Date();
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        publishDateEl.value = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+      }
 
       const draftTitle = localStorage.getItem('draft_post_title');
 
@@ -5752,7 +6086,7 @@ Use the toolbar buttons above for quick formatting!"
 
 
 
-    // Preview post function
+    // Preview post function (kept intentionally simple to avoid parser fragility)
 
     function previewPost() {
 
@@ -5760,82 +6094,39 @@ Use the toolbar buttons above for quick formatting!"
 
       const content = document.getElementById('content').value;
 
-      const difficulty = document.getElementById('difficulty').value;
-
-      const status = document.getElementById('status').value;
-
-      
-
       if (!title || !content) {
 
-        alert('⚠️ Please add title and content first!');
+        alert('Please add title and content first.');
 
         return;
 
       }
 
-      
-
       const previewWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!previewWindow) return;
 
-      previewWindow.document.write(`
+      const escapedTitle = String(title)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 
-        <!DOCTYPE html>
+      const bodyHtml = String(content)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
 
-        <html>
+      const html = '<!doctype html><html><head><meta charset="utf-8"><title>Preview: ' + escapedTitle + '</title></head><body style="font-family:Segoe UI,sans-serif;max-width:900px;margin:24px auto;padding:16px;line-height:1.6"><h1>' + escapedTitle + '</h1><div>' + bodyHtml + '</div>';
 
-        <head>
-
-          <title>Preview: ${title}</title>
-
-          <style>
-
-            body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
-
-            .preview-header { background: rgba(18,4,4,0.97); padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-            h1 { color: #8B0000; margin-bottom: 15px; }
-
-            .meta { color: #666; font-size: 14px; margin-bottom: 20px; }
-
-            .badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-right: 8px; }
-
-            .content { background: rgba(18,4,4,0.97); padding: 30px; border-radius: 12px; line-height: 1.8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-            code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', monospace; }
-
-            pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; }
-
-          </style>
-
-        </head>
-
-        <body>
-
-          <div class="preview-header">
-
-            <h1>${title}</h1>
-
-            <div class="meta">
-
-              <span class="badge" style="background: ${status === 'published' ? '#4CAF50' : '#FFC107'};">${status.toUpperCase()}</span>
-
-              <span class="badge" style="background: rgba(139, 0, 0, 0.1); color: #8B0000;">${difficulty.toUpperCase()}</span>
-
-            </div>
-
-          </div>
-
-          <div class="content">${content.replace(/\n/g, '<br>')}</div>
-
-        </body>
-      </html>
-      `);
+      previewWindow.document.open();
+      previewWindow.document.write(html);
+      previewWindow.document.write('</bo' + 'dy></ht' + 'ml>');
+      previewWindow.document.close();
     }
 
     document.getElementById('thumbnail').addEventListener('change', function() {
 
-      if (this.files[0]) document.getElementById('thumbnailInfo').textContent = `📎 ${this.files[0].name}`;
+      if (this.files[0]) document.getElementById('thumbnailInfo').textContent = 'File: ' + this.files[0].name;
 
     });
 
@@ -6169,7 +6460,7 @@ ${content}`;
 
       try {
 
-        const token = localStorage.getItem('github_api_token');
+        const token = localStorage.getItem('github_token') || localStorage.getItem('github_api_token');
 
         if (!token) {
 
@@ -6179,86 +6470,57 @@ ${content}`;
 
         }
 
-
-
         console.log('??  Syncing posts from cloud to Posts Manager...');
 
-        
-
         const owner = 'Akhinoor14';
-
         const repo = 'A3KM-Studio';
-
         const path = 'Content Studio/written-posts/posts.json';
-
         const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
 
-        
-
         const response = await fetch(url, {
-
           headers: {
-
-            'Authorization': `Bearer ${token}`,
-
+            'Authorization': `token ${token}`,
             'Accept': 'application/vnd.github.v3+json'
-
           }
-
         });
 
+        if (!response.ok) {
+          return;
+        }
 
+        const data = await response.json();
+        const base64Content = String(data.content || '').replace(/\s/g, '');
+        const binary = atob(base64Content);
 
-        if (response.ok) {
+        let content;
+        if (typeof TextDecoder !== 'undefined') {
+          const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+          content = new TextDecoder('utf-8').decode(bytes);
+        } else {
+          content = decodeURIComponent(escape(binary));
+        }
 
-          const data = await response.json();
+        // Remove UTF-8 BOM if present, then parse JSON.
+        const githubPosts = JSON.parse(content.replace(/^\uFEFF/, '').trim());
 
-          const content = decodeURIComponent(escape(atob(data.content)));
+        const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
+        const localIds = new Set(localPosts.map(p => p.id));
 
-          const githubPosts = JSON.parse(content);
+        let newCount = 0;
+        if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
+          githubPosts.posts.forEach(post => {
+            if (!localIds.has(post.id)) {
+              localPosts.push(post);
+              newCount++;
+            }
+          });
+        }
 
-          
-
-          // Merge with localStorage
-
-          const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
-
-          const localIds = new Set(localPosts.map(p => p.id));
-
-          
-
-          let newCount = 0;
-
-          if (githubPosts.posts && Array.isArray(githubPosts.posts)) {
-
-            githubPosts.posts.forEach(post => {
-
-              if (!localIds.has(post.id)) {
-
-                localPosts.push(post);
-
-                newCount++;
-
-              }
-
-            });
-
-          }
-
-          
-
-          if (newCount > 0) {
-
-            localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
-
-            console.log(`? Synced ${newCount} new posts from cloud to Posts Manager!`);
-
-          } else {
-
-            console.log('? Posts Manager already up to date with cloud');
-
-          }
-
+        if (newCount > 0) {
+          localStorage.setItem('a3km_posts', JSON.stringify(localPosts));
+          console.log(`? Synced ${newCount} new posts from cloud to Posts Manager!`);
+        } else {
+          console.log('? Posts Manager already up to date with cloud');
         }
 
       } catch (error) {
@@ -6305,7 +6567,15 @@ ${content}`;
 
     // Dashboard Stats Loading
 
+    let dashboardStatsLoading = false;
+    let lastDashboardStatsLoadAt = 0;
+
     async function loadDashboardStats() {
+
+      // Avoid duplicate calls from initializers + tab restore running together.
+      if (dashboardStatsLoading) return;
+      if (Date.now() - lastDashboardStatsLoadAt < 500) return;
+      dashboardStatsLoading = true;
 
       try {
 
@@ -6390,10 +6660,15 @@ ${content}`;
         document.getElementById('sidebarDrafts').textContent = drafts;
 
         document.getElementById('sidebarWords').textContent = totalWords.toLocaleString();
+        lastDashboardStatsLoadAt = Date.now();
 
       } catch (error) {
 
         console.error('Dashboard stats error:', error);
+
+      } finally {
+
+        dashboardStatsLoading = false;
 
       }
 
@@ -6413,25 +6688,16 @@ ${content}`;
 
         await syncFromGitHubCloud();
 
-        
-
         const data = await contentManager.loadContent(CONTENT_TYPE);
-
         let items = contentManager.getItemsFromData(data, CONTENT_TYPE);
-
-        
 
         // STEP 2: Load posts from local browser cache
 
         const localPosts = JSON.parse(localStorage.getItem('a3km_posts') || '[]');
 
-        
-
         if (localPosts.length > 0) {
 
           console.log(`Found ${localPosts.length} cached local posts in Manage tab.`);
-
-          
 
           // Merge with existing posts (avoid duplicates by ID)
 
@@ -6455,11 +6721,7 @@ ${content}`;
 
         }
 
-        
-
         console.log(`?? Manage Tab - Total posts: ${items.length} (GitHub + localStorage)`);
-
-        
 
         currentContent = items;
 
@@ -6613,6 +6875,9 @@ ${content}`;
 
         }
 
+        const fallbackThumb = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E';
+        const thumbSrc = (typeof thumbnailUrl === 'string' && thumbnailUrl.trim()) ? thumbnailUrl : fallbackThumb;
+
         
 
         card.innerHTML = `
@@ -6633,7 +6898,7 @@ ${content}`;
 
           ` : ''}
 
-          <img src="${thumbnailUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E'}" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E'">
+          <img src="" class="card-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%238B0000%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2248%22 fill=%22white%22 text-anchor=%22middle%22 dy=%22.3em%22%3E??%3C/text%3E%3C/svg%3E'">
 
           <div class="card-body">
 
@@ -6688,6 +6953,11 @@ ${content}`;
           </div>
 
         `;
+
+        const thumbImg = card.querySelector('.card-thumbnail');
+        if (thumbImg) {
+          thumbImg.src = thumbSrc;
+        }
 
         grid.appendChild(card);
 
@@ -7186,9 +7456,7 @@ ${content}`;
         previewImg.src = e.target.result;
 
         document.getElementById('edit-thumbnailPreview').style.display = 'block';
-
       };
-
       reader.readAsDataURL(file);
 
     }
@@ -7312,6 +7580,9 @@ ${content}`;
       const post = currentContent.find(p => p.id === id);
 
       if (!post) return;
+
+      activeEditPostData = post;
+      ensureTwoPanelEditors();
 
       
 
@@ -7481,7 +7752,11 @@ ${content}`;
 
         document.getElementById('editCategory').value = post.category;
 
+        updateEditLivePreview();
+
       });
+
+      updateEditLivePreview();
 
       
 
@@ -7989,6 +8264,8 @@ ${content}`;
 
     window.addEventListener('DOMContentLoaded', async () => {
 
+      ensureTwoPanelEditors();
+
       await loadCategories();
 
       await loadDashboardStats();
@@ -8273,7 +8550,7 @@ ${content}`;
 
   <script src="content-hub-sync.js"></script>
 
-  <script src="../../Optimization/navbar-autohide.js"></script>
+  <script src="../../../Optimization/navbar-autohide.js"></script>
 
     <!-- Neural Grid Cursor Effect -->
 
@@ -8331,22 +8608,6 @@ ${content}`;
   color: rgba(255,255,255,0.85);
 }
 </style>
-
-<!-- Footer -->
-<footer class="wg-footer">
-  <div class="wg-footer-inner">
-    <div class="wg-qwrap">
-      <span class="wg-qmark">&#8220;</span>
-      <p class="wg-qtext">প্রতিটি শব্দ একটি দায়িত্ব — কিয়ামতে প্রতিটি শব্দের হিসাব হবে।</p>
-      <cite class="wg-qsrc">&#8212; হাদিস</cite>
-    </div>
-    <div class="wg-divider"></div>
-    <div class="wg-copy">
-      <strong>&copy; 2026 Md Akhinoor Islam. All rights reserved.</strong>
-      <span class="wg-tagline">Portfolio presented by <a href="../../../Home/index.html">A3KM Studio</a> &nbsp;|&nbsp; Part of Noor Academy &nbsp;|&nbsp; Engineering &middot; Education &middot; Innovation</span>
-    </div>
-  </div>
-</footer>
 
 </body>
 

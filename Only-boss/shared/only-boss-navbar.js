@@ -141,6 +141,56 @@
     function init() {
         injectNav();
 
+        // One-time force: open Dashboard tab when coming from manager hubs.
+        // We trigger a real click so each page's switchTab(...) runs its data loaders.
+        try {
+            var forceDashboardOnce = sessionStorage.getItem('onlyBoss_forceDashboardOnce') === '1';
+            if (forceDashboardOnce) {
+                var tries = 0;
+                var maxTries = 10;
+                var clickDashboardTab = function () {
+                    tries += 1;
+
+                    var dashboardTrigger =
+                        document.querySelector('[onclick*="switchTab(\'dashboard\')"]') ||
+                        document.querySelector('[onclick*="switchTab(\"dashboard\")"]') ||
+                        document.querySelector('.tab-item[data-tab="dashboard"]') ||
+                        document.querySelector('[data-tab="dashboard"]');
+
+                    var switched = false;
+
+                    if (dashboardTrigger && typeof dashboardTrigger.click === 'function') {
+                        dashboardTrigger.click();
+                        switched = true;
+                    } else if (typeof window.switchTab === 'function') {
+                        try {
+                            window.switchTab('dashboard');
+                            switched = true;
+                        } catch (e) {}
+                    }
+
+                    var dashboardPanel = document.getElementById('dashboardTab') || document.getElementById('dashboard');
+                    var isActive = !!(dashboardPanel && dashboardPanel.classList && dashboardPanel.classList.contains('active'));
+
+                    if (switched || isActive) {
+                        sessionStorage.removeItem('onlyBoss_forceDashboardOnce');
+                        return;
+                    }
+
+                    if (tries < maxTries) {
+                        setTimeout(clickDashboardTab, 120);
+                    } else {
+                        // Give up quietly after several retries to avoid blocking page behavior.
+                        sessionStorage.removeItem('onlyBoss_forceDashboardOnce');
+                    }
+                };
+
+                setTimeout(clickDashboardTab, 60);
+            }
+        } catch (e) {
+            // Ignore storage/click errors silently.
+        }
+
         // Show last login from session
         var authTime = sessionStorage.getItem('authTime');
         var lastLoginEl = document.getElementById('lastLogin');

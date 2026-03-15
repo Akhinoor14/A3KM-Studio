@@ -49,6 +49,7 @@ class CentralAPIGateway {
             reset: null,
             limit: 5000
         };
+        this.REQUEST_TIMEOUT_MS = 8000;
         
         // Event listeners for supply chain
         this.eventListeners = {
@@ -266,8 +267,21 @@ class CentralAPIGateway {
         try {
             const token = this.tokenManager.loadToken();
             if (!token) return null;
+
+            const fetchWithTimeout = async (url, options = {}, timeoutMs = this.REQUEST_TIMEOUT_MS) => {
+                if (typeof AbortController === 'undefined') {
+                    return fetch(url, options);
+                }
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    return await fetch(url, { ...options, signal: controller.signal });
+                } finally {
+                    clearTimeout(timer);
+                }
+            };
             
-            const response = await fetch('https://api.github.com/rate_limit', {
+            const response = await fetchWithTimeout('https://api.github.com/rate_limit', {
                 headers: { 'Authorization': `token ${token}` }
             });
             
